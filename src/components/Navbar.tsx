@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
-import { Menu, X, Bell, User, LogOut } from "lucide-react";
+import { Menu, X, User, LogOut } from "lucide-react";
+import { NotificationBell } from "@/components/NotificationBell";
 import { Button } from "@/components/ui/button";
 import { TicketHallLogo } from "@/components/TicketHallLogo";
 import { AuthModal } from "@/components/AuthModal";
@@ -67,6 +68,8 @@ export function Navbar() {
 
           <div className="hidden md:flex items-center gap-3">
             {user ? (
+              <div className="flex items-center gap-1">
+                <NotificationBell />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="gap-2">
@@ -87,6 +90,7 @@ export function Navbar() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              </div>
             ) : (
               <>
                 <Button variant="ghost" size="sm" onClick={openLogin}>Entrar</Button>
