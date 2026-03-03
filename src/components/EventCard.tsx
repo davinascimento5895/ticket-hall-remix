@@ -1,4 +1,5 @@
 import { Calendar, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -23,11 +24,14 @@ const categoryLabels: Record<string, string> = {
   other: "Outros",
 };
 
-export function EventCard({ title, date, city, imageUrl, priceFrom, category, className }: EventCardProps) {
+export function EventCard({ title, date, city, imageUrl, priceFrom, category, slug, className }: EventCardProps) {
+  const Wrapper = slug ? Link : "div";
+  const wrapperProps = slug ? { to: `/eventos/${slug}` } : {};
   return (
-    <div
+    <Wrapper
+      {...wrapperProps as any}
       className={cn(
-        "group relative rounded-xl overflow-hidden border border-border bg-card transition-colors duration-150 hover:border-muted-foreground/30 cursor-pointer",
+        "group relative rounded-xl overflow-hidden border border-border bg-card transition-colors duration-150 hover:border-muted-foreground/30 cursor-pointer block",
         className
       )}
     >
@@ -67,6 +71,6 @@ export function EventCard({ title, date, city, imageUrl, priceFrom, category, cl
           </Button>
         </div>
       </div>
-    </div>
+    </Wrapper>
   );
 }
