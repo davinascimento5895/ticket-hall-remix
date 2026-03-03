@@ -1,1 +1,31 @@
 project_id = "rxexqnnqlgemzsasnikx"
+
+[functions.create-payment]
+verify_jwt = false
+
+[functions.asaas-webhook]
+verify_jwt = false
+
+[functions.create-producer-account]
+verify_jwt = false
+
+[functions.generate-qr-code]
+verify_jwt = false
+
+[functions.send-ticket-email]
+verify_jwt = false
+
+[functions.calculate-producer-payout]
+verify_jwt = false
+
+[functions.dispatch-webhook]
+verify_jwt = false
+
+[functions.generate-invoice]
+verify_jwt = false
+
+[functions.process-waitlist]
+verify_jwt = false
+
+[functions.sync-offline-checkins]
+verify_jwt = false
