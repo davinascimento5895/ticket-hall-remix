@@ -2,7 +2,8 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Minus, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const competitors = [
@@ -216,13 +217,33 @@ export function CalculadoraComparador() {
             <label className="text-xs font-medium text-muted-foreground">
               Preço base do ingresso
             </label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span>
-              <Input
-                value={fmtInput(basePrice)}
-                onChange={handlePriceChange}
-                className="pl-10 text-base font-display font-bold max-w-[200px] h-9"
-              />
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 shrink-0"
+                onClick={() => setBasePrice((p) => Math.max(0, p - 50))}
+                disabled={basePrice <= 0}
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span>
+                <Input
+                  value={fmtInput(basePrice)}
+                  onChange={handlePriceChange}
+                  className="pl-10 text-base font-display font-bold w-[140px] h-9 text-center"
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 shrink-0"
+                onClick={() => setBasePrice((p) => Math.min(5000, p + 50))}
+                disabled={basePrice >= 5000}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
             </div>
           </div>
           <div className="space-y-1.5">
