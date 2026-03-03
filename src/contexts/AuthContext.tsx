@@ -14,6 +14,13 @@ interface AuthContextType {
     phone: string | null;
     cpf: string | null;
     producer_status: string | null;
+    organizer_slug: string | null;
+    organizer_bio: string | null;
+    organizer_instagram: string | null;
+    organizer_facebook: string | null;
+    organizer_website: string | null;
+    organizer_logo_url: string | null;
+    organizer_banner_url: string | null;
   } | null;
   role: AppRole | null;
   loading: boolean;
@@ -41,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("id, full_name, avatar_url, phone, cpf, producer_status")
+      .select("id, full_name, avatar_url, phone, cpf, producer_status, organizer_slug, organizer_bio, organizer_instagram, organizer_facebook, organizer_website, organizer_logo_url, organizer_banner_url")
       .eq("id", userId)
       .single();
     setProfile(data);

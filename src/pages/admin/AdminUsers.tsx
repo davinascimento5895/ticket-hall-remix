@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { Search } from "lucide-react";
+import { Search, Download } from "lucide-react";
+import { exportToCSV, userCSVColumns } from "@/lib/csv-export";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { getAllUsers } from "@/lib/api-admin";
 import { useState } from "react";
 
@@ -20,9 +22,14 @@ export default function AdminUsers() {
     <div className="space-y-6">
       <h1 className="font-display text-2xl font-bold">Usuários</h1>
 
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Buscar por nome..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Buscar por nome..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+        </div>
+        <Button variant="outline" size="sm" onClick={() => users && exportToCSV(users, userCSVColumns, "usuarios")} disabled={!users?.length}>
+          <Download className="h-4 w-4 mr-1" /> Exportar CSV
+        </Button>
       </div>
 
       <Card>
