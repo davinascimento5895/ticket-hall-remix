@@ -1,10 +1,12 @@
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Search } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowLeft, Search, RotateCcw } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
+import { RefundDialog } from "@/components/RefundDialog";
 import { getEventOrders } from "@/lib/api-producer";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
@@ -13,6 +15,7 @@ export default function ProducerEventOrders() {
   const { id } = useParams();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [refundOrder, setRefundOrder] = useState<any>(null);
 
   const { data: event } = useQuery({
     queryKey: ["producer-event", id],
@@ -59,7 +62,7 @@ export default function ProducerEventOrders() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Buscar por nome ou ID..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-1 flex-wrap">
           {statuses.map((s) => (
             <button
               key={s.value}
@@ -89,6 +92,7 @@ export default function ProducerEventOrders() {
                     <th className="p-3 font-medium">Método</th>
                     <th className="p-3 font-medium">Status</th>
                     <th className="p-3 font-medium">Data</th>
+                    <th className="p-3 font-medium">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -100,6 +104,18 @@ export default function ProducerEventOrders() {
                       <td className="p-3 text-muted-foreground">{order.payment_method || "—"}</td>
                       <td className="p-3"><OrderStatusBadge status={order.status} /></td>
                       <td className="p-3 text-muted-foreground">{new Date(order.created_at).toLocaleDateString("pt-BR")}</td>
+                      <td className="p-3">
+                        {(order.status === "paid" || order.status === "processing") && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => setRefundOrder(order)}
+                          >
+                            <RotateCcw className="h-3.5 w-3.5 mr-1" /> Reembolsar
+                          </Button>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -108,6 +124,12 @@ export default function ProducerEventOrders() {
           )}
         </CardContent>
       </Card>
+
+      <RefundDialog
+        open={!!refundOrder}
+        onOpenChange={(open) => !open && setRefundOrder(null)}
+        order={refundOrder}
+      />
     </div>
   );
 }

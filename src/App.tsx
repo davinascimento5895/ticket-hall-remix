@@ -32,6 +32,7 @@ import AdminProducers from "./pages/admin/AdminProducers";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminFinance from "./pages/admin/AdminFinance";
 import AdminSettings from "./pages/admin/AdminSettings";
+import PublicCheckin from "./pages/PublicCheckin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +53,7 @@ const App = () => (
               <Route path="/carrinho" element={<Carrinho />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/meus-ingressos" element={<MeusIngressos />} />
+              <Route path="/checkin/:accessCode" element={<PublicCheckin />} />
 
               {/* Producer Panel */}
               <Route
