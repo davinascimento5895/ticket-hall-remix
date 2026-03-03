@@ -27,7 +27,7 @@ export function EventCard({ title, date, city, imageUrl, priceFrom, category, cl
   return (
     <div
       className={cn(
-        "group relative rounded-xl overflow-hidden border border-border bg-card transition-all duration-200 hover:-translate-y-1 hover:shadow-card-hover cursor-pointer",
+        "group relative rounded-xl overflow-hidden border border-border bg-card transition-colors duration-150 hover:border-muted-foreground/30 cursor-pointer",
         className
       )}
     >
