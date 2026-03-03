@@ -1,0 +1,72 @@
+import { Calendar, MapPin } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+interface EventCardProps {
+  title: string;
+  date: string;
+  city: string;
+  imageUrl: string;
+  priceFrom: number;
+  category?: string;
+  slug?: string;
+  className?: string;
+}
+
+const categoryLabels: Record<string, string> = {
+  music: "Música",
+  sports: "Esportes",
+  theater: "Teatro",
+  festival: "Festival",
+  corporate: "Corporativo",
+  education: "Educação",
+  other: "Outros",
+};
+
+export function EventCard({ title, date, city, imageUrl, priceFrom, category, className }: EventCardProps) {
+  return (
+    <div
+      className={cn(
+        "group relative rounded-xl overflow-hidden border border-border bg-card transition-all duration-200 hover:-translate-y-1 hover:shadow-card-hover cursor-pointer",
+        className
+      )}
+    >
+      <div className="aspect-video relative overflow-hidden">
+        <img
+          src={imageUrl}
+          alt={title}
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          loading="lazy"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+        {category && (
+          <span className="absolute top-3 left-3 px-2 py-1 text-xs font-medium rounded-full bg-primary/90 text-primary-foreground">
+            {categoryLabels[category] || category}
+          </span>
+        )}
+      </div>
+      <div className="p-4 space-y-2">
+        <h3 className="font-display font-semibold text-foreground line-clamp-2 leading-tight">{title}</h3>
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <Calendar className="h-3.5 w-3.5" />
+          <span>{date}</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <MapPin className="h-3.5 w-3.5" />
+          <span>{city}</span>
+        </div>
+        <div className="flex items-center justify-between pt-2">
+          <span className="text-sm text-muted-foreground">
+            A partir de{" "}
+            <span className="text-foreground font-semibold">
+              {priceFrom === 0 ? "Grátis" : `R$ ${priceFrom.toFixed(2).replace(".", ",")}`}
+            </span>
+          </span>
+          <Button size="sm" variant="default" className="text-xs">
+            Comprar
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
