@@ -6,10 +6,12 @@ import { ptBR } from "date-fns/locale";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { TicketTierCard } from "@/components/TicketTierCard";
+import { SEOHead } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/contexts/CartContext";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { getEventBySlug, getEventTiers } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 
@@ -29,6 +31,14 @@ export default function EventDetail() {
   });
 
   const { addItem } = useCart();
+
+  // Realtime: auto-refresh tiers when ticket availability changes
+  useRealtimeSubscription({
+    table: "tickets",
+    filter: event?.id ? `event_id=eq.${event.id}` : undefined,
+    queryKey: ["event-tiers", event?.id || ""],
+    enabled: !!event?.id,
+  });
 
   const handleAddToCart = (tierId: string, quantity: number) => {
     const tier = tiers?.find((t) => t.id === tierId);
@@ -91,6 +101,34 @@ export default function EventDetail() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={event.title}
+        description={event.description?.slice(0, 155) || `Compre ingressos para ${event.title} no TicketHall`}
+        ogImage={event.cover_image_url || undefined}
+        ogType="event"
+        canonicalUrl={`${window.location.origin}/eventos/${event.slug}`}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Event",
+          name: event.title,
+          startDate: event.start_date,
+          endDate: event.end_date,
+          location: event.is_online
+            ? { "@type": "VirtualLocation", url: event.online_url }
+            : {
+                "@type": "Place",
+                name: event.venue_name,
+                address: {
+                  "@type": "PostalAddress",
+                  addressLocality: event.venue_city,
+                  addressRegion: event.venue_state,
+                },
+              },
+          image: event.cover_image_url,
+          description: event.description,
+          organizer: { "@type": "Organization", name: "TicketHall" },
+        }}
+      />
       <Navbar />
 
       {/* Cover */}
