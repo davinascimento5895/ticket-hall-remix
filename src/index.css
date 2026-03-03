@@ -111,25 +111,10 @@
   }
 
   .bg-hero-gradient {
-    background: 
-      radial-gradient(ellipse 80% 60% at 50% -10%, rgba(79,70,229,0.25) 0%, transparent 70%),
-      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(245,158,11,0.10) 0%, transparent 60%),
-      hsl(var(--background));
-  }
-
-  .bg-cta-gradient {
-    background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
-  }
-
-  .shadow-glow-primary {
-    box-shadow: 0 0 20px rgba(79,70,229,0.4), 0 4px 12px rgba(79,70,229,0.3);
-  }
-
-  .shadow-card-hover {
-    box-shadow: 0 0 0 1px rgba(79,70,229,0.4), 0 8px 32px rgba(79,70,229,0.15);
+    background: hsl(var(--background));
   }
 
   .shadow-modal {
-    box-shadow: 0 16px 48px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px hsl(var(--border));
   }
 }
