@@ -1,8 +1,12 @@
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Download } from "lucide-react";
+import { EmbedSnippetGenerator } from "@/components/EmbedSnippetGenerator";
+import { exportToCSV, ticketCSVColumns } from "@/lib/csv-export";
+import { getEventTickets } from "@/lib/api-producer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { getEventAnalytics } from "@/lib/api-producer";
 import { supabase } from "@/integrations/supabase/client";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
@@ -15,10 +19,16 @@ export default function ProducerEventReports() {
   const { data: event } = useQuery({
     queryKey: ["producer-event", id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("events").select("title").eq("id", id).single();
+      const { data, error } = await supabase.from("events").select("title, slug").eq("id", id).single();
       if (error) throw error;
       return data;
     },
+    enabled: !!id,
+  });
+
+  const { data: tickets } = useQuery({
+    queryKey: ["event-tickets-export", id],
+    queryFn: () => getEventTickets(id!),
     enabled: !!id,
   });
 
@@ -116,6 +126,14 @@ export default function ProducerEventReports() {
               </div>
             </CardContent>
           </Card>
+          {/* Export & Embed */}
+          <div className="flex gap-3 flex-wrap">
+            <Button variant="outline" size="sm" onClick={() => tickets && exportToCSV(tickets, ticketCSVColumns, `ingressos_${id}`)} disabled={!tickets?.length}>
+              <Download className="h-4 w-4 mr-1" /> Exportar Ingressos CSV
+            </Button>
+          </div>
+
+          {event?.slug && <EmbedSnippetGenerator eventSlug={event.slug} />}
         </>
       )}
     </div>

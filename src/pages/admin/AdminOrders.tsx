@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { Search } from "lucide-react";
+import { Search, Download } from "lucide-react";
+import { exportToCSV, orderCSVColumns } from "@/lib/csv-export";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { getAllOrders } from "@/lib/api-admin";
 import { useState } from "react";
@@ -27,7 +29,12 @@ export default function AdminOrders() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-2xl font-bold">Todos os Pedidos</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="font-display text-2xl font-bold">Todos os Pedidos</h1>
+        <Button variant="outline" size="sm" onClick={() => orders && exportToCSV(orders, orderCSVColumns, "pedidos")} disabled={!orders?.length}>
+          <Download className="h-4 w-4 mr-1" /> Exportar CSV
+        </Button>
+      </div>
 
       <div className="flex gap-1 flex-wrap">
         {statuses.map((s) => (
