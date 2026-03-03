@@ -34,6 +34,7 @@ export default function ProducerSettings() {
       <Tabs defaultValue="profile" className="w-full">
         <TabsList>
           <TabsTrigger value="profile">Perfil</TabsTrigger>
+          <TabsTrigger value="organizer">Página Pública</TabsTrigger>
           <TabsTrigger value="bank">Bancário</TabsTrigger>
           <TabsTrigger value="team">Equipe</TabsTrigger>
           <TabsTrigger value="integrations">Integrações</TabsTrigger>
@@ -47,6 +48,25 @@ export default function ProducerSettings() {
               <div><Label>Telefone</Label><Input value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} placeholder="(11) 99999-9999" /></div>
               <div><Label>CPF</Label><Input value={form.cpf} onChange={(e) => setForm((p) => ({ ...p, cpf: e.target.value }))} placeholder="000.000.000-00" /></div>
               <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>Salvar</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="organizer" className="pt-4 max-w-2xl">
+          <Card>
+            <CardHeader><CardTitle className="text-base">Página do Organizador</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">Personalize sua página pública em <strong>/organizador/{profile?.organizer_slug || "seu-slug"}</strong></p>
+              <div><Label>Slug (URL)</Label><Input defaultValue={profile?.organizer_slug || ""} placeholder="minha-produtora" onBlur={(e) => updateProfile(user!.id, { organizer_slug: e.target.value } as any)} /></div>
+              <div><Label>Bio</Label><Input defaultValue={profile?.organizer_bio || ""} placeholder="Sobre sua produtora..." onBlur={(e) => updateProfile(user!.id, { organizer_bio: e.target.value } as any)} /></div>
+              <div><Label>Instagram</Label><Input defaultValue={profile?.organizer_instagram || ""} placeholder="https://instagram.com/..." onBlur={(e) => updateProfile(user!.id, { organizer_instagram: e.target.value } as any)} /></div>
+              <div><Label>Facebook</Label><Input defaultValue={profile?.organizer_facebook || ""} placeholder="https://facebook.com/..." onBlur={(e) => updateProfile(user!.id, { organizer_facebook: e.target.value } as any)} /></div>
+              <div><Label>Website</Label><Input defaultValue={profile?.organizer_website || ""} placeholder="https://..." onBlur={(e) => updateProfile(user!.id, { organizer_website: e.target.value } as any)} /></div>
+              {profile?.organizer_slug && (
+                <a href={`/organizador/${profile.organizer_slug}`} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">
+                  Ver página pública →
+                </a>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
