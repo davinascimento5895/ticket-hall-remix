@@ -822,21 +822,29 @@ export type Database = {
       }
       orders: {
         Row: {
+          asaas_customer_id: string | null
+          asaas_payment_id: string | null
           billing_address: string | null
           billing_cnpj: string | null
           billing_company_name: string | null
           boleto_barcode: string | null
           boleto_url: string | null
           buyer_id: string
+          chargeback_notified_at: string | null
+          chargeback_reason: string | null
+          chargeback_status: string | null
           coupon_id: string | null
           created_at: string | null
           discount_amount: number | null
           event_id: string
           expires_at: string | null
           id: string
+          installment_value: number | null
+          installments: number | null
           invoice_issued_at: string | null
           invoice_number: string | null
           invoice_pdf_url: string | null
+          net_amount: number | null
           payment_external_id: string | null
           payment_gateway: string | null
           payment_gateway_fee: number | null
@@ -845,6 +853,7 @@ export type Database = {
           pix_qr_code: string | null
           pix_qr_code_image: string | null
           platform_fee: number
+          platform_fee_amount: number | null
           refund_reason: string | null
           refunded_amount: number | null
           refunded_at: string | null
@@ -854,21 +863,29 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          asaas_customer_id?: string | null
+          asaas_payment_id?: string | null
           billing_address?: string | null
           billing_cnpj?: string | null
           billing_company_name?: string | null
           boleto_barcode?: string | null
           boleto_url?: string | null
           buyer_id: string
+          chargeback_notified_at?: string | null
+          chargeback_reason?: string | null
+          chargeback_status?: string | null
           coupon_id?: string | null
           created_at?: string | null
           discount_amount?: number | null
           event_id: string
           expires_at?: string | null
           id?: string
+          installment_value?: number | null
+          installments?: number | null
           invoice_issued_at?: string | null
           invoice_number?: string | null
           invoice_pdf_url?: string | null
+          net_amount?: number | null
           payment_external_id?: string | null
           payment_gateway?: string | null
           payment_gateway_fee?: number | null
@@ -877,6 +894,7 @@ export type Database = {
           pix_qr_code?: string | null
           pix_qr_code_image?: string | null
           platform_fee: number
+          platform_fee_amount?: number | null
           refund_reason?: string | null
           refunded_amount?: number | null
           refunded_at?: string | null
@@ -886,21 +904,29 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          asaas_customer_id?: string | null
+          asaas_payment_id?: string | null
           billing_address?: string | null
           billing_cnpj?: string | null
           billing_company_name?: string | null
           boleto_barcode?: string | null
           boleto_url?: string | null
           buyer_id?: string
+          chargeback_notified_at?: string | null
+          chargeback_reason?: string | null
+          chargeback_status?: string | null
           coupon_id?: string | null
           created_at?: string | null
           discount_amount?: number | null
           event_id?: string
           expires_at?: string | null
           id?: string
+          installment_value?: number | null
+          installments?: number | null
           invoice_issued_at?: string | null
           invoice_number?: string | null
           invoice_pdf_url?: string | null
+          net_amount?: number | null
           payment_external_id?: string | null
           payment_gateway?: string | null
           payment_gateway_fee?: number | null
@@ -909,6 +935,7 @@ export type Database = {
           pix_qr_code?: string | null
           pix_qr_code_image?: string | null
           platform_fee?: number
+          platform_fee_amount?: number | null
           refund_reason?: string | null
           refunded_amount?: number | null
           refunded_at?: string | null
@@ -987,6 +1014,9 @@ export type Database = {
       }
       profiles: {
         Row: {
+          asaas_account_id: string | null
+          asaas_account_key: string | null
+          asaas_wallet_id: string | null
           avatar_url: string | null
           cpf: string | null
           created_at: string | null
@@ -1004,6 +1034,9 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          asaas_account_id?: string | null
+          asaas_account_key?: string | null
+          asaas_wallet_id?: string | null
           avatar_url?: string | null
           cpf?: string | null
           created_at?: string | null
@@ -1023,6 +1056,9 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          asaas_account_id?: string | null
+          asaas_account_key?: string | null
+          asaas_wallet_id?: string | null
           avatar_url?: string | null
           cpf?: string | null
           created_at?: string | null
@@ -1040,6 +1076,24 @@ export type Database = {
             | Database["public"]["Enums"]["producer_status"]
             | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      rate_limits: {
+        Row: {
+          count: number
+          expires_at: string
+          key: string
+        }
+        Insert: {
+          count?: number
+          expires_at: string
+          key: string
+        }
+        Update: {
+          count?: number
+          expires_at?: string
+          key?: string
         }
         Relationships: []
       }
@@ -1529,6 +1583,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_coupon: {
+        Args: { p_coupon_id: string; p_order_id: string }
+        Returns: boolean
+      }
+      cleanup_expired_reservations: { Args: never; Returns: undefined }
+      confirm_order_payment: {
+        Args: {
+          p_asaas_payment: string
+          p_net_value: number
+          p_order_id: string
+        }
+        Returns: boolean
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -1538,6 +1605,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      reserve_tickets: {
+        Args: { p_order_id: string; p_quantity: number; p_tier_id: string }
         Returns: boolean
       }
     }
