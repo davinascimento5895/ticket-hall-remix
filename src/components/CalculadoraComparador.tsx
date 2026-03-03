@@ -254,14 +254,17 @@ export function CalculadoraComparador() {
       )}
 
       {/* Results Block - more compact */}
-      {ticketCount > 0 && (
-        <motion.div
-          ref={resultRef}
-          initial={{ opacity: 0, y: 12, filter: "blur(6px)" }}
-          animate={isInView ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 12, filter: "blur(6px)" }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-          className="rounded-xl border border-accent/20 bg-accent/5 p-4 md:p-6 text-center space-y-2"
-        >
+      <motion.div
+        ref={resultRef}
+        initial={{ opacity: 0, y: 12, filter: "blur(6px)", height: 0, marginTop: 0, padding: 0 }}
+        animate={
+          ticketCount > 0 && isInView
+            ? { opacity: 1, y: 0, filter: "blur(0px)", height: "auto", marginTop: 0, padding: undefined }
+            : { opacity: 0, y: 12, filter: "blur(6px)", height: 0, marginTop: 0, padding: 0 }
+        }
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="rounded-xl border border-accent/20 bg-accent/5 p-4 md:p-6 text-center space-y-2 overflow-hidden"
+      >
           <p className="text-sm text-muted-foreground">
             Seus compradores economizam até
           </p>
@@ -284,7 +287,6 @@ export function CalculadoraComparador() {
             Ingresso mais barato = mais gente comprando.
           </p>
         </motion.div>
-      )}
 
       <p className="text-[10px] text-muted-foreground text-center">
         Taxas dos concorrentes são aproximadas, baseadas em pesquisa pública de março de 2025.
