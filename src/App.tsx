@@ -24,6 +24,8 @@ import ProducerEventCheckin from "./pages/producer/ProducerEventCheckin";
 import ProducerEventGuestlist from "./pages/producer/ProducerEventGuestlist";
 import ProducerEventCoupons from "./pages/producer/ProducerEventCoupons";
 import ProducerSettings from "./pages/producer/ProducerSettings";
+import ProducerEventAffiliates from "./pages/producer/ProducerEventAffiliates";
+import ProducerEventMessages from "./pages/producer/ProducerEventMessages";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminEvents from "./pages/admin/AdminEvents";
@@ -73,6 +75,8 @@ const App = () => (
                 <Route path="events/:id/checkin" element={<ProducerEventCheckin />} />
                 <Route path="events/:id/guestlist" element={<ProducerEventGuestlist />} />
                 <Route path="events/:id/coupons" element={<ProducerEventCoupons />} />
+                <Route path="events/:id/affiliates" element={<ProducerEventAffiliates />} />
+                <Route path="events/:id/messages" element={<ProducerEventMessages />} />
                 <Route path="settings" element={<ProducerSettings />} />
               </Route>
 
