@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { DollarSign, TrendingUp, CreditCard, Percent } from "lucide-react";
+import { DollarSign, TrendingUp, CreditCard, Percent, Download } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -32,7 +32,15 @@ export default function AdminFinance() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold">Financeiro</h1>
-        <Button variant="outline" size="sm" disabled>Exportar CSV (em breve)</Button>
+        <Button variant="outline" size="sm" onClick={() => {
+          if (!data?.byMethod) return;
+          const rows = Object.entries(data.byMethod).map(([method, info]: any) => ({ method: methodLabels[method] || method, count: info.count, total: info.total }));
+          import("@/lib/csv-export").then(({ exportToCSV }) => {
+            exportToCSV(rows, [{ key: "method", header: "Método" }, { key: "count", header: "Pedidos" }, { key: "total", header: "Volume", format: (v: number) => v?.toFixed(2) }], "financeiro");
+          });
+        }} disabled={!data?.byMethod}>
+          <Download className="h-4 w-4 mr-1" /> Exportar CSV
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

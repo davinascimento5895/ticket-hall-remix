@@ -1,6 +1,8 @@
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Search, RotateCcw } from "lucide-react";
+import { ArrowLeft, Search, RotateCcw, Download, FileText } from "lucide-react";
+import { exportToCSV, orderCSVColumns } from "@/lib/csv-export";
+import { toast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -56,6 +58,11 @@ export default function ProducerEventOrders() {
         </Link>
         <h1 className="font-display text-2xl font-bold">Pedidos — {event?.title || "..."}</h1>
       </div>
+      <div className="flex justify-end">
+        <Button variant="outline" size="sm" onClick={() => filtered.length && exportToCSV(filtered, orderCSVColumns, `pedidos_${id}`)} disabled={!filtered.length}>
+          <Download className="h-4 w-4 mr-1" /> CSV
+        </Button>
+      </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
@@ -104,7 +111,26 @@ export default function ProducerEventOrders() {
                       <td className="p-3 text-muted-foreground">{order.payment_method || "—"}</td>
                       <td className="p-3"><OrderStatusBadge status={order.status} /></td>
                       <td className="p-3 text-muted-foreground">{new Date(order.created_at).toLocaleDateString("pt-BR")}</td>
-                      <td className="p-3">
+                      <td className="p-3 flex gap-1">
+                        {order.status === "paid" && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={async () => {
+                              try {
+                                const { data, error } = await supabase.functions.invoke("generate-invoice", { body: { order_id: order.id } });
+                                if (error) throw error;
+                                const w = window.open("", "_blank");
+                                if (w) { w.document.write(data.html); w.document.close(); }
+                                toast({ title: `Nota ${data.invoice_number} gerada!` });
+                              } catch (e: any) {
+                                toast({ title: "Erro ao gerar nota", description: e.message, variant: "destructive" });
+                              }
+                            }}
+                          >
+                            <FileText className="h-3.5 w-3.5 mr-1" /> Nota
+                          </Button>
+                        )}
                         {(order.status === "paid" || order.status === "processing") && (
                           <Button
                             size="sm"
