@@ -14,6 +14,254 @@ export type Database = {
   }
   public: {
     Tables: {
+      affiliates: {
+        Row: {
+          clicks: number | null
+          code: string
+          commission_type: string | null
+          commission_value: number | null
+          conversions: number | null
+          created_at: string | null
+          event_id: string
+          id: string
+          is_active: boolean | null
+          name: string
+          producer_id: string
+          revenue_generated: number | null
+        }
+        Insert: {
+          clicks?: number | null
+          code: string
+          commission_type?: string | null
+          commission_value?: number | null
+          conversions?: number | null
+          created_at?: string | null
+          event_id: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          producer_id: string
+          revenue_generated?: number | null
+        }
+        Update: {
+          clicks?: number | null
+          code?: string
+          commission_type?: string | null
+          commission_value?: number | null
+          conversions?: number | null
+          created_at?: string | null
+          event_id?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          producer_id?: string
+          revenue_generated?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliates_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliates_producer_id_fkey"
+            columns: ["producer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bulk_messages: {
+        Row: {
+          body: string
+          created_at: string | null
+          event_id: string
+          id: string
+          producer_id: string
+          recipient_filter: Json | null
+          recipients_count: number | null
+          sent_at: string | null
+          status: string | null
+          subject: string
+        }
+        Insert: {
+          body: string
+          created_at?: string | null
+          event_id: string
+          id?: string
+          producer_id: string
+          recipient_filter?: Json | null
+          recipients_count?: number | null
+          sent_at?: string | null
+          status?: string | null
+          subject: string
+        }
+        Update: {
+          body?: string
+          created_at?: string | null
+          event_id?: string
+          id?: string
+          producer_id?: string
+          recipient_filter?: Json | null
+          recipients_count?: number | null
+          sent_at?: string | null
+          status?: string | null
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bulk_messages_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bulk_messages_producer_id_fkey"
+            columns: ["producer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      capacity_groups: {
+        Row: {
+          capacity: number
+          created_at: string | null
+          event_id: string
+          id: string
+          name: string
+          sold_count: number | null
+        }
+        Insert: {
+          capacity: number
+          created_at?: string | null
+          event_id: string
+          id?: string
+          name: string
+          sold_count?: number | null
+        }
+        Update: {
+          capacity?: number
+          created_at?: string | null
+          event_id?: string
+          id?: string
+          name?: string
+          sold_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "capacity_groups_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checkin_lists: {
+        Row: {
+          access_code: string | null
+          activated_at: string | null
+          allowed_tier_ids: string[] | null
+          created_at: string | null
+          event_id: string
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+        }
+        Insert: {
+          access_code?: string | null
+          activated_at?: string | null
+          allowed_tier_ids?: string[] | null
+          created_at?: string | null
+          event_id: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+        }
+        Update: {
+          access_code?: string | null
+          activated_at?: string | null
+          allowed_tier_ids?: string[] | null
+          created_at?: string | null
+          event_id?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkin_lists_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checkin_scan_logs: {
+        Row: {
+          checkin_list_id: string | null
+          device_id: string | null
+          id: string
+          qr_code_scanned: string
+          result: string
+          scanned_at: string | null
+          scanned_by: string | null
+          ticket_id: string | null
+        }
+        Insert: {
+          checkin_list_id?: string | null
+          device_id?: string | null
+          id?: string
+          qr_code_scanned: string
+          result: string
+          scanned_at?: string | null
+          scanned_by?: string | null
+          ticket_id?: string | null
+        }
+        Update: {
+          checkin_list_id?: string | null
+          device_id?: string | null
+          id?: string
+          qr_code_scanned?: string
+          result?: string
+          scanned_at?: string | null
+          scanned_by?: string | null
+          ticket_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkin_scan_logs_checkin_list_id_fkey"
+            columns: ["checkin_list_id"]
+            isOneToOne: false
+            referencedRelation: "checkin_lists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkin_scan_logs_scanned_by_fkey"
+            columns: ["scanned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkin_scan_logs_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checkin_sessions: {
         Row: {
           created_at: string | null
@@ -55,6 +303,102 @@ export type Database = {
             columns: ["operator_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checkout_answers: {
+        Row: {
+          answer: string | null
+          created_at: string | null
+          id: string
+          order_id: string | null
+          question_id: string
+          ticket_id: string | null
+        }
+        Insert: {
+          answer?: string | null
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          question_id: string
+          ticket_id?: string | null
+        }
+        Update: {
+          answer?: string | null
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          question_id?: string
+          ticket_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkout_answers_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkout_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "checkout_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkout_answers_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checkout_questions: {
+        Row: {
+          applies_to: string | null
+          created_at: string | null
+          event_id: string
+          field_type: string
+          id: string
+          is_required: boolean | null
+          options: Json | null
+          question: string
+          sort_order: number | null
+          tier_ids: string[] | null
+        }
+        Insert: {
+          applies_to?: string | null
+          created_at?: string | null
+          event_id: string
+          field_type: string
+          id?: string
+          is_required?: boolean | null
+          options?: Json | null
+          question: string
+          sort_order?: number | null
+          tier_ids?: string[] | null
+        }
+        Update: {
+          applies_to?: string | null
+          created_at?: string | null
+          event_id?: string
+          field_type?: string
+          id?: string
+          is_required?: boolean | null
+          options?: Json | null
+          question?: string
+          sort_order?: number | null
+          tier_ids?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkout_questions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
         ]
@@ -167,6 +511,59 @@ export type Database = {
             foreignKeyName: "event_analytics_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: true
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_products: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          event_id: string
+          id: string
+          image_url: string | null
+          is_visible: boolean | null
+          max_per_order: number | null
+          name: string
+          price: number
+          quantity_available: number | null
+          quantity_sold: number | null
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          event_id: string
+          id?: string
+          image_url?: string | null
+          is_visible?: boolean | null
+          max_per_order?: number | null
+          name: string
+          price: number
+          quantity_available?: number | null
+          quantity_sold?: number | null
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          event_id?: string
+          id?: string
+          image_url?: string | null
+          is_visible?: boolean | null
+          max_per_order?: number | null
+          name?: string
+          price?: number
+          quantity_available?: number | null
+          quantity_sold?: number | null
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_products_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
             referencedRelation: "events"
             referencedColumns: ["id"]
           },
@@ -381,8 +778,53 @@ export type Database = {
           },
         ]
       }
+      order_products: {
+        Row: {
+          created_at: string | null
+          id: string
+          order_id: string
+          product_id: string
+          quantity: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          order_id: string
+          product_id: string
+          quantity: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          order_id?: string
+          product_id?: string
+          quantity?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_products_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "event_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
+          billing_address: string | null
+          billing_cnpj: string | null
+          billing_company_name: string | null
           boleto_barcode: string | null
           boleto_url: string | null
           buyer_id: string
@@ -392,6 +834,9 @@ export type Database = {
           event_id: string
           expires_at: string | null
           id: string
+          invoice_issued_at: string | null
+          invoice_number: string | null
+          invoice_pdf_url: string | null
           payment_external_id: string | null
           payment_gateway: string | null
           payment_gateway_fee: number | null
@@ -400,12 +845,18 @@ export type Database = {
           pix_qr_code: string | null
           pix_qr_code_image: string | null
           platform_fee: number
+          refund_reason: string | null
+          refunded_amount: number | null
+          refunded_at: string | null
           status: string | null
           subtotal: number
           total: number
           updated_at: string | null
         }
         Insert: {
+          billing_address?: string | null
+          billing_cnpj?: string | null
+          billing_company_name?: string | null
           boleto_barcode?: string | null
           boleto_url?: string | null
           buyer_id: string
@@ -415,6 +866,9 @@ export type Database = {
           event_id: string
           expires_at?: string | null
           id?: string
+          invoice_issued_at?: string | null
+          invoice_number?: string | null
+          invoice_pdf_url?: string | null
           payment_external_id?: string | null
           payment_gateway?: string | null
           payment_gateway_fee?: number | null
@@ -423,12 +877,18 @@ export type Database = {
           pix_qr_code?: string | null
           pix_qr_code_image?: string | null
           platform_fee: number
+          refund_reason?: string | null
+          refunded_amount?: number | null
+          refunded_at?: string | null
           status?: string | null
           subtotal: number
           total: number
           updated_at?: string | null
         }
         Update: {
+          billing_address?: string | null
+          billing_cnpj?: string | null
+          billing_company_name?: string | null
           boleto_barcode?: string | null
           boleto_url?: string | null
           buyer_id?: string
@@ -438,6 +898,9 @@ export type Database = {
           event_id?: string
           expires_at?: string | null
           id?: string
+          invoice_issued_at?: string | null
+          invoice_number?: string | null
+          invoice_pdf_url?: string | null
           payment_external_id?: string | null
           payment_gateway?: string | null
           payment_gateway_fee?: number | null
@@ -446,6 +909,9 @@ export type Database = {
           pix_qr_code?: string | null
           pix_qr_code_image?: string | null
           platform_fee?: number
+          refund_reason?: string | null
+          refunded_amount?: number | null
+          refunded_at?: string | null
           status?: string | null
           subtotal?: number
           total?: number
@@ -468,6 +934,57 @@ export type Database = {
           },
         ]
       }
+      producer_team_members: {
+        Row: {
+          accepted_at: string | null
+          email: string
+          id: string
+          invite_token: string | null
+          invited_at: string | null
+          producer_id: string
+          role: string
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          email: string
+          id?: string
+          invite_token?: string | null
+          invited_at?: string | null
+          producer_id: string
+          role: string
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          email?: string
+          id?: string
+          invite_token?: string | null
+          invited_at?: string | null
+          producer_id?: string
+          role?: string
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "producer_team_members_producer_id_fkey"
+            columns: ["producer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "producer_team_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -475,6 +992,13 @@ export type Database = {
           created_at: string | null
           full_name: string | null
           id: string
+          organizer_banner_url: string | null
+          organizer_bio: string | null
+          organizer_facebook: string | null
+          organizer_instagram: string | null
+          organizer_logo_url: string | null
+          organizer_slug: string | null
+          organizer_website: string | null
           phone: string | null
           producer_status: Database["public"]["Enums"]["producer_status"] | null
           updated_at: string | null
@@ -485,6 +1009,13 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id: string
+          organizer_banner_url?: string | null
+          organizer_bio?: string | null
+          organizer_facebook?: string | null
+          organizer_instagram?: string | null
+          organizer_logo_url?: string | null
+          organizer_slug?: string | null
+          organizer_website?: string | null
           phone?: string | null
           producer_status?:
             | Database["public"]["Enums"]["producer_status"]
@@ -497,6 +1028,13 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id?: string
+          organizer_banner_url?: string | null
+          organizer_bio?: string | null
+          organizer_facebook?: string | null
+          organizer_instagram?: string | null
+          organizer_logo_url?: string | null
+          organizer_slug?: string | null
+          organizer_website?: string | null
           phone?: string | null
           producer_status?:
             | Database["public"]["Enums"]["producer_status"]
@@ -505,13 +1043,117 @@ export type Database = {
         }
         Relationships: []
       }
+      refunds: {
+        Row: {
+          amount: number
+          created_at: string | null
+          gateway_refund_id: string | null
+          id: string
+          initiated_by: string | null
+          order_id: string
+          platform_fee_refunded: number | null
+          reason: string | null
+          status: string | null
+          ticket_ids: string[] | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          gateway_refund_id?: string | null
+          id?: string
+          initiated_by?: string | null
+          order_id: string
+          platform_fee_refunded?: number | null
+          reason?: string | null
+          status?: string | null
+          ticket_ids?: string[] | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          gateway_refund_id?: string | null
+          id?: string
+          initiated_by?: string | null
+          order_id?: string
+          platform_fee_refunded?: number | null
+          reason?: string | null
+          status?: string | null
+          ticket_ids?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refunds_initiated_by_fkey"
+            columns: ["initiated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refunds_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_taxes_fees: {
+        Row: {
+          amount: number
+          created_at: string | null
+          event_id: string
+          fee_type: string
+          id: string
+          is_passed_to_buyer: boolean | null
+          name: string
+          tier_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          event_id: string
+          fee_type: string
+          id?: string
+          is_passed_to_buyer?: boolean | null
+          name: string
+          tier_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          event_id?: string
+          fee_type?: string
+          id?: string
+          is_passed_to_buyer?: boolean | null
+          name?: string
+          tier_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_taxes_fees_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_taxes_fees_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "ticket_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ticket_tiers: {
         Row: {
+          capacity_group_id: string | null
           created_at: string | null
           description: string | null
           event_id: string
           id: string
           includes_items: string[] | null
+          is_hidden_by_default: boolean | null
           is_resellable: boolean | null
           is_transferable: boolean | null
           is_visible: boolean | null
@@ -527,13 +1169,16 @@ export type Database = {
           sale_start_date: string | null
           sort_order: number | null
           tier_type: string | null
+          unlock_code: string | null
         }
         Insert: {
+          capacity_group_id?: string | null
           created_at?: string | null
           description?: string | null
           event_id: string
           id?: string
           includes_items?: string[] | null
+          is_hidden_by_default?: boolean | null
           is_resellable?: boolean | null
           is_transferable?: boolean | null
           is_visible?: boolean | null
@@ -549,13 +1194,16 @@ export type Database = {
           sale_start_date?: string | null
           sort_order?: number | null
           tier_type?: string | null
+          unlock_code?: string | null
         }
         Update: {
+          capacity_group_id?: string | null
           created_at?: string | null
           description?: string | null
           event_id?: string
           id?: string
           includes_items?: string[] | null
+          is_hidden_by_default?: boolean | null
           is_resellable?: boolean | null
           is_transferable?: boolean | null
           is_visible?: boolean | null
@@ -571,8 +1219,16 @@ export type Database = {
           sale_start_date?: string | null
           sort_order?: number | null
           tier_type?: string | null
+          unlock_code?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "ticket_tiers_capacity_group_id_fkey"
+            columns: ["capacity_group_id"]
+            isOneToOne: false
+            referencedRelation: "capacity_groups"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ticket_tiers_event_id_fkey"
             columns: ["event_id"]
@@ -764,6 +1420,104 @@ export type Database = {
           {
             foreignKeyName: "waitlist_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhook_deliveries: {
+        Row: {
+          attempts: number | null
+          created_at: string | null
+          delivered_at: string | null
+          event_type: string
+          id: string
+          next_retry_at: string | null
+          payload: Json
+          response_body: string | null
+          response_status: number | null
+          webhook_id: string
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string | null
+          delivered_at?: string | null
+          event_type: string
+          id?: string
+          next_retry_at?: string | null
+          payload: Json
+          response_body?: string | null
+          response_status?: number | null
+          webhook_id: string
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string | null
+          delivered_at?: string | null
+          event_type?: string
+          id?: string
+          next_retry_at?: string | null
+          payload?: Json
+          response_body?: string | null
+          response_status?: number | null
+          webhook_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_deliveries_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "webhooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhooks: {
+        Row: {
+          created_at: string | null
+          event_id: string | null
+          events: string[]
+          id: string
+          is_active: boolean | null
+          last_triggered_at: string | null
+          producer_id: string
+          secret: string
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_id?: string | null
+          events: string[]
+          id?: string
+          is_active?: boolean | null
+          last_triggered_at?: string | null
+          producer_id: string
+          secret: string
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string | null
+          events?: string[]
+          id?: string
+          is_active?: boolean | null
+          last_triggered_at?: string | null
+          producer_id?: string
+          secret?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhooks_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "webhooks_producer_id_fkey"
+            columns: ["producer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
