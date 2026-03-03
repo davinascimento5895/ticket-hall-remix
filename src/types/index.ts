@@ -21,6 +21,13 @@ export interface Profile {
   cpf: string | null;
   role: UserRole;
   producer_status: ProducerStatus;
+  organizer_slug: string | null;
+  organizer_bio: string | null;
+  organizer_logo_url: string | null;
+  organizer_banner_url: string | null;
+  organizer_website: string | null;
+  organizer_instagram: string | null;
+  organizer_facebook: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -78,6 +85,9 @@ export interface TicketTier {
   max_per_order: number;
   includes_items: string[] | null;
   sort_order: number;
+  capacity_group_id: string | null;
+  is_hidden_by_default: boolean;
+  unlock_code: string | null;
   created_at: string;
 }
 
@@ -101,6 +111,15 @@ export interface Order {
   boleto_barcode: string | null;
   coupon_id: string | null;
   expires_at: string | null;
+  refunded_amount: number;
+  refund_reason: string | null;
+  refunded_at: string | null;
+  invoice_number: string | null;
+  invoice_issued_at: string | null;
+  invoice_pdf_url: string | null;
+  billing_company_name: string | null;
+  billing_cnpj: string | null;
+  billing_address: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -153,6 +172,184 @@ export interface Notification {
   data: Record<string, any> | null;
   is_read: boolean;
   created_at: string;
+}
+
+export type CheckoutFieldType = 'text' | 'textarea' | 'select' | 'checkbox' | 'radio' | 'date';
+export type CheckoutAppliesTo = 'order' | 'attendee';
+export type FeeType = 'percentage' | 'fixed';
+export type CheckinResult = 'success' | 'already_used' | 'invalid' | 'wrong_list' | 'not_found';
+export type WebhookEventType = 'order.paid' | 'order.cancelled' | 'order.refunded' | 'ticket.checked_in' | 'ticket.transferred' | 'event.published' | 'event.cancelled';
+export type BulkMessageStatus = 'draft' | 'sending' | 'sent' | 'failed';
+export type RefundStatus = 'pending' | 'processing' | 'completed' | 'failed';
+export type CommissionType = 'percentage' | 'fixed';
+export type TeamMemberRole = 'admin' | 'manager' | 'checkin_staff' | 'reports_only';
+export type TeamMemberStatus = 'pending' | 'active' | 'revoked';
+
+export interface CheckoutQuestion {
+  id: string;
+  event_id: string;
+  tier_ids: string[] | null;
+  question: string;
+  field_type: CheckoutFieldType;
+  options: any | null;
+  is_required: boolean;
+  applies_to: CheckoutAppliesTo;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface CheckoutAnswer {
+  id: string;
+  order_id: string | null;
+  ticket_id: string | null;
+  question_id: string;
+  answer: string | null;
+  created_at: string;
+}
+
+export interface TicketTaxFee {
+  id: string;
+  event_id: string;
+  tier_id: string | null;
+  name: string;
+  fee_type: FeeType;
+  amount: number;
+  is_passed_to_buyer: boolean;
+  created_at: string;
+}
+
+export interface CapacityGroup {
+  id: string;
+  event_id: string;
+  name: string;
+  capacity: number;
+  sold_count: number;
+  created_at: string;
+}
+
+export interface CheckinList {
+  id: string;
+  event_id: string;
+  name: string;
+  allowed_tier_ids: string[] | null;
+  access_code: string | null;
+  is_active: boolean;
+  activated_at: string | null;
+  expires_at: string | null;
+  created_at: string;
+}
+
+export interface CheckinScanLog {
+  id: string;
+  checkin_list_id: string | null;
+  ticket_id: string | null;
+  qr_code_scanned: string;
+  result: CheckinResult;
+  scanned_by: string | null;
+  device_id: string | null;
+  scanned_at: string;
+}
+
+export interface Webhook {
+  id: string;
+  producer_id: string;
+  event_id: string | null;
+  url: string;
+  secret: string;
+  events: string[];
+  is_active: boolean;
+  last_triggered_at: string | null;
+  created_at: string;
+}
+
+export interface WebhookDelivery {
+  id: string;
+  webhook_id: string;
+  event_type: string;
+  payload: Record<string, any>;
+  response_status: number | null;
+  response_body: string | null;
+  delivered_at: string | null;
+  next_retry_at: string | null;
+  attempts: number;
+  created_at: string;
+}
+
+export interface BulkMessage {
+  id: string;
+  event_id: string;
+  producer_id: string;
+  subject: string;
+  body: string;
+  recipient_filter: Record<string, any> | null;
+  recipients_count: number | null;
+  sent_at: string | null;
+  status: BulkMessageStatus;
+  created_at: string;
+}
+
+export interface Refund {
+  id: string;
+  order_id: string;
+  ticket_ids: string[] | null;
+  amount: number;
+  platform_fee_refunded: number;
+  reason: string | null;
+  initiated_by: string | null;
+  status: RefundStatus;
+  gateway_refund_id: string | null;
+  created_at: string;
+}
+
+export interface Affiliate {
+  id: string;
+  event_id: string;
+  producer_id: string;
+  name: string;
+  code: string;
+  commission_type: CommissionType | null;
+  commission_value: number;
+  clicks: number;
+  conversions: number;
+  revenue_generated: number;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface EventProduct {
+  id: string;
+  event_id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  image_url: string | null;
+  quantity_available: number | null;
+  quantity_sold: number;
+  max_per_order: number;
+  is_visible: boolean;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface OrderProduct {
+  id: string;
+  order_id: string;
+  product_id: string;
+  quantity: number;
+  unit_price: number;
+  created_at: string;
+}
+
+export interface ProducerTeamMember {
+  id: string;
+  producer_id: string;
+  user_id: string | null;
+  email: string;
+  role: TeamMemberRole;
+  status: TeamMemberStatus;
+  invite_token: string | null;
+  invited_at: string;
+  accepted_at: string | null;
 }
 
 export interface CartItem {
