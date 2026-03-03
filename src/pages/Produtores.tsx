@@ -3,10 +3,11 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { FeeCalculator } from "@/components/FeeCalculator";
+import { CalculadoraComparador } from "@/components/CalculadoraComparador";
+import { TabelaComparativo } from "@/components/TabelaComparativo";
 import {
   Layers, QrCode, BarChart3, Tag, Gift, Globe,
-  Check, ArrowRight
+  ArrowRight
 } from "lucide-react";
 
 const fadeUp = {
@@ -21,14 +22,6 @@ const features = [
   { icon: Tag, title: "Cupons de desconto", desc: "Crie cupons com percentual ou valor fixo, limite de uso e validade personalizada." },
   { icon: Gift, title: "Ingressos gratuitos", desc: "Distribua cortesias e convites pelo sistema com controle total." },
   { icon: Globe, title: "Página do evento", desc: "Cada evento ganha uma página otimizada, pronta para compartilhar nas redes." },
-];
-
-const competitors = [
-  { name: "TicketHall", fee: "7%", highlight: true },
-  { name: "Sympla", fee: "~10%", highlight: false },
-  { name: "Eventbrite", fee: "10% + taxa fixa", highlight: false },
-  { name: "Ingresse", fee: "~12,5%", highlight: false },
-  { name: "Bilheteria Digital", fee: "até 15%", highlight: false },
 ];
 
 const steps = [
@@ -68,43 +61,47 @@ export default function Produtores() {
         </div>
       </section>
 
-      {/* FEE COMPARISON */}
+      {/* TABELA COMPARATIVO — Features + Taxas */}
       <section className="py-16 md:py-24 bg-surface">
-        <div className="container max-w-3xl">
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-center mb-10">Compare as taxas</h2>
-          <div className="rounded-xl border border-border overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border bg-elevated">
-                  <th className="text-left text-sm font-medium text-muted-foreground p-4">Plataforma</th>
-                  <th className="text-right text-sm font-medium text-muted-foreground p-4">Taxa por ingresso</th>
-                </tr>
-              </thead>
-              <tbody>
-                {competitors.map((c, i) => (
-                  <tr key={i} className={`border-b border-border last:border-0 ${c.highlight ? "bg-primary/5" : ""}`}>
-                    <td className="p-4">
-                      <span className={`text-sm font-semibold ${c.highlight ? "text-primary" : "text-foreground"}`}>
-                        {c.name}
-                        {c.highlight && <Check className="inline h-4 w-4 ml-2 text-success" />}
-                      </span>
-                    </td>
-                    <td className="p-4 text-right">
-                      <span className={`text-sm font-bold ${c.highlight ? "text-primary" : "text-muted-foreground"}`}>{c.fee}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="text-xs text-muted-foreground text-center mt-4">
-            Valores aproximados baseados em pesquisa pública. Confirme nas plataformas.
-          </p>
+        <div className="container">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12 max-w-2xl mx-auto"
+          >
+            <h2 className="font-display text-2xl md:text-3xl font-bold mb-3">Compare e decida.</h2>
+            <p className="text-muted-foreground">
+              Menor taxa e mais funcionalidades. Veja como o TicketHall se compara ao mercado.
+            </p>
+          </motion.div>
+          <TabelaComparativo />
+        </div>
+      </section>
+
+      {/* CALCULADORA — Preço final do comprador */}
+      <section className="py-16 md:py-24">
+        <div className="container max-w-4xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12 max-w-2xl mx-auto"
+          >
+            <h2 className="font-display text-2xl md:text-3xl font-bold mb-3">
+              Ingresso mais barato para quem compra.{" "}
+              <span className="text-gradient-brand">Mais vendas para quem produz.</span>
+            </h2>
+            <p className="text-muted-foreground">
+              No TicketHall, a taxa de 7% é a menor do mercado. Isso significa que o preço final que seu comprador vê é menor do que em qualquer outra plataforma — e ingresso mais barato converte mais.
+            </p>
+          </motion.div>
+          <CalculadoraComparador />
         </div>
       </section>
 
       {/* FEATURES */}
-      <section className="py-16 md:py-24">
+      <section className="py-16 md:py-24 bg-surface">
         <div className="container">
           <h2 className="font-display text-2xl md:text-3xl font-bold text-center mb-10">Tudo que você precisa para vender ingressos</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
@@ -125,15 +122,6 @@ export default function Produtores() {
               </motion.div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* CALCULATOR */}
-      <section className="py-16 md:py-24 bg-surface">
-        <div className="container max-w-2xl">
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-center mb-4">Calcule sua receita</h2>
-          <p className="text-muted-foreground text-center mb-10">Veja quanto você economiza com a menor taxa do Brasil.</p>
-          <FeeCalculator />
         </div>
       </section>
 
