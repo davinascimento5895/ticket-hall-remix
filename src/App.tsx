@@ -23,6 +23,14 @@ import ProducerEventCheckin from "./pages/producer/ProducerEventCheckin";
 import ProducerEventGuestlist from "./pages/producer/ProducerEventGuestlist";
 import ProducerEventCoupons from "./pages/producer/ProducerEventCoupons";
 import ProducerSettings from "./pages/producer/ProducerSettings";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminEvents from "./pages/admin/AdminEvents";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminProducers from "./pages/admin/AdminProducers";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminFinance from "./pages/admin/AdminFinance";
+import AdminSettings from "./pages/admin/AdminSettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -65,7 +73,24 @@ const App = () => (
                 <Route path="settings" element={<ProducerSettings />} />
               </Route>
 
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              {/* Admin Panel */}
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute allowedRoles={["admin"]}>
+                    <AdminLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="events" element={<AdminEvents />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="producers" element={<AdminProducers />} />
+                <Route path="orders" element={<AdminOrders />} />
+                <Route path="finance" element={<AdminFinance />} />
+                <Route path="settings" element={<AdminSettings />} />
+              </Route>
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </CartProvider>
