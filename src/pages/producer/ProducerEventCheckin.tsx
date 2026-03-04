@@ -1,13 +1,14 @@
 import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Search, QrCode, CheckCircle2, Wifi, WifiOff } from "lucide-react";
+import { ArrowLeft, Search, QrCode, CheckCircle2, Wifi, WifiOff, XCircle, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckinListsManager } from "@/components/producer/CheckinListsManager";
-import { getEventTickets, checkinTicket } from "@/lib/api-producer";
+import { getEventTickets } from "@/lib/api-producer";
+import { validateCheckinByTicketId, type CheckinResult } from "@/lib/api-checkin";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -19,6 +20,7 @@ export default function ProducerEventCheckin() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [isOnline] = useState(navigator.onLine);
+  const [lastResult, setLastResult] = useState<CheckinResult | null>(null);
 
   const { data: event } = useQuery({
     queryKey: ["producer-event", id],
@@ -33,12 +35,16 @@ export default function ProducerEventCheckin() {
   });
 
   const checkinMutation = useMutation({
-    mutationFn: (ticketId: string) => checkinTicket(ticketId, user!.id),
-    onSuccess: () => {
+    mutationFn: (ticketId: string) => validateCheckinByTicketId({ ticketId, scannedBy: user?.id }),
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["event-tickets-checkin", id] });
-      toast({ title: "Check-in realizado!" });
+      setLastResult(result);
+      toast({ title: "Check-in realizado!", description: result.attendeeName });
     },
-    onError: (err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
+    onError: (err: any) => {
+      setLastResult({ success: false, result: "error", message: err.message });
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    },
   });
 
   const totalTickets = tickets?.length || 0;
@@ -49,7 +55,6 @@ export default function ProducerEventCheckin() {
     const s = search.toLowerCase();
     return t.attendee_name?.toLowerCase().includes(s) ||
       t.attendee_email?.toLowerCase().includes(s) ||
-      t.qr_code?.toLowerCase().includes(s) ||
       t.id.includes(s);
   }) || [];
 
@@ -91,13 +96,34 @@ export default function ProducerEventCheckin() {
         </TabsList>
 
         <TabsContent value="scanner" className="space-y-4 pt-2">
+          {/* Last scan result */}
+          {lastResult && (
+            <Card className={lastResult.success ? "border-green-500/50" : "border-destructive/50"}>
+              <CardContent className="py-3 flex items-center gap-3">
+                {lastResult.success ? (
+                  <CheckCircle2 className="h-6 w-6 text-green-500 shrink-0" />
+                ) : lastResult.result === "already_used" ? (
+                  <AlertTriangle className="h-6 w-6 text-yellow-500 shrink-0" />
+                ) : (
+                  <XCircle className="h-6 w-6 text-destructive shrink-0" />
+                )}
+                <div>
+                  <p className="text-sm font-medium text-foreground">{lastResult.message}</p>
+                  {lastResult.attendeeName && (
+                    <p className="text-xs text-muted-foreground">{lastResult.attendeeName} · {lastResult.tierName}</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* QR Scanner placeholder */}
           <Card>
             <CardContent className="pt-6">
               <div className="w-full h-48 bg-muted rounded-lg flex flex-col items-center justify-center gap-2 border border-dashed border-border">
                 <QrCode className="h-10 w-10 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">QR_SCANNER_INTEGRATION_POINT</p>
-                <p className="text-xs text-muted-foreground">Escaneie o QR code do ingresso</p>
+                <p className="text-sm text-muted-foreground">Scanner de câmera (em breve)</p>
+                <p className="text-xs text-muted-foreground">Use a busca manual abaixo</p>
               </div>
             </CardContent>
           </Card>
