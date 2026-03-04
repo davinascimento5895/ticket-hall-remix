@@ -61,16 +61,16 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } =
-      await supabaseUser.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: userData, error: userError } =
+      await supabaseUser.auth.getUser();
+    if (userError || !userData?.user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const userId = claimsData.claims.sub as string;
+    const userId = userData.user.id;
+    const userEmail = userData.user.email;
 
     // Rate limit: max 10 payment attempts per hour per user
     const rlKey = `payment:${userId}`;
@@ -240,7 +240,7 @@ Deno.serve(async (req) => {
     if (!customerId) {
       const customerRes = await asaas("POST", "/customers", {
         name: buyer?.full_name || "Comprador TicketHall",
-        email: claimsData.claims.email,
+        email: userEmail,
         cpfCnpj: buyer?.cpf?.replace(/\D/g, "") || undefined,
         mobilePhone: buyer?.phone?.replace(/\D/g, "") || undefined,
         notificationDisabled: true,
@@ -370,7 +370,7 @@ Deno.serve(async (req) => {
         };
         paymentPayload.creditCardHolderInfo = {
           name: buyer?.full_name || creditCard.holderName,
-          email: claimsData.claims.email,
+          email: userEmail,
           cpfCnpj: buyer?.cpf?.replace(/\D/g, "") || "",
           postalCode: creditCard.postalCode?.replace(/\D/g, "") || "",
           addressNumber: creditCard.addressNumber || "0",

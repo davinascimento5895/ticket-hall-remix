@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
@@ -44,11 +44,12 @@ serve(async (req) => {
         return jsonResponse({ success: true, ...existing, alreadyInQueue: true });
       }
 
-      // Get next position
+      // Get next position (only count waiting/admitted, not expired)
       const { count } = await supabase
         .from("virtual_queue")
         .select("id", { count: "exact", head: true })
-        .eq("event_id", eventId);
+        .eq("event_id", eventId)
+        .in("status", ["waiting", "admitted"]);
 
       const position = (count || 0) + 1;
 
