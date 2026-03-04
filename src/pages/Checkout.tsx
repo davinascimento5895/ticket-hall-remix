@@ -1,37 +1,43 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Check, CreditCard, QrCode, FileText } from "lucide-react";
+import { ArrowLeft, Check } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { CountdownTimer } from "@/components/CountdownTimer";
+import { CheckoutStepData } from "@/components/checkout/CheckoutStepData";
+import { CheckoutStepPayment } from "@/components/checkout/CheckoutStepPayment";
+import { CheckoutStepConfirmation } from "@/components/checkout/CheckoutStepConfirmation";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { getCheckoutQuestions } from "@/lib/api-checkout";
+import { createPayment, CreditCardData } from "@/lib/api-payment";
 import { toast } from "@/hooks/use-toast";
 
 const steps = ["Dados", "Pagamento", "Confirmação"];
 
 export default function Checkout() {
   const [step, setStep] = useState(0);
+  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [paymentCreated, setPaymentCreated] = useState(false);
+  const [awaitingPayment, setAwaitingPayment] = useState(false);
+  const [pixQrCode, setPixQrCode] = useState<string | null>(null);
+  const [pixQrCodeImage, setPixQrCodeImage] = useState<string | null>(null);
+  const [boletoUrl, setBoletoUrl] = useState<string | null>(null);
+  const [boletoBarcode, setBoletoBarcode] = useState<string | null>(null);
+
   const { items, subtotal, platformFee, total, expiresAt, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
 
   const [attendeeData, setAttendeeData] = useState<Record<string, { name: string; email: string; cpf: string }>>({});
-  const [paymentMethod, setPaymentMethod] = useState<string>("pix");
   const [questionAnswers, setQuestionAnswers] = useState<Record<string, string>>({});
 
-  // Get unique event IDs from cart
   const eventIds = [...new Set(items.map((i) => i.eventId))];
 
-  // Fetch checkout questions for all events in cart
   const { data: allQuestions = [] } = useQuery({
     queryKey: ["checkout-questions-all", eventIds],
     queryFn: async () => {
@@ -44,71 +50,145 @@ export default function Checkout() {
   const orderQuestions = allQuestions.filter((q: any) => q.applies_to === "order");
   const attendeeQuestions = allQuestions.filter((q: any) => q.applies_to === "attendee");
 
-  const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
+  // Realtime subscription for payment confirmation
+  useEffect(() => {
+    if (!orderId || !awaitingPayment) return;
 
+    const channel = supabase
+      .channel(`order-${orderId}`)
+      .on("postgres_changes", {
+        event: "UPDATE",
+        schema: "public",
+        table: "orders",
+        filter: `id=eq.${orderId}`,
+      }, (payload) => {
+        const newStatus = (payload.new as any)?.status;
+        if (newStatus === "paid") {
+          toast({ title: "Pagamento confirmado!", description: "Seus ingressos foram gerados com sucesso." });
+          clearCart();
+          setStep(2);
+          setAwaitingPayment(false);
+        } else if (newStatus === "cancelled" || newStatus === "expired") {
+          toast({ title: "Pagamento não aprovado", description: "Tente novamente.", variant: "destructive" });
+          setAwaitingPayment(false);
+          setPaymentCreated(false);
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [orderId, awaitingPayment, clearCart]);
+
+  // Create order when advancing from Step 0 to Step 1
+  const handleCreateOrder = useCallback(async () => {
+    if (!user) {
+      toast({ title: "Faça login", description: "Você precisa estar logado para finalizar a compra.", variant: "destructive" });
+      return;
+    }
+    setIsCreatingOrder(true);
+    try {
+      const eventId = items[0]?.eventId;
+      if (!eventId) throw new Error("No event in cart");
+
+      const { data: order, error: orderErr } = await supabase.from("orders").insert({
+        buyer_id: user.id, event_id: eventId, subtotal, platform_fee: platformFee, total,
+        status: "pending", payment_status: "pending",
+        expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+      }).select().single();
+      if (orderErr) throw orderErr;
+      setOrderId(order.id);
+
+      for (const item of items) {
+        const { data: reserved, error: reserveErr } = await supabase.rpc("reserve_tickets", {
+          p_tier_id: item.tierId, p_quantity: item.quantity, p_order_id: order.id,
+        });
+        if (reserveErr) throw reserveErr;
+        if (!reserved) {
+          await supabase.from("orders").update({ status: "cancelled" }).eq("id", order.id);
+          toast({ title: "Ingressos esgotados", description: `Não há ingressos suficientes para "${item.tierName}".`, variant: "destructive" });
+          setIsCreatingOrder(false);
+          return;
+        }
+      }
+
+      // Save attendee data on tickets
+      const { data: tickets } = await supabase.from("tickets").select("id, tier_id").eq("order_id", order.id).order("created_at");
+      if (tickets) {
+        const tierIdx: Record<string, number> = {};
+        for (const ticket of tickets) {
+          const idx = tierIdx[ticket.tier_id] || 0;
+          tierIdx[ticket.tier_id] = idx + 1;
+          const key = `${ticket.tier_id}-${idx}`;
+          const data = attendeeData[key];
+          if (data) {
+            await supabase.from("tickets").update({
+              attendee_name: data.name, attendee_email: data.email, attendee_cpf: data.cpf || null,
+            }).eq("id", ticket.id);
+          }
+        }
+      }
+
+      // Save checkout answers
+      const answersToSave: { order_id: string; question_id: string; answer: string }[] = [];
+      for (const [key, answer] of Object.entries(questionAnswers)) {
+        if (!answer?.trim()) continue;
+        if (key.startsWith("order-")) {
+          answersToSave.push({ order_id: order.id, question_id: key.replace("order-", ""), answer });
+        }
+      }
+      if (answersToSave.length > 0) {
+        await supabase.from("checkout_answers").insert(answersToSave);
+      }
+
+      setStep(1);
+    } catch (error: any) {
+      console.error("Order creation error:", error);
+      toast({ title: "Erro ao criar pedido", description: error.message || "Tente novamente.", variant: "destructive" });
+    } finally {
+      setIsCreatingOrder(false);
+    }
+  }, [user, items, subtotal, platformFee, total, attendeeData, questionAnswers]);
+
+  // Process payment
+  const handleConfirmPayment = useCallback(async (method: string, cardData?: CreditCardData, installments?: number) => {
+    if (!orderId) return;
+    setIsProcessingPayment(true);
+    try {
+      const result = await createPayment(orderId, method as "pix" | "credit_card" | "boleto", cardData, installments);
+      if (!result.success) {
+        toast({ title: "Erro no pagamento", description: result.error || "Tente novamente.", variant: "destructive" });
+        setIsProcessingPayment(false);
+        return;
+      }
+      setPaymentCreated(true);
+      if (result.immediateConfirmation) {
+        toast({ title: "Pagamento confirmado!", description: "Seus ingressos foram gerados com sucesso." });
+        clearCart();
+        setStep(2);
+      } else {
+        setPixQrCode(result.pixQrCode || null);
+        setPixQrCodeImage(result.pixQrCodeImage || null);
+        setBoletoUrl(result.boletoUrl || null);
+        setBoletoBarcode(result.boletoBarcode || null);
+        setAwaitingPayment(true);
+      }
+      if (result.stub) {
+        toast({ title: "Modo de teste", description: "Gateway de pagamento não configurado. Pagamento simulado." });
+        if (method === "credit_card") { clearCart(); setStep(2); }
+      }
+    } catch (error: any) {
+      console.error("Payment error:", error);
+      toast({ title: "Erro no pagamento", description: error.message || "Tente novamente.", variant: "destructive" });
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  }, [orderId, clearCart]);
+
+  // Redirect if cart empty (after all hooks)
   if (items.length === 0 && step < 2) {
     navigate("/carrinho");
     return null;
   }
-
-  const handleConfirm = () => {
-    // PAYMENT_INTEGRATION_POINT — create order via API, process payment, save checkout answers
-    toast({ title: "Pedido confirmado!", description: "Seus ingressos foram gerados com sucesso." });
-    clearCart();
-    setStep(2);
-  };
-
-  const renderQuestionField = (q: any, key: string) => {
-    const value = questionAnswers[key] || "";
-    const onChange = (val: string) => setQuestionAnswers((prev) => ({ ...prev, [key]: val }));
-
-    switch (q.field_type) {
-      case "textarea":
-        return <Textarea value={value} onChange={(e) => onChange(e.target.value)} placeholder="Sua resposta..." rows={2} maxLength={1000} />;
-      case "select":
-        return (
-          <Select value={value} onValueChange={onChange}>
-            <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-            <SelectContent>
-              {(q.options || []).map((opt: string) => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        );
-      case "radio":
-        return (
-          <div className="space-y-1">
-            {(q.options || []).map((opt: string) => (
-              <label key={opt} className="flex items-center gap-2 text-sm cursor-pointer">
-                <input type="radio" name={key} value={opt} checked={value === opt} onChange={() => onChange(opt)} className="accent-primary" />
-                <span className="text-foreground">{opt}</span>
-              </label>
-            ))}
-          </div>
-        );
-      case "checkbox":
-        return (
-          <div className="space-y-1">
-            {(q.options || []).map((opt: string) => {
-              const selected = value ? value.split(",") : [];
-              const checked = selected.includes(opt);
-              return (
-                <label key={opt} className="flex items-center gap-2 text-sm cursor-pointer">
-                  <Checkbox checked={checked} onCheckedChange={(c) => {
-                    const newSel = c ? [...selected, opt] : selected.filter((s) => s !== opt);
-                    onChange(newSel.join(","));
-                  }} />
-                  <span className="text-foreground">{opt}</span>
-                </label>
-              );
-            })}
-          </div>
-        );
-      case "date":
-        return <Input type="date" value={value} onChange={(e) => onChange(e.target.value)} />;
-      default:
-        return <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder="Sua resposta..." maxLength={500} />;
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -136,134 +216,26 @@ export default function Checkout() {
           )}
         </div>
 
-        {/* Step 0: Attendee Data + Custom Questions */}
         {step === 0 && (
-          <div className="space-y-6">
-            <h2 className="font-display text-xl font-bold">Dados dos participantes</h2>
-
-            {/* Order-level custom questions */}
-            {orderQuestions.length > 0 && (
-              <div className="p-4 rounded-lg border border-border bg-card space-y-3">
-                <p className="text-sm font-medium text-muted-foreground">Informações do pedido</p>
-                {orderQuestions.map((q: any) => (
-                  <div key={q.id}>
-                    <Label className="text-xs">{q.question}{q.is_required ? " *" : ""}</Label>
-                    {renderQuestionField(q, `order-${q.id}`)}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {items.map((item, idx) =>
-              Array.from({ length: item.quantity }).map((_, qi) => {
-                const key = `${item.tierId}-${qi}`;
-                const data = attendeeData[key] || { name: "", email: "", cpf: "" };
-                return (
-                  <div key={key} className="p-4 rounded-lg border border-border bg-card space-y-3">
-                    <p className="text-sm font-medium text-muted-foreground">
-                      {item.eventTitle} — {item.tierName} (Ingresso {qi + 1})
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <Label className="text-xs">Nome completo</Label>
-                        <Input value={data.name} onChange={(e) => setAttendeeData((p) => ({ ...p, [key]: { ...data, name: e.target.value } }))} placeholder="Nome do participante" />
-                      </div>
-                      <div>
-                        <Label className="text-xs">E-mail</Label>
-                        <Input type="email" value={data.email} onChange={(e) => setAttendeeData((p) => ({ ...p, [key]: { ...data, email: e.target.value } }))} placeholder="email@exemplo.com" />
-                      </div>
-                      <div>
-                        <Label className="text-xs">CPF (opcional)</Label>
-                        <Input value={data.cpf} onChange={(e) => setAttendeeData((p) => ({ ...p, [key]: { ...data, cpf: e.target.value } }))} placeholder="000.000.000-00" />
-                      </div>
-                    </div>
-
-                    {/* Attendee-level custom questions */}
-                    {attendeeQuestions.length > 0 && (
-                      <div className="space-y-3 pt-2 border-t border-border">
-                        {attendeeQuestions.map((q: any) => (
-                          <div key={q.id}>
-                            <Label className="text-xs">{q.question}{q.is_required ? " *" : ""}</Label>
-                            {renderQuestionField(q, `attendee-${key}-${q.id}`)}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })
-            )}
-            <Button className="w-full" onClick={() => setStep(1)}>Continuar para pagamento</Button>
-          </div>
+          <CheckoutStepData
+            items={items} orderQuestions={orderQuestions} attendeeQuestions={attendeeQuestions}
+            attendeeData={attendeeData} setAttendeeData={setAttendeeData}
+            questionAnswers={questionAnswers} setQuestionAnswers={setQuestionAnswers}
+            onNext={handleCreateOrder} isLoading={isCreatingOrder}
+          />
         )}
 
-        {/* Step 1: Payment */}
         {step === 1 && (
-          <div className="space-y-6">
-            <h2 className="font-display text-xl font-bold">Pagamento</h2>
-
-            <div className="space-y-2">
-              {[
-                { id: "pix", label: "PIX", icon: QrCode, desc: "Pagamento instantâneo" },
-                { id: "credit_card", label: "Cartão de Crédito", icon: CreditCard, desc: "Até 12x sem juros" },
-                { id: "boleto", label: "Boleto Bancário", icon: FileText, desc: "Compensação em até 3 dias úteis" },
-              ].map((m) => (
-                <button key={m.id} onClick={() => setPaymentMethod(m.id)}
-                  className={`w-full flex items-center gap-3 p-4 rounded-lg border transition-colors ${paymentMethod === m.id ? "border-primary bg-primary/5" : "border-border bg-card hover:border-muted-foreground/30"}`}>
-                  <m.icon className="h-5 w-5 text-muted-foreground" />
-                  <div className="text-left">
-                    <p className="text-sm font-medium text-foreground">{m.label}</p>
-                    <p className="text-xs text-muted-foreground">{m.desc}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            {paymentMethod === "pix" && (
-              <div className="p-6 rounded-lg border border-border bg-card text-center space-y-3">
-                <div className="w-40 h-40 mx-auto bg-muted rounded-lg flex items-center justify-center text-sm text-muted-foreground border border-dashed border-border">QR Code PIX</div>
-                <p className="text-xs text-muted-foreground">Escaneie o QR Code ou copie o código PIX</p>
-              </div>
-            )}
-
-            {paymentMethod === "credit_card" && (
-              <div className="p-4 rounded-lg border border-border bg-card space-y-3">
-                <div><Label className="text-xs">Número do cartão</Label><Input placeholder="0000 0000 0000 0000" /></div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div><Label className="text-xs">Validade</Label><Input placeholder="MM/AA" /></div>
-                  <div><Label className="text-xs">CVV</Label><Input placeholder="000" /></div>
-                </div>
-                <div><Label className="text-xs">Nome no cartão</Label><Input placeholder="Como no cartão" /></div>
-              </div>
-            )}
-
-            <div className="p-4 rounded-lg border border-border bg-card space-y-2 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{fmt(subtotal)}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Taxa (7%)</span><span>{fmt(platformFee)}</span></div>
-              <div className="flex justify-between font-semibold border-t border-border pt-2"><span>Total</span><span>{fmt(total)}</span></div>
-            </div>
-
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setStep(0)} className="flex-1">Voltar</Button>
-              <Button onClick={handleConfirm} className="flex-1">Confirmar pagamento</Button>
-            </div>
-          </div>
+          <CheckoutStepPayment
+            subtotal={subtotal} platformFee={platformFee} total={total}
+            onBack={() => setStep(0)} onConfirm={handleConfirmPayment} isProcessing={isProcessingPayment}
+            pixQrCode={pixQrCode} pixQrCodeImage={pixQrCodeImage}
+            boletoUrl={boletoUrl} boletoBarcode={boletoBarcode}
+            paymentCreated={paymentCreated} awaitingPayment={awaitingPayment}
+          />
         )}
 
-        {/* Step 2: Confirmation */}
-        {step === 2 && (
-          <div className="text-center space-y-6 py-8">
-            <div className="w-16 h-16 rounded-full bg-success/15 flex items-center justify-center mx-auto">
-              <Check className="h-8 w-8 text-success" />
-            </div>
-            <h2 className="font-display text-2xl font-bold">Pedido confirmado!</h2>
-            <p className="text-muted-foreground max-w-md mx-auto">Seus ingressos foram gerados com sucesso. Você pode acessá-los na seção "Meus Ingressos".</p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button asChild><Link to="/meus-ingressos">Ver meus ingressos</Link></Button>
-              <Button variant="outline" asChild><Link to="/eventos">Explorar mais eventos</Link></Button>
-            </div>
-          </div>
-        )}
+        {step === 2 && <CheckoutStepConfirmation />}
       </div>
       <Footer />
     </div>
