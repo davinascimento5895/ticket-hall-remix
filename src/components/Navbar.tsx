@@ -38,6 +38,7 @@ export function Navbar() {
   const links = [
     { label: "Eventos", href: "/eventos" },
     { label: "Produtores", href: "/produtores" },
+    { label: "Blog", href: "/blog" },
   ];
 
   const openLogin = () => { setAuthTab("login"); setAuthOpen(true); };
