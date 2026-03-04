@@ -6,10 +6,14 @@ import { EventCard } from "@/components/EventCard";
 import { Spotlight } from "@/components/core/spotlight";
 import { TextEffect } from "@/components/core/text-effect";
 import { TextLoop } from "@/components/core/text-loop";
+import { TextRoll } from "@/components/core/text-roll";
+import { ScrollProgress } from "@/components/core/scroll-progress";
+import { AnimatedBackground } from "@/components/core/animated-background";
+import { motion } from "framer-motion";
 import {
   CreditCard, Smartphone, Zap,
   Music, Trophy, Theater, PartyPopper, Building2, GraduationCap,
-  ArrowRight
+  ArrowRight, ChevronRight
 } from "lucide-react";
 import {
   Accordion,
@@ -28,12 +32,12 @@ const featuredEvents = [
 ];
 
 const categories = [
-  { label: "Música", icon: Music },
-  { label: "Esportes", icon: Trophy },
-  { label: "Teatro", icon: Theater },
-  { label: "Festas", icon: PartyPopper },
-  { label: "Corporativo", icon: Building2 },
-  { label: "Educação", icon: GraduationCap },
+  { id: "music", label: "Música", icon: Music },
+  { id: "sports", label: "Esportes", icon: Trophy },
+  { id: "theater", label: "Teatro", icon: Theater },
+  { id: "festival", label: "Festas", icon: PartyPopper },
+  { id: "corporate", label: "Corporativo", icon: Building2 },
+  { id: "education", label: "Educação", icon: GraduationCap },
 ];
 
 const testimonials = [
@@ -53,6 +57,7 @@ const faqItems = [
 export default function Index() {
   return (
     <div className="min-h-screen bg-background">
+      <ScrollProgress />
       <Navbar />
 
       {/* ===== HERO ===== */}
@@ -60,15 +65,20 @@ export default function Index() {
         <Spotlight size={500} className="z-0" />
         <div className="container relative z-10 text-center px-4 pt-24 pb-16">
           <div className="space-y-6 max-w-3xl mx-auto">
-            <TextEffect
-              per="word"
-              preset="fade-in-blur"
-              speedReveal={1.1}
-              as="h1"
-              className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] text-foreground"
-            >
-              Seus eventos, do jeito certo.
-            </TextEffect>
+            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] text-foreground">
+              <TextEffect per="word" preset="fade-in-blur" speedReveal={1.1} as="span">
+                Seus eventos, do
+              </TextEffect>
+              {" "}
+              <TextRoll
+                className="inline-block text-primary"
+                duration={0.6}
+                getEnterDelay={(i) => i * 0.08 + 0.5}
+                getExitDelay={(i) => i * 0.08 + 0.8}
+              >
+                jeito certo.
+              </TextRoll>
+            </h1>
 
             <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto">
               A plataforma de ingressos com a menor taxa do Brasil — apenas{" "}
@@ -105,10 +115,17 @@ export default function Index() {
               { icon: CreditCard, text: "PIX, cartão e boleto" },
               { icon: Smartphone, text: "App iOS & Android em breve" },
             ].map((item, i) => (
-              <div key={i} className="flex flex-col items-center gap-2">
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="flex flex-col items-center gap-2"
+              >
                 <item.icon className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">{item.text}</span>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -128,7 +145,15 @@ export default function Index() {
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
             {featuredEvents.map((event, i) => (
-              <EventCard key={i} {...event} />
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08 }}
+              >
+                <EventCard {...event} />
+              </motion.div>
             ))}
           </div>
           <div className="mt-8 text-center md:hidden">
@@ -149,11 +174,18 @@ export default function Index() {
               { step: "02", title: "Escolha seus ingressos", desc: "Selecione o lote, quantidade e pague com PIX, cartão ou boleto de forma segura." },
               { step: "03", title: "Receba no celular", desc: "Seu ingresso com QR Code chega instantaneamente no seu e-mail e na plataforma." },
             ].map((item, i) => (
-              <div key={i} className="text-center space-y-3">
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.15 }}
+                className="text-center space-y-3"
+              >
                 <span className="text-xs font-mono text-muted-foreground tracking-widest">{item.step}</span>
                 <h3 className="font-display font-semibold text-lg">{item.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -162,9 +194,14 @@ export default function Index() {
       {/* ===== FOR PRODUCERS CTA ===== */}
       <section className="py-16 md:py-20">
         <div className="container text-center max-w-2xl mx-auto space-y-5">
-          <h2 className="font-display text-3xl md:text-4xl font-bold">
+          <motion.h2
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="font-display text-3xl md:text-4xl font-bold"
+          >
             Você produz. Nós cuidamos dos ingressos.
-          </h2>
+          </motion.h2>
           <p className="text-muted-foreground text-lg">
             Crie seu evento em minutos e venda para todo o Brasil. Taxa de apenas 7% — e nada mais.
           </p>
@@ -174,20 +211,27 @@ export default function Index() {
         </div>
       </section>
 
-      {/* ===== CATEGORIES ===== */}
+      {/* ===== CATEGORIES with AnimatedBackground ===== */}
       <section className="py-16 md:py-20 border-y border-border">
         <div className="container">
           <h2 className="font-display text-2xl md:text-3xl font-bold text-center mb-10">Explore por categoria</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {categories.map((cat, i) => (
-              <div
-                key={i}
-                className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-6 cursor-pointer hover:border-muted-foreground/40 transition-colors duration-150"
-              >
-                <cat.icon className="h-6 w-6 text-muted-foreground" />
-                <span className="text-sm font-medium">{cat.label}</span>
-              </div>
-            ))}
+            <AnimatedBackground
+              className="rounded-xl bg-primary/10"
+              transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+              enableHover
+            >
+              {categories.map((cat) => (
+                <div
+                  key={cat.id}
+                  data-id={cat.id}
+                  className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-6 cursor-pointer transition-colors duration-150"
+                >
+                  <cat.icon className="h-6 w-6 text-muted-foreground" />
+                  <span className="text-sm font-medium">{cat.label}</span>
+                </div>
+              ))}
+            </AnimatedBackground>
           </div>
         </div>
       </section>
@@ -198,27 +242,39 @@ export default function Index() {
           <h2 className="font-display text-2xl md:text-3xl font-bold text-center mb-10">O que dizem nossos usuários</h2>
           <div className="grid md:grid-cols-3 gap-5 max-w-4xl mx-auto">
             {testimonials.map((t, i) => (
-              <div key={i} className="rounded-xl border border-border bg-card p-6 space-y-4">
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="rounded-xl border border-border bg-card p-6 space-y-4 hover:border-primary/30 transition-colors duration-200"
+              >
                 <p className="text-sm text-muted-foreground leading-relaxed">"{t.text}"</p>
                 <div>
                   <p className="text-sm font-semibold">{t.name}</p>
                   <p className="text-xs text-muted-foreground">{t.role}</p>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ===== FAQ ===== */}
+      {/* ===== FAQ with chevron ===== */}
       <section className="py-16 md:py-20 border-t border-border">
         <div className="container max-w-2xl">
           <h2 className="font-display text-2xl md:text-3xl font-bold text-center mb-10">Perguntas frequentes</h2>
           <Accordion type="single" collapsible className="space-y-2">
             {faqItems.map((item, i) => (
               <AccordionItem key={i} value={`faq-${i}`} className="border border-border rounded-lg px-4 bg-card">
-                <AccordionTrigger className="text-sm font-medium hover:no-underline py-4">{item.q}</AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground pb-4">{item.a}</AccordionContent>
+                <AccordionTrigger className="text-sm font-medium hover:no-underline py-4 [&[data-state=open]>svg]:rotate-90">
+                  <div className="flex items-center gap-2">
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
+                    <span>{item.q}</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground pb-4 pl-6">{item.a}</AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
