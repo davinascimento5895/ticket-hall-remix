@@ -5,9 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { CalculadoraComparador } from "@/components/CalculadoraComparador";
 import { TabelaComparativo } from "@/components/TabelaComparativo";
-import { ScrollProgress } from "@/components/core/scroll-progress";
 import { TextRoll } from "@/components/core/text-roll";
-import { AnimatedBackground } from "@/components/core/animated-background";
 import {
   Layers, QrCode, BarChart3, Tag, Gift, Globe,
   ArrowRight
@@ -37,7 +35,7 @@ const steps = [
 export default function Produtores() {
   return (
     <div className="min-h-screen bg-background">
-      <ScrollProgress />
+      
       <Navbar />
 
       {/* HERO */}
@@ -116,25 +114,22 @@ export default function Produtores() {
         <div className="container">
           <h2 className="font-display text-2xl md:text-3xl font-bold text-center mb-10">Tudo que você precisa para vender ingressos</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            <AnimatedBackground
-              className="rounded-xl bg-primary/10"
-              transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
-              enableHover
-            >
-              {features.map((f) => (
-                <div
-                  key={f.id}
-                  data-id={f.id}
-                  className="rounded-xl border border-border bg-card p-6 space-y-3 transition-all duration-200 cursor-pointer"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                    <f.icon className="h-5 w-5 text-primary" />
-                  </div>
-                  <h3 className="font-display font-semibold">{f.title}</h3>
-                  <p className="text-sm text-muted-foreground">{f.desc}</p>
+            {features.map((f, i) => (
+              <motion.div
+                key={f.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08 }}
+                className="rounded-xl border border-border bg-card p-6 space-y-3 hover:border-primary/30 hover:shadow-card-hover transition-all duration-200"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                  <f.icon className="h-5 w-5 text-primary" />
                 </div>
-              ))}
-            </AnimatedBackground>
+                <h3 className="font-display font-semibold">{f.title}</h3>
+                <p className="text-sm text-muted-foreground">{f.desc}</p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
