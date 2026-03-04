@@ -46,7 +46,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
     if (error) {
       toast({ title: "Erro ao entrar", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Bem-vindo de volta! 🎉" });
+      toast({ title: "Bem-vindo de volta!" });
       onOpenChange(false);
     }
   };
@@ -74,7 +74,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
     if (error) {
       toast({ title: "Erro ao criar conta", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Conta criada com sucesso! 🎉", description: "Verifique seu e-mail para confirmar." });
+      toast({ title: "Conta criada com sucesso!" });
       onOpenChange(false);
     }
   };
