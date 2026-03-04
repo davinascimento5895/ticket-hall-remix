@@ -17,7 +17,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { AnimatedBackground } from "@/components/core/animated-background";
 
 const featuredEvents = [
   { title: "Lollapalooza Brasil 2025", date: "28 Mar 2025", city: "São Paulo, SP", imageUrl: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=600&q=80", priceFrom: 450, category: "music" },
@@ -180,22 +179,15 @@ export default function Index() {
         <div className="container">
           <h2 className="font-display text-2xl md:text-3xl font-bold text-center mb-10">Explore por categoria</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            <AnimatedBackground
-              className="rounded-xl bg-primary/10"
-              transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
-              enableHover
-            >
-              {categories.map((cat, i) => (
-                <div
-                  key={i}
-                  data-id={cat.label}
-                  className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-6 cursor-pointer transition-colors duration-150"
-                >
-                  <cat.icon className="h-6 w-6 text-muted-foreground" />
-                  <span className="text-sm font-medium">{cat.label}</span>
-                </div>
-              ))}
-            </AnimatedBackground>
+            {categories.map((cat, i) => (
+              <div
+                key={i}
+                className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-6 cursor-pointer hover:border-muted-foreground/40 transition-colors duration-150"
+              >
+                <cat.icon className="h-6 w-6 text-muted-foreground" />
+                <span className="text-sm font-medium">{cat.label}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
