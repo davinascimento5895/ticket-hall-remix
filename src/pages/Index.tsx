@@ -7,8 +7,6 @@ import { Spotlight } from "@/components/core/spotlight";
 import { TextEffect } from "@/components/core/text-effect";
 import { TextLoop } from "@/components/core/text-loop";
 import { TextRoll } from "@/components/core/text-roll";
-import { ScrollProgress } from "@/components/core/scroll-progress";
-import { AnimatedBackground } from "@/components/core/animated-background";
 import { motion } from "framer-motion";
 import {
   CreditCard, Smartphone, Zap,
@@ -57,7 +55,7 @@ const faqItems = [
 export default function Index() {
   return (
     <div className="min-h-screen bg-background">
-      <ScrollProgress />
+      
       <Navbar />
 
       {/* ===== HERO ===== */}
@@ -216,22 +214,15 @@ export default function Index() {
         <div className="container">
           <h2 className="font-display text-2xl md:text-3xl font-bold text-center mb-10">Explore por categoria</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            <AnimatedBackground
-              className="rounded-xl bg-primary/10"
-              transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
-              enableHover
-            >
-              {categories.map((cat) => (
-                <div
-                  key={cat.id}
-                  data-id={cat.id}
-                  className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-6 cursor-pointer transition-colors duration-150"
-                >
-                  <cat.icon className="h-6 w-6 text-muted-foreground" />
-                  <span className="text-sm font-medium">{cat.label}</span>
-                </div>
-              ))}
-            </AnimatedBackground>
+            {categories.map((cat) => (
+              <div
+                key={cat.id}
+                className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-6 cursor-pointer hover:border-muted-foreground/40 transition-colors duration-150"
+              >
+                <cat.icon className="h-6 w-6 text-muted-foreground" />
+                <span className="text-sm font-medium">{cat.label}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
