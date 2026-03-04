@@ -64,8 +64,27 @@ export default function MeusCertificados() {
                       {cert.certificate_code}
                     </p>
                   </div>
-                  <Button variant="outline" size="sm" className="gap-1.5 shrink-0">
-                    <Download className="h-4 w-4" /> PDF
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 shrink-0"
+                    onClick={() => {
+                      if (cert.download_url) {
+                        window.open(cert.download_url, "_blank");
+                      } else {
+                        // Generate a simple text-based certificate download
+                        const text = `CERTIFICADO DE PARTICIPAÇÃO\n\nCertificamos que ${cert.attendee_name} participou do evento "${cert.events?.title}".\n\nData: ${new Date(cert.events?.start_date).toLocaleDateString("pt-BR")}\nCódigo: ${cert.certificate_code}\n\nEmitido em: ${new Date(cert.issued_at).toLocaleDateString("pt-BR")}`;
+                        const blob = new Blob([text], { type: "text/plain" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = `certificado-${cert.certificate_code}.txt`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      }
+                    }}
+                  >
+                    <Download className="h-4 w-4" /> Baixar
                   </Button>
                 </CardContent>
               </Card>

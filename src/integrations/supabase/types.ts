@@ -1791,6 +1791,10 @@ export type Database = {
         Returns: boolean
       }
       cleanup_expired_reservations: { Args: never; Returns: undefined }
+      confirm_checkin_analytics: {
+        Args: { p_event_id: string }
+        Returns: undefined
+      }
       confirm_order_payment: {
         Args: {
           p_asaas_payment: string
