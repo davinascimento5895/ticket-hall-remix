@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.sync-offline-checkins]
 verify_jwt = false
+
+[functions.validate-checkin]
+verify_jwt = false
