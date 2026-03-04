@@ -37,6 +37,7 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import PublicCheckin from "./pages/PublicCheckin";
 import OrganizerProfile from "./pages/OrganizerProfile";
 import EmbedWidget from "./pages/EmbedWidget";
+import Privacidade from "./pages/Privacidade";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -60,6 +61,7 @@ const App = () => (
               <Route path="/checkin/:accessCode" element={<PublicCheckin />} />
               <Route path="/organizador/:slug" element={<OrganizerProfile />} />
               <Route path="/embed" element={<EmbedWidget />} />
+              <Route path="/minha-conta/privacidade" element={<Privacidade />} />
 
               {/* Producer Panel */}
               <Route
