@@ -5,6 +5,9 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { CalculadoraComparador } from "@/components/CalculadoraComparador";
 import { TabelaComparativo } from "@/components/TabelaComparativo";
+import { ScrollProgress } from "@/components/core/scroll-progress";
+import { TextRoll } from "@/components/core/text-roll";
+import { AnimatedBackground } from "@/components/core/animated-background";
 import {
   Layers, QrCode, BarChart3, Tag, Gift, Globe,
   ArrowRight
@@ -16,12 +19,12 @@ const fadeUp = {
 };
 
 const features = [
-  { icon: Layers, title: "Lotes e combos", desc: "Crie diferentes lotes com preços e quantidades independentes. Monte combos com itens extras." },
-  { icon: QrCode, title: "QR Code + Check-in", desc: "Cada ingresso tem um QR Code único. Faça check-in em segundos, mesmo offline." },
-  { icon: BarChart3, title: "Relatórios em tempo real", desc: "Acompanhe vendas, receita e check-ins ao vivo no painel do produtor." },
-  { icon: Tag, title: "Cupons de desconto", desc: "Crie cupons com percentual ou valor fixo, limite de uso e validade personalizada." },
-  { icon: Gift, title: "Ingressos gratuitos", desc: "Distribua cortesias e convites pelo sistema com controle total." },
-  { icon: Globe, title: "Página do evento", desc: "Cada evento ganha uma página otimizada, pronta para compartilhar nas redes." },
+  { id: "lotes", icon: Layers, title: "Lotes e combos", desc: "Crie diferentes lotes com preços e quantidades independentes. Monte combos com itens extras." },
+  { id: "qr", icon: QrCode, title: "QR Code + Check-in", desc: "Cada ingresso tem um QR Code único. Faça check-in em segundos, mesmo offline." },
+  { id: "reports", icon: BarChart3, title: "Relatórios em tempo real", desc: "Acompanhe vendas, receita e check-ins ao vivo no painel do produtor." },
+  { id: "coupons", icon: Tag, title: "Cupons de desconto", desc: "Crie cupons com percentual ou valor fixo, limite de uso e validade personalizada." },
+  { id: "free", icon: Gift, title: "Ingressos gratuitos", desc: "Distribua cortesias e convites pelo sistema com controle total." },
+  { id: "page", icon: Globe, title: "Página do evento", desc: "Cada evento ganha uma página otimizada, pronta para compartilhar nas redes." },
 ];
 
 const steps = [
@@ -34,6 +37,7 @@ const steps = [
 export default function Produtores() {
   return (
     <div className="min-h-screen bg-background">
+      <ScrollProgress />
       <Navbar />
 
       {/* HERO */}
@@ -46,7 +50,14 @@ export default function Produtores() {
           <div className="max-w-2xl space-y-6">
             <motion.h1 initial="hidden" animate="visible" custom={0} variants={fadeUp} className="font-display text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.1]">
               A menor taxa do Brasil para{" "}
-              <span className="text-gradient-brand">produtores de eventos.</span>
+              <TextRoll
+                className="inline-block"
+                duration={0.6}
+                getEnterDelay={(i) => i * 0.08 + 0.3}
+                getExitDelay={(i) => i * 0.08 + 0.6}
+              >
+                produtores de eventos.
+              </TextRoll>
             </motion.h1>
             <motion.p initial="hidden" animate="visible" custom={1} variants={fadeUp} className="text-lg text-muted-foreground">
               Enquanto outros cobram 10% a 15%, nós cobramos apenas{" "}
@@ -61,7 +72,7 @@ export default function Produtores() {
         </div>
       </section>
 
-      {/* TABELA COMPARATIVO — Features + Taxas */}
+      {/* TABELA COMPARATIVO */}
       <section className="py-16 md:py-24 bg-surface">
         <div className="container">
           <motion.div
@@ -79,7 +90,7 @@ export default function Produtores() {
         </div>
       </section>
 
-      {/* CALCULADORA — Preço final do comprador */}
+      {/* CALCULADORA */}
       <section className="py-16 md:py-24">
         <div className="container max-w-4xl">
           <motion.div
@@ -100,27 +111,30 @@ export default function Produtores() {
         </div>
       </section>
 
-      {/* FEATURES */}
+      {/* FEATURES with AnimatedBackground */}
       <section className="py-16 md:py-24 bg-surface">
         <div className="container">
           <h2 className="font-display text-2xl md:text-3xl font-bold text-center mb-10">Tudo que você precisa para vender ingressos</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {features.map((f, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
-                className="rounded-xl border border-border bg-card p-6 space-y-3 hover:border-primary/30 hover:shadow-card-hover transition-all duration-200"
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                  <f.icon className="h-5 w-5 text-primary" />
+            <AnimatedBackground
+              className="rounded-xl bg-primary/10"
+              transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+              enableHover
+            >
+              {features.map((f) => (
+                <div
+                  key={f.id}
+                  data-id={f.id}
+                  className="rounded-xl border border-border bg-card p-6 space-y-3 transition-all duration-200 cursor-pointer"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                    <f.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <h3 className="font-display font-semibold">{f.title}</h3>
+                  <p className="text-sm text-muted-foreground">{f.desc}</p>
                 </div>
-                <h3 className="font-display font-semibold">{f.title}</h3>
-                <p className="text-sm text-muted-foreground">{f.desc}</p>
-              </motion.div>
-            ))}
+              ))}
+            </AnimatedBackground>
           </div>
         </div>
       </section>
