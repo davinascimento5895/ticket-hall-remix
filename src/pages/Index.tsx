@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -50,6 +51,25 @@ const faqItems = [
 ];
 
 export default function Index() {
+  const { user, role, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 rounded-full bg-primary/20 animate-pulse" />
+      </div>
+    );
+  }
+
+  if (user) {
+    const redirectMap: Record<string, string> = {
+      admin: "/admin/dashboard",
+      producer: "/producer/dashboard",
+      buyer: "/meus-ingressos",
+    };
+    return <Navigate to={redirectMap[role || "buyer"] || "/meus-ingressos"} replace />;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       
