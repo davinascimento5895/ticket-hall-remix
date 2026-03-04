@@ -5,7 +5,6 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { CalculadoraComparador } from "@/components/CalculadoraComparador";
 import { TabelaComparativo } from "@/components/TabelaComparativo";
-import { TextRoll } from "@/components/core/text-roll";
 import {
   Layers, QrCode, BarChart3, Tag, Gift, Globe,
   ArrowRight
@@ -48,14 +47,7 @@ export default function Produtores() {
           <div className="max-w-2xl space-y-6">
             <motion.h1 initial="hidden" animate="visible" custom={0} variants={fadeUp} className="font-display text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.1]">
               A menor taxa do Brasil para{" "}
-              <TextRoll
-                className="inline-block"
-                duration={0.6}
-                getEnterDelay={(i) => i * 0.08 + 0.3}
-                getExitDelay={(i) => i * 0.08 + 0.6}
-              >
-                produtores de eventos.
-              </TextRoll>
+              <span className="text-primary">produtores de eventos.</span>
             </motion.h1>
             <motion.p initial="hidden" animate="visible" custom={1} variants={fadeUp} className="text-lg text-muted-foreground">
               Enquanto outros cobram 10% a 15%, nós cobramos apenas{" "}
