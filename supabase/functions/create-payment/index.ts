@@ -72,6 +72,21 @@ Deno.serve(async (req) => {
     }
     const userId = claimsData.claims.sub as string;
 
+    // Rate limit: max 10 payment attempts per hour per user
+    const rlKey = `payment:${userId}`;
+    const now = new Date();
+    const { data: rl } = await supabaseAdmin.from("rate_limits").select("count, expires_at").eq("key", rlKey).single();
+    if (rl && new Date(rl.expires_at) > now && rl.count >= 10) {
+      return new Response(JSON.stringify({ error: "Muitas tentativas. Aguarde alguns minutos." }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!rl || new Date(rl.expires_at) <= now) {
+      await supabaseAdmin.from("rate_limits").upsert({ key: rlKey, count: 1, expires_at: new Date(now.getTime() + 3600000).toISOString() });
+    } else {
+      await supabaseAdmin.from("rate_limits").update({ count: rl.count + 1 }).eq("key", rlKey);
+    }
+
     // Parse body
     const { orderId, paymentMethod, creditCard, installments } =
       await req.json();
