@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ScrollToTop } from "@/components/ScrollToTop";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -38,6 +39,8 @@ import PublicCheckin from "./pages/PublicCheckin";
 import OrganizerProfile from "./pages/OrganizerProfile";
 import EmbedWidget from "./pages/EmbedWidget";
 import Privacidade from "./pages/Privacidade";
+import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
+import TermosDeUso from "./pages/TermosDeUso";
 import FilaVirtual from "./pages/FilaVirtual";
 import MeusCertificados from "./pages/MeusCertificados";
 import Blog from "./pages/Blog";
@@ -53,6 +56,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <ScrollToTop />
         <AuthProvider>
           <CartProvider>
             <Routes>
@@ -67,6 +71,8 @@ const App = () => (
               <Route path="/organizador/:slug" element={<OrganizerProfile />} />
               <Route path="/embed" element={<EmbedWidget />} />
               <Route path="/minha-conta/privacidade" element={<Privacidade />} />
+              <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
+              <Route path="/termos-de-uso" element={<TermosDeUso />} />
               <Route path="/meus-certificados" element={<MeusCertificados />} />
               <Route path="/fila/:slug" element={<FilaVirtual />} />
               <Route path="/changelog" element={<Changelog />} />
