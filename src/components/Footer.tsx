@@ -36,9 +36,9 @@ export function Footer() {
           </div>
         </div>
         <div className="border-t border-border mt-8 pt-8 text-center text-sm text-muted-foreground">
-          © 2025 TicketHall. Todos os direitos reservados.
+          © 2026 TicketHall. Todos os direitos reservados.
         </div>
       </div>
-    </footer>
-  );
+    </footer>);
+
 }
