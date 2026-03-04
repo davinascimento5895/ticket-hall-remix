@@ -20,6 +20,7 @@ export default function MeusIngressos() {
     open: boolean;
     ticketId: string;
     qrCode: string;
+    qrCodeImageUrl?: string | null;
     eventTitle: string;
     tierName: string;
     attendeeName?: string;
@@ -67,6 +68,7 @@ export default function MeusIngressos() {
               open: true,
               ticketId: ticket.id,
               qrCode: ticket.qr_code,
+              qrCodeImageUrl: ticket.qr_code_image_url,
               eventTitle: ticket.events?.title || "",
               tierName: ticket.ticket_tiers?.name || "",
               attendeeName: ticket.attendee_name || undefined,
@@ -129,6 +131,7 @@ export default function MeusIngressos() {
         onOpenChange={(open) => setQrModal((p) => ({ ...p, open }))}
         ticketId={qrModal.ticketId}
         qrCode={qrModal.qrCode}
+        qrCodeImageUrl={qrModal.qrCodeImageUrl}
         eventTitle={qrModal.eventTitle}
         tierName={qrModal.tierName}
         attendeeName={qrModal.attendeeName}
