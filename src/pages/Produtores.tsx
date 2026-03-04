@@ -9,6 +9,7 @@ import {
   Layers, QrCode, BarChart3, Tag, Gift, Globe,
   ArrowRight
 } from "lucide-react";
+import { AnimatedBackground } from "@/components/core/animated-background";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -105,22 +106,29 @@ export default function Produtores() {
         <div className="container">
           <h2 className="font-display text-2xl md:text-3xl font-bold text-center mb-10">Tudo que você precisa para vender ingressos</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {features.map((f, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
-                className="rounded-xl border border-border bg-card p-6 space-y-3 hover:border-primary/30 hover:shadow-card-hover transition-all duration-200"
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                  <f.icon className="h-5 w-5 text-primary" />
-                </div>
-                <h3 className="font-display font-semibold">{f.title}</h3>
-                <p className="text-sm text-muted-foreground">{f.desc}</p>
-              </motion.div>
-            ))}
+            <AnimatedBackground
+              className="rounded-xl bg-primary/5"
+              transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+              enableHover
+            >
+              {features.map((f, i) => (
+                <motion.div
+                  key={i}
+                  data-id={f.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.08 }}
+                  className="rounded-xl border border-border bg-card p-6 space-y-3 transition-all duration-200"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                    <f.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <h3 className="font-display font-semibold">{f.title}</h3>
+                  <p className="text-sm text-muted-foreground">{f.desc}</p>
+                </motion.div>
+              ))}
+            </AnimatedBackground>
           </div>
         </div>
       </section>
