@@ -8,15 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
+import { validateCheckinByTicketId, type CheckinResult } from "@/lib/api-checkin";
 import { toast } from "@/hooks/use-toast";
 
 export default function PublicCheckin() {
   const { accessCode } = useParams<{ accessCode: string }>();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
-  const [lastResult, setLastResult] = useState<{ result: string; name?: string } | null>(null);
+  const [lastResult, setLastResult] = useState<CheckinResult | null>(null);
 
-  // Load check-in list by access code
   const { data: checkinList, isLoading: loadingList } = useQuery({
     queryKey: ["checkin-list-public", accessCode],
     queryFn: async () => {
@@ -34,7 +34,6 @@ export default function PublicCheckin() {
 
   const eventId = (checkinList as any)?.events?.id;
 
-  // Load tickets for this event (filtered by allowed tiers)
   const { data: tickets = [], isLoading: loadingTickets } = useQuery({
     queryKey: ["checkin-tickets", eventId, checkinList?.id],
     queryFn: async () => {
@@ -55,71 +54,16 @@ export default function PublicCheckin() {
   });
 
   const checkinMutation = useMutation({
-    mutationFn: async (ticketId: string) => {
-      const ticket = tickets.find((t: any) => t.id === ticketId);
-
-      // Check if already used
-      if (ticket?.status === "used") {
-        // Log the duplicate scan
-        await supabase.from("checkin_scan_logs").insert({
-          checkin_list_id: checkinList?.id,
-          ticket_id: ticketId,
-          qr_code_scanned: ticket.qr_code,
-          result: "already_used",
-        });
-        throw new Error("already_used");
-      }
-
-      // Check if tier is allowed
-      if (
-        checkinList?.allowed_tier_ids &&
-        checkinList.allowed_tier_ids.length > 0 &&
-        !checkinList.allowed_tier_ids.includes(ticket?.tier_id)
-      ) {
-        await supabase.from("checkin_scan_logs").insert({
-          checkin_list_id: checkinList?.id,
-          ticket_id: ticketId,
-          qr_code_scanned: ticket?.qr_code || "",
-          result: "wrong_list",
-        });
-        throw new Error("wrong_list");
-      }
-
-      // Perform check-in
-      const { error } = await supabase
-        .from("tickets")
-        .update({ status: "used", checked_in_at: new Date().toISOString() })
-        .eq("id", ticketId)
-        .eq("status", "active");
-      if (error) throw error;
-
-      // Log success
-      await supabase.from("checkin_scan_logs").insert({
-        checkin_list_id: checkinList?.id,
-        ticket_id: ticketId,
-        qr_code_scanned: ticket?.qr_code || "",
-        result: "success",
-      });
-
-      return ticket;
-    },
-    onSuccess: (ticket: any) => {
+    mutationFn: (ticketId: string) =>
+      validateCheckinByTicketId({ ticketId, checkinListId: checkinList?.id }),
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["checkin-tickets"] });
-      const name = ticket?.attendee_name || ticket?.profiles?.full_name || "Participante";
-      setLastResult({ result: "success", name });
-      toast({ title: "Check-in realizado!", description: name });
+      setLastResult(result);
+      toast({ title: "Check-in realizado!", description: result.attendeeName });
     },
     onError: (err: any) => {
-      if (err.message === "already_used") {
-        setLastResult({ result: "already_used" });
-        toast({ title: "Ingresso já utilizado", variant: "destructive" });
-      } else if (err.message === "wrong_list") {
-        setLastResult({ result: "wrong_list" });
-        toast({ title: "Ingresso não pertence a esta entrada", variant: "destructive" });
-      } else {
-        setLastResult({ result: "error" });
-        toast({ title: "Erro no check-in", description: err.message, variant: "destructive" });
-      }
+      setLastResult({ success: false, result: "error", message: err.message });
+      toast({ title: "Erro no check-in", description: err.message, variant: "destructive" });
     },
   });
 
@@ -132,7 +76,6 @@ export default function PublicCheckin() {
     return (
       t.attendee_name?.toLowerCase().includes(s) ||
       t.attendee_email?.toLowerCase().includes(s) ||
-      t.qr_code?.toLowerCase().includes(s) ||
       t.id.includes(s)
     );
   });
@@ -159,13 +102,11 @@ export default function PublicCheckin() {
 
   return (
     <div className="min-h-screen bg-background p-4 max-w-lg mx-auto space-y-4">
-      {/* Header */}
       <div className="text-center space-y-1">
         <h1 className="font-display text-lg font-bold text-foreground">{checkinList.name}</h1>
         <p className="text-sm text-muted-foreground">{(checkinList as any)?.events?.title}</p>
       </div>
 
-      {/* Counters */}
       <div className="grid grid-cols-2 gap-3">
         <Card>
           <CardContent className="pt-4 pb-3 text-center">
@@ -181,11 +122,10 @@ export default function PublicCheckin() {
         </Card>
       </div>
 
-      {/* Last scan result */}
       {lastResult && (
-        <Card className={lastResult.result === "success" ? "border-green-500/50" : "border-destructive/50"}>
+        <Card className={lastResult.success ? "border-green-500/50" : "border-destructive/50"}>
           <CardContent className="py-3 flex items-center gap-3">
-            {lastResult.result === "success" ? (
+            {lastResult.success ? (
               <CheckCircle2 className="h-6 w-6 text-green-500 shrink-0" />
             ) : lastResult.result === "already_used" ? (
               <AlertTriangle className="h-6 w-6 text-yellow-500 shrink-0" />
@@ -193,28 +133,24 @@ export default function PublicCheckin() {
               <XCircle className="h-6 w-6 text-destructive shrink-0" />
             )}
             <div>
-              <p className="text-sm font-medium text-foreground">
-                {lastResult.result === "success" && `✓ ${lastResult.name}`}
-                {lastResult.result === "already_used" && "Ingresso já utilizado"}
-                {lastResult.result === "wrong_list" && "Entrada incorreta"}
-                {lastResult.result === "error" && "Erro no scan"}
-              </p>
+              <p className="text-sm font-medium text-foreground">{lastResult.message}</p>
+              {lastResult.attendeeName && (
+                <p className="text-xs text-muted-foreground">{lastResult.attendeeName} · {lastResult.tierName}</p>
+              )}
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* QR Scanner placeholder */}
       <Card>
         <CardContent className="pt-4 pb-4">
           <div className="w-full h-40 bg-muted rounded-lg flex flex-col items-center justify-center gap-2 border border-dashed border-border">
             <QrCode className="h-8 w-8 text-muted-foreground" />
-            <p className="text-xs text-muted-foreground">QR_SCANNER_INTEGRATION_POINT</p>
+            <p className="text-xs text-muted-foreground">Scanner de câmera (em breve)</p>
           </div>
         </CardContent>
       </Card>
 
-      {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
@@ -225,7 +161,6 @@ export default function PublicCheckin() {
         />
       </div>
 
-      {/* Ticket list */}
       <Card>
         <CardContent className="p-0">
           {loadingTickets ? (
