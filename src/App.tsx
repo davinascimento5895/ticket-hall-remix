@@ -38,6 +38,8 @@ import PublicCheckin from "./pages/PublicCheckin";
 import OrganizerProfile from "./pages/OrganizerProfile";
 import EmbedWidget from "./pages/EmbedWidget";
 import Privacidade from "./pages/Privacidade";
+import FilaVirtual from "./pages/FilaVirtual";
+import MeusCertificados from "./pages/MeusCertificados";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -62,6 +64,8 @@ const App = () => (
               <Route path="/organizador/:slug" element={<OrganizerProfile />} />
               <Route path="/embed" element={<EmbedWidget />} />
               <Route path="/minha-conta/privacidade" element={<Privacidade />} />
+              <Route path="/meus-certificados" element={<MeusCertificados />} />
+              <Route path="/fila/:slug" element={<FilaVirtual />} />
 
               {/* Producer Panel */}
               <Route

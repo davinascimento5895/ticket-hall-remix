@@ -1,0 +1,143 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { ticketId, eventId } = await req.json();
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, serviceKey);
+
+    // If ticketId provided, generate for single ticket
+    if (ticketId) {
+      const cert = await generateCertificate(supabase, ticketId);
+      return jsonResponse({ success: true, certificate: cert });
+    }
+
+    // If eventId provided, batch generate for all checked-in tickets
+    if (eventId) {
+      const { data: event } = await supabase
+        .from("events")
+        .select("has_certificates, title")
+        .eq("id", eventId)
+        .single();
+
+      if (!event?.has_certificates) {
+        return jsonResponse({ error: "Certificados não habilitados para este evento" }, 400);
+      }
+
+      const { data: tickets } = await supabase
+        .from("tickets")
+        .select("id")
+        .eq("event_id", eventId)
+        .eq("status", "used"); // Only checked-in tickets
+
+      if (!tickets || tickets.length === 0) {
+        return jsonResponse({ success: true, generated: 0 });
+      }
+
+      // Skip tickets that already have certificates
+      const { data: existingCerts } = await supabase
+        .from("certificates")
+        .select("ticket_id")
+        .eq("event_id", eventId);
+
+      const existingTicketIds = new Set((existingCerts || []).map((c: any) => c.ticket_id));
+      const toGenerate = tickets.filter((t: any) => !existingTicketIds.has(t.id));
+
+      let generated = 0;
+      for (const ticket of toGenerate) {
+        try {
+          await generateCertificate(supabase, ticket.id);
+          generated++;
+        } catch (e) {
+          console.error(`Failed to generate cert for ticket ${ticket.id}:`, e);
+        }
+      }
+
+      return jsonResponse({ success: true, generated, total: tickets.length });
+    }
+
+    return jsonResponse({ error: "ticketId or eventId required" }, 400);
+  } catch (error) {
+    console.error("generate-certificate error:", error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+});
+
+async function generateCertificate(supabase: any, ticketId: string) {
+  // Get ticket with event and attendee details
+  const { data: ticket, error } = await supabase
+    .from("tickets")
+    .select("id, event_id, owner_id, attendee_name, status, checked_in_at, events(title, start_date, end_date, has_certificates, venue_name), profiles!tickets_owner_id_fkey(full_name)")
+    .eq("id", ticketId)
+    .single();
+
+  if (error || !ticket) throw new Error("Ticket not found");
+  if (ticket.status !== "used") throw new Error("Ticket must be checked in to receive certificate");
+  if (!ticket.events?.has_certificates) throw new Error("Event does not issue certificates");
+
+  // Check if certificate already exists
+  const { data: existing } = await supabase
+    .from("certificates")
+    .select("id")
+    .eq("ticket_id", ticketId)
+    .single();
+
+  if (existing) {
+    const { data: cert } = await supabase
+      .from("certificates")
+      .select("*")
+      .eq("id", existing.id)
+      .single();
+    return cert;
+  }
+
+  const attendeeName = ticket.attendee_name || ticket.profiles?.full_name || "Participante";
+  const certCode = `CERT-${ticket.event_id.slice(0, 4).toUpperCase()}-${ticketId.slice(0, 8).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+
+  const { data: cert, error: insertErr } = await supabase
+    .from("certificates")
+    .insert({
+      event_id: ticket.event_id,
+      ticket_id: ticketId,
+      user_id: ticket.owner_id,
+      certificate_code: certCode,
+      attendee_name: attendeeName,
+    })
+    .select()
+    .single();
+
+  if (insertErr) throw insertErr;
+
+  // Notify user
+  await supabase.from("notifications").insert({
+    user_id: ticket.owner_id,
+    type: "certificate_issued",
+    title: "Certificado disponível!",
+    body: `Seu certificado de participação em "${ticket.events.title}" está disponível.`,
+    data: { eventId: ticket.event_id, certificateId: cert.id },
+  });
+
+  return cert;
+}
+
+function jsonResponse(body: Record<string, unknown>, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}

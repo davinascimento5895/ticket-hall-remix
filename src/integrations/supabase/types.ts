@@ -163,6 +163,57 @@ export type Database = {
           },
         ]
       }
+      certificates: {
+        Row: {
+          attendee_name: string
+          certificate_code: string
+          created_at: string | null
+          download_url: string | null
+          event_id: string
+          id: string
+          issued_at: string | null
+          ticket_id: string
+          user_id: string
+        }
+        Insert: {
+          attendee_name: string
+          certificate_code: string
+          created_at?: string | null
+          download_url?: string | null
+          event_id: string
+          id?: string
+          issued_at?: string | null
+          ticket_id: string
+          user_id: string
+        }
+        Update: {
+          attendee_name?: string
+          certificate_code?: string
+          created_at?: string | null
+          download_url?: string | null
+          event_id?: string
+          id?: string
+          issued_at?: string | null
+          ticket_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificates_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "certificates_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checkin_lists: {
         Row: {
           access_code: string | null
@@ -573,20 +624,27 @@ export type Database = {
         Row: {
           banner_image_url: string | null
           category: string | null
+          certificate_template: string | null
           cover_image_url: string | null
           created_at: string | null
           description: string | null
           doors_open_time: string | null
           end_date: string
+          has_certificates: boolean | null
+          has_insurance_option: boolean | null
           has_seat_map: boolean | null
+          has_virtual_queue: boolean | null
           id: string
+          insurance_price: number | null
           is_featured: boolean | null
+          is_multi_day: boolean | null
           is_online: boolean | null
           max_capacity: number | null
           minimum_age: number | null
           online_url: string | null
           platform_fee_percent: number | null
           producer_id: string
+          queue_capacity: number | null
           seat_map_config: Json | null
           slug: string
           start_date: string
@@ -605,20 +663,27 @@ export type Database = {
         Insert: {
           banner_image_url?: string | null
           category?: string | null
+          certificate_template?: string | null
           cover_image_url?: string | null
           created_at?: string | null
           description?: string | null
           doors_open_time?: string | null
           end_date: string
+          has_certificates?: boolean | null
+          has_insurance_option?: boolean | null
           has_seat_map?: boolean | null
+          has_virtual_queue?: boolean | null
           id?: string
+          insurance_price?: number | null
           is_featured?: boolean | null
+          is_multi_day?: boolean | null
           is_online?: boolean | null
           max_capacity?: number | null
           minimum_age?: number | null
           online_url?: string | null
           platform_fee_percent?: number | null
           producer_id: string
+          queue_capacity?: number | null
           seat_map_config?: Json | null
           slug: string
           start_date: string
@@ -637,20 +702,27 @@ export type Database = {
         Update: {
           banner_image_url?: string | null
           category?: string | null
+          certificate_template?: string | null
           cover_image_url?: string | null
           created_at?: string | null
           description?: string | null
           doors_open_time?: string | null
           end_date?: string
+          has_certificates?: boolean | null
+          has_insurance_option?: boolean | null
           has_seat_map?: boolean | null
+          has_virtual_queue?: boolean | null
           id?: string
+          insurance_price?: number | null
           is_featured?: boolean | null
+          is_multi_day?: boolean | null
           is_online?: boolean | null
           max_capacity?: number | null
           minimum_age?: number | null
           online_url?: string | null
           platform_fee_percent?: number | null
           producer_id?: string
+          queue_capacity?: number | null
           seat_map_config?: Json | null
           slug?: string
           start_date?: string
@@ -907,9 +979,11 @@ export type Database = {
           discount_amount: number | null
           event_id: string
           expires_at: string | null
+          has_insurance: boolean | null
           id: string
           installment_value: number | null
           installments: number | null
+          insurance_amount: number | null
           invoice_issued_at: string | null
           invoice_number: string | null
           invoice_pdf_url: string | null
@@ -948,9 +1022,11 @@ export type Database = {
           discount_amount?: number | null
           event_id: string
           expires_at?: string | null
+          has_insurance?: boolean | null
           id?: string
           installment_value?: number | null
           installments?: number | null
+          insurance_amount?: number | null
           invoice_issued_at?: string | null
           invoice_number?: string | null
           invoice_pdf_url?: string | null
@@ -989,9 +1065,11 @@ export type Database = {
           discount_amount?: number | null
           event_id?: string
           expires_at?: string | null
+          has_insurance?: boolean | null
           id?: string
           installment_value?: number | null
           installments?: number | null
+          insurance_amount?: number | null
           invoice_issued_at?: string | null
           invoice_number?: string | null
           invoice_pdf_url?: string | null
@@ -1293,6 +1371,7 @@ export type Database = {
           sort_order: number | null
           tier_type: string | null
           unlock_code: string | null
+          valid_dates: string[] | null
         }
         Insert: {
           capacity_group_id?: string | null
@@ -1318,6 +1397,7 @@ export type Database = {
           sort_order?: number | null
           tier_type?: string | null
           unlock_code?: string | null
+          valid_dates?: string[] | null
         }
         Update: {
           capacity_group_id?: string | null
@@ -1343,6 +1423,7 @@ export type Database = {
           sort_order?: number | null
           tier_type?: string | null
           unlock_code?: string | null
+          valid_dates?: string[] | null
         }
         Relationships: [
           {
@@ -1370,8 +1451,11 @@ export type Database = {
           checked_in_by: string | null
           created_at: string | null
           event_id: string
+          half_price_doc_number: string | null
+          half_price_doc_type: string | null
           id: string
           is_for_resale: boolean | null
+          is_half_price: boolean | null
           is_offline_synced: boolean | null
           order_id: string
           original_buyer_id: string
@@ -1391,8 +1475,11 @@ export type Database = {
           checked_in_by?: string | null
           created_at?: string | null
           event_id: string
+          half_price_doc_number?: string | null
+          half_price_doc_type?: string | null
           id?: string
           is_for_resale?: boolean | null
+          is_half_price?: boolean | null
           is_offline_synced?: boolean | null
           order_id: string
           original_buyer_id: string
@@ -1412,8 +1499,11 @@ export type Database = {
           checked_in_by?: string | null
           created_at?: string | null
           event_id?: string
+          half_price_doc_number?: string | null
+          half_price_doc_type?: string | null
           id?: string
           is_for_resale?: boolean | null
+          is_half_price?: boolean | null
           is_offline_synced?: boolean | null
           order_id?: string
           original_buyer_id?: string
@@ -1487,6 +1577,50 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      virtual_queue: {
+        Row: {
+          admitted_at: string | null
+          created_at: string | null
+          event_id: string
+          expires_at: string | null
+          id: string
+          position: number | null
+          session_id: string | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          admitted_at?: string | null
+          created_at?: string | null
+          event_id: string
+          expires_at?: string | null
+          id?: string
+          position?: number | null
+          session_id?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          admitted_at?: string | null
+          created_at?: string | null
+          event_id?: string
+          expires_at?: string | null
+          id?: string
+          position?: number | null
+          session_id?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "virtual_queue_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       waitlist: {
         Row: {
