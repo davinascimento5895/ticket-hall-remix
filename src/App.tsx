@@ -40,6 +40,8 @@ import EmbedWidget from "./pages/EmbedWidget";
 import Privacidade from "./pages/Privacidade";
 import FilaVirtual from "./pages/FilaVirtual";
 import MeusCertificados from "./pages/MeusCertificados";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 import Changelog from "./pages/Changelog";
 import NotFound from "./pages/NotFound";
 
@@ -68,6 +70,8 @@ const App = () => (
               <Route path="/meus-certificados" element={<MeusCertificados />} />
               <Route path="/fila/:slug" element={<FilaVirtual />} />
               <Route path="/changelog" element={<Changelog />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
 
               {/* Producer Panel */}
               <Route
