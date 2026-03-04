@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 // Verify HMAC-SHA256 JWT
@@ -154,9 +154,8 @@ serve(async (req) => {
     }
 
     // 8. Update analytics
-    await supabase.rpc("confirm_checkin_analytics", { p_event_id: ticket.event_id }).catch(() => {
-      // Best-effort analytics update — non-blocking
-      console.warn("Analytics update skipped (function may not exist yet)");
+    await supabase.rpc("confirm_checkin_analytics", { p_event_id: ticket.event_id }).catch((err: any) => {
+      console.warn("Analytics update failed:", err?.message);
     });
 
     // 9. Log success
