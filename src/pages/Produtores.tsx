@@ -50,7 +50,7 @@ export default function Produtores() {
               <span className="text-primary">produtores de eventos.</span>
             </motion.h1>
             <motion.p initial="hidden" animate="visible" custom={1} variants={fadeUp} className="text-lg text-muted-foreground">
-              Enquanto outros cobram 10% a 15%, nós cobramos apenas{" "}
+              Enquanto outros cobram 10% a 20%, nós cobramos apenas{" "}
               <span className="text-accent font-bold text-xl">7%</span>. Simples, transparente, justo.
             </motion.p>
             <motion.div initial="hidden" animate="visible" custom={2} variants={fadeUp}>
