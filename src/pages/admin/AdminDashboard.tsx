@@ -48,10 +48,18 @@ export default function AdminDashboard() {
           ) : stats?.revenueByMonth && stats.revenueByMonth.length > 0 ? (
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={stats.revenueByMonth}>
-                <XAxis dataKey="month" tick={{ fontSize: 12, fill: "hsl(240 5% 65%)" }} />
-                <YAxis tick={{ fontSize: 12, fill: "hsl(240 5% 65%)" }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
-                <Tooltip contentStyle={{ background: "hsl(240 6% 7%)", border: "1px solid hsl(240 4% 18%)", borderRadius: 8 }} formatter={(v: number) => [fmt(v), "Receita"]} />
-                <Bar dataKey="revenue" fill="hsl(243 75% 59%)" radius={[4, 4, 0, 0]} />
+                <XAxis dataKey="month" tick={{ fontSize: 12, className: "fill-muted-foreground" }} />
+                <YAxis tick={{ fontSize: 12, className: "fill-muted-foreground" }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
+                <Tooltip
+                  contentStyle={{
+                    background: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: 8,
+                    color: "hsl(var(--foreground))",
+                  }}
+                  formatter={(v: number) => [fmt(v), "Receita"]}
+                />
+                <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
