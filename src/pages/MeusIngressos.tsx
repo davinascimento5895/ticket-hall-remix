@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Ticket, Calendar, MapPin, QrCode } from "lucide-react";
+import { Ticket, Calendar, MapPin, QrCode, Send } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { QRCodeModal } from "@/components/QRCodeModal";
+import { TransferTicketModal } from "@/components/TransferTicketModal";
 import { EmptyState } from "@/components/EmptyState";
 import { useAuth } from "@/contexts/AuthContext";
 import { getMyTickets } from "@/lib/api";
@@ -26,6 +27,13 @@ export default function MeusIngressos() {
     attendeeName?: string;
   }>({ open: false, ticketId: "", qrCode: "", eventTitle: "", tierName: "" });
 
+  const [transferModal, setTransferModal] = useState<{
+    open: boolean;
+    ticketId: string;
+    eventTitle: string;
+    tierName: string;
+  }>({ open: false, ticketId: "", eventTitle: "", tierName: "" });
+
   const { data: tickets, isLoading } = useQuery({
     queryKey: ["my-tickets", user?.id],
     queryFn: () => getMyTickets(user!.id),
@@ -37,49 +45,72 @@ export default function MeusIngressos() {
   const past = tickets?.filter((t: any) => new Date(t.events?.start_date) < now || t.status === "used") || [];
   const transferred = tickets?.filter((t: any) => t.status === "transferred") || [];
 
-  const renderTicket = (ticket: any) => (
-    <div key={ticket.id} className="flex items-start gap-4 p-4 rounded-lg border border-border bg-card">
-      {ticket.events?.cover_image_url && (
-        <img src={ticket.events.cover_image_url} alt="" className="w-20 h-20 rounded object-cover hidden sm:block" />
-      )}
-      <div className="flex-1 min-w-0 space-y-1">
-        <div className="flex items-center gap-2">
-          <h3 className="font-display font-semibold text-foreground truncate">{ticket.events?.title}</h3>
-          <OrderStatusBadge status={ticket.status} />
+  const renderTicket = (ticket: any) => {
+    const isTransferable = ticket.status === "active" && ticket.ticket_tiers?.is_transferable !== false;
+
+    return (
+      <div key={ticket.id} className="flex items-start gap-4 p-4 rounded-lg border border-border bg-card">
+        {ticket.events?.cover_image_url && (
+          <img src={ticket.events.cover_image_url} alt="" className="w-20 h-20 rounded object-cover hidden sm:block" />
+        )}
+        <div className="flex-1 min-w-0 space-y-1">
+          <div className="flex items-center gap-2">
+            <h3 className="font-display font-semibold text-foreground truncate">{ticket.events?.title}</h3>
+            <OrderStatusBadge status={ticket.status} />
+          </div>
+          <p className="text-sm text-muted-foreground">{ticket.ticket_tiers?.name}</p>
+          <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+            {ticket.events?.start_date && (
+              <span className="inline-flex items-center gap-1"><Calendar className="h-3 w-3" />{new Date(ticket.events.start_date).toLocaleDateString("pt-BR")}</span>
+            )}
+            {ticket.events?.venue_city && (
+              <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{ticket.events.venue_city}</span>
+            )}
+          </div>
+          {ticket.attendee_name && <p className="text-xs text-muted-foreground">Participante: {ticket.attendee_name}</p>}
         </div>
-        <p className="text-sm text-muted-foreground">{ticket.ticket_tiers?.name}</p>
-        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-          {ticket.events?.start_date && (
-            <span className="inline-flex items-center gap-1"><Calendar className="h-3 w-3" />{new Date(ticket.events.start_date).toLocaleDateString("pt-BR")}</span>
+        <div className="flex flex-col gap-2">
+          {ticket.status === "active" && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={() =>
+                setQrModal({
+                  open: true,
+                  ticketId: ticket.id,
+                  qrCode: ticket.qr_code,
+                  qrCodeImageUrl: ticket.qr_code_image_url,
+                  eventTitle: ticket.events?.title || "",
+                  tierName: ticket.ticket_tiers?.name || "",
+                  attendeeName: ticket.attendee_name || undefined,
+                })
+              }
+            >
+              <QrCode className="h-4 w-4" /> QR Code
+            </Button>
           )}
-          {ticket.events?.venue_city && (
-            <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{ticket.events.venue_city}</span>
+          {isTransferable && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-muted-foreground"
+              onClick={() =>
+                setTransferModal({
+                  open: true,
+                  ticketId: ticket.id,
+                  eventTitle: ticket.events?.title || "",
+                  tierName: ticket.ticket_tiers?.name || "",
+                })
+              }
+            >
+              <Send className="h-4 w-4" /> Transferir
+            </Button>
           )}
         </div>
-        {ticket.attendee_name && <p className="text-xs text-muted-foreground">Participante: {ticket.attendee_name}</p>}
       </div>
-      <div className="flex flex-col gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-1.5"
-          onClick={() =>
-            setQrModal({
-              open: true,
-              ticketId: ticket.id,
-              qrCode: ticket.qr_code,
-              qrCodeImageUrl: ticket.qr_code_image_url,
-              eventTitle: ticket.events?.title || "",
-              tierName: ticket.ticket_tiers?.name || "",
-              attendeeName: ticket.attendee_name || undefined,
-            })
-          }
-        >
-          <QrCode className="h-4 w-4" /> QR Code
-        </Button>
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -135,6 +166,14 @@ export default function MeusIngressos() {
         eventTitle={qrModal.eventTitle}
         tierName={qrModal.tierName}
         attendeeName={qrModal.attendeeName}
+      />
+
+      <TransferTicketModal
+        open={transferModal.open}
+        onOpenChange={(open) => setTransferModal((p) => ({ ...p, open }))}
+        ticketId={transferModal.ticketId}
+        eventTitle={transferModal.eventTitle}
+        tierName={transferModal.tierName}
       />
     </div>
   );

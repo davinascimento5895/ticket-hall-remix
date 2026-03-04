@@ -32,3 +32,9 @@ verify_jwt = false
 
 [functions.validate-checkin]
 verify_jwt = false
+
+[functions.transfer-ticket]
+verify_jwt = false
+
+[functions.cancel-event]
+verify_jwt = false
