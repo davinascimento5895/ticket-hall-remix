@@ -5,11 +5,74 @@
 @tailwind utilities;
 
 @layer base {
+  /* ===== LIGHT MODE (default) ===== */
   :root {
     --font-display: 'Sora', sans-serif;
     --font-body: 'Inter', sans-serif;
 
-    /* TicketHall Dark Theme */
+    --background: 0 0% 99%;
+    --foreground: 240 10% 8%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 8%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 8%;
+
+    --primary: 243 75% 59%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 5% 93%;
+    --secondary-foreground: 240 10% 10%;
+
+    --muted: 240 5% 93%;
+    --muted-foreground: 240 5% 40%;
+
+    --accent: 38 92% 50%;
+    --accent-foreground: 240 10% 6%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 32 95% 44%;
+    --warning-foreground: 0 0% 100%;
+
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 240 6% 85%;
+    --border-subtle: 240 5% 90%;
+    --border-strong: 240 5% 70%;
+    --input: 240 6% 85%;
+    --ring: 243 75% 59%;
+
+    --radius: 0.5rem;
+
+    /* Surfaces */
+    --surface: 0 0% 98%;
+    --elevated: 0 0% 100%;
+    --overlay: 240 5% 93%;
+    --subtle: 240 5% 90%;
+
+    /* Brand glow */
+    --primary-glow: 243 75% 59%;
+    --accent-glow: 38 92% 50%;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 10% 8%;
+    --sidebar-primary: 243 75% 59%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 5% 93%;
+    --sidebar-accent-foreground: 240 10% 8%;
+    --sidebar-border: 240 6% 85%;
+    --sidebar-ring: 243 75% 59%;
+  }
+
+  /* ===== DARK MODE ===== */
+  .dark {
     --background: 240 10% 3.5%;
     --foreground: 240 5% 96%;
 
@@ -49,8 +112,6 @@
     --input: 240 4% 18%;
     --ring: 243 75% 59%;
 
-    --radius: 0.5rem;
-
     /* Surfaces */
     --surface: 240 6% 7%;
     --elevated: 240 4% 12%;
@@ -69,15 +130,6 @@
     --sidebar-accent-foreground: 240 5% 96%;
     --sidebar-border: 240 4% 18%;
     --sidebar-ring: 243 75% 59%;
-
-    /* LIGHT_MODE_PLACEHOLDER — implement later
-    --background: 0 0% 100%;
-    --foreground: 240 10% 6%;
-    --card: 0 0% 98%;
-    --card-foreground: 240 10% 6%;
-    --primary: 243 75% 59%;
-    --primary-foreground: 0 0% 100%;
-    */
   }
 }
 
@@ -93,6 +145,13 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
   }
+}
+
+/* View Transition for theme toggle */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
 }
 
 @layer utilities {
