@@ -40,6 +40,7 @@ import EmbedWidget from "./pages/EmbedWidget";
 import Privacidade from "./pages/Privacidade";
 import FilaVirtual from "./pages/FilaVirtual";
 import MeusCertificados from "./pages/MeusCertificados";
+import Changelog from "./pages/Changelog";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -66,6 +67,7 @@ const App = () => (
               <Route path="/minha-conta/privacidade" element={<Privacidade />} />
               <Route path="/meus-certificados" element={<MeusCertificados />} />
               <Route path="/fila/:slug" element={<FilaVirtual />} />
+              <Route path="/changelog" element={<Changelog />} />
 
               {/* Producer Panel */}
               <Route
