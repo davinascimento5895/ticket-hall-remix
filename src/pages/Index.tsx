@@ -4,9 +4,6 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { EventCard } from "@/components/EventCard";
 import { Spotlight } from "@/components/core/spotlight";
-import { TextEffect } from "@/components/core/text-effect";
-import { TextLoop } from "@/components/core/text-loop";
-import { TextRoll } from "@/components/core/text-roll";
 import { motion } from "framer-motion";
 import {
   CreditCard, Smartphone, Zap,
@@ -64,31 +61,15 @@ export default function Index() {
         <div className="container relative z-10 text-center px-4 pt-24 pb-16">
           <div className="space-y-6 max-w-3xl mx-auto">
             <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] text-foreground">
-              <TextEffect per="word" preset="fade-in-blur" speedReveal={1.1} as="span">
-                Seus eventos, do
-              </TextEffect>
-              {" "}
-              <TextRoll
-                className="inline-block text-primary"
-                duration={0.6}
-                getEnterDelay={(i) => i * 0.08 + 0.5}
-                getExitDelay={(i) => i * 0.08 + 0.8}
-              >
-                jeito certo.
-              </TextRoll>
+              Seus eventos, do{" "}
+              <span className="text-primary">jeito certo.</span>
             </h1>
 
             <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto">
               A plataforma de ingressos com a menor taxa do Brasil — apenas{" "}
               <span className="text-primary font-semibold">7%</span>
               {" "}para{" "}
-              <TextLoop interval={2.5} className="text-foreground font-medium">
-                <span>shows</span>
-                <span>festivais</span>
-                <span>peças</span>
-                <span>cursos</span>
-                <span>eventos</span>
-              </TextLoop>
+              <span className="text-foreground font-medium">eventos</span>
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
