@@ -189,8 +189,8 @@ export default function Checkout() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <>
+
       <div className="container pt-24 pb-16 max-w-2xl">
         <Link to="/carrinho" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
           <ArrowLeft className="h-4 w-4" /> Voltar ao carrinho
