@@ -44,8 +44,7 @@ export default function Carrinho() {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
+      <>
         <div className="container pt-24 pb-16">
           <EmptyState
             icon={<ShoppingCart className="h-12 w-12" />}
