@@ -25,8 +25,7 @@ export default function MeusCertificados() {
   });
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <>
       <div className="container pt-24 pb-16 max-w-2xl">
         <div className="flex items-center gap-3 mb-6">
           <Award className="h-6 w-6 text-primary" />
