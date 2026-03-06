@@ -70,12 +70,11 @@ export default function OrganizerProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SEOHead
         title={`${profile.full_name || "Organizador"} — TicketHall`}
         description={profile.organizer_bio || `Eventos organizados por ${profile.full_name}`}
       />
-      <Navbar />
 
       {/* Banner */}
       <div className="relative h-48 md:h-64 bg-gradient-to-br from-primary/30 to-accent/20 overflow-hidden">
