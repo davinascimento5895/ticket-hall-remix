@@ -81,6 +81,7 @@ const App = () => (
               <Route path="/changelog" element={<Changelog />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogPost />} />
+              <Route path="/notificacoes" element={<NotificacoesConfig />} />
 
               {/* Producer Panel */}
               <Route
