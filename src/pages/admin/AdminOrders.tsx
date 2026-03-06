@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { Search, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import { exportToCSV, orderCSVColumns } from "@/lib/csv-export";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -36,15 +35,23 @@ export default function AdminOrders() {
         </Button>
       </div>
 
-      <div className="flex gap-1 flex-wrap">
+      <div className="flex gap-1.5 flex-wrap">
         {statuses.map((s) => (
-          <button key={s.value} onClick={() => setStatusFilter(s.value)} className={`px-3 py-1.5 text-sm rounded-full transition-colors ${statusFilter === s.value ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}>
+          <button
+            key={s.value}
+            onClick={() => setStatusFilter(s.value)}
+            className={`px-3.5 py-1.5 text-sm rounded-full transition-colors font-medium ${
+              statusFilter === s.value
+                ? "bg-primary text-primary-foreground"
+                : "bg-secondary text-muted-foreground hover:text-foreground"
+            }`}
+          >
             {s.label}
           </button>
         ))}
       </div>
 
-      <Card>
+      <Card className="border-border">
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-4 space-y-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
@@ -66,11 +73,11 @@ export default function AdminOrders() {
                 </thead>
                 <tbody>
                   {orders.map((order: any) => (
-                    <tr key={order.id} className="border-b border-border/50 hover:bg-muted/30">
-                      <td className="p-3 font-mono text-xs">{order.id.slice(0, 8)}</td>
+                    <tr key={order.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                      <td className="p-3 font-mono text-xs text-muted-foreground">{order.id.slice(0, 8)}</td>
                       <td className="p-3">{order.profiles?.full_name || "—"}</td>
                       <td className="p-3 text-muted-foreground max-w-[150px] truncate">{order.events?.title || "—"}</td>
-                      <td className="p-3">{fmt(order.total)}</td>
+                      <td className="p-3 font-medium">{fmt(order.total)}</td>
                       <td className="p-3 text-muted-foreground">{order.payment_method || "—"}</td>
                       <td className="p-3"><OrderStatusBadge status={order.status} /></td>
                       <td className="p-3 text-muted-foreground">{new Date(order.created_at).toLocaleDateString("pt-BR")}</td>
