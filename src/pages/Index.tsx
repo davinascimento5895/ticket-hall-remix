@@ -1,16 +1,20 @@
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { EventCard } from "@/components/EventCard";
 import { Spotlight } from "@/components/core/spotlight";
+import { TextLoop } from "@/components/core/text-loop";
 import { motion } from "framer-motion";
 import {
   CreditCard, Smartphone, Zap,
-  Music, Trophy, Theater, PartyPopper, Building2, GraduationCap,
-  ArrowRight, ChevronRight
+  Shield, Users, QrCode, ArrowRight,
+  ChevronDown,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getFeaturedEvents } from "@/lib/api";
+import { LoadingSkeleton } from "@/components/LoadingSkeleton";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   Accordion,
   AccordionContent,
@@ -18,144 +22,122 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-const featuredEvents = [
-  { title: "Lollapalooza Brasil 2025", date: "28 Mar 2025", city: "São Paulo, SP", imageUrl: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=600&q=80", priceFrom: 450, category: "music" },
-  { title: "Stand Up Comedy — Fábio Porchat", date: "15 Abr 2025", city: "Rio de Janeiro, RJ", imageUrl: "https://images.unsplash.com/photo-1585699324551-f6c309eedeca?w=600&q=80", priceFrom: 80, category: "theater" },
-  { title: "Final Copa do Brasil", date: "10 Mai 2025", city: "Belo Horizonte, MG", imageUrl: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=600&q=80", priceFrom: 120, category: "sports" },
-  { title: "Festival Gastronômico BH", date: "22 Jun 2025", city: "Belo Horizonte, MG", imageUrl: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&q=80", priceFrom: 0, category: "festival" },
-  { title: "Tech Summit Brasil", date: "05 Jul 2025", city: "Florianópolis, SC", imageUrl: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&q=80", priceFrom: 250, category: "corporate" },
-  { title: "Sertanejo in Rio", date: "18 Ago 2025", city: "Rio de Janeiro, RJ", imageUrl: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&q=80", priceFrom: 90, category: "music" },
+const features = [
+  { icon: CreditCard, title: "Pagamento seguro", desc: "PIX, cartão de crédito e boleto. Checkout rápido e protegido." },
+  { icon: Smartphone, title: "Ingresso digital", desc: "QR Code único no celular. Sem necessidade de impressão." },
+  { icon: Zap, title: "Entrega instantânea", desc: "Receba seus ingressos por e-mail e na área logada em segundos." },
+  { icon: Shield, title: "Garantia de reembolso", desc: "Solicite reembolso facilmente caso o evento seja cancelado." },
+  { icon: Users, title: "Transferência fácil", desc: "Transfira ingressos para amigos com apenas um clique." },
+  { icon: QrCode, title: "Check-in rápido", desc: "Check-in na entrada do evento com leitura de QR Code." },
 ];
 
-const categories = [
-  { id: "music", label: "Música", icon: Music },
-  { id: "sports", label: "Esportes", icon: Trophy },
-  { id: "theater", label: "Teatro", icon: Theater },
-  { id: "festival", label: "Festas", icon: PartyPopper },
-  { id: "corporate", label: "Corporativo", icon: Building2 },
-  { id: "education", label: "Educação", icon: GraduationCap },
-];
-
-const testimonials = [
-  { name: "Renata Silva", role: "Produtora de eventos", text: "Migrei da Sympla e economizei mais de R$ 12.000 em taxas no primeiro trimestre. A plataforma é intuitiva e o suporte é rápido." },
-  { name: "Lucas Mendes", role: "Comprador", text: "A experiência de compra é muito mais fluida. PIX instantâneo e o ingresso fica disponível na hora no celular." },
-  { name: "Mariana Costa", role: "Produtora de festivais", text: "O check-in por QR Code funcionou perfeitamente para 3.000 pessoas. Nunca tive problemas. Recomendo demais." },
-];
-
-const faqItems = [
-  { q: "Qual é a taxa cobrada pelo TicketHall?", a: "Cobramos apenas 7% sobre cada ingresso vendido — a menor taxa do Brasil. Não há mensalidades, taxas de setup ou custos ocultos." },
-  { q: "Como recebo meus pagamentos?", a: "Os valores das vendas são depositados diretamente na sua conta bancária ou via PIX, com repasses automáticos após o evento." },
-  { q: "Quais formas de pagamento são aceitas?", a: "PIX, cartão de crédito (com parcelamento), cartão de débito e boleto bancário." },
-  { q: "Posso transferir meu ingresso para outra pessoa?", a: "Sim! Basta acessar 'Meus Ingressos' e usar a função de transferência. O destinatário recebe o ingresso no e-mail cadastrado." },
-  { q: "E se o evento for cancelado?", a: "Em caso de cancelamento pelo produtor, o reembolso é feito automaticamente pelo mesmo método de pagamento, em até 7 dias úteis." },
+const faqs = [
+  { q: "Como compro ingressos?", a: "Basta acessar a página do evento, selecionar os ingressos desejados e finalizar a compra com PIX, cartão ou boleto." },
+  { q: "Posso transferir meu ingresso?", a: "Sim! Na área 'Meus Ingressos', clique em transferir e informe o e-mail do destinatário." },
+  { q: "Como funciona o reembolso?", a: "Caso o evento seja cancelado, o reembolso é automático. Para outros casos, solicite pelo painel em até 7 dias antes." },
+  { q: "O que é a fila virtual?", a: "Alguns eventos com alta demanda utilizam fila virtual para garantir uma experiência justa na compra." },
+  { q: "É seguro comprar pelo TicketHall?", a: "Sim. Todos os pagamentos são processados com criptografia e seguimos as normas da LGPD." },
 ];
 
 export default function Index() {
   const { user, role, loading } = useAuth();
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 rounded-full bg-primary/20 animate-pulse" />
-      </div>
-    );
-  }
+  const { data: featuredEvents = [], isLoading: loadingEvents } = useQuery({
+    queryKey: ["featured-events"],
+    queryFn: getFeaturedEvents,
+  });
 
-  if (user) {
+  // Redirect logged-in users to their dashboard
+  if (!loading && user && role) {
     const redirectMap: Record<string, string> = {
       admin: "/admin/dashboard",
       producer: "/producer/dashboard",
       buyer: "/meus-ingressos",
     };
-    return <Navigate to={redirectMap[role || "buyer"] || "/meus-ingressos"} replace />;
+    return <Navigate to={redirectMap[role] || "/meus-ingressos"} replace />;
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      
-      <Navbar />
-
+    <>
       {/* ===== HERO ===== */}
       <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden">
         <Spotlight size={500} className="z-0" />
-        <div className="container relative z-10 text-center px-4 pt-24 pb-16">
-          <div className="space-y-6 max-w-3xl mx-auto">
-            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] text-foreground">
-              Seus eventos, do{" "}
-              <span className="text-primary">jeito certo.</span>
-            </h1>
-
-            <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto">
-              A plataforma de ingressos com a menor taxa do Brasil — apenas{" "}
-              <span className="text-primary font-semibold">7%</span>
-              {" "}para{" "}
-              <span className="text-foreground font-medium">eventos</span>
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
-              <Button size="xl" asChild>
-                <Link to="/eventos">Explorar Eventos</Link>
-              </Button>
-              <Button variant="outline" size="xl" asChild>
-                <Link to="/produtores">Vender Ingressos</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== TRUST BAR ===== */}
-      <section className="border-y border-border">
-        <div className="container py-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            {[
-              { icon: Zap, text: "R$ 0 cobrado até vender" },
-              { icon: CreditCard, text: "7% de taxa — a menor do Brasil" },
-              { icon: CreditCard, text: "PIX, cartão e boleto" },
-              { icon: Smartphone, text: "App iOS & Android em breve" },
-            ].map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="flex flex-col items-center gap-2"
-              >
-                <item.icon className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">{item.text}</span>
-              </motion.div>
-            ))}
-          </div>
+        <div className="container relative z-10 text-center space-y-6 py-20">
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="font-display text-4xl md:text-6xl lg:text-7xl font-bold leading-tight"
+          >
+            Seus ingressos para{" "}
+            <TextLoop interval={3000} className="text-primary inline-block">
+              <span>shows</span>
+              <span>festivais</span>
+              <span>teatros</span>
+              <span>eventos</span>
+            </TextLoop>
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto"
+          >
+            Compre, transfira e gerencie seus ingressos com segurança. A plataforma completa para produtores e compradores.
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4"
+          >
+            <Button variant="default" size="lg" asChild>
+              <Link to="/eventos">
+                Explorar eventos <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+            <Button variant="outline" size="lg" asChild>
+              <Link to="/produtores">Sou produtor</Link>
+            </Button>
+          </motion.div>
         </div>
       </section>
 
       {/* ===== FEATURED EVENTS ===== */}
-      <section className="py-16 md:py-20">
+      <section className="py-16 md:py-24">
         <div className="container">
           <div className="flex items-end justify-between mb-8">
             <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold">Eventos em Destaque</h2>
-              <p className="text-muted-foreground mt-1 text-sm">Os melhores eventos acontecendo agora</p>
+              <h2 className="font-display text-2xl md:text-3xl font-bold">Em destaque</h2>
+              <p className="text-muted-foreground mt-1">Os eventos mais procurados da semana</p>
             </div>
-            <Button variant="ghost" asChild className="hidden md:flex text-sm">
-              <Link to="/eventos">Ver todos <ArrowRight className="h-4 w-4 ml-1" /></Link>
+            <Button variant="ghost" asChild className="hidden sm:inline-flex">
+              <Link to="/eventos">Ver todos <ArrowRight className="ml-1 h-4 w-4" /></Link>
             </Button>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {featuredEvents.map((event, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
-              >
-                <EventCard {...event} />
-              </motion.div>
-            ))}
-          </div>
-          <div className="mt-8 text-center md:hidden">
+
+          {loadingEvents ? (
+            <LoadingSkeleton variant="card" count={3} />
+          ) : featuredEvents.length > 0 ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredEvents.map((event: any) => (
+                <EventCard
+                  key={event.id}
+                  title={event.title}
+                  date={format(new Date(event.start_date), "dd MMM yyyy · HH'h'mm", { locale: ptBR })}
+                  city={event.venue_city || "Online"}
+                  imageUrl={event.cover_image_url || "/placeholder.svg"}
+                  priceFrom={0}
+                  category={event.category}
+                  slug={event.slug}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-muted-foreground py-12">Nenhum evento em destaque no momento.</p>
+          )}
+
+          <div className="mt-6 text-center sm:hidden">
             <Button variant="outline" asChild>
               <Link to="/eventos">Ver todos os eventos</Link>
             </Button>
@@ -163,117 +145,70 @@ export default function Index() {
         </div>
       </section>
 
-      {/* ===== HOW IT WORKS ===== */}
-      <section className="py-16 md:py-20 border-y border-border">
+      {/* ===== FEATURES ===== */}
+      <section className="py-16 md:py-24 bg-muted/30">
         <div className="container">
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-center mb-12">Como funciona</h2>
-          <div className="grid md:grid-cols-3 gap-10 max-w-3xl mx-auto">
-            {[
-              { step: "01", title: "Encontre seu evento", desc: "Pesquise por nome, cidade ou categoria e descubra os melhores eventos perto de você." },
-              { step: "02", title: "Escolha seus ingressos", desc: "Selecione o lote, quantidade e pague com PIX, cartão ou boleto de forma segura." },
-              { step: "03", title: "Receba no celular", desc: "Seu ingresso com QR Code chega instantaneamente no seu e-mail e na plataforma." },
-            ].map((item, i) => (
+          <div className="text-center mb-12">
+            <h2 className="font-display text-2xl md:text-3xl font-bold">Por que o TicketHall?</h2>
+            <p className="text-muted-foreground mt-2 max-w-lg mx-auto">
+              Tudo o que você precisa para comprar e vender ingressos online.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {features.map((f, i) => (
               <motion.div
-                key={i}
+                key={f.title}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.15 }}
-                className="text-center space-y-3"
+                transition={{ delay: i * 0.08 }}
+                className="p-6 rounded-xl border border-border bg-card hover:shadow-lg transition-shadow"
               >
-                <span className="text-xs font-mono text-muted-foreground tracking-widest">{item.step}</span>
-                <h3 className="font-display font-semibold text-lg">{item.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                  <f.icon className="h-5 w-5 text-primary" />
+                </div>
+                <h3 className="font-display font-semibold text-foreground mb-1">{f.title}</h3>
+                <p className="text-sm text-muted-foreground">{f.desc}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ===== FOR PRODUCERS CTA ===== */}
-      <section className="py-16 md:py-20">
-        <div className="container text-center max-w-2xl mx-auto space-y-5">
-          <motion.h2
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="font-display text-3xl md:text-4xl font-bold"
-          >
-            Você produz. Nós cuidamos dos ingressos.
-          </motion.h2>
-          <p className="text-muted-foreground text-lg">
-            Crie seu evento em minutos e venda para todo o Brasil. Taxa de apenas 7% — e nada mais.
+      {/* ===== CTA PRODUTOR ===== */}
+      <section className="py-16 md:py-24">
+        <div className="container text-center space-y-6">
+          <h2 className="font-display text-2xl md:text-3xl font-bold">É produtor de eventos?</h2>
+          <p className="text-muted-foreground max-w-lg mx-auto">
+            Crie seus eventos, venda ingressos e gerencie check-in com uma plataforma completa e sem mensalidade.
           </p>
-          <Button size="xl" asChild>
-            <Link to="/produtores">Começar a vender grátis</Link>
+          <Button variant="default" size="lg" asChild>
+            <Link to="/produtores">
+              Começar a vender grátis <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
           </Button>
         </div>
       </section>
 
-      {/* ===== CATEGORIES with AnimatedBackground ===== */}
-      <section className="py-16 md:py-20 border-y border-border">
-        <div className="container">
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-center mb-10">Explore por categoria</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {categories.map((cat) => (
-              <div
-                key={cat.id}
-                className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-6 cursor-pointer hover:border-muted-foreground/40 transition-colors duration-150"
-              >
-                <cat.icon className="h-6 w-6 text-muted-foreground" />
-                <span className="text-sm font-medium">{cat.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ===== TESTIMONIALS ===== */}
-      <section className="py-16 md:py-20">
-        <div className="container">
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-center mb-10">O que dizem nossos usuários</h2>
-          <div className="grid md:grid-cols-3 gap-5 max-w-4xl mx-auto">
-            {testimonials.map((t, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="rounded-xl border border-border bg-card p-6 space-y-4 hover:border-primary/30 transition-colors duration-200"
-              >
-                <p className="text-sm text-muted-foreground leading-relaxed">"{t.text}"</p>
-                <div>
-                  <p className="text-sm font-semibold">{t.name}</p>
-                  <p className="text-xs text-muted-foreground">{t.role}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ===== FAQ with chevron ===== */}
-      <section className="py-16 md:py-20 border-t border-border">
+      {/* ===== FAQ ===== */}
+      <section className="py-16 md:py-24 bg-muted/30">
         <div className="container max-w-2xl">
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-center mb-10">Perguntas frequentes</h2>
+          <h2 className="font-display text-2xl md:text-3xl font-bold text-center mb-8">Perguntas frequentes</h2>
           <Accordion type="single" collapsible className="space-y-2">
-            {faqItems.map((item, i) => (
-              <AccordionItem key={i} value={`faq-${i}`} className="border border-border rounded-lg px-4 bg-card">
-                <AccordionTrigger className="text-sm font-medium hover:no-underline py-4 [&[data-state=open]>svg]:rotate-90">
-                  <div className="flex items-center gap-2">
-                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
-                    <span>{item.q}</span>
-                  </div>
+            {faqs.map((faq, i) => (
+              <AccordionItem key={i} value={`faq-${i}`} className="border border-border rounded-lg px-4">
+                <AccordionTrigger className="text-sm font-medium text-foreground hover:no-underline">
+                  {faq.q}
                 </AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground pb-4 pl-6">{item.a}</AccordionContent>
+                <AccordionContent className="text-sm text-muted-foreground">
+                  {faq.a}
+                </AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
         </div>
       </section>
-
-      <Footer />
-    </div>
+    </>
   );
 }

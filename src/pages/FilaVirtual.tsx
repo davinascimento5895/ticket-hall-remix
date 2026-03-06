@@ -5,8 +5,6 @@ import { Clock, Users, CheckCircle2, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -94,8 +92,7 @@ export default function FilaVirtual() {
   }, [isAdmitted, queueStatus?.expires_at]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <>
       <div className="container pt-24 pb-16 max-w-lg mx-auto">
         <div className="text-center space-y-4">
           {event?.cover_image_url && (
@@ -163,7 +160,6 @@ export default function FilaVirtual() {
           </CardContent>
         </Card>
       </div>
-      <Footer />
-    </div>
+    </>
   );
 }

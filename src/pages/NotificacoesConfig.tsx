@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { SEOHead } from "@/components/SEOHead";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -36,9 +34,8 @@ export default function NotificacoesConfig() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SEOHead title="Notificações" description="Configure suas preferências de notificação." />
-      <Navbar />
 
       <div className="container pt-24 pb-16 max-w-2xl">
         <div className="flex items-center gap-3 mb-8">
@@ -83,7 +80,6 @@ export default function NotificacoesConfig() {
         </div>
       </div>
 
-      <Footer />
-    </div>
+    </>
   );
 }

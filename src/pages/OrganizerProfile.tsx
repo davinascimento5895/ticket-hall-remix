@@ -1,8 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Globe, Instagram, Facebook, CalendarDays, MapPin } from "lucide-react";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { SEOHead } from "@/components/SEOHead";
 import { EventCard } from "@/components/EventCard";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
@@ -49,20 +47,17 @@ export default function OrganizerProfile() {
 
   if (loadingProfile) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
+      <>
         <div className="container pt-24 pb-16">
           <LoadingSkeleton variant="card" count={1} />
         </div>
-        <Footer />
-      </div>
+      </>
     );
   }
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
+      <>
         <div className="container pt-24 pb-16">
           <EmptyState
             icon={<CalendarDays className="h-12 w-12" />}
@@ -70,18 +65,16 @@ export default function OrganizerProfile() {
             description="Não encontramos nenhum organizador com esse perfil."
           />
         </div>
-        <Footer />
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SEOHead
         title={`${profile.full_name || "Organizador"} — TicketHall`}
         description={profile.organizer_bio || `Eventos organizados por ${profile.full_name}`}
       />
-      <Navbar />
 
       {/* Banner */}
       <div className="relative h-48 md:h-64 bg-gradient-to-br from-primary/30 to-accent/20 overflow-hidden">
@@ -155,7 +148,6 @@ export default function OrganizerProfile() {
         )}
       </div>
 
-      <Footer />
-    </div>
+    </>
   );
 }

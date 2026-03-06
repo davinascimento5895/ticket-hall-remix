@@ -1,8 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { CalculadoraComparador } from "@/components/CalculadoraComparador";
 import { TabelaComparativo } from "@/components/TabelaComparativo";
 import {
@@ -33,9 +31,7 @@ const steps = [
 
 export default function Produtores() {
   return (
-    <div className="min-h-screen bg-background">
-      
-      <Navbar />
+    <>
 
       {/* HERO */}
       <section className="relative min-h-[80vh] flex items-center bg-hero-gradient overflow-hidden">
@@ -165,7 +161,6 @@ export default function Produtores() {
         </div>
       </section>
 
-      <Footer />
-    </div>
+    </>
   );
 }

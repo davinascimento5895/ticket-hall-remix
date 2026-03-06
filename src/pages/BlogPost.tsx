@@ -1,6 +1,4 @@
 import { useParams, Link } from "react-router-dom";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SEOHead } from "@/components/SEOHead";
@@ -149,16 +147,14 @@ export default function BlogPost() {
 
   if (!post) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
+      <>
         <div className="container pt-32 pb-16 text-center">
           <h1 className="font-display text-2xl font-bold">Artigo não encontrado</h1>
           <Button variant="outline" asChild className="mt-4">
             <Link to="/blog">Voltar ao blog</Link>
           </Button>
         </div>
-        <Footer />
-      </div>
+      </>
     );
   }
 
@@ -178,9 +174,8 @@ export default function BlogPost() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SEOHead title={`${post.title} — TicketHall Blog`} description={post.description} />
-      <Navbar />
 
       <article className="pt-28 pb-16">
         <div className="container max-w-3xl">
@@ -281,7 +276,6 @@ export default function BlogPost() {
         </div>
       </section>
 
-      <Footer />
-    </div>
+    </>
   );
 }
