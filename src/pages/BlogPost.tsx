@@ -174,9 +174,8 @@ export default function BlogPost() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SEOHead title={`${post.title} — TicketHall Blog`} description={post.description} />
-      <Navbar />
 
       <article className="pt-28 pb-16">
         <div className="container max-w-3xl">
