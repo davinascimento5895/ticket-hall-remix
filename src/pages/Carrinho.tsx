@@ -147,7 +147,6 @@ export default function Carrinho() {
           </div>
         </div>
       </div>
-      <Footer />
-    </div>
+    </>
   );
 }
