@@ -87,6 +87,9 @@ export function Navbar() {
                   <DropdownMenuItem asChild>
                     <Link to="/meus-ingressos">Meus Ingressos</Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/notificacoes">Notificações</Link>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={signOut} className="text-destructive">
                     <LogOut className="h-4 w-4 mr-2" /> Sair

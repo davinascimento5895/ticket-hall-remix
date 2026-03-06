@@ -46,7 +46,10 @@ import MeusCertificados from "./pages/MeusCertificados";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Changelog from "./pages/Changelog";
+import NotificacoesConfig from "./pages/NotificacoesConfig";
 import NotFound from "./pages/NotFound";
+import { OnboardingFlow } from "@/components/OnboardingFlow";
+import { SupportChat } from "@/components/SupportChat";
 
 const queryClient = new QueryClient();
 
@@ -78,6 +81,7 @@ const App = () => (
               <Route path="/changelog" element={<Changelog />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogPost />} />
+              <Route path="/notificacoes" element={<NotificacoesConfig />} />
 
               {/* Producer Panel */}
               <Route
@@ -123,6 +127,8 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
             <MobileBottomNav />
+            <OnboardingFlow />
+            <SupportChat />
           </CartProvider>
         </AuthProvider>
       </BrowserRouter>
