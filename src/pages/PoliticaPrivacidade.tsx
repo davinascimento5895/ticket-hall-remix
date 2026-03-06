@@ -1,5 +1,3 @@
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { SEOHead } from "@/components/SEOHead";
 import { Separator } from "@/components/ui/separator";
 import { useEffect, useState } from "react";

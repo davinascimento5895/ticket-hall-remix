@@ -1,5 +1,3 @@
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { SEOHead } from "@/components/SEOHead";

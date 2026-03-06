@@ -1,7 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { Ticket, Calendar, MapPin, QrCode, Send, Clock } from "lucide-react";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";

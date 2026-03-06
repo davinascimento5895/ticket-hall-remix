@@ -1,6 +1,4 @@
 import { Link } from "react-router-dom";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
 import { SEOHead } from "@/components/SEOHead";
 import { motion } from "framer-motion";

@@ -4,8 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Calendar, MapPin, Clock, Share2, Users, ArrowLeft, Lock, Package, Star } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { TicketTierCard } from "@/components/TicketTierCard";
 import { SEOHead } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
