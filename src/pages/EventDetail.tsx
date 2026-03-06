@@ -108,12 +108,11 @@ export default function EventDetail() {
 
   if (loadingEvent) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
+      <>
         <div className="pt-16"><Skeleton className="w-full h-[340px]" />
           <div className="container py-8 space-y-4"><Skeleton className="h-10 w-2/3" /><Skeleton className="h-5 w-1/3" /></div>
         </div>
-      </div>
+      </>
     );
   }
 
