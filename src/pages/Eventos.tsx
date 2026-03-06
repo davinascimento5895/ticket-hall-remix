@@ -33,6 +33,7 @@ export default function Eventos() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [gridView, setGridView] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const { city, loading: cityLoading, requestLocation } = useCityDetection();
 
   const [timer, setTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const handleSearch = (value: string) => {
