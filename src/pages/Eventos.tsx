@@ -10,9 +10,12 @@ import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { SEOHead } from "@/components/SEOHead";
 import { getEvents } from "@/lib/api";
+import { RandomDiscoveryButton } from "@/components/RandomDiscoveryButton";
+import { useCityDetection } from "@/hooks/useCityDetection";
 import { cn } from "@/lib/utils";
 import { addDays, format, isSameDay, startOfToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { MapPin } from "lucide-react";
 
 const categories = [
   { value: "", label: "Todos" },
@@ -30,6 +33,7 @@ export default function Eventos() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [gridView, setGridView] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const { city, loading: cityLoading, requestLocation } = useCityDetection();
 
   const [timer, setTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const handleSearch = (value: string) => {
@@ -160,6 +164,25 @@ export default function Eventos() {
           ))}
         </div>
 
+        {/* City detection bar */}
+        {!city && (
+          <button
+            onClick={requestLocation}
+            disabled={cityLoading}
+            className="flex items-center gap-2 mb-4 px-3 py-2 rounded-xl border border-dashed border-border text-sm text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors"
+          >
+            <MapPin className="h-4 w-4 text-primary" />
+            {cityLoading ? "Detectando..." : "Usar minha localização para filtrar eventos"}
+          </button>
+        )}
+        {city && (
+          <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
+            <MapPin className="h-3.5 w-3.5 text-primary" />
+            <span>Eventos em <span className="text-foreground font-medium">{city}</span></span>
+            <button onClick={() => { localStorage.removeItem("tickethall_detected_city"); window.location.reload(); }} className="text-xs underline ml-1">Alterar</button>
+          </div>
+        )}
+
         {/* Header with view toggle */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -174,19 +197,22 @@ export default function Eventos() {
               </button>
             )}
           </div>
-          <div className="hidden md:flex items-center gap-1 border border-border rounded-lg p-0.5">
-            <button
-              onClick={() => setGridView(false)}
-              className={cn("p-1.5 rounded-md transition-colors", !gridView ? "bg-secondary text-foreground" : "text-muted-foreground")}
-            >
-              <List className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => setGridView(true)}
-              className={cn("p-1.5 rounded-md transition-colors", gridView ? "bg-secondary text-foreground" : "text-muted-foreground")}
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </button>
+          <div className="flex items-center gap-2">
+            <RandomDiscoveryButton className="hidden md:flex" />
+            <div className="hidden md:flex items-center gap-1 border border-border rounded-lg p-0.5">
+              <button
+                onClick={() => setGridView(false)}
+                className={cn("p-1.5 rounded-md transition-colors", !gridView ? "bg-secondary text-foreground" : "text-muted-foreground")}
+              >
+                <List className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setGridView(true)}
+                className={cn("p-1.5 rounded-md transition-colors", gridView ? "bg-secondary text-foreground" : "text-muted-foreground")}
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
 
