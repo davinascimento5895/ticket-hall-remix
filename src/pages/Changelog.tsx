@@ -306,12 +306,11 @@ const changelog: ChangelogEntry[] = [
 
 export default function Changelog() {
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SEOHead
         title="Changelog — TicketHall"
         description="Acompanhe todas as atualizações, novidades e melhorias da plataforma TicketHall."
       />
-      <Navbar />
 
       {/* Header */}
       <section className="pt-28 pb-12 border-b border-border">
