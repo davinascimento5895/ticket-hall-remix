@@ -34,9 +34,8 @@ export default function NotificacoesConfig() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SEOHead title="Notificações" description="Configure suas preferências de notificação." />
-      <Navbar />
 
       <div className="container pt-24 pb-16 max-w-2xl">
         <div className="flex items-center gap-3 mb-8">
