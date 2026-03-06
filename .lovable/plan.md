@@ -1,209 +1,145 @@
+# TicketHall — Plano Mestre de Redesign & Implementação
 
-
-# TicketHall — Estágio 3: Plano de Implementação em Blocos
-
-## Visão Geral
-
-O projeto atual tem toda a UI construída com placeholders `PAYMENT_INTEGRATION_POINT` no checkout, QR codes, e payouts. As edge functions existentes (`send-ticket-email`, `generate-qr-code`, `calculate-producer-payout`) são stubs. O objetivo é tornar tudo funcional com o gateway Asaas, sem ter as chaves API ainda — preparando a infraestrutura completa para que, ao receber as chaves, tudo funcione de ponta a ponta.
+## Documento de Referência
+Business Case & Product Design Analysis completo fornecido pelo cliente em 2026-03-06.
 
 ---
 
-## Bloco 1 — Fundação: Schema, Funções SQL e Utilitários
-
-**Objetivo:** Preparar o banco de dados e utilitários compartilhados antes de qualquer lógica de pagamento.
-
-**Tarefas:**
-1. **Migração de schema** — Adicionar colunas faltantes:
-   - `profiles`: `asaas_wallet_id`, `asaas_account_id`, `asaas_account_key`
-   - `orders`: `asaas_payment_id`, `asaas_customer_id`, `net_amount`, `platform_fee_amount`, `installments`, `installment_value`, `chargeback_status`, `chargeback_reason`, `chargeback_notified_at`
-   - Nova tabela `rate_limits` (key TEXT PK, count INT, expires_at TIMESTAMPTZ)
-
-2. **Funções SQL atômicas:**
-   - `reserve_tickets(p_tier_id, p_quantity, p_order_id)` com `FOR UPDATE` lock
-   - `confirm_order_payment(p_order_id, p_asaas_payment, p_net_value)` — transação que atualiza orders, ticket_tiers, tickets, event_analytics
-   - `apply_coupon(p_coupon_id, p_order_id)` com verificação atômica
-   - `cleanup_expired_reservations()` para cron
-
-3. **Índices de performance** — Todos os índices listados no prompt (events, orders, tickets, full-text search)
-
-4. **Utilitários frontend:**
-   - `src/lib/validators.ts`: `validateCPF()`, `formatCPF()`, `formatPhone()`
-   - `src/lib/cep.ts`: `fetchAddress()` com debounce via ViaCEP
-   - `src/lib/slug.ts`: `generateUniqueSlug()` usando supabase
+## Design System Alvo (Novo)
+- **Tema**: Dark-first (`#0d0d0d` base, `#1a1a1a`/`#1f1f1f`/`#2c2c2c` superfícies)
+- **Cor principal (ação)**: Laranja `#ff472d` — CTAs, badges, ícones ativos, links, bordas de foco
+- **Cor secundária (gamificação)**: Verde-lima `#bad900` — pontos, sucesso, confirmações
+- **Texto principal**: Branco `#ffffff`
+- **Texto secundário**: Cinza claro `#9ca3af`
+- **Texto terciário (inativo)**: Cinza médio `#6b7280`
+- **Tipografia**: Sora (display) + Inter (body) — já configurado
+- **Border radius**: ~12-16px para cards, ~10px para inputs
+- **Componentes**: Chips/Pills, Bottom Sheets, Cards com gradiente escuro, Toggle switches
 
 ---
 
-## Bloco 2 — Edge Function de Pagamento (Asaas)
+## Gap Analysis — Existente vs Documento de Design
 
-**Objetivo:** Criar a edge function central `create-payment` que cria cobranças no Asaas para PIX, cartão e boleto. Funciona como stub inteligente sem as chaves — retorna erros claros pedindo configuração.
+### ✅ JÁ IMPLEMENTADO
+- Catálogo de eventos com filtros por categoria
+- Detalhe do evento com descrição, data, local
+- Fluxo de compra (carrinho → checkout → pagamento)
+- Meus Ingressos (lista de ingressos ativos)
+- QR Code por ingresso
+- Transferência de ingresso
+- Sistema de reembolso (RefundDialog)
+- Cupons de desconto
+- Fila virtual
+- Certificados pós-evento
+- Painel do produtor completo
+- Painel admin completo
+- Autenticação (login/registro com email)
+- Notificações (NotificationBell)
+- Blog
+- Página do organizador
+- LGPD/Privacidade
+- Bottom navigation mobile
+- Tema claro/escuro com transição animada
 
-**Tarefas:**
-1. **`supabase/functions/create-payment/index.ts`** — Edge function que:
-   - Recebe: `orderId`, `paymentMethod`, `creditCard?`, `installments?`
-   - Busca order + event + producer profile (walletId)
-   - Cria/busca customer Asaas do comprador
-   - Cria cobrança com split (93%/7%)
-   - Para PIX: busca QR code em chamada separada (`/pixQrCode`)
-   - Para cartão: envia dados do cartão no checkout transparente
-   - Para boleto: cria com vencimento 3 dias úteis
-   - Salva IDs do Asaas na order
-   - **Sem chaves:** retorna `{ error: "ASAAS_NOT_CONFIGURED" }` graciosamente
+### ❌ FEATURES FALTANTES
+1. **Onboarding** — 2-3 telas de boas-vindas com skip
+2. **Detecção automática de cidade** — GPS
+3. **Seletor de datas horizontal** — Barra scrollável no catálogo
+4. **Top-10 / Ranking** — Seção editorial com badges numerados
+5. **Filtro avançado (Bottom Sheet)** — Sort, range slider, gênero, horário
+6. **Grid view toggle** — Lista/grade no catálogo
+7. **Rating/Avaliação** — Estrelas + reviews de usuários (tabela + UI)
+8. **Random/Discovery** — Evento aleatório
+9. **Cast/Elenco** — Seção de artistas no detalhe
+10. **Mapa de assentos** — Seleção visual interativa
+11. **Sistema de pontos** — Fidelidade no checkout
+12. **Favoritos** — Salvar eventos (tabela + UI)
+13. **Ingressos arquivados** — Ativo/Arquivado com visual P&B
+14. **Chat de suporte** — Bot + quick replies in-app
+15. **Perfil completo** — Editar perfil, cidade, pagamentos, notificações
+16. **Login OTP** — Código por email/telefone
+17. **Login social** — Google, Apple
+18. **Compartilhamento** — Share via link
+19. **Notificações configuráveis** — SMS/Push/Email toggles
+20. **Seções editoriais** — "Novo", "Semana", curadoria
 
-2. **`supabase/functions/asaas-webhook/index.ts`** — Webhook handler:
-   - Valida `asaas-access-token` no header
-   - Trata: `PAYMENT_RECEIVED`, `PAYMENT_CONFIRMED`, `PAYMENT_REFUNDED`, `CHARGEBACK_REQUESTED`, `PAYMENT_REPROVED_BY_RISK_ANALYSIS`
-   - Chama `confirm_order_payment` via RPC
-   - Dispara async: `send-ticket-email`, `generate-qr-codes`
-
-3. **`supabase/functions/create-producer-account/index.ts`** — Cria subconta Asaas quando admin aprova produtor
-
-4. **Secrets necessários** (a pedir depois): `ASAAS_API_KEY`, `ASAAS_BASE_URL`, `QR_SECRET`
-
----
-
-## Bloco 3 — Checkout Real (Frontend)
-
-**Objetivo:** Conectar a UI de checkout existente (`Checkout.tsx`) às edge functions reais.
-
-**Tarefas:**
-1. **Refatorar `Checkout.tsx`:**
-   - Step 0 → Validar dados obrigatórios (nome, email, CPF com `validateCPF`)
-   - Ao avançar para Step 1 → Chamar `createOrder` na API + `reserve_tickets` via RPC
-   - PIX: chamar `create-payment`, exibir QR real (base64 image + copia-cola)
-   - Cartão: adicionar campos de parcelamento, endereço do titular, chamar `create-payment`
-   - Boleto: chamar `create-payment`, mostrar link PDF + código de barras
-   - Realtime subscription em `orders` para detectar `status = 'paid'` → avançar para confirmação
-
-2. **`src/lib/api-payment.ts`** — Novo módulo:
-   - `createPayment(orderId, method, cardData?)` → invoca edge function
-   - `getInstallmentOptions(total)` → calcula tabela de parcelas
-
-3. **Countdown + expiração:** Conectar ao `expires_at` real da order (não só localStorage)
-
----
-
-## Bloco 4 — QR Codes Seguros e Check-in Real
-
-**Objetivo:** Substituir QR codes de placeholder por JWTs assinados com validação real.
-
-**Tarefas:**
-1. **Refatorar `generate-qr-code/index.ts`:**
-   - Gerar JWT assinado (HS256) com `{ tid, eid, oid, uid, v:1 }`
-   - Gerar imagem via `api.qrserver.com`
-   - Salvar `qr_code` e `qr_code_image_url` no ticket
-
-2. **Nova edge function `validate-checkin/index.ts`:**
-   - Verificar assinatura JWT
-   - Verificar status do ticket no banco
-   - Verificar owner_id (detectar QR de ingresso transferido)
-   - Verificar allowed_tier_ids da checkin list
-   - Marcar como `used` atomicamente (`WHERE status = 'active'`)
-   - Registrar no `checkin_scan_logs`
-
-3. **Atualizar `QRCodeModal.tsx`** — Renderizar imagem real do QR (base64 ou URL)
-
-4. **Atualizar `ProducerEventCheckin.tsx`** — Usar `validate-checkin` em vez de update direto
+### 🔄 PRECISA REDESIGN VISUAL
+- Todas as páginas públicas (landing, catálogo, detalhe, checkout)
+- Navbar → Dark-first com laranja
+- Bottom Nav → Ícone ativo laranja
+- Cards de evento → Fundo #1f1f1f, gradiente, badges
+- Botões → Fill laranja, outline cinza
+- Inputs → Fundo #1f1f1f, borda #3a3a3a
+- Chips → Ativo laranja, inativo borda cinza
+- Login/Registro → Redesign completo
+- Meus Ingressos → Cards com barcode, ações
+- Painéis Producer/Admin → Dark-first
 
 ---
 
-## Bloco 5 — Transferência de Ingresso e Cancelamento de Evento
+## Fases de Implementação
 
-**Objetivo:** Implementar edge cases críticos de produto.
+### Fase 1 — Design System Foundation
+- [ ] Atualizar index.css (CSS variables nova paleta)
+- [ ] Atualizar tailwind.config.ts
+- [ ] Atualizar componentes base (Button, Input, Card, Badge, Chips)
+- [ ] Navbar dark-first com laranja
+- [ ] Bottom Nav com laranja
+- [ ] AuthModal redesign dark-first
 
-**Tarefas:**
-1. **`supabase/functions/transfer-ticket/index.ts`:**
-   - Validar que ticket é transferível e ativo
-   - Buscar/criar conta do destinatário
-   - Gerar novo QR code (invalidar antigo)
-   - Atualizar `owner_id`, `transfer_history`
-   - Notificar ambas as partes
+### Fase 2 — Páginas Públicas (Buyer UX)
+- [ ] Landing page redesign
+- [ ] Catálogo (seletor datas, chips, banner, Top-10)
+- [ ] Detalhe do evento (reviews, cast, CTA fixo)
+- [ ] Meus Ingressos (ativo/arquivado, barcode, reembolso)
+- [ ] Checkout redesign
 
-2. **`supabase/functions/cancel-event/index.ts`:**
-   - Buscar todas as orders pagas
-   - Para cada: criar refund no Asaas + atualizar order
-   - Atualizar event status para `cancelled`
-   - Suspender todos os tickets
+### Fase 3 — Features Novas (Prioridade Alta)
+- [ ] Favoritos (tabela + UI)
+- [ ] Rating/Reviews (tabela + UI)
+- [ ] Filtro avançado (Bottom Sheet com Drawer)
+- [ ] Grid view toggle
+- [ ] Compartilhamento social
+- [ ] Perfil completo do usuário
+- [ ] Ingressos arquivados
 
-3. **UI de transferência** em `MeusIngressos.tsx` — Botão "Transferir" com modal de email
+### Fase 4 — Features Avançadas
+- [ ] Random/Discovery
+- [ ] Sistema de pontos/fidelidade
+- [ ] Chat de suporte in-app
+- [ ] Onboarding (2-3 telas)
+- [ ] Detecção de cidade
+- [ ] Notificações configuráveis
+- [ ] Login OTP + Social
 
-4. **Chargeback handling** no webhook Asaas — Suspender tickets + notificar admin
-
----
-
-## Bloco 6 — Limpeza Automática e Cron Jobs
-
-**Objetivo:** Automatizar expiração de reservas e lembretes.
-
-**Tarefas:**
-1. **Habilitar `pg_cron` e `pg_net`** via migração
-2. **Registrar cron jobs:**
-   - `cleanup_expired_reservations` — a cada 5 minutos
-   - Lembretes 24h e 1h antes do evento (edge function via `pg_net`)
-3. **Edge function `event-reminders/index.ts`** — Busca eventos próximos, envia notificações
-
----
-
-## Bloco 7 — Segurança e LGPD
-
-**Objetivo:** Rate limiting, compliance e hardening.
-
-**Tarefas:**
-1. **Rate limiting** — Tabela `rate_limits` + verificação nas edge functions de checkout e checkin
-2. **LGPD:**
-   - Tabelas `lgpd_consents` e `lgpd_data_requests`
-   - Página `/minha-conta/privacidade` com exportação de dados e exclusão de conta
-   - Checkbox de consentimento no cadastro
-3. **RLS policies** para as novas tabelas
-4. **Webhook auth** — Validar `asaas-access-token` em todas as requests
+### Fase 5 — Painéis (Producer/Admin)
+- [ ] Redesign dark-first dos dashboards
+- [ ] Consistência com novo design system
 
 ---
 
-## Bloco 8 — Features Adicionais
+## Infraestrutura Backend (Plano Anterior — Mantido)
 
-**Objetivo:** Fila virtual, certificados, multi-day, meia-entrada, seguro.
+### Bloco 1 — Schema & SQL Functions
+- Funções atômicas: reserve_tickets, confirm_order_payment, apply_coupon
+- Índices de performance
 
-**Tarefas:**
-1. **Fila virtual** — Tabela `virtual_queue`, edge function de admissão, UI de espera
-2. **Certificados** — Flag no evento, edge function de geração pós-checkin
-3. **Multi-day** — Campo `valid_dates` nos tiers, validação no checkin
-4. **Meia-entrada** — Campos de documento, verificação no checkin
-5. **Seguro de ingresso** — Placeholder com toggle no checkout
+### Bloco 2 — Edge Functions de Pagamento (Asaas)
+- create-payment, asaas-webhook, create-producer-account
+- Secrets: ASAAS_API_KEY, ASAAS_BASE_URL, QR_SECRET
 
----
+### Bloco 3 — Checkout Real
+- Conectar UI ao create-payment
+- PIX, Cartão, Boleto
 
-## Ordem de Implementação Recomendada
+### Bloco 4 — QR Codes Seguros + Check-in
+- JWT assinado, validate-checkin
 
-```text
-Bloco 1 (Schema + SQL)     ← Fundação, sem dependências
-  ↓
-Bloco 2 (Edge Functions)   ← Infra de pagamento (stub sem chaves)
-  ↓
-Bloco 3 (Checkout Frontend) ← Conecta UI às edge functions
-  ↓
-Bloco 4 (QR + Check-in)    ← Ingressos funcionais
-  ↓
-Bloco 5 (Transferência)    ← Edge cases de produto
-  ↓
-Bloco 6 (Cron Jobs)        ← Automação
-  ↓
-Bloco 7 (Segurança/LGPD)   ← Hardening
-  ↓
-Bloco 8 (Features extras)  ← Nice-to-have
-```
+### Bloco 5 — Transferência + Cancelamento
+- transfer-ticket, cancel-event
 
-## Sobre as Chaves API
+### Bloco 6 — Cron Jobs
+- cleanup_expired_reservations, event-reminders
 
-Ao final do **Bloco 2**, vou solicitar as seguintes credenciais:
-- `ASAAS_API_KEY` — Chave da conta raiz TicketHall no Asaas
-- `ASAAS_BASE_URL` — `https://sandbox.asaas.com/api/v3` (sandbox) ou produção
-- `QR_SECRET` — Chave secreta para assinar JWTs dos QR codes (posso gerar automaticamente)
-
-Até lá, todas as edge functions funcionam com fallback gracioso retornando erro claro de configuração pendente. O checkout e o frontend serão testáveis com mocks.
-
-## Escopo Total Estimado
-
-- **12 migrações SQL** (schema + funções + índices + cron)
-- **7 edge functions** novas/refatoradas
-- **5 arquivos frontend** novos/refatorados
-- **3 utilitários** (validators, CEP, slug)
-
+### Bloco 7 — Segurança & LGPD
+- Rate limiting, consents, data requests
