@@ -10,9 +10,12 @@ import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { SEOHead } from "@/components/SEOHead";
 import { getEvents } from "@/lib/api";
+import { RandomDiscoveryButton } from "@/components/RandomDiscoveryButton";
+import { useCityDetection } from "@/hooks/useCityDetection";
 import { cn } from "@/lib/utils";
 import { addDays, format, isSameDay, startOfToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { MapPin } from "lucide-react";
 
 const categories = [
   { value: "", label: "Todos" },
