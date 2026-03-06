@@ -47,13 +47,11 @@ export default function OrganizerProfile() {
 
   if (loadingProfile) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
+      <>
         <div className="container pt-24 pb-16">
           <LoadingSkeleton variant="card" count={1} />
         </div>
-        <Footer />
-      </div>
+      </>
     );
   }
 
