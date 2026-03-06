@@ -127,6 +127,8 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
             <MobileBottomNav />
+            <OnboardingFlow />
+            <SupportChat />
           </CartProvider>
         </AuthProvider>
       </BrowserRouter>
