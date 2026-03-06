@@ -57,8 +57,7 @@ export default function OrganizerProfile() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
+      <>
         <div className="container pt-24 pb-16">
           <EmptyState
             icon={<CalendarDays className="h-12 w-12" />}
@@ -66,8 +65,7 @@ export default function OrganizerProfile() {
             description="Não encontramos nenhum organizador com esse perfil."
           />
         </div>
-        <Footer />
-      </div>
+      </>
     );
   }
 
