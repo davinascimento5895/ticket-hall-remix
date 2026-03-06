@@ -44,7 +44,7 @@ function ProducerSidebar() {
         <div className="p-4 border-b border-sidebar-border">
           <Link to="/producer/dashboard" className="flex items-center gap-2">
             {collapsed ? (
-              <span className="font-display font-bold text-sm text-primary">TH</span>
+              <TicketHallLogo variant="symbol" size="sm" />
             ) : (
               <TicketHallLogo size="sm" />
             )}
