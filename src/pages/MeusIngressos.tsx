@@ -1,8 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { Ticket, Calendar, MapPin, QrCode, Send } from "lucide-react";
+import { Ticket, Calendar, MapPin, QrCode, Send, Clock } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
@@ -13,10 +12,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getMyTickets } from "@/lib/api";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 export default function MeusIngressos() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<"upcoming" | "past" | "transferred">("upcoming");
   const [qrModal, setQrModal] = useState<{
     open: boolean;
     ticketId: string;
@@ -45,31 +46,84 @@ export default function MeusIngressos() {
   const past = tickets?.filter((t: any) => new Date(t.events?.start_date) < now || t.status === "used") || [];
   const transferred = tickets?.filter((t: any) => t.status === "transferred") || [];
 
+  const tabs = [
+    { id: "upcoming" as const, label: "Ativos", count: upcoming.length },
+    { id: "past" as const, label: "Arquivados", count: past.length },
+    { id: "transferred" as const, label: "Transferidos", count: transferred.length },
+  ];
+
+  const currentTickets = activeTab === "upcoming" ? upcoming : activeTab === "past" ? past : transferred;
+  const isPast = activeTab === "past";
+
   const renderTicket = (ticket: any) => {
     const isTransferable = ticket.status === "active" && ticket.ticket_tiers?.is_transferable !== false;
+    const eventDate = ticket.events?.start_date ? new Date(ticket.events.start_date) : null;
+    const isToday = eventDate && eventDate.toDateString() === now.toDateString();
 
     return (
-      <div key={ticket.id} className="flex items-start gap-4 p-4 rounded-lg border border-border bg-card">
-        {ticket.events?.cover_image_url && (
-          <img src={ticket.events.cover_image_url} alt="" className="w-20 h-20 rounded object-cover hidden sm:block" />
+      <div
+        key={ticket.id}
+        className={cn(
+          "flex items-start gap-4 p-4 rounded-xl border bg-card transition-colors",
+          isPast ? "border-border/50 opacity-70" : "border-border hover:border-primary/30"
         )}
-        <div className="flex-1 min-w-0 space-y-1">
+      >
+        {/* Event image */}
+        <div className={cn(
+          "w-20 h-20 rounded-lg overflow-hidden shrink-0 hidden sm:block",
+          isPast && "grayscale"
+        )}>
+          {ticket.events?.cover_image_url ? (
+            <img src={ticket.events.cover_image_url} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-secondary flex items-center justify-center">
+              <Ticket className="h-6 w-6 text-muted-foreground" />
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0 space-y-1.5">
           <div className="flex items-center gap-2">
             <h3 className="font-display font-semibold text-foreground truncate">{ticket.events?.title}</h3>
+            {isToday && !isPast && (
+              <span className="px-2 py-0.5 text-[10px] font-bold uppercase rounded-full bg-primary text-primary-foreground">
+                Hoje
+              </span>
+            )}
             <OrderStatusBadge status={ticket.status} />
           </div>
+
           <p className="text-sm text-muted-foreground">{ticket.ticket_tiers?.name}</p>
+
           <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-            {ticket.events?.start_date && (
-              <span className="inline-flex items-center gap-1"><Calendar className="h-3 w-3" />{new Date(ticket.events.start_date).toLocaleDateString("pt-BR")}</span>
+            {eventDate && (
+              <span className="inline-flex items-center gap-1">
+                <Calendar className="h-3 w-3 text-primary" />
+                {eventDate.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
+              </span>
+            )}
+            {eventDate && (
+              <span className="inline-flex items-center gap-1">
+                <Clock className="h-3 w-3 text-primary" />
+                {eventDate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+              </span>
             )}
             {ticket.events?.venue_city && (
-              <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{ticket.events.venue_city}</span>
+              <span className="inline-flex items-center gap-1">
+                <MapPin className="h-3 w-3 text-primary" />
+                {ticket.events.venue_city}
+              </span>
             )}
           </div>
-          {ticket.attendee_name && <p className="text-xs text-muted-foreground">Participante: {ticket.attendee_name}</p>}
+
+          {ticket.attendee_name && (
+            <p className="text-xs text-muted-foreground">Participante: {ticket.attendee_name}</p>
+          )}
         </div>
-        <div className="flex flex-col gap-2">
+
+        {/* Actions */}
+        <div className="flex flex-col gap-2 shrink-0">
           {ticket.status === "active" && (
             <Button
               variant="outline"
@@ -131,28 +185,43 @@ export default function MeusIngressos() {
             onAction={() => navigate("/eventos")}
           />
         ) : (
-          <Tabs defaultValue="upcoming">
-            <TabsList>
-              <TabsTrigger value="upcoming">Próximos ({upcoming.length})</TabsTrigger>
-              <TabsTrigger value="past">Passados ({past.length})</TabsTrigger>
-              <TabsTrigger value="transferred">Transferidos ({transferred.length})</TabsTrigger>
-            </TabsList>
-            <TabsContent value="upcoming" className="pt-4 space-y-3">
-              {upcoming.length > 0 ? upcoming.map(renderTicket) : (
-                <p className="text-sm text-muted-foreground py-8 text-center">Nenhum ingresso para eventos futuros.</p>
+          <>
+            {/* Custom underline tabs */}
+            <div className="flex border-b border-border mb-6">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    "pb-3 px-1 mr-6 text-sm font-medium transition-colors border-b-2",
+                    activeTab === tab.id
+                      ? "border-primary text-foreground"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {tab.label}
+                  <span className={cn(
+                    "ml-1.5 text-xs",
+                    activeTab === tab.id ? "text-primary" : "text-muted-foreground"
+                  )}>
+                    {tab.count}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <div className="space-y-3">
+              {currentTickets.length > 0 ? (
+                currentTickets.map(renderTicket)
+              ) : (
+                <p className="text-sm text-muted-foreground py-8 text-center">
+                  {activeTab === "upcoming" && "Nenhum ingresso para eventos futuros."}
+                  {activeTab === "past" && "Nenhum ingresso passado."}
+                  {activeTab === "transferred" && "Nenhum ingresso transferido."}
+                </p>
               )}
-            </TabsContent>
-            <TabsContent value="past" className="pt-4 space-y-3">
-              {past.length > 0 ? past.map(renderTicket) : (
-                <p className="text-sm text-muted-foreground py-8 text-center">Nenhum ingresso passado.</p>
-              )}
-            </TabsContent>
-            <TabsContent value="transferred" className="pt-4 space-y-3">
-              {transferred.length > 0 ? transferred.map(renderTicket) : (
-                <p className="text-sm text-muted-foreground py-8 text-center">Nenhum ingresso transferido.</p>
-              )}
-            </TabsContent>
-          </Tabs>
+            </div>
+          </>
         )}
       </div>
       <Footer />
