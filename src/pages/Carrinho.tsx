@@ -54,8 +54,7 @@ export default function Carrinho() {
             onAction={() => navigate("/eventos")}
           />
         </div>
-        <Footer />
-      </div>
+      </>
     );
   }
 
