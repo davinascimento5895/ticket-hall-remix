@@ -542,7 +542,6 @@ export default function TermosDeUso() {
         </div>
       </main>
 
-      <Footer />
-    </div>
+    </>
   );
 }

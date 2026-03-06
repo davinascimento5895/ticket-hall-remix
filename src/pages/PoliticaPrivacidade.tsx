@@ -465,7 +465,6 @@ export default function PoliticaPrivacidade() {
         </div>
       </main>
 
-      <Footer />
-    </div>
+    </>
   );
 }

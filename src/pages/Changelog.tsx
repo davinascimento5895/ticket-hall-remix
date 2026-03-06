@@ -453,7 +453,6 @@ export default function Changelog() {
         </div>
       </section>
 
-      <Footer />
-    </div>
+    </>
   );
 }

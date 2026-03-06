@@ -250,7 +250,6 @@ export default function Privacidade() {
           </Card>
         )}
       </div>
-      <Footer />
-    </div>
+    </>
   );
 }

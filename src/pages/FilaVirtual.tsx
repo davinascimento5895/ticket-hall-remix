@@ -160,7 +160,6 @@ export default function FilaVirtual() {
           </CardContent>
         </Card>
       </div>
-      <Footer />
-    </div>
+    </>
   );
 }
