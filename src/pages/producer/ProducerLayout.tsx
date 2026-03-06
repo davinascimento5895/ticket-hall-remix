@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation } from "react-router-dom";
+import { Outlet, Link } from "react-router-dom";
 import {
   SidebarProvider,
   SidebarTrigger,
@@ -39,19 +39,23 @@ function ProducerSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarContent className="flex flex-col h-full">
+      <SidebarContent className="flex flex-col h-full bg-sidebar">
+        {/* Brand */}
         <div className="p-4 border-b border-sidebar-border">
           <Link to="/producer/dashboard" className="flex items-center gap-2">
             {collapsed ? (
-              <span className="font-display font-bold text-sm text-sidebar-foreground">TH</span>
+              <span className="font-display font-bold text-sm text-primary">TH</span>
             ) : (
               <TicketHallLogo size="sm" />
             )}
           </Link>
         </div>
 
+        {/* Navigation */}
         <SidebarGroup>
-          <SidebarGroupLabel>Menu</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[11px] uppercase tracking-wider text-sidebar-foreground/40 font-semibold">
+            Menu
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (
@@ -60,8 +64,8 @@ function ProducerSidebar() {
                     <NavLink
                       to={item.url}
                       end={item.url === "/producer/dashboard"}
-                      className="hover:bg-sidebar-accent/50"
-                      activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                      className="hover:bg-sidebar-accent/50 rounded-lg transition-colors"
+                      activeClassName="bg-primary/10 text-primary font-medium"
                     >
                       <item.icon className="mr-2 h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
@@ -73,10 +77,11 @@ function ProducerSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
+        {/* Footer */}
         <div className="mt-auto border-t border-sidebar-border">
-          <div className="p-3">
-            {!collapsed ? (
-              <div className="flex items-center gap-3 mb-3 px-1">
+          <div className="p-3 space-y-2">
+            {!collapsed && (
+              <div className="flex items-center gap-3 px-2 py-1.5">
                 <Avatar className="h-8 w-8">
                   <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
                     {initials}
@@ -86,14 +91,14 @@ function ProducerSidebar() {
                   <p className="text-sm font-medium text-sidebar-foreground truncate">
                     {profile?.full_name || "Produtor"}
                   </p>
-                  <p className="text-[11px] text-sidebar-foreground/50">Produtor</p>
+                  <p className="text-[10px] text-sidebar-foreground/40">Produtor</p>
                 </div>
               </div>
-            ) : null}
+            )}
             <Button
               variant="ghost"
               size="sm"
-              className="w-full justify-start text-sidebar-foreground/60 hover:text-destructive hover:bg-destructive/10"
+              className="w-full justify-start text-sidebar-foreground/50 hover:text-destructive hover:bg-destructive/10 rounded-lg"
               onClick={signOut}
             >
               <LogOut className="h-4 w-4 mr-2" />
@@ -112,6 +117,7 @@ export default function ProducerLayout() {
       <div className="min-h-screen flex w-full bg-background">
         <ProducerSidebar />
         <div className="flex-1 flex flex-col min-w-0">
+          {/* Top bar */}
           <header className="h-14 flex items-center justify-between border-b border-border px-4 shrink-0 bg-background/80 backdrop-blur-sm">
             <div className="flex items-center gap-3">
               <SidebarTrigger />
@@ -129,7 +135,9 @@ export default function ProducerLayout() {
               <AnimatedThemeToggler />
             </div>
           </header>
-          <main className="flex-1 p-6 overflow-auto">
+
+          {/* Content */}
+          <main className="flex-1 p-4 md:p-6 overflow-auto">
             <Outlet />
           </main>
         </div>
