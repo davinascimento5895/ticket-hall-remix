@@ -118,15 +118,13 @@ export default function EventDetail() {
 
   if (!event) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
+      <>
         <div className="container pt-24 pb-16 text-center">
           <h1 className="font-display text-2xl font-bold mb-2">Evento não encontrado</h1>
           <p className="text-muted-foreground mb-6">O evento que você procura não existe ou foi removido.</p>
           <Button asChild><Link to="/eventos">Ver todos os eventos</Link></Button>
         </div>
-        <Footer />
-      </div>
+      </>
     );
   }
 
