@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { getAllUsers } from "@/lib/api-admin";
+import { maskCPF } from "@/lib/validators";
 import { useState } from "react";
 
 export default function AdminUsers() {
@@ -56,7 +57,7 @@ export default function AdminUsers() {
                     return (
                       <tr key={user.id} className="border-b border-border/50 hover:bg-muted/30">
                         <td className="p-3 font-medium">{user.full_name || "—"}</td>
-                        <td className="p-3 text-muted-foreground font-mono text-xs">{user.cpf || "—"}</td>
+                        <td className="p-3 text-muted-foreground font-mono text-xs">{user.cpf ? maskCPF(user.cpf) : "—"}</td>
                         <td className="p-3 text-muted-foreground">{user.phone || "—"}</td>
                         <td className="p-3">
                           <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full border ${role === "admin" ? "bg-destructive/15 text-destructive border-destructive/20" : role === "producer" ? "bg-primary/15 text-primary border-primary/20" : "bg-secondary text-muted-foreground border-border"}`}>

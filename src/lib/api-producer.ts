@@ -299,3 +299,158 @@ export async function getProducerDashboardStats(producerId: string) {
     recentOrders: recentOrders || [],
   };
 }
+
+// ============================================================
+// PRODUCER — EVENT UTILITIES
+// ============================================================
+
+export async function getProducerEventBasic(eventId: string) {
+  const { data, error } = await supabase
+    .from("events")
+    .select("title, slug")
+    .eq("id", eventId)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function getProducerEventById(eventId: string) {
+  const { data, error } = await supabase
+    .from("events")
+    .select("*")
+    .eq("id", eventId)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function getEventTiersAll(eventId: string) {
+  const { data, error } = await supabase
+    .from("ticket_tiers")
+    .select("*")
+    .eq("event_id", eventId)
+    .order("sort_order", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getEventTiersBasic(eventId: string) {
+  const { data, error } = await supabase
+    .from("ticket_tiers")
+    .select("id, name")
+    .eq("event_id", eventId);
+  if (error) throw error;
+  return data || [];
+}
+
+export async function uploadEventImage(path: string, file: File) {
+  const { data, error } = await supabase.storage
+    .from("events")
+    .upload(path, file, { upsert: true });
+  if (error) throw error;
+  const { data: { publicUrl } } = supabase.storage.from("events").getPublicUrl(data.path);
+  return publicUrl;
+}
+
+// ============================================================
+// PRODUCER — AFFILIATES
+// ============================================================
+
+export async function getEventAffiliates(eventId: string) {
+  const { data, error } = await supabase
+    .from("affiliates")
+    .select("*")
+    .eq("event_id", eventId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function createAffiliate(affiliate: {
+  event_id: string;
+  producer_id: string;
+  name: string;
+  code: string;
+  commission_type: string;
+  commission_value: number;
+}) {
+  const { data, error } = await supabase
+    .from("affiliates")
+    .insert(affiliate)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteAffiliate(affiliateId: string) {
+  const { error } = await supabase.from("affiliates").delete().eq("id", affiliateId);
+  if (error) throw error;
+}
+
+export async function toggleAffiliate(affiliateId: string, isActive: boolean) {
+  const { error } = await supabase
+    .from("affiliates")
+    .update({ is_active: isActive })
+    .eq("id", affiliateId);
+  if (error) throw error;
+}
+
+// ============================================================
+// PRODUCER — BULK MESSAGES
+// ============================================================
+
+export async function getEventMessages(eventId: string) {
+  const { data, error } = await supabase
+    .from("bulk_messages")
+    .select("*")
+    .eq("event_id", eventId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getEventMessageRecipientCount(eventId: string, tierFilter?: string) {
+  let query = supabase
+    .from("tickets")
+    .select("attendee_email", { count: "exact", head: true })
+    .eq("event_id", eventId)
+    .eq("status", "active");
+  if (tierFilter && tierFilter !== "all") query = query.eq("tier_id", tierFilter);
+  const { count, error } = await query;
+  if (error) return 0;
+  return count || 0;
+}
+
+export async function createBulkMessage(msg: {
+  event_id: string;
+  producer_id: string;
+  subject: string;
+  body: string;
+  recipient_filter: any;
+  recipients_count: number;
+  status: string;
+}) {
+  const { data, error } = await supabase
+    .from("bulk_messages")
+    .insert(msg)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateBulkMessageStatus(messageId: string, status: string) {
+  const { error } = await supabase
+    .from("bulk_messages")
+    .update({ status })
+    .eq("id", messageId);
+  if (error) throw error;
+}
+
+export async function sendBulkMessage(messageId: string) {
+  const { error } = await supabase.functions.invoke("send-bulk-message", {
+    body: { messageId },
+  });
+  if (error) throw error;
+}

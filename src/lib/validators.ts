@@ -29,6 +29,16 @@ export const formatCPF = (value: string): string => {
 };
 
 /**
+ * Masks a CPF for display, showing only the last 2 digits.
+ * Example: "123.456.789-00" → "***.***.*89-00"
+ */
+export const maskCPF = (cpf: string): string => {
+  const clean = cpf.replace(/\D/g, '');
+  if (clean.length < 11) return cpf;
+  return `***.***.*${clean.slice(7, 9)}-${clean.slice(9)}`;
+};
+
+/**
  * Formats a phone number as (00) 00000-0000
  */
 export const formatPhone = (value: string): string => {

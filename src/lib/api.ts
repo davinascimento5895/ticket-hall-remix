@@ -221,3 +221,64 @@ export function trackPageView(_path: string) {
 export function trackPurchase(_orderId: string, _value: number, _items: any[]) {
   // Placeholder
 }
+
+// ============================================================
+// CERTIFICATES
+// ============================================================
+
+/** Get user's certificates */
+export async function getMyCertificates(userId: string) {
+  const { data, error } = await supabase
+    .from("certificates")
+    .select("*, events(title, start_date, venue_name)")
+    .eq("user_id", userId)
+    .order("issued_at", { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+// ============================================================
+// VIRTUAL QUEUE
+// ============================================================
+
+/** Get event info for virtual queue page */
+export async function getEventForQueue(slug: string) {
+  const { data, error } = await supabase
+    .from("events")
+    .select("id, title, cover_image_url, has_virtual_queue, queue_capacity")
+    .eq("slug", slug)
+    .eq("status", "published")
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+/** Manage queue position (join, check status) */
+export async function manageQueue(action: string, eventId: string, userId: string) {
+  const { data, error } = await supabase.functions.invoke("manage-queue", {
+    body: { action, eventId, userId },
+  });
+  if (error) throw error;
+  return data;
+}
+
+// ============================================================
+// AFFILIATE TRACKING
+// ============================================================
+
+/** Track an affiliate click by incrementing the click counter */
+export async function trackAffiliateClick(eventId: string, code: string) {
+  const { data } = await supabase
+    .from("affiliates")
+    .select("id, clicks")
+    .eq("event_id", eventId)
+    .eq("code", code)
+    .eq("is_active", true)
+    .single();
+  if (data) {
+    await supabase
+      .from("affiliates")
+      .update({ clicks: (data.clicks || 0) + 1 })
+      .eq("id", data.id);
+  }
+}

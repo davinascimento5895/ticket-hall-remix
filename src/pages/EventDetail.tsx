@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Calendar, MapPin, Clock, Share2, Users, ArrowLeft, Lock, Package, Star } from "lucide-react";
 import { format } from "date-fns";
@@ -11,13 +11,14 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/contexts/CartContext";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
-import { getEventBySlug, getEventTiers } from "@/lib/api";
+import { getEventBySlug, getEventTiers, trackAffiliateClick } from "@/lib/api";
 import { getEventProducts } from "@/lib/api-checkout";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 export default function EventDetail() {
   const { slug } = useParams<{ slug: string }>();
+  const [searchParams] = useSearchParams();
   const [unlockCode, setUnlockCode] = useState("");
   const [revealedCodes, setRevealedCodes] = useState<string[]>([]);
   const [showUnlockInput, setShowUnlockInput] = useState(false);
@@ -28,6 +29,17 @@ export default function EventDetail() {
     queryFn: () => getEventBySlug(slug!),
     enabled: !!slug,
   });
+
+  // Track affiliate click from ?ref=CODE
+  useEffect(() => {
+    const ref = searchParams.get("ref");
+    if (!ref || !event?.id) return;
+    const trackedKey = `affiliate_tracked_${event.id}_${ref}`;
+    if (sessionStorage.getItem(trackedKey)) return;
+    sessionStorage.setItem("affiliate_ref", ref);
+    sessionStorage.setItem(trackedKey, "1");
+    trackAffiliateClick(event.id, ref);
+  }, [event?.id, searchParams]);
 
   const { data: allTiers, isLoading: loadingTiers } = useQuery({
     queryKey: ["event-tiers-all", event?.id],

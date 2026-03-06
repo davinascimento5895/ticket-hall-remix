@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { SEOHead } from "@/components/SEOHead";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Bell, Mail, Smartphone, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface NotifPref {
   id: string;
@@ -24,12 +26,55 @@ const defaultPrefs: NotifPref[] = [
 ];
 
 export default function NotificacoesConfig() {
+  const { user } = useAuth();
   const [prefs, setPrefs] = useState(defaultPrefs);
+  const [loaded, setLoaded] = useState(false);
+
+  // Load preferences from DB on mount
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase
+      .from("notification_preferences")
+      .select("*")
+      .eq("user_id", user.id)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setPrefs((prev) =>
+            prev.map((p) => {
+              const saved = data.find((d: any) => d.notification_type === p.id);
+              if (saved) {
+                return { ...p, email: saved.email ?? p.email, push: saved.push ?? p.push, sms: saved.sms ?? p.sms };
+              }
+              return p;
+            })
+          );
+        }
+        setLoaded(true);
+      });
+  }, [user?.id]);
+
+  const persistPref = useCallback(async (id: string, channel: "email" | "push" | "sms", value: boolean) => {
+    if (!user?.id) return;
+    const { error } = await supabase
+      .from("notification_preferences")
+      .upsert(
+        { user_id: user.id, notification_type: id, [channel]: value },
+        { onConflict: "user_id,notification_type" }
+      );
+    if (error) {
+      toast.error("Erro ao salvar preferência");
+      console.error("notification_preferences upsert error:", error);
+    }
+  }, [user?.id]);
 
   const toggle = (id: string, channel: "email" | "push" | "sms") => {
+    const pref = prefs.find((p) => p.id === id);
+    if (!pref) return;
+    const newValue = !pref[channel];
     setPrefs((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, [channel]: !p[channel] } : p))
+      prev.map((p) => (p.id === id ? { ...p, [channel]: newValue } : p))
     );
+    persistPref(id, channel, newValue);
     toast.success("Preferência atualizada");
   };
 

@@ -1,3 +1,4 @@
+import { lazy, Suspense, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,6 +10,10 @@ import { CartProvider } from "@/contexts/CartContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { MainLayout } from "@/components/MainLayout";
+import { OnboardingFlow } from "@/components/OnboardingFlow";
+import { SupportChat } from "@/components/SupportChat";
+
+// Public pages — eager loaded
 import Index from "./pages/Index";
 import Produtores from "./pages/Produtores";
 import Eventos from "./pages/Eventos";
@@ -16,26 +21,6 @@ import EventDetail from "./pages/EventDetail";
 import Carrinho from "./pages/Carrinho";
 import Checkout from "./pages/Checkout";
 import MeusIngressos from "./pages/MeusIngressos";
-import ProducerLayout from "./pages/producer/ProducerLayout";
-import ProducerDashboard from "./pages/producer/ProducerDashboard";
-import ProducerEvents from "./pages/producer/ProducerEvents";
-import ProducerEventForm from "./pages/producer/ProducerEventForm";
-import ProducerEventReports from "./pages/producer/ProducerEventReports";
-import ProducerEventOrders from "./pages/producer/ProducerEventOrders";
-import ProducerEventCheckin from "./pages/producer/ProducerEventCheckin";
-import ProducerEventGuestlist from "./pages/producer/ProducerEventGuestlist";
-import ProducerEventCoupons from "./pages/producer/ProducerEventCoupons";
-import ProducerSettings from "./pages/producer/ProducerSettings";
-import ProducerEventAffiliates from "./pages/producer/ProducerEventAffiliates";
-import ProducerEventMessages from "./pages/producer/ProducerEventMessages";
-import AdminLayout from "./pages/admin/AdminLayout";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminEvents from "./pages/admin/AdminEvents";
-import AdminUsers from "./pages/admin/AdminUsers";
-import AdminProducers from "./pages/admin/AdminProducers";
-import AdminOrders from "./pages/admin/AdminOrders";
-import AdminFinance from "./pages/admin/AdminFinance";
-import AdminSettings from "./pages/admin/AdminSettings";
 import PublicCheckin from "./pages/PublicCheckin";
 import OrganizerProfile from "./pages/OrganizerProfile";
 import EmbedWidget from "./pages/EmbedWidget";
@@ -49,12 +34,41 @@ import BlogPost from "./pages/BlogPost";
 import Changelog from "./pages/Changelog";
 import NotificacoesConfig from "./pages/NotificacoesConfig";
 import NotFound from "./pages/NotFound";
-import { OnboardingFlow } from "@/components/OnboardingFlow";
-import { SupportChat } from "@/components/SupportChat";
 
-const queryClient = new QueryClient();
+// Producer pages — lazy loaded
+const ProducerLayout = lazy(() => import("./pages/producer/ProducerLayout"));
+const ProducerDashboard = lazy(() => import("./pages/producer/ProducerDashboard"));
+const ProducerEvents = lazy(() => import("./pages/producer/ProducerEvents"));
+const ProducerEventForm = lazy(() => import("./pages/producer/ProducerEventForm"));
+const ProducerEventReports = lazy(() => import("./pages/producer/ProducerEventReports"));
+const ProducerEventOrders = lazy(() => import("./pages/producer/ProducerEventOrders"));
+const ProducerEventCheckin = lazy(() => import("./pages/producer/ProducerEventCheckin"));
+const ProducerEventGuestlist = lazy(() => import("./pages/producer/ProducerEventGuestlist"));
+const ProducerEventCoupons = lazy(() => import("./pages/producer/ProducerEventCoupons"));
+const ProducerSettings = lazy(() => import("./pages/producer/ProducerSettings"));
+const ProducerEventAffiliates = lazy(() => import("./pages/producer/ProducerEventAffiliates"));
+const ProducerEventMessages = lazy(() => import("./pages/producer/ProducerEventMessages"));
 
-const App = () => (
+// Admin pages — lazy loaded
+const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminEvents = lazy(() => import("./pages/admin/AdminEvents"));
+const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminProducers = lazy(() => import("./pages/admin/AdminProducers"));
+const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
+const AdminFinance = lazy(() => import("./pages/admin/AdminFinance"));
+const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
+
+const LazyFallback = () => (
+  <div className="flex items-center justify-center min-h-[50vh]">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+  </div>
+);
+
+const App = () => {
+  const [queryClient] = useState(() => new QueryClient());
+
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -63,6 +77,7 @@ const App = () => (
         <ScrollToTop />
         <AuthProvider>
           <CartProvider>
+            <Suspense fallback={<LazyFallback />}>
             <Routes>
               {/* Pages with shared Navbar + Footer */}
               <Route element={<MainLayout />}>
@@ -132,6 +147,7 @@ const App = () => (
 
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </Suspense>
             <MobileBottomNav />
             <OnboardingFlow />
             <SupportChat />
@@ -140,6 +156,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;

@@ -10,7 +10,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  getProducerEventBasic,
+  getEventTiersBasic,
+  getEventMessages,
+  getEventMessageRecipientCount,
+  createBulkMessage,
+  updateBulkMessageStatus,
+  sendBulkMessage,
+} from "@/lib/api-producer";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 
@@ -24,54 +32,33 @@ export default function ProducerEventMessages() {
 
   const { data: event } = useQuery({
     queryKey: ["producer-event", id],
-    queryFn: async () => {
-      const { data } = await supabase.from("events").select("title").eq("id", id).single();
-      return data;
-    },
+    queryFn: () => getProducerEventBasic(id!),
     enabled: !!id,
   });
 
   const { data: tiers = [] } = useQuery({
     queryKey: ["event-tiers-messages", id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("ticket_tiers").select("id, name").eq("event_id", id!);
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => getEventTiersBasic(id!),
     enabled: !!id,
   });
 
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ["event-messages", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("bulk_messages")
-        .select("*")
-        .eq("event_id", id!)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => getEventMessages(id!),
     enabled: !!id,
   });
 
   // Count recipients
   const { data: recipientCount = 0 } = useQuery({
     queryKey: ["recipient-count", id, tierFilter],
-    queryFn: async () => {
-      let query = supabase.from("tickets").select("attendee_email", { count: "exact", head: true }).eq("event_id", id!).eq("status", "active");
-      if (tierFilter !== "all") query = query.eq("tier_id", tierFilter);
-      const { count, error } = await query;
-      if (error) return 0;
-      return count || 0;
-    },
+    queryFn: () => getEventMessageRecipientCount(id!, tierFilter),
     enabled: !!id,
   });
 
-  const sendMutation = useMutation({
+  const saveDraftMutation = useMutation({
     mutationFn: async () => {
       const filter = tierFilter !== "all" ? { tier_ids: [tierFilter], status: "active" } : { status: "active" };
-      const { error } = await supabase.from("bulk_messages").insert({
+      await createBulkMessage({
         event_id: id!,
         producer_id: user!.id,
         subject,
@@ -80,16 +67,43 @@ export default function ProducerEventMessages() {
         recipients_count: recipientCount,
         status: "draft",
       });
-      if (error) throw error;
-      // BULK_MESSAGE_INTEGRATION_POINT — trigger edge function to send emails
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["event-messages"] });
       setSubject("");
       setBody("");
-      toast({ title: "Mensagem salva como rascunho" });
+      toast({ title: "Rascunho salvo" });
     },
     onError: (err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
+  });
+
+  const sendMutation = useMutation({
+    mutationFn: async () => {
+      const filter = tierFilter !== "all" ? { tier_ids: [tierFilter], status: "active" } : { status: "active" };
+      const msg = await createBulkMessage({
+        event_id: id!,
+        producer_id: user!.id,
+        subject,
+        body,
+        recipient_filter: filter,
+        recipients_count: recipientCount,
+        status: "pending",
+      });
+
+      try {
+        await sendBulkMessage(msg.id);
+      } catch (fnError) {
+        await updateBulkMessageStatus(msg.id, "failed");
+        throw fnError;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["event-messages"] });
+      setSubject("");
+      setBody("");
+      toast({ title: "Mensagem enviada!", description: "Os e-mails estão sendo processados." });
+    },
+    onError: (err: any) => toast({ title: "Erro ao enviar", description: err.message, variant: "destructive" }),
   });
 
   const statusLabel = (s: string) => {
@@ -140,10 +154,12 @@ export default function ProducerEventMessages() {
             <Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Escreva sua mensagem aqui..." rows={6} />
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => sendMutation.mutate()} disabled={!subject || !body || sendMutation.isPending}>
-              <Send className="h-4 w-4 mr-1" /> Salvar rascunho
+            <Button onClick={() => sendMutation.mutate()} disabled={!subject || !body || sendMutation.isPending || saveDraftMutation.isPending}>
+              <Send className="h-4 w-4 mr-1" /> Enviar mensagem
             </Button>
-            <p className="text-xs text-muted-foreground self-center">BULK_MESSAGE_INTEGRATION_POINT — O envio será processado por função em segundo plano.</p>
+            <Button variant="outline" onClick={() => saveDraftMutation.mutate()} disabled={!subject || !body || saveDraftMutation.isPending || sendMutation.isPending}>
+              Salvar rascunho
+            </Button>
           </div>
         </CardContent>
       </Card>
