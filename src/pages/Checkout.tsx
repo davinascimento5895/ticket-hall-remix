@@ -2,8 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Check } from "lucide-react";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { CheckoutStepData } from "@/components/checkout/CheckoutStepData";
 import { CheckoutStepPayment } from "@/components/checkout/CheckoutStepPayment";
