@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,30 @@ export default function ProducerSettings() {
     onSuccess: () => toast({ title: "Perfil atualizado!" }),
     onError: (err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
   });
+
+  const saveBankMutation = useMutation({
+    mutationFn: () => updateProfile(user!.id, {
+      bank_pix_key: bank.pix_key,
+      bank_name: bank.bank_name,
+      bank_agency: bank.agency,
+      bank_account: bank.account,
+    } as any),
+    onSuccess: () => toast({ title: "Dados bancários salvos!" }),
+    onError: (err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
+  });
+
+  // Debounced auto-save for organizer page fields
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debouncedUpdate = useCallback((field: string, value: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      updateProfile(user!.id, { [field]: value } as any).then(() => {
+        toast({ title: "Salvo!" });
+      }).catch(() => {
+        toast({ title: "Erro ao salvar", variant: "destructive" });
+      });
+    }, 800);
+  }, [user]);
 
   return (
     <div className="space-y-6">
@@ -57,11 +81,11 @@ export default function ProducerSettings() {
             <CardHeader><CardTitle className="text-base">Página do Organizador</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">Personalize sua página pública em <strong>/organizador/{profile?.organizer_slug || "seu-slug"}</strong></p>
-              <div><Label>Slug (URL)</Label><Input defaultValue={profile?.organizer_slug || ""} placeholder="minha-produtora" onBlur={(e) => updateProfile(user!.id, { organizer_slug: e.target.value } as any)} /></div>
-              <div><Label>Bio</Label><Input defaultValue={profile?.organizer_bio || ""} placeholder="Sobre sua produtora..." onBlur={(e) => updateProfile(user!.id, { organizer_bio: e.target.value } as any)} /></div>
-              <div><Label>Instagram</Label><Input defaultValue={profile?.organizer_instagram || ""} placeholder="https://instagram.com/..." onBlur={(e) => updateProfile(user!.id, { organizer_instagram: e.target.value } as any)} /></div>
-              <div><Label>Facebook</Label><Input defaultValue={profile?.organizer_facebook || ""} placeholder="https://facebook.com/..." onBlur={(e) => updateProfile(user!.id, { organizer_facebook: e.target.value } as any)} /></div>
-              <div><Label>Website</Label><Input defaultValue={profile?.organizer_website || ""} placeholder="https://..." onBlur={(e) => updateProfile(user!.id, { organizer_website: e.target.value } as any)} /></div>
+              <div><Label>Slug (URL)</Label><Input defaultValue={profile?.organizer_slug || ""} placeholder="minha-produtora" onBlur={(e) => debouncedUpdate("organizer_slug", e.target.value)} /></div>
+              <div><Label>Bio</Label><Input defaultValue={profile?.organizer_bio || ""} placeholder="Sobre sua produtora..." onBlur={(e) => debouncedUpdate("organizer_bio", e.target.value)} /></div>
+              <div><Label>Instagram</Label><Input defaultValue={profile?.organizer_instagram || ""} placeholder="https://instagram.com/..." onBlur={(e) => debouncedUpdate("organizer_instagram", e.target.value)} /></div>
+              <div><Label>Facebook</Label><Input defaultValue={profile?.organizer_facebook || ""} placeholder="https://facebook.com/..." onBlur={(e) => debouncedUpdate("organizer_facebook", e.target.value)} /></div>
+              <div><Label>Website</Label><Input defaultValue={profile?.organizer_website || ""} placeholder="https://..." onBlur={(e) => debouncedUpdate("organizer_website", e.target.value)} /></div>
               {profile?.organizer_slug && (
                 <a href={`/organizador/${profile.organizer_slug}`} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">
                   Ver página pública →
@@ -81,8 +105,9 @@ export default function ProducerSettings() {
                 <div><Label>Agência</Label><Input value={bank.agency} onChange={(e) => setBank((p) => ({ ...p, agency: e.target.value }))} /></div>
               </div>
               <div><Label>Conta</Label><Input value={bank.account} onChange={(e) => setBank((p) => ({ ...p, account: e.target.value }))} /></div>
-              <p className="text-xs text-muted-foreground">BANK_PAYOUT_INTEGRATION_POINT — Os dados bancários serão utilizados para repasses após integração com gateway de pagamento.</p>
-              <Button variant="outline" disabled>Salvar dados bancários (em breve)</Button>
+              <Button onClick={() => saveBankMutation.mutate()} disabled={saveBankMutation.isPending || !bank.pix_key}>
+                Salvar dados bancários
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>

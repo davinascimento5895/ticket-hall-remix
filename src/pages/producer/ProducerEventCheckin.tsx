@@ -1,18 +1,18 @@
 import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Search, QrCode, CheckCircle2, Wifi, WifiOff, XCircle, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Search, QrCode, CheckCircle2, Wifi, WifiOff, XCircle, AlertTriangle, Camera, CameraOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckinListsManager } from "@/components/producer/CheckinListsManager";
-import { getEventTickets } from "@/lib/api-producer";
+import { getEventTickets, getProducerEventBasic } from "@/lib/api-producer";
 import { validateCheckinByTicketId, type CheckinResult } from "@/lib/api-checkin";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Html5Qrcode } from "html5-qrcode";
 
 export default function ProducerEventCheckin() {
   const { id } = useParams();
@@ -21,10 +21,14 @@ export default function ProducerEventCheckin() {
   const [search, setSearch] = useState("");
   const [isOnline] = useState(navigator.onLine);
   const [lastResult, setLastResult] = useState<CheckinResult | null>(null);
+  const [scannerActive, setScannerActive] = useState(false);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const scannerContainerRef = useRef<string>("qr-reader-" + Math.random().toString(36).slice(2));
+  const lastScannedRef = useRef<string>("");
 
   const { data: event } = useQuery({
     queryKey: ["producer-event", id],
-    queryFn: async () => { const { data } = await supabase.from("events").select("title").eq("id", id).single(); return data; },
+    queryFn: () => getProducerEventBasic(id!),
     enabled: !!id,
   });
 
@@ -49,6 +53,49 @@ export default function ProducerEventCheckin() {
 
   const totalTickets = tickets?.length || 0;
   const checkedIn = tickets?.filter((t: any) => t.status === "used").length || 0;
+
+  // QR Scanner start/stop
+  const startScanner = useCallback(async () => {
+    const containerId = scannerContainerRef.current;
+    if (scannerRef.current) return;
+    try {
+      const scanner = new Html5Qrcode(containerId);
+      scannerRef.current = scanner;
+      await scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        (decodedText) => {
+          // Prevent duplicate scans of the same code in quick succession
+          if (lastScannedRef.current === decodedText) return;
+          lastScannedRef.current = decodedText;
+          checkinMutation.mutate(decodedText);
+          // Reset after 3 seconds to allow re-scanning
+          setTimeout(() => { lastScannedRef.current = ""; }, 3000);
+        },
+        () => {} // ignore scan failures
+      );
+      setScannerActive(true);
+    } catch (err: any) {
+      toast({ title: "Erro ao abrir câmera", description: err.message || "Permissão de câmera negada", variant: "destructive" });
+      scannerRef.current = null;
+    }
+  }, [checkinMutation]);
+
+  const stopScanner = useCallback(async () => {
+    if (scannerRef.current) {
+      try {
+        await scannerRef.current.stop();
+        scannerRef.current.clear();
+      } catch (_) {}
+      scannerRef.current = null;
+    }
+    setScannerActive(false);
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => { stopScanner(); };
+  }, [stopScanner]);
 
   const filtered = tickets?.filter((t: any) => {
     if (!search) return true;
@@ -117,14 +164,28 @@ export default function ProducerEventCheckin() {
             </Card>
           )}
 
-          {/* QR Scanner placeholder */}
+          {/* QR Scanner */}
           <Card>
             <CardContent className="pt-6">
-              <div className="w-full h-48 bg-muted rounded-lg flex flex-col items-center justify-center gap-2 border border-dashed border-border">
-                <QrCode className="h-10 w-10 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">Scanner de câmera (em breve)</p>
-                <p className="text-xs text-muted-foreground">Use a busca manual abaixo</p>
-              </div>
+              <div
+                id={scannerContainerRef.current}
+                className="mx-auto overflow-hidden rounded-lg mb-4"
+                style={{ maxWidth: 400, minHeight: scannerActive ? 300 : 0 }}
+              />
+              {!scannerActive ? (
+                <div className="w-full flex flex-col items-center gap-3">
+                  <QrCode className="h-10 w-10 text-muted-foreground" />
+                  <Button onClick={startScanner} className="gap-2">
+                    <Camera className="h-4 w-4" /> Abrir câmera para scanner
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <Button variant="outline" onClick={stopScanner} className="gap-2">
+                    <CameraOff className="h-4 w-4" /> Parar scanner
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
 

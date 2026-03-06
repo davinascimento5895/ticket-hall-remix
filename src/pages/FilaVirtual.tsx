@@ -5,7 +5,7 @@ import { Clock, Users, CheckCircle2, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { supabase } from "@/integrations/supabase/client";
+import { getEventForQueue, manageQueue } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 
@@ -17,28 +17,13 @@ export default function FilaVirtual() {
 
   const { data: event } = useQuery({
     queryKey: ["event-queue", slug],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("events")
-        .select("id, title, cover_image_url, has_virtual_queue, queue_capacity")
-        .eq("slug", slug)
-        .eq("status", "published")
-        .single();
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => getEventForQueue(slug!),
     enabled: !!slug,
   });
 
   const { data: queueStatus, refetch } = useQuery({
     queryKey: ["queue-status", event?.id, user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("manage-queue", {
-        body: { action: "status", eventId: event!.id, userId: user!.id },
-      });
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => manageQueue("status", event!.id, user!.id),
     enabled: !!event?.id && !!user?.id,
     refetchInterval: 5000, // Poll every 5 seconds
   });
@@ -47,10 +32,7 @@ export default function FilaVirtual() {
     if (!user || !event) return;
     setJoining(true);
     try {
-      const { data, error } = await supabase.functions.invoke("manage-queue", {
-        body: { action: "join", eventId: event.id, userId: user.id },
-      });
-      if (error) throw error;
+      const data = await manageQueue("join", event.id, user.id);
       if (data?.error) throw new Error(data.error);
       toast({ title: "Você entrou na fila!", description: `Posição: #${data.position}` });
       refetch();
@@ -64,9 +46,11 @@ export default function FilaVirtual() {
   // Redirect when admitted
   useEffect(() => {
     if (queueStatus?.status === "admitted") {
-      toast({ title: "É sua vez!", description: "Você pode comprar seus ingressos agora." });
+      toast({ title: "É sua vez!", description: "Redirecionando para o evento..." });
+      const timer = setTimeout(() => navigate(`/eventos/${slug}`), 2500);
+      return () => clearTimeout(timer);
     }
-  }, [queueStatus?.status]);
+  }, [queueStatus?.status, navigate, slug]);
 
   const isAdmitted = queueStatus?.status === "admitted";
   const isWaiting = queueStatus?.status === "waiting";
@@ -130,7 +114,7 @@ export default function FilaVirtual() {
                     {queueStatus.peopleAhead} {queueStatus.peopleAhead === 1 ? "pessoa" : "pessoas"} à sua frente
                   </p>
                 )}
-                <Progress value={Math.max(5, 100 - (queueStatus.peopleAhead || 0) * 5)} className="h-2" />
+                <Progress value={queueStatus.peopleAhead != null ? Math.max(5, Math.round(100 / ((queueStatus.peopleAhead || 0) + 1))) : 5} className="h-2" />
                 <p className="text-xs text-muted-foreground">
                   Aguarde, você será notificado quando for sua vez. Não feche esta página.
                 </p>

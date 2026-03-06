@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import { config } from "@/lib/config";
 
 export interface CartItem {
   tierId: string;
@@ -128,7 +129,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const platformFee = subtotal * 0.07;
+  const platformFee = subtotal * (config.platformFeePercent / 100);
   const total = subtotal + platformFee;
   const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
 

@@ -10,7 +10,13 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  getProducerEventBasic,
+  getEventAffiliates,
+  createAffiliate,
+  deleteAffiliate,
+  toggleAffiliate,
+} from "@/lib/api-producer";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 
@@ -23,31 +29,20 @@ export default function ProducerEventAffiliates() {
 
   const { data: event } = useQuery({
     queryKey: ["producer-event", id],
-    queryFn: async () => {
-      const { data } = await supabase.from("events").select("title, slug").eq("id", id).single();
-      return data;
-    },
+    queryFn: () => getProducerEventBasic(id!),
     enabled: !!id,
   });
 
   const { data: affiliates = [], isLoading } = useQuery({
     queryKey: ["event-affiliates", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("affiliates")
-        .select("*")
-        .eq("event_id", id!)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => getEventAffiliates(id!),
     enabled: !!id,
   });
 
   const createMutation = useMutation({
     mutationFn: async () => {
       const code = form.code.trim().toUpperCase().replace(/\s+/g, "-") || form.name.trim().toUpperCase().replace(/\s+/g, "-").slice(0, 12);
-      const { error } = await supabase.from("affiliates").insert({
+      await createAffiliate({
         event_id: id!,
         producer_id: user!.id,
         name: form.name,
@@ -55,7 +50,6 @@ export default function ProducerEventAffiliates() {
         commission_type: form.commission_type,
         commission_value: parseFloat(form.commission_value) || 0,
       });
-      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["event-affiliates"] });
@@ -67,10 +61,7 @@ export default function ProducerEventAffiliates() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (affId: string) => {
-      const { error } = await supabase.from("affiliates").delete().eq("id", affId);
-      if (error) throw error;
-    },
+    mutationFn: (affId: string) => deleteAffiliate(affId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["event-affiliates"] });
       toast({ title: "Afiliado removido" });
@@ -78,10 +69,7 @@ export default function ProducerEventAffiliates() {
   });
 
   const toggleMutation = useMutation({
-    mutationFn: async ({ affId, active }: { affId: string; active: boolean }) => {
-      const { error } = await supabase.from("affiliates").update({ is_active: active }).eq("id", affId);
-      if (error) throw error;
-    },
+    mutationFn: ({ affId, active }: { affId: string; active: boolean }) => toggleAffiliate(affId, active),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["event-affiliates"] }),
   });
 

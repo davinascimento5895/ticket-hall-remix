@@ -9,7 +9,7 @@ import { CheckoutStepConfirmation } from "@/components/checkout/CheckoutStepConf
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { getCheckoutQuestions } from "@/lib/api-checkout";
+import { getCheckoutQuestions, saveOrderProducts } from "@/lib/api-checkout";
 import { createPayment, CreditCardData } from "@/lib/api-payment";
 import { toast } from "@/hooks/use-toast";
 
@@ -126,6 +126,19 @@ export default function Checkout() {
         }
       }
 
+      // Save order products (items with tierId starting with "product-")
+      const productItems = items.filter((i) => i.tierId.startsWith("product-"));
+      if (productItems.length > 0) {
+        await saveOrderProducts(
+          productItems.map((i) => ({
+            order_id: order.id,
+            product_id: i.tierId.replace("product-", ""),
+            quantity: i.quantity,
+            unit_price: i.price,
+          }))
+        );
+      }
+
       // Save checkout answers
       const answersToSave: { order_id: string; question_id: string; answer: string }[] = [];
       for (const [key, answer] of Object.entries(questionAnswers)) {
@@ -233,7 +246,7 @@ export default function Checkout() {
           />
         )}
 
-        {step === 2 && <CheckoutStepConfirmation />}
+        {step === 2 && <CheckoutStepConfirmation orderId={orderId} />}
       </div>
     </>
   );

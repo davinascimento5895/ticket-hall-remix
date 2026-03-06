@@ -5,22 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { getMyCertificates } from "@/lib/api";
 
 export default function MeusCertificados() {
   const { user } = useAuth();
 
   const { data: certificates, isLoading } = useQuery({
     queryKey: ["my-certificates", user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("certificates")
-        .select("*, events(title, start_date, venue_name)")
-        .eq("user_id", user!.id)
-        .order("issued_at", { ascending: false });
-      if (error) throw error;
-      return data || [];
-    },
+    queryFn: () => getMyCertificates(user!.id),
     enabled: !!user?.id,
   });
 

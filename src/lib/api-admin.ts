@@ -115,6 +115,7 @@ export async function getAllOrders(filters?: { status?: string; search?: string 
     .select("*, events(title), profiles!orders_buyer_id_fkey(full_name)")
     .order("created_at", { ascending: false });
   if (filters?.status && filters.status !== "all") query = query.eq("status", filters.status);
+  if (filters?.search) query = query.ilike("id", `%${filters.search}%`);
   const { data, error } = await query;
   if (error) throw error;
   return data;
