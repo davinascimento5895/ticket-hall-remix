@@ -147,16 +147,14 @@ export default function BlogPost() {
 
   if (!post) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
+      <>
         <div className="container pt-32 pb-16 text-center">
           <h1 className="font-display text-2xl font-bold">Artigo não encontrado</h1>
           <Button variant="outline" asChild className="mt-4">
             <Link to="/blog">Voltar ao blog</Link>
           </Button>
         </div>
-        <Footer />
-      </div>
+      </>
     );
   }
 
