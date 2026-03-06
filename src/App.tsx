@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { MainLayout } from "@/components/MainLayout";
 import Index from "./pages/Index";
 import Produtores from "./pages/Produtores";
 import Eventos from "./pages/Eventos";
@@ -63,25 +64,30 @@ const App = () => (
         <AuthProvider>
           <CartProvider>
             <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/produtores" element={<Produtores />} />
-              <Route path="/eventos" element={<Eventos />} />
-              <Route path="/eventos/:slug" element={<EventDetail />} />
-              <Route path="/carrinho" element={<Carrinho />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/meus-ingressos" element={<MeusIngressos />} />
+              {/* Pages with shared Navbar + Footer */}
+              <Route element={<MainLayout />}>
+                <Route path="/" element={<Index />} />
+                <Route path="/produtores" element={<Produtores />} />
+                <Route path="/eventos" element={<Eventos />} />
+                <Route path="/eventos/:slug" element={<EventDetail />} />
+                <Route path="/carrinho" element={<Carrinho />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/meus-ingressos" element={<MeusIngressos />} />
+                <Route path="/organizador/:slug" element={<OrganizerProfile />} />
+                <Route path="/minha-conta/privacidade" element={<Privacidade />} />
+                <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
+                <Route path="/termos-de-uso" element={<TermosDeUso />} />
+                <Route path="/meus-certificados" element={<MeusCertificados />} />
+                <Route path="/fila/:slug" element={<FilaVirtual />} />
+                <Route path="/changelog" element={<Changelog />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/blog/:slug" element={<BlogPost />} />
+                <Route path="/notificacoes" element={<NotificacoesConfig />} />
+              </Route>
+
+              {/* Standalone pages (no shared Navbar/Footer) */}
               <Route path="/checkin/:accessCode" element={<PublicCheckin />} />
-              <Route path="/organizador/:slug" element={<OrganizerProfile />} />
               <Route path="/embed" element={<EmbedWidget />} />
-              <Route path="/minha-conta/privacidade" element={<Privacidade />} />
-              <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
-              <Route path="/termos-de-uso" element={<TermosDeUso />} />
-              <Route path="/meus-certificados" element={<MeusCertificados />} />
-              <Route path="/fila/:slug" element={<FilaVirtual />} />
-              <Route path="/changelog" element={<Changelog />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/blog/:slug" element={<BlogPost />} />
-              <Route path="/notificacoes" element={<NotificacoesConfig />} />
 
               {/* Producer Panel */}
               <Route

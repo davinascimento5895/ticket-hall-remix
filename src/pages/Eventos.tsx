@@ -3,8 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Search, X, LayoutGrid, List, Ticket } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { EventCard } from "@/components/EventCard";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { EmptyState } from "@/components/EmptyState";
@@ -86,12 +84,11 @@ export default function Eventos() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SEOHead
         title="Eventos"
         description="Encontre os melhores eventos, shows, festivais e experiências perto de você. Compre ingressos com segurança no TicketHall."
       />
-      <Navbar />
 
       <div className="container pt-24 pb-16">
         {/* Search bar */}
@@ -283,7 +280,6 @@ export default function Eventos() {
         )}
       </div>
 
-      <Footer />
-    </div>
+    </>
   );
 }

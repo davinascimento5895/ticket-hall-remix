@@ -1,7 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { Ticket, Calendar, MapPin, QrCode, Send, Clock } from "lucide-react";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
@@ -167,8 +165,7 @@ export default function MeusIngressos() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <>
       <div className="container pt-24 pb-16">
         <h1 className="font-display text-2xl font-bold mb-6">Meus Ingressos</h1>
 
@@ -224,7 +221,7 @@ export default function MeusIngressos() {
           </>
         )}
       </div>
-      <Footer />
+      
 
       <QRCodeModal
         open={qrModal.open}
@@ -244,6 +241,6 @@ export default function MeusIngressos() {
         eventTitle={transferModal.eventTitle}
         tierName={transferModal.tierName}
       />
-    </div>
+    </>
   );
 }

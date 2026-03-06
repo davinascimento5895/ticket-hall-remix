@@ -1,7 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { Award, Download, ExternalLink } from "lucide-react";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,8 +25,7 @@ export default function MeusCertificados() {
   });
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <>
       <div className="container pt-24 pb-16 max-w-2xl">
         <div className="flex items-center gap-3 mb-6">
           <Award className="h-6 w-6 text-primary" />
@@ -92,7 +89,6 @@ export default function MeusCertificados() {
           </div>
         )}
       </div>
-      <Footer />
-    </div>
+    </>
   );
 }

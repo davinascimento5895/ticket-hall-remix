@@ -1,5 +1,3 @@
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { SEOHead } from "@/components/SEOHead";
 import { Separator } from "@/components/ui/separator";
 import { useEffect, useState } from "react";
@@ -56,12 +54,11 @@ export default function PoliticaPrivacidade() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SEOHead
         title="Política de Privacidade — TicketHall"
         description="Entenda como a TicketHall coleta, armazena e utiliza seus dados pessoais em conformidade com a LGPD (Lei nº 13.709/2018)."
       />
-      <Navbar />
 
       <main className="pt-28 pb-20">
         <div className="container max-w-7xl">
@@ -468,7 +465,6 @@ export default function PoliticaPrivacidade() {
         </div>
       </main>
 
-      <Footer />
-    </div>
+    </>
   );
 }

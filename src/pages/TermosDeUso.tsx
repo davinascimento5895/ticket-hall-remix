@@ -1,5 +1,3 @@
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { SEOHead } from "@/components/SEOHead";
 import { Separator } from "@/components/ui/separator";
 import { useEffect, useState } from "react";
@@ -56,12 +54,11 @@ export default function TermosDeUso() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SEOHead
         title="Termos de Uso — TicketHall"
         description="Leia os Termos de Uso da plataforma TicketHall. Saiba seus direitos e deveres ao utilizar nossos serviços de venda de ingressos online."
       />
-      <Navbar />
 
       <main className="pt-28 pb-20">
         <div className="container max-w-7xl">
@@ -545,7 +542,6 @@ export default function TermosDeUso() {
         </div>
       </main>
 
-      <Footer />
-    </div>
+    </>
   );
 }

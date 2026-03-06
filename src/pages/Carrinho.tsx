@@ -1,7 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Trash2, ShoppingCart, ArrowLeft } from "lucide-react";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CountdownTimer } from "@/components/CountdownTimer";
@@ -46,8 +44,7 @@ export default function Carrinho() {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
+      <>
         <div className="container pt-24 pb-16">
           <EmptyState
             icon={<ShoppingCart className="h-12 w-12" />}
@@ -57,14 +54,12 @@ export default function Carrinho() {
             onAction={() => navigate("/eventos")}
           />
         </div>
-        <Footer />
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <>
       <div className="container pt-24 pb-16">
         <Link to="/eventos" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
           <ArrowLeft className="h-4 w-4" /> Continuar comprando
@@ -152,7 +147,6 @@ export default function Carrinho() {
           </div>
         </div>
       </div>
-      <Footer />
-    </div>
+    </>
   );
 }

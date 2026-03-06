@@ -4,8 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Calendar, MapPin, Clock, Share2, Users, ArrowLeft, Lock, Package, Star } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { TicketTierCard } from "@/components/TicketTierCard";
 import { SEOHead } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
@@ -110,26 +108,23 @@ export default function EventDetail() {
 
   if (loadingEvent) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
+      <>
         <div className="pt-16"><Skeleton className="w-full h-[340px]" />
           <div className="container py-8 space-y-4"><Skeleton className="h-10 w-2/3" /><Skeleton className="h-5 w-1/3" /></div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (!event) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
+      <>
         <div className="container pt-24 pb-16 text-center">
           <h1 className="font-display text-2xl font-bold mb-2">Evento não encontrado</h1>
           <p className="text-muted-foreground mb-6">O evento que você procura não existe ou foi removido.</p>
           <Button asChild><Link to="/eventos">Ver todos os eventos</Link></Button>
         </div>
-        <Footer />
-      </div>
+      </>
     );
   }
 
@@ -144,7 +139,7 @@ export default function EventDetail() {
   const lowestPrice = tiers.length > 0 ? Math.min(...tiers.map((t: any) => t.price ?? 0)) : null;
 
   return (
-    <div className="min-h-screen bg-background pb-24 lg:pb-0">
+    <div className="pb-24 lg:pb-0">
       <SEOHead
         title={event.title}
         description={event.description?.slice(0, 155) || `Compre ingressos para ${event.title} no TicketHall`}
@@ -161,7 +156,6 @@ export default function EventDetail() {
           organizer: { "@type": "Organization", name: "TicketHall" },
         }}
       />
-      <Navbar />
 
       {/* Cover image - cinematic */}
       <div className="relative w-full h-[300px] md:h-[420px] bg-secondary overflow-hidden">
@@ -391,7 +385,6 @@ export default function EventDetail() {
         </div>
       </div>
 
-      <Footer />
     </div>
   );
 }
