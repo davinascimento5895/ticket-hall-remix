@@ -46,7 +46,10 @@ import MeusCertificados from "./pages/MeusCertificados";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Changelog from "./pages/Changelog";
+import NotificacoesConfig from "./pages/NotificacoesConfig";
 import NotFound from "./pages/NotFound";
+import { OnboardingFlow } from "@/components/OnboardingFlow";
+import { SupportChat } from "@/components/SupportChat";
 
 const queryClient = new QueryClient();
 
