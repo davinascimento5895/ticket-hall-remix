@@ -150,7 +150,6 @@ export default function Blog() {
         </div>
       </section>
 
-      <Footer />
-    </div>
+    </>
   );
 }

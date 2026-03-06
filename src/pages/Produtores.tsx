@@ -161,7 +161,6 @@ export default function Produtores() {
         </div>
       </section>
 
-      <Footer />
-    </div>
+    </>
   );
 }

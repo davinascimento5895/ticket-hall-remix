@@ -235,7 +235,6 @@ export default function Checkout() {
 
         {step === 2 && <CheckoutStepConfirmation />}
       </div>
-      <Footer />
-    </div>
+    </>
   );
 }
