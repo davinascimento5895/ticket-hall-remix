@@ -280,7 +280,6 @@ export default function Eventos() {
         )}
       </div>
 
-      <Footer />
-    </div>
+    </>
   );
 }
