@@ -139,7 +139,7 @@ export default function EventDetail() {
   const lowestPrice = tiers.length > 0 ? Math.min(...tiers.map((t: any) => t.price ?? 0)) : null;
 
   return (
-    <div className="min-h-screen bg-background pb-24 lg:pb-0">
+    <div className="pb-24 lg:pb-0">
       <SEOHead
         title={event.title}
         description={event.description?.slice(0, 155) || `Compre ingressos para ${event.title} no TicketHall`}
@@ -156,7 +156,6 @@ export default function EventDetail() {
           organizer: { "@type": "Organization", name: "TicketHall" },
         }}
       />
-      <Navbar />
 
       {/* Cover image - cinematic */}
       <div className="relative w-full h-[300px] md:h-[420px] bg-secondary overflow-hidden">
