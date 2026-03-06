@@ -3,151 +3,212 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/EventCard";
 import { Spotlight } from "@/components/core/spotlight";
+import { TextLoop } from "@/components/core/text-loop";
 import { motion } from "framer-motion";
-import { Input } from "@/components/ui/input";
-import { useCityDetection } from "@/hooks/useCityDetection";
-import { useEffect, useState } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { CalendarDays, MapPin, Search } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
-import { EventFilters } from "@/components/EventFilters";
-import { api } from "@/lib/api";
+import {
+  CreditCard, Smartphone, Zap,
+  Shield, Users, QrCode, ArrowRight,
+  ChevronDown,
+} from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getFeaturedEvents } from "@/lib/api";
+import { LoadingSkeleton } from "@/components/LoadingSkeleton";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+
+const features = [
+  { icon: CreditCard, title: "Pagamento seguro", desc: "PIX, cartão de crédito e boleto. Checkout rápido e protegido." },
+  { icon: Smartphone, title: "Ingresso digital", desc: "QR Code único no celular. Sem necessidade de impressão." },
+  { icon: Zap, title: "Entrega instantânea", desc: "Receba seus ingressos por e-mail e na área logada em segundos." },
+  { icon: Shield, title: "Garantia de reembolso", desc: "Solicite reembolso facilmente caso o evento seja cancelado." },
+  { icon: Users, title: "Transferência fácil", desc: "Transfira ingressos para amigos com apenas um clique." },
+  { icon: QrCode, title: "Check-in rápido", desc: "Check-in na entrada do evento com leitura de QR Code." },
+];
+
+const faqs = [
+  { q: "Como compro ingressos?", a: "Basta acessar a página do evento, selecionar os ingressos desejados e finalizar a compra com PIX, cartão ou boleto." },
+  { q: "Posso transferir meu ingresso?", a: "Sim! Na área 'Meus Ingressos', clique em transferir e informe o e-mail do destinatário." },
+  { q: "Como funciona o reembolso?", a: "Caso o evento seja cancelado, o reembolso é automático. Para outros casos, solicite pelo painel em até 7 dias antes." },
+  { q: "O que é a fila virtual?", a: "Alguns eventos com alta demanda utilizam fila virtual para garantir uma experiência justa na compra." },
+  { q: "É seguro comprar pelo TicketHall?", a: "Sim. Todos os pagamentos são processados com criptografia e seguimos as normas da LGPD." },
+];
 
 export default function Index() {
-  const { user } = useAuth();
-  const { city, loading: cityLoading, requestLocation } = useCityDetection();
-  const [events, setEvents] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { user, role, loading } = useAuth();
 
-  useEffect(() => {
-    api.get("/events").then((response) => {
-      setEvents(response.data);
-      setLoading(false);
-    });
-  }, []);
+  const { data: featuredEvents = [], isLoading: loadingEvents } = useQuery({
+    queryKey: ["featured-events"],
+    queryFn: getFeaturedEvents,
+  });
+
+  // Redirect logged-in users to their dashboard
+  if (!loading && user && role) {
+    const redirectMap: Record<string, string> = {
+      admin: "/admin/dashboard",
+      producer: "/producer/dashboard",
+      buyer: "/meus-ingressos",
+    };
+    return <Navigate to={redirectMap[role] || "/meus-ingressos"} replace />;
+  }
 
   return (
     <>
-      {/* Hero */}
-      <section className="relative py-12 md:py-24 bg-muted">
-        <div className="container relative z-10">
-          <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
-            Descubra os melhores eventos perto de você
-          </h1>
-          <p className="mt-4 max-w-[700px] text-muted-foreground">
-            Encontre eventos incríveis, shows, festas e muito mais.
-          </p>
-
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Button size="lg" asChild>
+      {/* ===== HERO ===== */}
+      <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden">
+        <Spotlight size={500} className="z-0" />
+        <div className="container relative z-10 text-center space-y-6 py-20">
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="font-display text-4xl md:text-6xl lg:text-7xl font-bold leading-tight"
+          >
+            Seus ingressos para{" "}
+            <TextLoop interval={3000} className="text-primary inline-block">
+              <span>shows</span>
+              <span>festivais</span>
+              <span>teatros</span>
+              <span>eventos</span>
+            </TextLoop>
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto"
+          >
+            Compre, transfira e gerencie seus ingressos com segurança. A plataforma completa para produtores e compradores.
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4"
+          >
+            <Button variant="default" size="lg" asChild>
               <Link to="/eventos">
-                Ver todos os eventos <CalendarDays className="w-4 h-4 ml-2" />
+                Explorar eventos <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
-            {city ? (
-              <Button variant="outline" size="lg" asChild>
-                <Link to="/eventos">
-                  Eventos em {city} <MapPin className="w-4 h-4 ml-2" />
-                </Link>
-              </Button>
-            ) : (
-              <Button variant="secondary" size="lg" onClick={requestLocation} disabled={cityLoading}>
-                {cityLoading ? "Detectando..." : "Detectar minha localização"}
-              </Button>
-            )}
-          </div>
-
-          <div className="mt-8">
-            <Input type="search" placeholder="Buscar eventos" className="md:w-[400px]" prefix={<Search className="w-4 h-4 mr-2" />} />
-          </div>
+            <Button variant="outline" size="lg" asChild>
+              <Link to="/produtores">Sou produtor</Link>
+            </Button>
+          </motion.div>
         </div>
-
-        <Spotlight
-          className="-top-40 left-0 md:left-1/2 md:-translate-x-1/2 w-[100vw] h-[60vh] md:h-[80vh] rounded-none md:rounded-full"
-          style={{
-            "--spotlight-color": "var(--primary)",
-          }}
-        />
       </section>
 
-      {/* Event List */}
-      <section className="py-12 md:py-24">
+      {/* ===== FEATURED EVENTS ===== */}
+      <section className="py-16 md:py-24">
         <div className="container">
-          <div className="flex items-center justify-between">
-            <h2 className="scroll-m-20 pb-2 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
-              Em destaque
-            </h2>
-            <Link to="/eventos" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              Ver todos os eventos
-            </Link>
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <h2 className="font-display text-2xl md:text-3xl font-bold">Em destaque</h2>
+              <p className="text-muted-foreground mt-1">Os eventos mais procurados da semana</p>
+            </div>
+            <Button variant="ghost" asChild className="hidden sm:inline-flex">
+              <Link to="/eventos">Ver todos <ArrowRight className="ml-1 h-4 w-4" /></Link>
+            </Button>
           </div>
 
-          <Separator className="my-4" />
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {loading ? (
-              <>
-                <Skeleton className="w-full h-[200px] rounded-md" />
-                <Skeleton className="w-full h-[200px] rounded-md" />
-                <Skeleton className="w-full h-[200px] rounded-md" />
-                <Skeleton className="w-full h-[200px] rounded-md" />
-              </>
-            ) : events.length > 0 ? (
-              events.slice(0, 8).map((event) => (
+          {loadingEvents ? (
+            <LoadingSkeleton variant="card" count={3} />
+          ) : featuredEvents.length > 0 ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredEvents.map((event: any) => (
                 <EventCard
                   key={event.id}
-                  id={event.id}
-                  imageUrl={event.image_url}
-                  title={event.name}
-                  date={event.start_date}
-                  location={event.location}
-                  price={event.price}
+                  title={event.title}
+                  date={format(new Date(event.start_date), "dd MMM yyyy · HH'h'mm", { locale: ptBR })}
+                  city={event.venue_city || "Online"}
+                  imageUrl={event.cover_image_url || "/placeholder.svg"}
+                  priceFrom={0}
+                  category={event.category}
                   slug={event.slug}
                 />
-              ))
-            ) : (
-              <div className="col-span-full text-center py-12">
-                <p className="text-muted-foreground">Nenhum evento encontrado.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Event Filters */}
-      <section className="py-12 md:py-24 bg-secondary">
-        <div className="container">
-          <h2 className="scroll-m-20 pb-2 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
-            Explore por categoria
-          </h2>
-          <p className="text-muted-foreground">Encontre eventos para todos os gostos.</p>
-
-          <EventFilters />
-        </div>
-      </section>
-
-      {/* Call to action */}
-      {!user && (
-        <section className="py-12 md:py-24">
-          <div className="container">
-            <div className="grid lg:grid-cols-2 gap-8">
-              <div>
-                <h2 className="scroll-m-20 pb-2 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
-                  Crie sua conta agora
-                </h2>
-                <p className="text-muted-foreground">
-                  Tenha acesso a recursos exclusivos, como lista de desejos, notificações personalizadas e muito mais.
-                </p>
-              </div>
-              <div className="flex flex-col justify-center">
-                <Button size="lg" asChild>
-                  <Link to="/?login=true">Criar conta grátis</Link>
-                </Button>
-              </div>
+              ))}
             </div>
+          ) : (
+            <p className="text-center text-muted-foreground py-12">Nenhum evento em destaque no momento.</p>
+          )}
+
+          <div className="mt-6 text-center sm:hidden">
+            <Button variant="outline" asChild>
+              <Link to="/eventos">Ver todos os eventos</Link>
+            </Button>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
+
+      {/* ===== FEATURES ===== */}
+      <section className="py-16 md:py-24 bg-muted/30">
+        <div className="container">
+          <div className="text-center mb-12">
+            <h2 className="font-display text-2xl md:text-3xl font-bold">Por que o TicketHall?</h2>
+            <p className="text-muted-foreground mt-2 max-w-lg mx-auto">
+              Tudo o que você precisa para comprar e vender ingressos online.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {features.map((f, i) => (
+              <motion.div
+                key={f.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08 }}
+                className="p-6 rounded-xl border border-border bg-card hover:shadow-lg transition-shadow"
+              >
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                  <f.icon className="h-5 w-5 text-primary" />
+                </div>
+                <h3 className="font-display font-semibold text-foreground mb-1">{f.title}</h3>
+                <p className="text-sm text-muted-foreground">{f.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== CTA PRODUTOR ===== */}
+      <section className="py-16 md:py-24">
+        <div className="container text-center space-y-6">
+          <h2 className="font-display text-2xl md:text-3xl font-bold">É produtor de eventos?</h2>
+          <p className="text-muted-foreground max-w-lg mx-auto">
+            Crie seus eventos, venda ingressos e gerencie check-in com uma plataforma completa e sem mensalidade.
+          </p>
+          <Button variant="default" size="lg" asChild>
+            <Link to="/produtores">
+              Começar a vender grátis <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+      </section>
+
+      {/* ===== FAQ ===== */}
+      <section className="py-16 md:py-24 bg-muted/30">
+        <div className="container max-w-2xl">
+          <h2 className="font-display text-2xl md:text-3xl font-bold text-center mb-8">Perguntas frequentes</h2>
+          <Accordion type="single" collapsible className="space-y-2">
+            {faqs.map((faq, i) => (
+              <AccordionItem key={i} value={`faq-${i}`} className="border border-border rounded-lg px-4">
+                <AccordionTrigger className="text-sm font-medium text-foreground hover:no-underline">
+                  {faq.q}
+                </AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground">
+                  {faq.a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
     </>
   );
 }
