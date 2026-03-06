@@ -39,17 +39,18 @@ function AdminSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarContent className="flex flex-col h-full">
+      <SidebarContent className="flex flex-col h-full bg-sidebar">
+        {/* Brand */}
         <div className="p-4 border-b border-sidebar-border">
           <Link to="/admin/dashboard" className="flex items-center gap-2">
             {collapsed ? (
-              <div className="flex items-center justify-center">
-                <Shield className="h-5 w-5 text-destructive" />
+              <div className="flex items-center justify-center w-full">
+                <Shield className="h-5 w-5 text-primary" />
               </div>
             ) : (
               <div className="flex items-center gap-2.5">
                 <TicketHallLogo size="sm" />
-                <Badge variant="destructive" className="text-[10px] px-1.5 py-0 h-4 font-semibold">
+                <Badge className="text-[10px] px-1.5 py-0 h-4 font-semibold bg-primary/15 text-primary border-primary/20 hover:bg-primary/20">
                   Admin
                 </Badge>
               </div>
@@ -57,8 +58,11 @@ function AdminSidebar() {
           </Link>
         </div>
 
+        {/* Navigation */}
         <SidebarGroup>
-          <SidebarGroupLabel>Administração</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[11px] uppercase tracking-wider text-sidebar-foreground/40 font-semibold">
+            Administração
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (
@@ -67,8 +71,8 @@ function AdminSidebar() {
                     <NavLink
                       to={item.url}
                       end={item.url === "/admin/dashboard"}
-                      className="hover:bg-sidebar-accent/50"
-                      activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                      className="hover:bg-sidebar-accent/50 rounded-lg transition-colors"
+                      activeClassName="bg-primary/10 text-primary font-medium"
                     >
                       <item.icon className="mr-2 h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
@@ -80,17 +84,21 @@ function AdminSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
+        {/* Footer */}
         <div className="mt-auto border-t border-sidebar-border">
-          <div className="p-3">
+          <div className="p-3 space-y-2">
             {!collapsed && (
-              <p className="text-xs text-sidebar-foreground/50 truncate mb-2 px-1">
-                {profile?.full_name || "Administrador"}
-              </p>
+              <div className="px-2 py-1.5">
+                <p className="text-xs font-medium text-sidebar-foreground/70 truncate">
+                  {profile?.full_name || "Administrador"}
+                </p>
+                <p className="text-[10px] text-sidebar-foreground/40">Administrador</p>
+              </div>
             )}
             <Button
               variant="ghost"
               size="sm"
-              className="w-full justify-start text-sidebar-foreground/60 hover:text-destructive hover:bg-destructive/10"
+              className="w-full justify-start text-sidebar-foreground/50 hover:text-destructive hover:bg-destructive/10 rounded-lg"
               onClick={signOut}
             >
               <LogOut className="h-4 w-4 mr-2" />
@@ -109,6 +117,7 @@ export default function AdminLayout() {
       <div className="min-h-screen flex w-full bg-background">
         <AdminSidebar />
         <div className="flex-1 flex flex-col min-w-0">
+          {/* Top bar */}
           <header className="h-14 flex items-center justify-between border-b border-border px-4 shrink-0 bg-background/80 backdrop-blur-sm">
             <div className="flex items-center gap-3">
               <SidebarTrigger />
@@ -126,7 +135,9 @@ export default function AdminLayout() {
               <AnimatedThemeToggler />
             </div>
           </header>
-          <main className="flex-1 p-6 overflow-auto">
+
+          {/* Content */}
+          <main className="flex-1 p-4 md:p-6 overflow-auto">
             <Outlet />
           </main>
         </div>
