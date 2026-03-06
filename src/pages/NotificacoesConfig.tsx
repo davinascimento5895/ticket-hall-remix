@@ -80,7 +80,6 @@ export default function NotificacoesConfig() {
         </div>
       </div>
 
-      <Footer />
-    </div>
+    </>
   );
 }

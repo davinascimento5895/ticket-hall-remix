@@ -241,6 +241,6 @@ export default function MeusIngressos() {
         eventTitle={transferModal.eventTitle}
         tierName={transferModal.tierName}
       />
-    </div>
+    </>
   );
 }
