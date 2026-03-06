@@ -92,8 +92,7 @@ export default function FilaVirtual() {
   }, [isAdmitted, queueStatus?.expires_at]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <>
       <div className="container pt-24 pb-16 max-w-lg mx-auto">
         <div className="text-center space-y-4">
           {event?.cover_image_url && (
