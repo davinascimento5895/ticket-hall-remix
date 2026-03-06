@@ -17,12 +17,11 @@ export default function Blog() {
   const [featured, ...rest] = blogPosts;
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SEOHead
         title="Blog — TicketHall | Dicas para Produtores e Compradores de Ingressos"
         description="Artigos, guias e dicas sobre venda de ingressos online, produção de eventos, marketing digital e tendências do mercado de eventos no Brasil."
       />
-      <Navbar />
 
       {/* Header */}
       <section className="pt-28 pb-12 border-b border-border">
