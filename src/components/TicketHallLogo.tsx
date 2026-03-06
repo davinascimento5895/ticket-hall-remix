@@ -1,49 +1,41 @@
 import { cn } from "@/lib/utils";
+import logoFullBlack from "@/assets/logo-full-black.png";
+import logoFullWhite from "@/assets/logo-full-white.png";
+import logoIconBlack from "@/assets/logo-icon-black.png";
+import logoIconWhite from "@/assets/logo-icon-white.png";
 
 interface TicketHallLogoProps {
   variant?: "full" | "compact" | "symbol";
   size?: "sm" | "md" | "lg";
   className?: string;
+  /** Force a specific color variant instead of auto-detecting theme */
+  forceDark?: boolean;
 }
 
 const sizes = {
-  sm: { icon: 24, text: "text-lg" },
-  md: { icon: 32, text: "text-xl" },
-  lg: { icon: 40, text: "text-2xl" },
+  sm: { full: "h-8", icon: "h-7" },
+  md: { full: "h-9", icon: "h-8" },
+  lg: { full: "h-12", icon: "h-10" },
 };
 
-export function TicketHallLogo({ variant = "full", size = "md", className }: TicketHallLogoProps) {
+export function TicketHallLogo({ variant = "full", size = "md", className, forceDark }: TicketHallLogoProps) {
   const s = sizes[size];
 
-  const icon = (
-    <svg width={s.icon} height={s.icon} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="logo-grad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#ff472d" />
-          <stop offset="100%" stopColor="#ff6b4a" />
-        </linearGradient>
-      </defs>
-      <rect x="2" y="6" width="36" height="28" rx="6" fill="url(#logo-grad)" />
-      {/* Ticket notches */}
-      <circle cx="2" cy="20" r="4" className="fill-background" />
-      <circle cx="38" cy="20" r="4" className="fill-background" />
-      {/* Dashed line */}
-      <line x1="14" y1="10" x2="14" y2="30" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.2" />
-      {/* TH text */}
-      <text x="26" y="25" textAnchor="middle" fill="white" fontFamily="Sora, sans-serif" fontWeight="700" fontSize="12">TH</text>
-    </svg>
-  );
-
-  if (variant === "symbol") return <span className={className}>{icon}</span>;
-
-  if (variant === "compact") return <span className={className}>{icon}</span>;
+  // In dark mode we show white logo, in light mode we show black logo
+  // Uses CSS to toggle visibility based on .dark class on html
+  if (variant === "symbol" || variant === "compact") {
+    return (
+      <span className={cn("inline-flex items-center", className)}>
+        <img src={forceDark ? logoIconWhite : logoIconWhite} alt="TicketHall" className={cn(s.icon, "w-auto dark:block", forceDark ? "block" : "hidden")} />
+        <img src={logoIconBlack} alt="TicketHall" className={cn(s.icon, "w-auto dark:hidden", forceDark ? "hidden" : "block")} />
+      </span>
+    );
+  }
 
   return (
-    <span className={cn("inline-flex items-center gap-2", className)}>
-      {icon}
-      <span className={cn("font-display font-bold tracking-tight", s.text)}>
-        Ticket<span className="text-primary">Hall</span>
-      </span>
+    <span className={cn("inline-flex items-center", className)}>
+      <img src={forceDark ? logoFullWhite : logoFullWhite} alt="TicketHall — Do clique ao palco" className={cn(s.full, "w-auto dark:block", forceDark ? "block" : "hidden")} />
+      <img src={logoFullBlack} alt="TicketHall — Do clique ao palco" className={cn(s.full, "w-auto dark:hidden", forceDark ? "hidden" : "block")} />
     </span>
   );
 }
