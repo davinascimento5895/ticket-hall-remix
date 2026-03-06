@@ -221,7 +221,7 @@ export default function MeusIngressos() {
           </>
         )}
       </div>
-      <Footer />
+      
 
       <QRCodeModal
         open={qrModal.open}
