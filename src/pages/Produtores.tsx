@@ -31,9 +31,7 @@ const steps = [
 
 export default function Produtores() {
   return (
-    <div className="min-h-screen bg-background">
-      
-      <Navbar />
+    <>
 
       {/* HERO */}
       <section className="relative min-h-[80vh] flex items-center bg-hero-gradient overflow-hidden">
