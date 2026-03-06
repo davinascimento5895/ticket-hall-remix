@@ -84,12 +84,11 @@ export default function Eventos() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SEOHead
         title="Eventos"
         description="Encontre os melhores eventos, shows, festivais e experiências perto de você. Compre ingressos com segurança no TicketHall."
       />
-      <Navbar />
 
       <div className="container pt-24 pb-16">
         {/* Search bar */}
