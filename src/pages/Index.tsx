@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/EventCard";
 import { Spotlight } from "@/components/core/spotlight";
-import { TextLoop } from "@/components/core/text-loop";
+import { WordRotate } from "@/components/ui/word-rotate";
 import { motion } from "framer-motion";
 import {
   CreditCard, Smartphone, Zap,
@@ -70,12 +70,11 @@ export default function Index() {
             className="font-display text-4xl md:text-6xl lg:text-7xl font-bold leading-tight"
           >
             Seus ingressos para{" "}
-            <TextLoop interval={3000} className="text-primary inline-block">
-              <span>shows</span>
-              <span>festivais</span>
-              <span>teatros</span>
-              <span>eventos</span>
-            </TextLoop>
+            <WordRotate
+              words={["shows", "festivais", "eventos", "summits", "teatros", "congressos", "workshops"]}
+              duration={2500}
+              className="text-primary"
+            />
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
