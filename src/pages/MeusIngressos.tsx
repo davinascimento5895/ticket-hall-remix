@@ -165,8 +165,7 @@ export default function MeusIngressos() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <>
       <div className="container pt-24 pb-16">
         <h1 className="font-display text-2xl font-bold mb-6">Meus Ingressos</h1>
 
