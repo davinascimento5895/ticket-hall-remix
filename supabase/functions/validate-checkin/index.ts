@@ -154,9 +154,11 @@ serve(async (req) => {
     }
 
     // 8. Update analytics
-    await supabase.rpc("confirm_checkin_analytics", { p_event_id: ticket.event_id }).catch((err: any) => {
+    try {
+      await supabase.rpc("confirm_checkin_analytics", { p_event_id: ticket.event_id });
+    } catch (err: any) {
       console.warn("Analytics update failed:", err?.message);
-    });
+    }
 
     // 9. Log success
     await logScan(supabase, { checkinListId, ticketId, qrCode, result: "success", deviceId, scannedBy });
