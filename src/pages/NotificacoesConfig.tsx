@@ -37,19 +37,9 @@ export default function NotificacoesConfig() {
     setLoaded(true);
   }, [user?.id]);
 
-  const persistPref = useCallback(async (id: string, channel: "email" | "push" | "sms", value: boolean) => {
-    if (!user?.id) return;
-    const { error } = await supabase
-      .from("notification_preferences")
-      .upsert(
-        { user_id: user.id, notification_type: id, [channel]: value },
-        { onConflict: "user_id,notification_type" }
-      );
-    if (error) {
-      toast.error("Erro ao salvar preferência");
-      console.error("notification_preferences upsert error:", error);
-    }
-  }, [user?.id]);
+  const persistPref = useCallback(async (_id: string, _channel: "email" | "push" | "sms", _value: boolean) => {
+    // TODO: persist when notification_preferences table is created
+  }, []);
 
   const toggle = (id: string, channel: "email" | "push" | "sms") => {
     const pref = prefs.find((p) => p.id === id);
