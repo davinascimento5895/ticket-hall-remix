@@ -53,7 +53,7 @@ serve(async (req) => {
 
     // Rate limit: max 60 scans per minute per device/user
     const rlKey = `checkin:${scannedBy || deviceId || "anon"}`;
-    const now = new Date();
+    const rlNow = new Date();
     const { data: rl } = await supabase.from("rate_limits").select("count, expires_at").eq("key", rlKey).single();
     if (rl && new Date(rl.expires_at) > now && rl.count >= 60) {
       return jsonResponse({ success: false, result: "rate_limited", message: "Muitos scans. Aguarde um momento." }, 429);
