@@ -53,13 +53,13 @@ serve(async (req) => {
 
     // Rate limit: max 60 scans per minute per device/user
     const rlKey = `checkin:${scannedBy || deviceId || "anon"}`;
-    const now = new Date();
+    const rlNow = new Date();
     const { data: rl } = await supabase.from("rate_limits").select("count, expires_at").eq("key", rlKey).single();
-    if (rl && new Date(rl.expires_at) > now && rl.count >= 60) {
+    if (rl && new Date(rl.expires_at) > rlNow && rl.count >= 60) {
       return jsonResponse({ success: false, result: "rate_limited", message: "Muitos scans. Aguarde um momento." }, 429);
     }
-    if (!rl || new Date(rl.expires_at) <= now) {
-      await supabase.from("rate_limits").upsert({ key: rlKey, count: 1, expires_at: new Date(now.getTime() + 60000).toISOString() });
+    if (!rl || new Date(rl.expires_at) <= rlNow) {
+      await supabase.from("rate_limits").upsert({ key: rlKey, count: 1, expires_at: new Date(rlNow.getTime() + 60000).toISOString() });
     } else {
       await supabase.from("rate_limits").update({ count: rl.count + 1 }).eq("key", rlKey);
     }
@@ -154,9 +154,11 @@ serve(async (req) => {
     }
 
     // 8. Update analytics
-    await supabase.rpc("confirm_checkin_analytics", { p_event_id: ticket.event_id }).catch((err: any) => {
+    try {
+      await supabase.rpc("confirm_checkin_analytics", { p_event_id: ticket.event_id });
+    } catch (err: any) {
       console.warn("Analytics update failed:", err?.message);
-    });
+    }
 
     // 9. Log success
     await logScan(supabase, { checkinListId, ticketId, qrCode, result: "success", deviceId, scannedBy });
@@ -173,7 +175,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("validate-checkin error:", error);
     return new Response(
-      JSON.stringify({ success: false, result: "error", message: error.message }),
+      JSON.stringify({ success: false, result: "error", message: (error as Error).message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
