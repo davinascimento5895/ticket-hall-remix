@@ -55,11 +55,11 @@ serve(async (req) => {
     const rlKey = `checkin:${scannedBy || deviceId || "anon"}`;
     const rlNow = new Date();
     const { data: rl } = await supabase.from("rate_limits").select("count, expires_at").eq("key", rlKey).single();
-    if (rl && new Date(rl.expires_at) > now && rl.count >= 60) {
+    if (rl && new Date(rl.expires_at) > rlNow && rl.count >= 60) {
       return jsonResponse({ success: false, result: "rate_limited", message: "Muitos scans. Aguarde um momento." }, 429);
     }
-    if (!rl || new Date(rl.expires_at) <= now) {
-      await supabase.from("rate_limits").upsert({ key: rlKey, count: 1, expires_at: new Date(now.getTime() + 60000).toISOString() });
+    if (!rl || new Date(rl.expires_at) <= rlNow) {
+      await supabase.from("rate_limits").upsert({ key: rlKey, count: 1, expires_at: new Date(rlNow.getTime() + 60000).toISOString() });
     } else {
       await supabase.from("rate_limits").update({ count: rl.count + 1 }).eq("key", rlKey);
     }
