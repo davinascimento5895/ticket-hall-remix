@@ -135,7 +135,7 @@ serve(async (req) => {
     return jsonResponse({ error: "Ação inválida. Use 'export' ou 'delete'." }, 400);
   } catch (error) {
     console.error("lgpd-data error:", error);
-    return jsonResponse({ error: error.message }, 500);
+    return jsonResponse({ error: (error as Error).message }, 500);
   }
 });
 

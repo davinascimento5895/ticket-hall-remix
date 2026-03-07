@@ -175,7 +175,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("validate-checkin error:", error);
     return new Response(
-      JSON.stringify({ success: false, result: "error", message: error.message }),
+      JSON.stringify({ success: false, result: "error", message: (error as Error).message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
