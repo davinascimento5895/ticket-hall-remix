@@ -33,24 +33,8 @@ export default function NotificacoesConfig() {
   // Load preferences from DB on mount
   useEffect(() => {
     if (!user?.id) return;
-    supabase
-      .from("notification_preferences")
-      .select("*")
-      .eq("user_id", user.id)
-      .then(({ data }) => {
-        if (data && data.length > 0) {
-          setPrefs((prev) =>
-            prev.map((p) => {
-              const saved = data.find((d: any) => d.notification_type === p.id);
-              if (saved) {
-                return { ...p, email: saved.email ?? p.email, push: saved.push ?? p.push, sms: saved.sms ?? p.sms };
-              }
-              return p;
-            })
-          );
-        }
-        setLoaded(true);
-      });
+    // notification_preferences table doesn't exist yet — use local defaults
+    setLoaded(true);
   }, [user?.id]);
 
   const persistPref = useCallback(async (id: string, channel: "email" | "push" | "sms", value: boolean) => {
