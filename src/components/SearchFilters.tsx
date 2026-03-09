@@ -40,6 +40,7 @@ const defaultFilters: SearchFilterValues = {
   category: "",
   city: "",
   timeOfDay: "all",
+  modality: "all",
 };
 
 const SORT_OPTIONS = [
