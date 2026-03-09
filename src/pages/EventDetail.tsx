@@ -111,6 +111,19 @@ export default function EventDetail() {
     enabled: !!event?.id,
   });
 
+  // Increment views_count once per session per event
+  useEffect(() => {
+    if (!event?.id) return;
+    const viewedKey = `event_viewed_${event.id}`;
+    if (sessionStorage.getItem(viewedKey)) return;
+    sessionStorage.setItem(viewedKey, "1");
+    supabase
+      .from("events")
+      .update({ views_count: (event.views_count ?? 0) + 1 })
+      .eq("id", event.id)
+      .then(() => {});
+  }, [event?.id]);
+
   const tiers = allTiers?.filter((t: any) => {
     if (!t.is_visible) return false;
     if (t.is_hidden_by_default && t.unlock_code) {
