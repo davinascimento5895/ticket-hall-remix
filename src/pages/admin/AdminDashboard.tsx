@@ -29,6 +29,7 @@ export default function AdminDashboard() {
     to: undefined,
   });
   const [activePreset, setActivePreset] = useState("Todo o período");
+  const [granularity, setGranularity] = useState<ChartGranularity>("month");
 
   const queryDateRange = useMemo(() => {
     if (!dateRange.from) return undefined;
