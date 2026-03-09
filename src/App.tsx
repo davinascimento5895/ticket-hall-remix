@@ -42,6 +42,7 @@ import PerfilCidade from "./pages/PerfilCidade";
 import MetodosPagamento from "./pages/MetodosPagamento";
 import PerfilNotificacoes from "./pages/PerfilNotificacoes";
 import PerfilSuporte from "./pages/PerfilSuporte";
+import Favoritos from "./pages/Favoritos";
 import NotFound from "./pages/NotFound";
 
 // Producer pages — lazy loaded
