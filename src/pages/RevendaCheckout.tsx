@@ -163,9 +163,12 @@ export default function RevendaCheckout() {
             Você não pode comprar seu próprio ingresso.
           </div>
         ) : !user ? (
-          <Button className="w-full" onClick={() => navigate("/?login=true")}>
-            Faça login para comprar
-          </Button>
+          <>
+            <Button className="w-full" onClick={() => setShowAuth(true)}>
+              Faça login para comprar
+            </Button>
+            <AuthModal open={showAuth} onOpenChange={setShowAuth} />
+          </>
         ) : (
           <div className="space-y-3">
             <label className="flex items-start gap-2 cursor-pointer">
