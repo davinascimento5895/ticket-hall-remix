@@ -257,7 +257,7 @@ export default function Index() {
       {/* ===== FAQ ===== */}
       <section className="py-16 lg:py-24 bg-muted/30">
         <div className="container max-w-2xl">
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-center mb-8">Perguntas frequentes</h2>
+          <h2 className="font-display text-2xl lg:text-3xl font-bold text-center mb-8">Perguntas frequentes</h2>
           <Accordion type="single" collapsible className="space-y-2">
             {faqs.map((faq, i) => (
               <AccordionItem key={i} value={`faq-${i}`} className="border border-border rounded-lg px-4">

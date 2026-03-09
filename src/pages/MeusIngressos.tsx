@@ -243,7 +243,7 @@ export default function MeusIngressos() {
           <h1 className="font-display text-2xl lg:text-3xl font-bold">Ingressos</h1>
           
           {/* Search bar */}
-          <div className="relative w-full md:w-80">
+          <div className="relative w-full lg:w-80">
             <Input
               type="text"
               placeholder="Buscar pelo nome, email, ingresso ou pedido"
