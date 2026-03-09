@@ -233,7 +233,7 @@ export default function Eventos() {
                 <div className="absolute bottom-0 left-0 right-0 p-6">
                   {featuredEvent.category && (
                     <span className="inline-block px-2.5 py-1 text-xs font-medium rounded-full bg-primary/90 text-primary-foreground mb-3">
-                      {categories.find(c => c.value === featuredEvent.category)?.label || featuredEvent.category}
+                      {CATEGORY_OPTIONS.find(c => c.value === featuredEvent.category)?.label || featuredEvent.category}
                     </span>
                   )}
                   <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-1">{featuredEvent.title}</h2>
