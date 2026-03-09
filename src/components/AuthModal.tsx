@@ -82,6 +82,10 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login", redirectTo
     } else {
       toast({ title: "Conta criada com sucesso!" });
       onOpenChange(false);
+      const from = redirectTo || (location.state as any)?.from?.pathname;
+      if (from && from !== "/" && from !== location.pathname) {
+        navigate(from, { replace: true });
+      }
     }
   };
 
