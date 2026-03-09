@@ -2,6 +2,7 @@ import { Calendar, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getCategoryLabel } from "@/lib/categories";
 
 interface EventCardProps {
   title: string;
@@ -13,16 +14,6 @@ interface EventCardProps {
   slug?: string;
   className?: string;
 }
-
-const categoryLabels: Record<string, string> = {
-  music: "Música",
-  sports: "Esportes",
-  theater: "Teatro",
-  festival: "Festival",
-  corporate: "Corporativo",
-  education: "Educação",
-  other: "Outros",
-};
 
 export function EventCard({ title, date, city, imageUrl, priceFrom, category, slug, className }: EventCardProps) {
   const Wrapper = slug ? Link : "div";
