@@ -23,6 +23,22 @@ export default function Carrinho() {
       const eventId = items[0].eventId;
       const coupon = await validateCoupon(eventId, couponCode);
       if (coupon) {
+        // Check minimum order value
+        if (coupon.min_order_value && subtotal < coupon.min_order_value) {
+          toast({ title: "Valor mínimo não atingido", description: `Este cupom requer pedido mínimo de R$ ${Number(coupon.min_order_value).toFixed(2).replace(".", ",")}.`, variant: "destructive" });
+          setValidatingCoupon(false);
+          return;
+        }
+        // Check applicable tiers
+        if (coupon.applicable_tier_ids && coupon.applicable_tier_ids.length > 0) {
+          const cartTierIds = items.map(i => i.tierId);
+          const hasValidTier = cartTierIds.some(tid => coupon.applicable_tier_ids!.includes(tid));
+          if (!hasValidTier) {
+            toast({ title: "Cupom não aplicável", description: "Este cupom não é válido para os ingressos no carrinho.", variant: "destructive" });
+            setValidatingCoupon(false);
+            return;
+          }
+        }
         const discountAmount =
           coupon.discount_type === "percentage"
             ? subtotal * (coupon.discount_value / 100)
