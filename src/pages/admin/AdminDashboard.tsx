@@ -148,37 +148,79 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* Revenue chart */}
-      <Card className="border-border">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base font-semibold">Receita por Mês</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {stats?.revenueByMonth && stats.revenueByMonth.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={stats.revenueByMonth}>
-                <XAxis dataKey="month" tick={{ fontSize: 12, className: "fill-muted-foreground" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 12, className: "fill-muted-foreground" }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
-                <Tooltip
-                  contentStyle={{
-                    background: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: 12,
-                    color: "hsl(var(--foreground))",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                  }}
-                  formatter={(v: number) => [fmt(v), "Receita"]}
-                />
-                <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              {isLoading ? "Carregando..." : "Sem dados para o período selecionado"}
-            </p>
-          )}
-        </CardContent>
-      </Card>
+      {/* Revenue chart + Payment methods */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Card className="border-border lg:col-span-2">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-semibold">Receita</CardTitle>
+              <div className="flex gap-1">
+                {(["month", "day"] as const).map((g) => (
+                  <button
+                    key={g}
+                    onClick={() => setGranularity(g)}
+                    className={cn(
+                      "px-3 py-1 text-xs rounded-full transition-colors font-medium",
+                      granularity === g
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-secondary text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {g === "month" ? "Mês" : "Dia"}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {chartData && chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={chartData}>
+                  <XAxis dataKey={chartDataKey} tick={{ fontSize: 12, className: "fill-muted-foreground" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 12, className: "fill-muted-foreground" }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
+                  <Tooltip
+                    contentStyle={{
+                      background: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: 12,
+                      color: "hsl(var(--foreground))",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                    }}
+                    formatter={(v: number) => [fmt(v), "Receita"]}
+                  />
+                  <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                {isLoading ? "Carregando..." : "Sem dados para o período selecionado"}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-border">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold">Métodos de Pagamento</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {paymentPieData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie data={paymentPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                    {paymentPieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip formatter={(value: number) => [fmt(value), "Total"]} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                {isLoading ? "Carregando..." : "Sem dados"}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Status breakdowns */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
