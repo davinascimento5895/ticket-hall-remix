@@ -263,7 +263,7 @@ export default function Checkout() {
 
         {step === 1 && (
           <CheckoutStepPayment
-            subtotal={subtotal} platformFee={platformFee} total={total}
+            subtotal={subtotal} platformFee={platformFee} total={finalTotal}
             onBack={() => setStep(0)} onConfirm={handleConfirmPayment} isProcessing={isProcessingPayment}
             pixQrCode={pixQrCode} pixQrCodeImage={pixQrCodeImage}
             boletoUrl={boletoUrl} boletoBarcode={boletoBarcode}
