@@ -109,6 +109,20 @@ export async function validateCoupon(eventId: string, code: string) {
     .eq("is_active", true)
     .single();
   if (error) throw error;
+  if (!data) throw new Error("Cupom não encontrado");
+
+  // Client-side validation of temporal and usage limits
+  const now = new Date();
+  if (data.valid_from && new Date(data.valid_from) > now) {
+    throw new Error("Este cupom ainda não está ativo.");
+  }
+  if (data.valid_until && new Date(data.valid_until) < now) {
+    throw new Error("Este cupom expirou.");
+  }
+  if (data.max_uses !== null && (data.uses_count || 0) >= data.max_uses) {
+    throw new Error("Este cupom atingiu o limite de usos.");
+  }
+
   return data;
 }
 

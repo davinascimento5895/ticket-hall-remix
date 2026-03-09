@@ -19,7 +19,7 @@ export default function ProducerEventFinancial() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select("id, total, platform_fee, net_amount, payment_method, status, payment_status, created_at, profiles:buyer_id(full_name)")
+        .select("id, total, subtotal, discount_amount, platform_fee, net_amount, payment_method, status, payment_status, coupon_id, created_at, profiles:buyer_id(full_name)")
         .eq("event_id", id!)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -156,36 +156,42 @@ export default function ProducerEventFinancial() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border text-left text-muted-foreground">
-                    <th className="p-3 font-medium">Nº Pedido</th>
-                    <th className="p-3 font-medium">Comprador</th>
-                    <th className="p-3 font-medium">Data</th>
-                    <th className="p-3 font-medium">Valor</th>
-                    <th className="p-3 font-medium">Taxa</th>
-                    <th className="p-3 font-medium">Líquido</th>
-                    <th className="p-3 font-medium">Status</th>
+                     <th className="p-3 font-medium">Nº Pedido</th>
+                     <th className="p-3 font-medium">Comprador</th>
+                     <th className="p-3 font-medium">Data</th>
+                     <th className="p-3 font-medium">Subtotal</th>
+                     <th className="p-3 font-medium">Desconto</th>
+                     <th className="p-3 font-medium">Valor</th>
+                     <th className="p-3 font-medium">Taxa</th>
+                     <th className="p-3 font-medium">Líquido</th>
+                     <th className="p-3 font-medium">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredOrders.map((order: any) => (
                     <tr key={order.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                      <td className="p-3 font-mono text-xs">{order.id.slice(0, 8)}</td>
-                      <td className="p-3">{order.profiles?.full_name || "—"}</td>
-                      <td className="p-3 text-muted-foreground">{new Date(order.created_at).toLocaleDateString("pt-BR")}</td>
-                      <td className="p-3">{fmt(order.total || 0)}</td>
-                      <td className="p-3 text-muted-foreground">{fmt(order.platform_fee || 0)}</td>
-                      <td className="p-3 font-medium">{fmt((order.total || 0) - (order.platform_fee || 0))}</td>
-                      <td className="p-3">{statusBadge(order.status)}</td>
+                       <td className="p-3 font-mono text-xs">{order.id.slice(0, 8)}</td>
+                       <td className="p-3">{order.profiles?.full_name || "—"}</td>
+                       <td className="p-3 text-muted-foreground">{new Date(order.created_at).toLocaleDateString("pt-BR")}</td>
+                       <td className="p-3">{fmt(order.subtotal || 0)}</td>
+                       <td className="p-3 text-muted-foreground">{order.discount_amount > 0 ? `-${fmt(order.discount_amount)}` : "—"}</td>
+                       <td className="p-3">{fmt(order.total || 0)}</td>
+                       <td className="p-3 text-muted-foreground">{fmt(order.platform_fee || 0)}</td>
+                       <td className="p-3 font-medium">{fmt((order.total || 0) - (order.platform_fee || 0))}</td>
+                       <td className="p-3">{statusBadge(order.status)}</td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr className="border-t border-border font-medium">
-                    <td colSpan={3} className="p-3 text-right text-muted-foreground">Total</td>
-                    <td className="p-3">{fmt(filteredOrders.reduce((s: number, o: any) => s + (o.total || 0), 0))}</td>
-                    <td className="p-3 text-muted-foreground">{fmt(filteredOrders.reduce((s: number, o: any) => s + (o.platform_fee || 0), 0))}</td>
-                    <td className="p-3">{fmt(filteredOrders.reduce((s: number, o: any) => s + ((o.total || 0) - (o.platform_fee || 0)), 0))}</td>
-                    <td className="p-3"></td>
-                  </tr>
+                   <tr className="border-t border-border font-medium">
+                     <td colSpan={3} className="p-3 text-right text-muted-foreground">Total</td>
+                     <td className="p-3">{fmt(filteredOrders.reduce((s: number, o: any) => s + (o.subtotal || 0), 0))}</td>
+                     <td className="p-3 text-muted-foreground">{fmt(filteredOrders.reduce((s: number, o: any) => s + (o.discount_amount || 0), 0))}</td>
+                     <td className="p-3">{fmt(filteredOrders.reduce((s: number, o: any) => s + (o.total || 0), 0))}</td>
+                     <td className="p-3 text-muted-foreground">{fmt(filteredOrders.reduce((s: number, o: any) => s + (o.platform_fee || 0), 0))}</td>
+                     <td className="p-3">{fmt(filteredOrders.reduce((s: number, o: any) => s + ((o.total || 0) - (o.platform_fee || 0)), 0))}</td>
+                     <td className="p-3"></td>
+                   </tr>
                 </tfoot>
               </table>
             </div>
