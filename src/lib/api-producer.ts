@@ -345,10 +345,10 @@ export async function getEventTiersBasic(eventId: string) {
 
 export async function uploadEventImage(path: string, file: File) {
   const { data, error } = await supabase.storage
-    .from("events")
+    .from("event-images")
     .upload(path, file, { upsert: true });
   if (error) throw error;
-  const { data: { publicUrl } } = supabase.storage.from("events").getPublicUrl(data.path);
+  const { data: { publicUrl } } = supabase.storage.from("event-images").getPublicUrl(data.path);
   return publicUrl;
 }
 
