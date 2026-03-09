@@ -145,6 +145,11 @@ export function Navbar() {
                       <Link to="/notificacoes">Notificações</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleCreateEvent}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Criar evento
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={signOut} className="text-destructive">
                       <LogOut className="h-4 w-4 mr-2" /> Sair
                     </DropdownMenuItem>
