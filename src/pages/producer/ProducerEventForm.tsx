@@ -237,25 +237,7 @@ export default function ProducerEventForm() {
 
       {/* Step 1: Venue */}
       {step === 1 && (
-        <Card>
-          <CardHeader><CardTitle>Local</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-3"><Switch checked={form.is_online} onCheckedChange={(v) => updateField("is_online", v)} /><Label>Evento online</Label></div>
-            {form.is_online ? (
-              <div><Label>URL da transmissão</Label><Input value={form.online_url} onChange={(e) => updateField("online_url", e.target.value)} placeholder="https://..." /></div>
-            ) : (
-              <>
-                <div><Label>Nome do local</Label><Input value={form.venue_name} onChange={(e) => updateField("venue_name", e.target.value)} placeholder="Ex: Allianz Parque" /></div>
-                <div><Label>Endereço</Label><Input value={form.venue_address} onChange={(e) => updateField("venue_address", e.target.value)} /></div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div><Label>Cidade</Label><Input value={form.venue_city} onChange={(e) => updateField("venue_city", e.target.value)} /></div>
-                  <div><Label>Estado</Label><Input value={form.venue_state} onChange={(e) => updateField("venue_state", e.target.value)} placeholder="SP" maxLength={2} /></div>
-                </div>
-                <div><Label>CEP</Label><Input value={form.venue_zip} onChange={(e) => updateField("venue_zip", e.target.value)} placeholder="00000-000" /></div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+        <VenueStepWithIBGE form={form} updateField={updateField} />
       )}
 
       {/* Step 2: Tickets */}

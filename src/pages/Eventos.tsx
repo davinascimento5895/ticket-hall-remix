@@ -165,8 +165,17 @@ export default function Eventos() {
           ))}
         </div>
 
+        {/* City filter indicator */}
+        {cityFilter && (
+          <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
+            <MapPin className="h-3.5 w-3.5 text-primary" />
+            <span>Eventos em <span className="text-foreground font-medium">{cityFilter}</span></span>
+            <button onClick={() => setCityFilter("")} className="text-xs underline ml-1">Limpar</button>
+          </div>
+        )}
+
         {/* City detection bar */}
-        {!city && (
+        {!city && !cityFilter && (
           <button
             onClick={requestLocation}
             disabled={cityLoading}
@@ -176,7 +185,7 @@ export default function Eventos() {
             {cityLoading ? "Detectando..." : "Usar minha localização para filtrar eventos"}
           </button>
         )}
-        {city && (
+        {city && !cityFilter && (
           <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
             <MapPin className="h-3.5 w-3.5 text-primary" />
             <span>Eventos em <span className="text-foreground font-medium">{city}</span></span>
