@@ -34,6 +34,8 @@ interface CartContextType {
   appliedCouponId: string | null;
   setAppliedCouponId: (id: string | null) => void;
   finalTotal: number;
+  trackingCode: string | null;
+  setTrackingCode: (code: string | null) => void;
 }
 
 const CART_KEY = "tickethall_cart";
@@ -59,6 +61,8 @@ const CartContext = createContext<CartContextType>({
   appliedCouponId: null,
   setAppliedCouponId: () => {},
   finalTotal: 0,
+  trackingCode: null,
+  setTrackingCode: () => {},
 });
 
 export const useCart = () => useContext(CartContext);
@@ -89,6 +93,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [couponCode, setCouponCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [appliedCouponId, setAppliedCouponId] = useState<string | null>(null);
+  const [trackingCode, setTrackingCode] = useState<string | null>(() => {
+    try { return sessionStorage.getItem("promoter_tracking_code"); } catch { return null; }
+  });
 
   useEffect(() => {
     localStorage.setItem(CART_KEY, JSON.stringify(items));
@@ -181,7 +188,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, updateQuantity, clearCart, subtotal, platformFee, total, itemCount, expiresAt, startCheckout, couponCode, setCouponCode, discount, setDiscount, appliedCouponId, setAppliedCouponId, finalTotal }}
+      value={{ items, addItem, removeItem, updateQuantity, clearCart, subtotal, platformFee, total, itemCount, expiresAt, startCheckout, couponCode, setCouponCode, discount, setDiscount, appliedCouponId, setAppliedCouponId, finalTotal, trackingCode, setTrackingCode: (code: string | null) => { setTrackingCode(code); try { if (code) sessionStorage.setItem("promoter_tracking_code", code); else sessionStorage.removeItem("promoter_tracking_code"); } catch {} } }}
     >
       {children}
     </CartContext.Provider>
