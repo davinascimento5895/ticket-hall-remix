@@ -225,6 +225,37 @@ Deno.serve(async (req) => {
         .update(updateData)
         .eq("id", orderId);
 
+      // In stub mode, auto-confirm PIX/Boleto and generate QR codes for tickets
+      console.log("Stub mode: auto-confirming payment for order", orderId);
+      await supabaseAdmin.rpc("confirm_order_payment", {
+        p_order_id: orderId,
+        p_asaas_payment: `stub_${paymentMethod}_${orderId}`,
+        p_net_value: Number(order.total) - Number(order.platform_fee || 0),
+      });
+
+      // Generate proper QR codes (JWT) for each ticket
+      const { data: activatedTickets } = await supabaseAdmin
+        .from("tickets")
+        .select("id")
+        .eq("order_id", orderId)
+        .eq("status", "active");
+
+      if (activatedTickets && activatedTickets.length > 0) {
+        for (const ticket of activatedTickets) {
+          try {
+            await supabaseAdmin.functions.invoke("generate-qr-code", {
+              body: { ticketId: ticket.id },
+            });
+          } catch (e) {
+            console.error("Failed to generate QR for ticket", ticket.id, e);
+          }
+        }
+      }
+
+      // Update stub result to reflect confirmed status
+      stubResult.status = "paid";
+      stubResult.immediateConfirmation = true;
+
       return new Response(JSON.stringify(stubResult), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
