@@ -22,6 +22,8 @@ const TABS = [
   { key: "coupons", label: "Cupons", icon: Tag, path: "/coupons" },
 ];
 
+const [showEmbed, setShowEmbed] = useState(false);
+
 export default function ProducerEventPanel() {
   const { id } = useParams();
   const navigate = useNavigate();
