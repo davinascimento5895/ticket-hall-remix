@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { Search, X, LayoutGrid, List, Ticket } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -14,16 +15,7 @@ import { cn } from "@/lib/utils";
 import { addDays, format, isSameDay, startOfToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { MapPin } from "lucide-react";
-
-const categories = [
-  { value: "", label: "Todos" },
-  { value: "music", label: "Música" },
-  { value: "sports", label: "Esportes" },
-  { value: "theater", label: "Teatro" },
-  { value: "festival", label: "Festival" },
-  { value: "corporate", label: "Corporativo" },
-  { value: "education", label: "Educação" },
-];
+import { EVENT_CATEGORIES, CATEGORY_OPTIONS } from "@/lib/categories";
 
 export default function Eventos() {
   const [search, setSearch] = useState("");
