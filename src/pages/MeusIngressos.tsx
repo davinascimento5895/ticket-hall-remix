@@ -236,6 +236,17 @@ export default function MeusIngressos() {
               <Send className="h-4 w-4" /> Transferir
             </Button>
           )}
+          {(activeTab === "past" || activeTab === "archived") && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-muted-foreground"
+              onClick={() => toggleArchive(ticket.id)}
+            >
+              <Archive className="h-4 w-4" />
+              {archivedIds.includes(ticket.id) ? "Desarquivar" : "Arquivar"}
+            </Button>
+          )}
         </div>
       </div>
     );
