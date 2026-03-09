@@ -61,6 +61,8 @@ const CartContext = createContext<CartContextType>({
   appliedCouponId: null,
   setAppliedCouponId: () => {},
   finalTotal: 0,
+  trackingCode: null,
+  setTrackingCode: () => {},
 });
 
 export const useCart = () => useContext(CartContext);
