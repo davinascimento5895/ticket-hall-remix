@@ -170,13 +170,15 @@ export default function ProducerEventFinancial() {
                 <tbody>
                   {filteredOrders.map((order: any) => (
                     <tr key={order.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                      <td className="p-3 font-mono text-xs">{order.id.slice(0, 8)}</td>
-                      <td className="p-3">{order.profiles?.full_name || "—"}</td>
-                      <td className="p-3 text-muted-foreground">{new Date(order.created_at).toLocaleDateString("pt-BR")}</td>
-                      <td className="p-3">{fmt(order.total || 0)}</td>
-                      <td className="p-3 text-muted-foreground">{fmt(order.platform_fee || 0)}</td>
-                      <td className="p-3 font-medium">{fmt((order.total || 0) - (order.platform_fee || 0))}</td>
-                      <td className="p-3">{statusBadge(order.status)}</td>
+                       <td className="p-3 font-mono text-xs">{order.id.slice(0, 8)}</td>
+                       <td className="p-3">{order.profiles?.full_name || "—"}</td>
+                       <td className="p-3 text-muted-foreground">{new Date(order.created_at).toLocaleDateString("pt-BR")}</td>
+                       <td className="p-3">{fmt(order.subtotal || 0)}</td>
+                       <td className="p-3 text-muted-foreground">{order.discount_amount > 0 ? `-${fmt(order.discount_amount)}` : "—"}</td>
+                       <td className="p-3">{fmt(order.total || 0)}</td>
+                       <td className="p-3 text-muted-foreground">{fmt(order.platform_fee || 0)}</td>
+                       <td className="p-3 font-medium">{fmt((order.total || 0) - (order.platform_fee || 0))}</td>
+                       <td className="p-3">{statusBadge(order.status)}</td>
                     </tr>
                   ))}
                 </tbody>
