@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +20,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Camera, ChevronRight } from "lucide-react";
+import { ArrowLeft, Camera, Lock } from "lucide-react";
 import { toast } from "sonner";
 
 export default function EditarPerfil() {
@@ -52,6 +53,10 @@ export default function EditarPerfil() {
 
   const handleSave = async () => {
     if (!user) return;
+    if (!firstName.trim()) {
+      toast.error("O nome é obrigatório");
+      return;
+    }
     setSaving(true);
     const fullName = [firstName.trim(), lastName.trim()].filter(Boolean).join(" ");
     const { error } = await supabase
@@ -70,7 +75,6 @@ export default function EditarPerfil() {
   const handleDeleteAccount = async () => {
     if (!user) return;
     setDeleting(true);
-    // Sign out user — actual deletion would require an edge function
     await signOut();
     toast.success("Sua conta foi desativada. Entre em contato com o suporte para exclusão definitiva.");
     navigate("/");
@@ -81,18 +85,28 @@ export default function EditarPerfil() {
       <SEOHead title="Editar Perfil | TicketHall" description="Edite seu perfil no TicketHall" />
 
       <div className="min-h-screen bg-background">
-        {/* Header */}
+        {/* Mobile Header */}
         <div className="sticky top-0 z-10 bg-background border-b border-border px-4 py-4 flex items-center gap-3 md:hidden">
-          <button onClick={() => navigate("/meu-perfil")} className="p-1" aria-label="Voltar">
+          <button onClick={() => navigate("/meu-perfil")} className="p-2 -ml-1 active:scale-95" aria-label="Voltar">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
           <h1 className="text-center flex-1 text-lg font-semibold font-[var(--font-display)]">
             Editar Perfil
           </h1>
-          <div className="w-6" />
+          <div className="w-8" />
         </div>
 
-        <div className="max-w-lg mx-auto px-4 py-6 md:py-12 space-y-8">
+        {/* Desktop Header */}
+        <div className="hidden md:flex items-center gap-3 pt-8 pb-4 max-w-lg mx-auto px-4">
+          <button onClick={() => navigate("/meu-perfil")} className="p-2 -ml-2 hover:bg-muted rounded-lg" aria-label="Voltar">
+            <ArrowLeft className="h-5 w-5 text-foreground" />
+          </button>
+          <h1 className="text-2xl font-bold text-foreground font-[var(--font-display)]">
+            Editar Perfil
+          </h1>
+        </div>
+
+        <div className="max-w-lg mx-auto px-4 py-6 md:py-4 space-y-8">
           {/* Avatar */}
           <div className="flex justify-center">
             <div className="relative">
@@ -103,8 +117,9 @@ export default function EditarPerfil() {
                 </AvatarFallback>
               </Avatar>
               <button
-                className="absolute bottom-0 right-0 flex items-center justify-center w-8 h-8 rounded-full bg-muted border-2 border-background"
+                className="absolute bottom-0 right-0 flex items-center justify-center w-8 h-8 rounded-full bg-muted border-2 border-background active:scale-95 transition-transform"
                 aria-label="Alterar foto"
+                onClick={() => toast.info("Em breve: upload de foto de perfil")}
               >
                 <Camera className="h-4 w-4 text-muted-foreground" />
               </button>
@@ -141,21 +156,24 @@ export default function EditarPerfil() {
 
           <Separator />
 
-          {/* Email (read-only) */}
-          <div className="space-y-4">
+          {/* Email (read-only with lock icon) */}
+          <div className="space-y-3">
             <h3 className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
               E-mail
             </h3>
-            <div className="flex items-center gap-3 px-3 py-3 rounded-xl bg-muted/50">
-              <span className="flex-1 text-sm text-foreground truncate">{email}</span>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            <div className="flex items-center gap-3 px-3 py-3 rounded-xl bg-muted/30 border border-border/50">
+              <span className="flex-1 text-sm text-muted-foreground truncate">{email}</span>
+              <Lock className="h-4 w-4 text-muted-foreground/50" />
             </div>
+            <p className="text-xs text-muted-foreground">
+              O e-mail não pode ser alterado por segurança.
+            </p>
           </div>
 
           <Separator />
 
           {/* Linked Accounts */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             <h3 className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
               Contas vinculadas
             </h3>
@@ -163,10 +181,12 @@ export default function EditarPerfil() {
               {linkedAccounts.map((account) => (
                 <div
                   key={account.id}
-                  className="flex items-center gap-3 px-3 py-3 rounded-xl bg-muted/50"
+                  className="flex items-center gap-3 px-3 py-3 rounded-xl bg-muted/30 border border-border/50"
                 >
                   <span className="flex-1 text-sm text-foreground">{account.label}</span>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  <Badge variant={account.linked ? "default" : "secondary"} className="text-[10px]">
+                    {account.linked ? "Vinculada" : "Não vinculada"}
+                  </Badge>
                 </div>
               ))}
             </div>
@@ -182,7 +202,7 @@ export default function EditarPerfil() {
           {/* Delete Account */}
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <button className="w-full py-3 text-center text-destructive font-medium text-sm hover:underline">
+              <button className="w-full py-3 text-center text-destructive font-medium text-sm hover:underline active:opacity-70">
                 Excluir conta
               </button>
             </AlertDialogTrigger>
