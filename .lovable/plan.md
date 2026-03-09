@@ -1,97 +1,145 @@
+# TicketHall — Plano Mestre de Redesign & Implementação
 
-## Problema Identificado
-
-O fluxo de **se tornar produtor** está completamente incompleto:
-
-1. **Botões mortos**: "Criar minha conta de produtor" e "Começar a vender grátis" na página `/produtores` não têm `onClick`
-2. **Sem formulário de solicitação**: Não existe forma do usuário solicitar ser produtor
-3. **Admin sem gestão**: Não há tela para admin aprovar/rejeitar solicitações pendentes
-4. **Perfil sem opção**: O perfil do usuário não mostra opção de "Quero ser produtor"
+## Documento de Referência
+Business Case & Product Design Analysis completo fornecido pelo cliente em 2026-03-06.
 
 ---
 
-## Solução Proposta
-
-### 1. Modal de Solicitação para Produtor
-Criar um componente `BecomeProducerModal` que:
-- Pede CPF e telefone (dados necessários para o Asaas)
-- Atualiza `producer_status` para `pending` no perfil
-- Mostra mensagem de "aguardando aprovação"
-
-### 2. Página de Produtores Funcional
-Atualizar `src/pages/Produtores.tsx`:
-- Botões abrem o modal de auth (se não logado)
-- Após login, abrem o modal de solicitação
-- Se já é produtor, redirecionam para `/producer/dashboard`
-
-### 3. Perfil do Usuário com Status
-Atualizar `src/pages/MeuPerfil.tsx`:
-- Mostrar card "Quero ser produtor" se `producer_status` é `null`
-- Mostrar "Aguardando aprovação" se `pending`
-- Mostrar link para painel se `approved`
-
-### 4. Admin: Gestão de Solicitações
-Atualizar `src/pages/admin/AdminProducers.tsx`:
-- Listar solicitações pendentes em destaque
-- Botões de Aprovar/Rejeitar em cada solicitação
-- Ao aprovar, chamar edge function `create-producer-account`
+## Design System Alvo (Novo)
+- **Tema**: Dark-first (`#0d0d0d` base, `#1a1a1a`/`#1f1f1f`/`#2c2c2c` superfícies)
+- **Cor principal (ação)**: Laranja `#ff472d` — CTAs, badges, ícones ativos, links, bordas de foco
+- **Cor secundária (gamificação)**: Verde-lima `#bad900` — pontos, sucesso, confirmações
+- **Texto principal**: Branco `#ffffff`
+- **Texto secundário**: Cinza claro `#9ca3af`
+- **Texto terciário (inativo)**: Cinza médio `#6b7280`
+- **Tipografia**: Sora (display) + Inter (body) — já configurado
+- **Border radius**: ~12-16px para cards, ~10px para inputs
+- **Componentes**: Chips/Pills, Bottom Sheets, Cards com gradiente escuro, Toggle switches
 
 ---
 
-## Estrutura de Arquivos
+## Gap Analysis — Existente vs Documento de Design
 
-```text
-src/
-├── components/
-│   └── BecomeProducerModal.tsx  ← NOVO
-├── pages/
-│   ├── Produtores.tsx           ← MODIFICAR
-│   ├── MeuPerfil.tsx            ← MODIFICAR
-│   └── admin/
-│       └── AdminProducers.tsx   ← MODIFICAR
-└── lib/
-    └── api-admin.ts             ← ADICIONAR: getPendingProducers()
-```
+### ✅ JÁ IMPLEMENTADO
+- Catálogo de eventos com filtros por categoria
+- Detalhe do evento com descrição, data, local
+- Fluxo de compra (carrinho → checkout → pagamento)
+- Meus Ingressos (lista de ingressos ativos)
+- QR Code por ingresso
+- Transferência de ingresso
+- Sistema de reembolso (RefundDialog)
+- Cupons de desconto
+- Fila virtual
+- Certificados pós-evento
+- Painel do produtor completo
+- Painel admin completo
+- Autenticação (login/registro com email)
+- Notificações (NotificationBell)
+- Blog
+- Página do organizador
+- LGPD/Privacidade
+- Bottom navigation mobile
+- Tema claro/escuro com transição animada
+
+### ❌ FEATURES FALTANTES
+1. **Onboarding** — 2-3 telas de boas-vindas com skip
+2. **Detecção automática de cidade** — GPS
+3. **Seletor de datas horizontal** — Barra scrollável no catálogo
+4. **Top-10 / Ranking** — Seção editorial com badges numerados
+5. **Filtro avançado (Bottom Sheet)** — Sort, range slider, gênero, horário
+6. **Grid view toggle** — Lista/grade no catálogo
+7. **Rating/Avaliação** — Estrelas + reviews de usuários (tabela + UI)
+8. **Random/Discovery** — Evento aleatório
+9. **Cast/Elenco** — Seção de artistas no detalhe
+10. **Mapa de assentos** — Seleção visual interativa
+11. **Sistema de pontos** — Fidelidade no checkout
+12. **Favoritos** — Salvar eventos (tabela + UI)
+13. **Ingressos arquivados** — Ativo/Arquivado com visual P&B
+14. **Chat de suporte** — Bot + quick replies in-app
+15. **Perfil completo** — Editar perfil, cidade, pagamentos, notificações
+16. **Login OTP** — Código por email/telefone
+17. **Login social** — Google, Apple
+18. **Compartilhamento** — Share via link
+19. **Notificações configuráveis** — SMS/Push/Email toggles
+20. **Seções editoriais** — "Novo", "Semana", curadoria
+
+### 🔄 PRECISA REDESIGN VISUAL
+- Todas as páginas públicas (landing, catálogo, detalhe, checkout)
+- Navbar → Dark-first com laranja
+- Bottom Nav → Ícone ativo laranja
+- Cards de evento → Fundo #1f1f1f, gradiente, badges
+- Botões → Fill laranja, outline cinza
+- Inputs → Fundo #1f1f1f, borda #3a3a3a
+- Chips → Ativo laranja, inativo borda cinza
+- Login/Registro → Redesign completo
+- Meus Ingressos → Cards com barcode, ações
+- Painéis Producer/Admin → Dark-first
 
 ---
 
-## Fluxo do Usuário
+## Fases de Implementação
 
-```text
-┌─────────────────────────────────────────────────────────────┐
-│  Usuário não logado clica "Criar conta de produtor"         │
-│                          ↓                                  │
-│  Abre AuthModal (tab: register)                             │
-│                          ↓                                  │
-│  Após criar conta, abre BecomeProducerModal                 │
-│                          ↓                                  │
-│  Preenche CPF + Telefone → producer_status = 'pending'      │
-│                          ↓                                  │
-│  Admin vê na lista → Aprovar/Rejeitar                       │
-│                          ↓                                  │
-│  Se aprovado → role 'producer' + acesso ao painel           │
-└─────────────────────────────────────────────────────────────┘
-```
+### Fase 1 — Design System Foundation
+- [ ] Atualizar index.css (CSS variables nova paleta)
+- [ ] Atualizar tailwind.config.ts
+- [ ] Atualizar componentes base (Button, Input, Card, Badge, Chips)
+- [ ] Navbar dark-first com laranja
+- [ ] Bottom Nav com laranja
+- [ ] AuthModal redesign dark-first
+
+### Fase 2 — Páginas Públicas (Buyer UX)
+- [ ] Landing page redesign
+- [ ] Catálogo (seletor datas, chips, banner, Top-10)
+- [ ] Detalhe do evento (reviews, cast, CTA fixo)
+- [ ] Meus Ingressos (ativo/arquivado, barcode, reembolso)
+- [ ] Checkout redesign
+
+### Fase 3 — Features Novas (Prioridade Alta)
+- [ ] Favoritos (tabela + UI)
+- [ ] Rating/Reviews (tabela + UI)
+- [ ] Filtro avançado (Bottom Sheet com Drawer)
+- [ ] Grid view toggle
+- [ ] Compartilhamento social
+- [ ] Perfil completo do usuário
+- [ ] Ingressos arquivados
+
+### Fase 4 — Features Avançadas
+- [ ] Random/Discovery
+- [ ] Sistema de pontos/fidelidade
+- [ ] Chat de suporte in-app
+- [ ] Onboarding (2-3 telas)
+- [ ] Detecção de cidade
+- [ ] Notificações configuráveis
+- [ ] Login OTP + Social
+
+### Fase 5 — Painéis (Producer/Admin)
+- [ ] Redesign dark-first dos dashboards
+- [ ] Consistência com novo design system
 
 ---
 
-## Detalhes Técnicos
+## Infraestrutura Backend (Plano Anterior — Mantido)
 
-**BecomeProducerModal**:
-- Input CPF com máscara
-- Input telefone com máscara
-- Validação básica
-- Atualiza `profiles.producer_status` para `pending`
-- Atualiza `profiles.cpf` e `profiles.phone`
+### Bloco 1 — Schema & SQL Functions
+- Funções atômicas: reserve_tickets, confirm_order_payment, apply_coupon
+- Índices de performance
 
-**Página Produtores**:
-- Verifica se usuário está logado via `useAuth()`
-- Se `role === 'producer'`, botão vira "Acessar painel"
-- Se `producer_status === 'pending'`, mostra "Aguardando aprovação"
-- Se não logado ou sem solicitação, abre fluxo de cadastro
+### Bloco 2 — Edge Functions de Pagamento (Asaas)
+- create-payment, asaas-webhook, create-producer-account
+- Secrets: ASAAS_API_KEY, ASAAS_BASE_URL, QR_SECRET
 
-**Admin Producers**:
-- Query separada para `producer_status = 'pending'`
-- Exibir seção "Solicitações Pendentes" no topo
-- Botão "Aprovar" chama edge function `create-producer-account`
-- Botão "Rejeitar" atualiza `producer_status = 'rejected'`
+### Bloco 3 — Checkout Real
+- Conectar UI ao create-payment
+- PIX, Cartão, Boleto
+
+### Bloco 4 — QR Codes Seguros + Check-in
+- JWT assinado, validate-checkin
+
+### Bloco 5 — Transferência + Cancelamento
+- transfer-ticket, cancel-event
+
+### Bloco 6 — Cron Jobs
+- cleanup_expired_reservations, event-reminders
+
+### Bloco 7 — Segurança & LGPD
+- Rate limiting, consents, data requests
