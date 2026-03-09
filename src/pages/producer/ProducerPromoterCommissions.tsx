@@ -25,6 +25,7 @@ export default function ProducerPromoterCommissions({ producerId }: { producerId
   const { data: promoters = [] } = useQuery({
     queryKey: ["promoters", producerId],
     queryFn: () => getPromoters(producerId),
+    staleTime: 30_000,
   });
 
   const { data: commissions = [], isLoading } = useQuery({
@@ -33,6 +34,7 @@ export default function ProducerPromoterCommissions({ producerId }: { producerId
       promoter_id: promoterFilter === "all" ? undefined : promoterFilter,
       status: statusFilter === "all" ? undefined : statusFilter,
     }),
+    staleTime: 30_000,
   });
 
   const updateMut = useMutation({

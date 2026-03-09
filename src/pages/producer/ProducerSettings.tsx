@@ -34,6 +34,7 @@ export default function ProducerSettings() {
     queryKey: ["bank-accounts", user?.id],
     queryFn: () => getBankAccounts(user!.id),
     enabled: !!user,
+    staleTime: 30_000,
   });
 
   const saveMutation = useMutation({

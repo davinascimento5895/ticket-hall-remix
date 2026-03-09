@@ -48,6 +48,7 @@ export default function ProducerAccountsReceivable({ producerId }: { producerId:
       type: "receivable",
       status: statusFilter === "all" ? undefined : statusFilter,
     }),
+    staleTime: 30_000,
   });
 
   const createMut = useMutation({

@@ -354,50 +354,6 @@ export async function uploadEventImage(path: string, file: File) {
 }
 
 // ============================================================
-// PRODUCER — AFFILIATES
-// ============================================================
-
-export async function getEventAffiliates(eventId: string) {
-  const { data, error } = await supabase
-    .from("affiliates")
-    .select("*")
-    .eq("event_id", eventId)
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  return data || [];
-}
-
-export async function createAffiliate(affiliate: {
-  event_id: string;
-  producer_id: string;
-  name: string;
-  code: string;
-  commission_type: string;
-  commission_value: number;
-}) {
-  const { data, error } = await supabase
-    .from("affiliates")
-    .insert(affiliate)
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
-}
-
-export async function deleteAffiliate(affiliateId: string) {
-  const { error } = await supabase.from("affiliates").delete().eq("id", affiliateId);
-  if (error) throw error;
-}
-
-export async function toggleAffiliate(affiliateId: string, isActive: boolean) {
-  const { error } = await supabase
-    .from("affiliates")
-    .update({ is_active: isActive })
-    .eq("id", affiliateId);
-  if (error) throw error;
-}
-
-// ============================================================
 // PRODUCER — BULK MESSAGES
 // ============================================================
 

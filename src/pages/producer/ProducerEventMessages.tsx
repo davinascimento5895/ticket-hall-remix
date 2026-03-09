@@ -34,18 +34,21 @@ export default function ProducerEventMessages() {
     queryKey: ["producer-event", id],
     queryFn: () => getProducerEventBasic(id!),
     enabled: !!id,
+    staleTime: 30_000,
   });
 
   const { data: tiers = [] } = useQuery({
     queryKey: ["event-tiers-messages", id],
     queryFn: () => getEventTiersBasic(id!),
     enabled: !!id,
+    staleTime: 30_000,
   });
 
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ["event-messages", id],
     queryFn: () => getEventMessages(id!),
     enabled: !!id,
+    staleTime: 30_000,
   });
 
   // Count recipients
@@ -53,6 +56,7 @@ export default function ProducerEventMessages() {
     queryKey: ["recipient-count", id, tierFilter],
     queryFn: () => getEventMessageRecipientCount(id!, tierFilter),
     enabled: !!id,
+    staleTime: 30_000,
   });
 
   const saveDraftMutation = useMutation({
@@ -90,12 +94,9 @@ export default function ProducerEventMessages() {
         status: "pending",
       });
 
-      try {
-        await sendBulkMessage(msg.id);
-      } catch (fnError) {
-        await updateBulkMessageStatus(msg.id, "failed");
-        throw fnError;
-      }
+      await sendBulkMessage(msg.id);
+      // Nota: o envio real de e-mails está em desenvolvimento.
+      // A mensagem será salva como "queued" para processamento futuro.
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["event-messages"] });
