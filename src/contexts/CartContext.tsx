@@ -188,7 +188,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, updateQuantity, clearCart, subtotal, platformFee, total, itemCount, expiresAt, startCheckout, couponCode, setCouponCode, discount, setDiscount, appliedCouponId, setAppliedCouponId, finalTotal }}
+      value={{ items, addItem, removeItem, updateQuantity, clearCart, subtotal, platformFee, total, itemCount, expiresAt, startCheckout, couponCode, setCouponCode, discount, setDiscount, appliedCouponId, setAppliedCouponId, finalTotal, trackingCode, setTrackingCode: (code: string | null) => { setTrackingCode(code); try { if (code) sessionStorage.setItem("promoter_tracking_code", code); else sessionStorage.removeItem("promoter_tracking_code"); } catch {} } }}
     >
       {children}
     </CartContext.Provider>
