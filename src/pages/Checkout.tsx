@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { SEOHead } from "@/components/SEOHead";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Navigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Check } from "lucide-react";
 import { CountdownTimer } from "@/components/CountdownTimer";
@@ -259,8 +259,7 @@ export default function Checkout() {
 
   // Redirect if cart empty (after all hooks)
   if (items.length === 0 && step < 2) {
-    navigate("/carrinho");
-    return null;
+    return <Navigate to="/carrinho" replace />;
   }
 
   return (

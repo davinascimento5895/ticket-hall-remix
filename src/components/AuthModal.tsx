@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,14 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login", redirectTo
   const [forgotMode, setForgotMode] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Sync tab when defaultTab changes (e.g. switching between Login/Register buttons)
+  useEffect(() => {
+    if (open) {
+      setTab(defaultTab);
+      setForgotMode(false);
+    }
+  }, [defaultTab, open]);
 
   // Login state
   const [loginEmail, setLoginEmail] = useState("");
