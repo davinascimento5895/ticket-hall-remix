@@ -103,6 +103,7 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
   };
 
   const handleConfirmPayment = useCallback(async (method: string, cardData?: CreditCardData, installments?: number) => {
+    const isFree = total === 0;
     if (!user) {
       toast({ title: "Faça login", description: "Você precisa estar logado para comprar.", variant: "destructive" });
       return;
