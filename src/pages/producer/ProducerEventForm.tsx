@@ -19,6 +19,7 @@ import { TaxesFeesManager } from "@/components/producer/TaxesFeesManager";
 import { CapacityGroupsManager } from "@/components/producer/CapacityGroupsManager";
 import { EventProductsManager } from "@/components/producer/EventProductsManager";
 import { getCapacityGroups } from "@/lib/api-checkout";
+import { EVENT_CATEGORIES } from "@/lib/categories";
 
 const stepLabels = ["Informações", "Local", "Ingressos", "Formulário", "Produtos", "Configurações", "Revisão"];
 
@@ -46,7 +47,7 @@ export default function ProducerEventForm() {
   const [step, setStep] = useState(0);
 
   const [form, setForm] = useState({
-    title: "", slug: "", description: "", category: "music",
+    title: "", slug: "", description: "", category: "shows",
     start_date: "", end_date: "", doors_open_time: "",
     venue_name: "", venue_address: "", venue_city: "", venue_state: "", venue_zip: "",
     is_online: false, online_url: "",
@@ -193,12 +194,7 @@ export default function ProducerEventForm() {
     }
   };
 
-  const categories = [
-    { value: "music", label: "Música" }, { value: "sports", label: "Esportes" },
-    { value: "theater", label: "Teatro" }, { value: "festival", label: "Festival" },
-    { value: "corporate", label: "Corporativo" }, { value: "education", label: "Educação" },
-    { value: "other", label: "Outros" },
-  ];
+  // Use centralized categories from lib/categories.ts
 
   return (
     <div className="max-w-3xl space-y-6">
@@ -225,7 +221,7 @@ export default function ProducerEventForm() {
             <div><Label>Categoria</Label>
               <Select value={form.category} onValueChange={(v) => updateField("category", v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{categories.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
+                <SelectContent>{EVENT_CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div><Label>Descrição</Label><Textarea value={form.description} onChange={(e) => updateField("description", e.target.value)} rows={5} placeholder="Descreva o evento..." /></div>
@@ -388,7 +384,7 @@ export default function ProducerEventForm() {
           <CardContent className="space-y-3 text-sm">
             <div className="grid grid-cols-2 gap-2">
               <span className="text-muted-foreground">Título:</span><span className="text-foreground font-medium">{form.title}</span>
-              <span className="text-muted-foreground">Categoria:</span><span className="text-foreground">{categories.find((c) => c.value === form.category)?.label}</span>
+              <span className="text-muted-foreground">Categoria:</span><span className="text-foreground">{EVENT_CATEGORIES.find((c) => c.value === form.category)?.label}</span>
               <span className="text-muted-foreground">Início:</span><span className="text-foreground">{form.start_date ? new Date(form.start_date).toLocaleString("pt-BR") : "—"}</span>
               <span className="text-muted-foreground">Término:</span><span className="text-foreground">{form.end_date ? new Date(form.end_date).toLocaleString("pt-BR") : "—"}</span>
               <span className="text-muted-foreground">Local:</span><span className="text-foreground">{form.is_online ? "Online" : form.venue_name || "—"}</span>

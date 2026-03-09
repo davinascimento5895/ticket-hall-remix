@@ -2,6 +2,7 @@ import { Calendar, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getCategoryLabel } from "@/lib/categories";
 
 interface EventCardProps {
   title: string;
@@ -13,16 +14,6 @@ interface EventCardProps {
   slug?: string;
   className?: string;
 }
-
-const categoryLabels: Record<string, string> = {
-  music: "Música",
-  sports: "Esportes",
-  theater: "Teatro",
-  festival: "Festival",
-  corporate: "Corporativo",
-  education: "Educação",
-  other: "Outros",
-};
 
 export function EventCard({ title, date, city, imageUrl, priceFrom, category, slug, className }: EventCardProps) {
   const Wrapper = slug ? Link : "div";
@@ -45,7 +36,7 @@ export function EventCard({ title, date, city, imageUrl, priceFrom, category, sl
         <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
         {category && (
           <span className="absolute top-3 left-3 px-2 py-1 text-xs font-medium rounded-full bg-primary/90 text-primary-foreground">
-            {categoryLabels[category] || category}
+            {getCategoryLabel(category)}
           </span>
         )}
       </div>
