@@ -263,8 +263,8 @@ export default function MeusIngressos() {
           </div>
         </div>
 
-        {/* Tabs - contained scroll */}
-        <div className="flex border-b border-border mb-6 overflow-x-auto scrollbar-hide">
+        {/* Tabs - grid on mobile for no horizontal scroll */}
+        <div className="grid grid-cols-4 gap-1 md:flex md:gap-0 border-b border-border mb-6">
           {tabs.map((tab) => (
             <button
               key={tab.id}
