@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckinListsManager } from "@/components/producer/CheckinListsManager";
 import { getEventTickets, getProducerEventBasic } from "@/lib/api-producer";
-import { validateCheckinByTicketId, type CheckinResult } from "@/lib/api-checkin";
+import { validateCheckin, validateCheckinByTicketId, type CheckinResult } from "@/lib/api-checkin";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -40,8 +40,23 @@ export default function ProducerEventCheckin() {
     staleTime: 30_000,
   });
 
+  // Mutation for manual check-in by ticket ID (list button click)
   const checkinMutation = useMutation({
     mutationFn: (ticketId: string) => validateCheckinByTicketId({ ticketId, scannedBy: user?.id }),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["event-tickets-checkin", id] });
+      setLastResult(result);
+      toast({ title: "Check-in realizado!", description: result.attendeeName });
+    },
+    onError: (err: any) => {
+      setLastResult({ success: false, result: "error", message: err.message });
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    },
+  });
+
+  // Mutation for QR scanner — passes raw QR code string
+  const scanCheckinMutation = useMutation({
+    mutationFn: (qrCode: string) => validateCheckin({ qrCode, scannedBy: user?.id }),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["event-tickets-checkin", id] });
       setLastResult(result);
@@ -70,7 +85,8 @@ export default function ProducerEventCheckin() {
           // Prevent duplicate scans of the same code in quick succession
           if (lastScannedRef.current === decodedText) return;
           lastScannedRef.current = decodedText;
-          checkinMutation.mutate(decodedText);
+          // QR codes contain JWT or raw data — use validateCheckin directly
+          scanCheckinMutation.mutate(decodedText);
           // Reset after 3 seconds to allow re-scanning
           setTimeout(() => { lastScannedRef.current = ""; }, 3000);
         },
@@ -81,7 +97,7 @@ export default function ProducerEventCheckin() {
       toast({ title: "Erro ao abrir câmera", description: err.message || "Permissão de câmera negada", variant: "destructive" });
       scannerRef.current = null;
     }
-  }, [checkinMutation]);
+  }, [scanCheckinMutation]);
 
   const stopScanner = useCallback(async () => {
     if (scannerRef.current) {
