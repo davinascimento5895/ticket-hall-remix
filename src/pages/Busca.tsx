@@ -10,7 +10,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { SEOHead } from "@/components/SEOHead";
 import { SearchFilters, defaultFilters, type SearchFilterValues } from "@/components/SearchFilters";
 import { supabase } from "@/integrations/supabase/client";
-import { fuzzyMatch } from "@/lib/search";
+import { fuzzyMatch, sanitizePostgrestFilter } from "@/lib/search";
 import { getCategoryLabel, EVENT_CATEGORIES } from "@/lib/categories";
 import { format, getHours } from "date-fns";
 import { ptBR } from "date-fns/locale";
