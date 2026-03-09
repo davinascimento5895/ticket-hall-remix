@@ -36,7 +36,7 @@ export default function ProducerEventPanel() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
-        .select("title, start_date, end_date, is_online, venue_city, venue_name, status, cover_image_url")
+        .select("title, slug, start_date, end_date, is_online, venue_city, venue_name, status, cover_image_url")
         .eq("id", id)
         .single();
       if (error) throw error;
