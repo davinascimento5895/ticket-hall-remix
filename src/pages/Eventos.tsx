@@ -1,14 +1,17 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useSearchParams } from "react-router-dom";
-import { Search, X, LayoutGrid, List, Ticket, MapPin } from "lucide-react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { Search, X, LayoutGrid, List, Ticket, MapPin, Plus, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/EventCard";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { SEOHead } from "@/components/SEOHead";
+import { AuthModal } from "@/components/AuthModal";
+import { BecomeProducerModal } from "@/components/BecomeProducerModal";
+import { useAuth } from "@/contexts/AuthContext";
 
 import { getEvents } from "@/lib/api";
 import { RandomDiscoveryButton } from "@/components/RandomDiscoveryButton";
@@ -20,6 +23,8 @@ import { EVENT_CATEGORIES, CATEGORY_OPTIONS } from "@/lib/categories";
 
 export default function Eventos() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { user, role, profile } = useAuth();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>(searchParams.get("categoria") || "");
   const [cityFilter, setCityFilter] = useState<string>(searchParams.get("cidade") || "");
@@ -27,6 +32,25 @@ export default function Eventos() {
   const [gridView, setGridView] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const { city, loading: cityLoading, requestLocation } = useCityDetection();
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [producerModalOpen, setProducerModalOpen] = useState(false);
+
+  const handleCreateEvent = () => {
+    // Already a producer — go to create event
+    if (role === "producer") {
+      navigate("/producer/events/new");
+      return;
+    }
+    // Not logged in — open auth modal
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+    // Logged in but not producer — open become producer modal
+    setProducerModalOpen(true);
+  };
+
+  const isPendingProducer = profile?.producer_status === "pending";
 
   // Sync URL params on mount
   useEffect(() => {
@@ -111,6 +135,25 @@ export default function Eventos() {
       <SEOHead
         title="Eventos"
         description="Encontre os melhores eventos, shows, festivais e experiências perto de você. Compre ingressos com segurança no TicketHall."
+      />
+
+      {/* Auth Modal */}
+      <AuthModal
+        open={authModalOpen}
+        onOpenChange={(open) => {
+          setAuthModalOpen(open);
+          // After successful auth, open producer modal
+          if (!open && user && role !== "producer") {
+            setTimeout(() => setProducerModalOpen(true), 300);
+          }
+        }}
+        defaultTab="register"
+      />
+
+      {/* Become Producer Modal */}
+      <BecomeProducerModal
+        open={producerModalOpen}
+        onOpenChange={setProducerModalOpen}
       />
 
       <div className="container pt-4 lg:pt-24 pb-16">
@@ -233,6 +276,26 @@ export default function Eventos() {
             )}
           </div>
           <div className="flex items-center gap-2">
+            {/* Create Event CTA */}
+            <Button
+              variant={isPendingProducer ? "outline" : "default"}
+              size="sm"
+              onClick={handleCreateEvent}
+              disabled={isPendingProducer}
+              className="gap-1.5"
+            >
+              {isPendingProducer ? (
+                <>
+                  <Clock className="h-4 w-4" />
+                  <span className="hidden sm:inline">Aguardando aprovação</span>
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4" />
+                  <span className="hidden sm:inline">Criar evento</span>
+                </>
+              )}
+            </Button>
             <RandomDiscoveryButton className="hidden lg:flex" />
             <div className="hidden lg:flex items-center gap-1 border border-border rounded-lg p-0.5">
               <button
