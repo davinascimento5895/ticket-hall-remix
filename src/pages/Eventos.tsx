@@ -104,8 +104,8 @@ export default function Eventos() {
           />
         </div>
 
-        {/* Date selector - horizontal scroll */}
-        <div className="flex gap-1.5 overflow-x-auto pb-3 mb-4 scrollbar-hide -mx-1 px-1">
+        {/* Date selector - horizontal scroll contained */}
+        <div className="flex gap-1.5 overflow-x-auto pb-3 mb-4 scrollbar-hide">
           <button
             onClick={() => setSelectedDate(null)}
             className={cn(
