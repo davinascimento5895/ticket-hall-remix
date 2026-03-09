@@ -102,6 +102,23 @@ export default function Checkout() {
       if (orderErr) throw orderErr;
       setOrderId(order.id);
 
+      // Apply coupon: increment uses_count and enforce max_uses
+      if (appliedCouponId) {
+        const { data: couponApplied, error: couponErr } = await supabase.rpc("apply_coupon", {
+          p_coupon_id: appliedCouponId,
+          p_order_id: order.id,
+        });
+        if (couponErr) {
+          console.error("apply_coupon error:", couponErr);
+        } else if (!couponApplied) {
+          // Coupon has exceeded max_uses or is invalid — cancel and warn
+          toast({ title: "Cupom expirado", description: "O cupom atingiu o limite de usos.", variant: "destructive" });
+          await supabase.from("orders").update({ status: "cancelled" }).eq("id", order.id);
+          setIsCreatingOrder(false);
+          return;
+        }
+      }
+
       // Reserve tickets (only for actual ticket tiers, not products)
       const ticketItems = items.filter((i) => !i.tierId.startsWith("product-"));
       for (const item of ticketItems) {
