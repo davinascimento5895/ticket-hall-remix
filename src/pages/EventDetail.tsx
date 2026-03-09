@@ -40,17 +40,32 @@ export default function EventDetail() {
 
   const { setTrackingCode } = useCart();
 
-  // Track affiliate click from ?ref=CODE and save as promoter tracking code
+  // Track promoter click from ?ref=CODE
   useEffect(() => {
     const ref = searchParams.get("ref");
     if (!ref || !event?.id) return;
-    const trackedKey = `affiliate_tracked_${event.id}_${ref}`;
+    const trackedKey = `promoter_tracked_${event.id}_${ref}`;
     if (sessionStorage.getItem(trackedKey)) return;
-    sessionStorage.setItem("affiliate_ref", ref);
     sessionStorage.setItem(trackedKey, "1");
-    // Save tracking code for the new promoter system
+    // Save tracking code for the promoter system
     setTrackingCode(ref);
-    trackAffiliateClick(event.id, ref);
+    // Increment clicks on promoter_events
+    supabase
+      .from("promoter_events")
+      .select("id, clicks")
+      .eq("tracking_code", ref)
+      .eq("event_id", event.id)
+      .eq("is_active", true)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          supabase
+            .from("promoter_events")
+            .update({ clicks: (data.clicks || 0) + 1 })
+            .eq("id", data.id)
+            .then(() => {});
+        }
+      });
   }, [event?.id, searchParams, setTrackingCode]);
 
   const { data: allTiers, isLoading: loadingTiers } = useQuery({

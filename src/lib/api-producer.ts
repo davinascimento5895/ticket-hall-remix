@@ -274,17 +274,18 @@ export async function getProducerDashboardStats(producerId: string) {
 
   const eventIds = events.map((e) => e.id);
 
-  const { data: analytics } = await supabase
-    .from("event_analytics")
-    .select("*")
-    .in("event_id", eventIds);
+  // Parallelize analytics + orders queries
+  const [analyticsRes, ordersRes] = await Promise.all([
+    supabase.from("event_analytics").select("*").in("event_id", eventIds),
+    supabase.from("orders")
+      .select("*, events(title), profiles!orders_buyer_id_fkey(full_name)")
+      .in("event_id", eventIds)
+      .order("created_at", { ascending: false })
+      .limit(10),
+  ]);
 
-  const { data: recentOrders } = await supabase
-    .from("orders")
-    .select("*, events(title), profiles!orders_buyer_id_fkey(full_name)")
-    .in("event_id", eventIds)
-    .order("created_at", { ascending: false })
-    .limit(10);
+  const analytics = analyticsRes.data;
+  const recentOrders = ordersRes.data;
 
   const totalRevenue = analytics?.reduce((s, a) => s + (a.producer_revenue || 0), 0) || 0;
   const ticketsSold = analytics?.reduce((s, a) => s + (a.tickets_sold || 0), 0) || 0;

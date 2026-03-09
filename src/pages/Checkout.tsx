@@ -219,7 +219,7 @@ export default function Checkout() {
     } finally {
       setIsCreatingOrder(false);
     }
-  }, [user, items, subtotal, platformFee, total, finalTotal, discount, appliedCouponId, attendeeData, questionAnswers, clearCart]);
+  }, [user, items, subtotal, platformFee, total, finalTotal, discount, appliedCouponId, attendeeData, questionAnswers, clearCart, orderId]);
 
   // Process payment
   const handleConfirmPayment = useCallback(async (method: string, cardData?: CreditCardData, installments?: number) => {
