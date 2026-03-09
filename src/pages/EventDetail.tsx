@@ -228,16 +228,20 @@ export default function EventDetail() {
             <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
               <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                 <Calendar className="h-4 w-4 text-primary" />
-                {format(startDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-              </span>
-              <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-                <Clock className="h-4 w-4 text-primary" />
-                {format(startDate, "HH:mm")} – {format(endDate, "HH:mm")}
+                {format(startDate, "dd 'de' MMMM 'de' yyyy, HH:mm", { locale: ptBR })}
+                {" › "}
+                {format(endDate, "dd 'de' MMMM 'de' yyyy, HH:mm", { locale: ptBR })}
               </span>
               {event.venue_name && (
-                <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-                  <MapPin className="h-4 w-4 text-primary" />
-                  {event.venue_name}{event.venue_city ? `, ${event.venue_city}` : ""}
+                <span className="inline-flex items-start gap-1.5 text-muted-foreground">
+                  <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                  <span>
+                    {event.venue_name}
+                    {event.venue_address ? ` - ${event.venue_address}` : ""}
+                    {event.venue_city ? `, ${event.venue_city}` : ""}
+                    {event.venue_state ? `, ${event.venue_state}` : ""}
+                    {event.venue_zip ? ` - ${event.venue_zip}` : ""}
+                  </span>
                 </span>
               )}
               {event.max_capacity && (
