@@ -13,6 +13,13 @@ interface Message {
   timestamp: Date;
 }
 
+const DISCLAIMER_MESSAGE: Message = {
+  id: "disclaimer",
+  text: "🤖 Olá! Sou o assistente automatizado da TicketHall. Posso ajudar com dúvidas frequentes. Para atendimento humano, envie um e-mail para suporte@tickethall.com.br.",
+  from: "bot",
+  timestamp: new Date(),
+};
+
 const quickReplies = [
   "Como comprar ingressos?",
   "Quero pedir reembolso",
