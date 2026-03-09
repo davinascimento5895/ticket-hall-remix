@@ -68,7 +68,17 @@ export default function Busca() {
         const { data, error } = await q;
         if (error) throw error;
 
-        let results = data || [];
+        let rawResults = data || [];
+
+        // Compute min_price and has_discount from tiers
+        let results: SearchResultEvent[] = rawResults.map((e: any) => {
+          const tiers = e.ticket_tiers || [];
+          const prices = tiers.map((t: any) => t.price ?? 0);
+          const minPrice = prices.length > 0 ? Math.min(...prices) : null;
+          const hasDiscount = tiers.some((t: any) => t.original_price != null && t.original_price > (t.price ?? 0));
+          const { ticket_tiers, ...rest } = e;
+          return { ...rest, min_price: minPrice, has_discount: hasDiscount };
+        });
 
         // Fuzzy filter only when there's a query
         if (query.trim()) {
