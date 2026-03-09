@@ -22,6 +22,7 @@ export default function ProducerEventTicketsTab() {
       return data;
     },
     enabled: !!id,
+    staleTime: 30_000,
   });
 
   const { data: stats } = useQuery({
