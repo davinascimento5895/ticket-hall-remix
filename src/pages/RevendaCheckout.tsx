@@ -17,6 +17,7 @@ export default function RevendaCheckout() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [confirmed, setConfirmed] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
 
   const { data: listing, isLoading, error } = useQuery({
     queryKey: ["resale-listing", listingId],
