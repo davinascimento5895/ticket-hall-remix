@@ -1,16 +1,6 @@
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { toast } from "@/hooks/use-toast";
 
 export default function AdminSettings() {
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
-
-  const handleSave = () => {
-    toast({ title: "Configurações salvas!" });
-  };
 
   return (
     <div className="max-w-2xl space-y-6">
