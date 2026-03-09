@@ -147,8 +147,23 @@ export default function MeusIngressos() {
 
   const isPast = activeTab === "past" || activeTab === "cancelled" || activeTab === "archived";
 
+  const handleCancelResale = async (listingId: string, ticketId: string) => {
+    try {
+      await cancelResaleListing(listingId, ticketId);
+      toast({ title: "Revenda cancelada", description: "O ingresso voltou para sua conta." });
+      queryClient.invalidateQueries({ queryKey: ["my-tickets"] });
+      queryClient.invalidateQueries({ queryKey: ["my-resale-listings"] });
+      queryClient.invalidateQueries({ queryKey: ["resale-listings"] });
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    }
+  };
+
   const renderTicket = (ticket: any) => {
     const isTransferable = ticket.status === "active" && ticket.ticket_tiers?.is_transferable !== false;
+    const isResellable = ticket.status === "active" && ticket.ticket_tiers?.is_resellable !== false;
+    const isForResale = ticket.is_for_resale === true;
+    const activeListing = (myResaleListings || []).find((l: any) => l.ticket_id === ticket.id && l.status === "active");
     const eventDate = ticket.events?.start_date ? new Date(ticket.events.start_date) : null;
     const isToday = eventDate && eventDate.toDateString() === now.toDateString();
 
