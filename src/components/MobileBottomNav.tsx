@@ -1,10 +1,8 @@
-import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { LayoutGrid, Search, Ticket, User, ShoppingBag } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { cn } from "@/lib/utils";
-import { AuthModal } from "@/components/AuthModal";
 
 interface NavItem {
   id: string;
