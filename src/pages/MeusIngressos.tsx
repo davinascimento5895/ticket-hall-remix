@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { Ticket, Calendar, MapPin, QrCode, Send, Clock } from "lucide-react";
+import { Ticket, Calendar, MapPin, QrCode, Send, Clock, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { QRCodeModal } from "@/components/QRCodeModal";
@@ -8,14 +9,19 @@ import { TransferTicketModal } from "@/components/TransferTicketModal";
 import { EmptyState } from "@/components/EmptyState";
 import { useAuth } from "@/contexts/AuthContext";
 import { getMyTickets } from "@/lib/api";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { normalizeText } from "@/lib/search";
+
+type TabId = "active" | "pending" | "cancelled" | "past";
 
 export default function MeusIngressos() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<"upcoming" | "past" | "transferred">("upcoming");
+  const [activeTab, setActiveTab] = useState<TabId>("active");
+  const [searchQuery, setSearchQuery] = useState("");
+  
   const [qrModal, setQrModal] = useState<{
     open: boolean;
     ticketId: string;
@@ -40,18 +46,70 @@ export default function MeusIngressos() {
   });
 
   const now = new Date();
-  const upcoming = tickets?.filter((t: any) => new Date(t.events?.start_date) >= now && t.status === "active") || [];
-  const past = tickets?.filter((t: any) => new Date(t.events?.start_date) < now || t.status === "used") || [];
-  const transferred = tickets?.filter((t: any) => t.status === "transferred") || [];
 
-  const tabs = [
-    { id: "upcoming" as const, label: "Ativos", count: upcoming.length },
-    { id: "past" as const, label: "Arquivados", count: past.length },
-    { id: "transferred" as const, label: "Transferidos", count: transferred.length },
+  // Categorize tickets
+  const categorizedTickets = useMemo(() => {
+    if (!tickets) return { active: [], pending: [], cancelled: [], past: [] };
+
+    const active: any[] = [];
+    const pending: any[] = [];
+    const cancelled: any[] = [];
+    const past: any[] = [];
+
+    for (const ticket of tickets) {
+      const eventDate = ticket.events?.start_date ? new Date(ticket.events.start_date) : null;
+      const isPastEvent = eventDate && eventDate < now;
+
+      if (ticket.status === "cancelled" || ticket.status === "refunded") {
+        cancelled.push(ticket);
+      } else if (ticket.status === "pending") {
+        pending.push(ticket);
+      } else if (isPastEvent || ticket.status === "used") {
+        past.push(ticket);
+      } else if (ticket.status === "active") {
+        active.push(ticket);
+      } else {
+        // Default to active for any other status
+        active.push(ticket);
+      }
+    }
+
+    return { active, pending, cancelled, past };
+  }, [tickets, now]);
+
+  // Filter by search query
+  const filteredTickets = useMemo(() => {
+    const ticketsForTab = categorizedTickets[activeTab];
+    if (!searchQuery.trim()) return ticketsForTab;
+
+    const normalizedQuery = normalizeText(searchQuery);
+    
+    return ticketsForTab.filter((ticket: any) => {
+      const searchableFields = [
+        ticket.events?.title,
+        ticket.events?.venue_city,
+        ticket.ticket_tiers?.name,
+        ticket.attendee_name,
+        ticket.attendee_email,
+        ticket.qr_code,
+        ticket.id,
+        ticket.order_id,
+      ].filter(Boolean);
+
+      return searchableFields.some((field) =>
+        normalizeText(String(field)).includes(normalizedQuery)
+      );
+    });
+  }, [categorizedTickets, activeTab, searchQuery]);
+
+  const tabs: { id: TabId; label: string; count: number }[] = [
+    { id: "active", label: "Ativos", count: categorizedTickets.active.length },
+    { id: "pending", label: "Pendentes", count: categorizedTickets.pending.length },
+    { id: "cancelled", label: "Cancelados", count: categorizedTickets.cancelled.length },
+    { id: "past", label: "Encerrados", count: categorizedTickets.past.length },
   ];
 
-  const currentTickets = activeTab === "upcoming" ? upcoming : activeTab === "past" ? past : transferred;
-  const isPast = activeTab === "past";
+  const isPast = activeTab === "past" || activeTab === "cancelled";
 
   const renderTicket = (ticket: any) => {
     const isTransferable = ticket.status === "active" && ticket.ticket_tiers?.is_transferable !== false;
@@ -82,9 +140,9 @@ export default function MeusIngressos() {
 
         {/* Content */}
         <div className="flex-1 min-w-0 space-y-1.5">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <h3 className="font-display font-semibold text-foreground truncate">{ticket.events?.title}</h3>
-            {isToday && !isPast && (
+            {isToday && activeTab === "active" && (
               <span className="px-2 py-0.5 text-[10px] font-bold uppercase rounded-full bg-primary text-primary-foreground">
                 Hoje
               </span>
@@ -164,64 +222,91 @@ export default function MeusIngressos() {
     );
   };
 
+  const getEmptyMessage = () => {
+    switch (activeTab) {
+      case "active":
+        return "Não há ingressos para próximos eventos";
+      case "pending":
+        return "Nenhum ingresso pendente de pagamento";
+      case "cancelled":
+        return "Nenhum ingresso cancelado";
+      case "past":
+        return "Nenhum ingresso de eventos passados";
+    }
+  };
+
   return (
     <>
       <div className="container pt-24 pb-16">
-        <h1 className="font-display text-2xl font-bold mb-6">Meus Ingressos</h1>
+        {/* Header with title and search */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <h1 className="font-display text-2xl md:text-3xl font-bold">Ingressos</h1>
+          
+          {/* Search bar */}
+          <div className="relative w-full md:w-80">
+            <Input
+              type="text"
+              placeholder="Buscar pelo nome, email, ingresso ou pedido"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pr-16 bg-muted/50 border-border"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute right-1 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground hover:text-foreground"
+              onClick={() => {/* Search is automatic */}}
+            >
+              BUSCAR
+            </Button>
+          </div>
+        </div>
 
+        {/* Tabs */}
+        <div className="flex border-b border-border mb-6 overflow-x-auto">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                "pb-3 px-1 mr-6 text-sm font-medium transition-colors border-b-2 whitespace-nowrap",
+                activeTab === tab.id
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {tab.label}
+              {tab.count > 0 && (
+                <span className={cn(
+                  "ml-1.5 text-xs",
+                  activeTab === tab.id ? "text-primary" : "text-muted-foreground"
+                )}>
+                  ({tab.count})
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Content */}
         {isLoading ? (
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
           </div>
-        ) : !tickets || tickets.length === 0 ? (
-          <EmptyState
-            icon={<Ticket className="h-12 w-12" />}
-            title="Nenhum ingresso ainda"
-            description="Quando você comprar ingressos, eles aparecerão aqui."
-            actionLabel="Explorar eventos"
-            onAction={() => navigate("/eventos")}
-          />
+        ) : filteredTickets.length > 0 ? (
+          <div className="space-y-3">
+            {filteredTickets.map(renderTicket)}
+          </div>
         ) : (
-          <>
-            {/* Custom underline tabs */}
-            <div className="flex border-b border-border mb-6">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={cn(
-                    "pb-3 px-1 mr-6 text-sm font-medium transition-colors border-b-2",
-                    activeTab === tab.id
-                      ? "border-primary text-foreground"
-                      : "border-transparent text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {tab.label}
-                  <span className={cn(
-                    "ml-1.5 text-xs",
-                    activeTab === tab.id ? "text-primary" : "text-muted-foreground"
-                  )}>
-                    {tab.count}
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            <div className="space-y-3">
-              {currentTickets.length > 0 ? (
-                currentTickets.map(renderTicket)
-              ) : (
-                <p className="text-sm text-muted-foreground py-8 text-center">
-                  {activeTab === "upcoming" && "Nenhum ingresso para eventos futuros."}
-                  {activeTab === "past" && "Nenhum ingresso passado."}
-                  {activeTab === "transferred" && "Nenhum ingresso transferido."}
-                </p>
-              )}
-            </div>
-          </>
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <p className="text-muted-foreground mb-6">{getEmptyMessage()}</p>
+            <Button onClick={() => navigate("/eventos")}>
+              ENCONTRAR EVENTOS
+            </Button>
+          </div>
         )}
       </div>
-      
 
       <QRCodeModal
         open={qrModal.open}
