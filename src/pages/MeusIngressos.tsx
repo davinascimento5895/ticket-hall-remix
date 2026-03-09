@@ -426,6 +426,14 @@ export default function MeusIngressos() {
         eventTitle={transferModal.eventTitle}
         tierName={transferModal.tierName}
       />
+
+      {resaleModal.ticket && (
+        <ResaleListingModal
+          open={resaleModal.open}
+          onOpenChange={(open) => setResaleModal((p) => ({ ...p, open }))}
+          ticket={resaleModal.ticket}
+        />
+      )}
     </>
   );
 }
