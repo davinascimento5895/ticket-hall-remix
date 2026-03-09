@@ -70,7 +70,7 @@ const faqs = [
   },
   { 
     q: "Posso parcelar minha compra?", 
-    a: "Sim! Aceitamos cartão de crédito em até 12x sem juros (sujeito à análise do emissor do cartão). Também oferecemos PIX com aprovação instantânea e boleto bancário com vencimento em 3 dias úteis. Escolha a forma que melhor se adequa ao seu orçamento." 
+    a: "Sim! Aceitamos cartão de crédito em até 12x (em até 3x sem juros). Também oferecemos PIX com aprovação instantânea e boleto bancário com vencimento em 3 dias úteis. Escolha a forma que melhor se adequa ao seu orçamento." 
   },
   { 
     q: "E se eu perder meu ingresso ou deletar o e-mail?", 

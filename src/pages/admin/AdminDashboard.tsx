@@ -15,7 +15,7 @@ export default function AdminDashboard() {
 
   const metrics = [
     { label: "GMV Total", value: stats ? fmt(stats.totalGMV) : "—", icon: DollarSign, accent: "bg-primary/10 text-primary" },
-    { label: "Receita Plataforma (7%)", value: stats ? fmt(stats.platformRevenue) : "—", icon: TrendingUp, accent: "bg-accent/10 text-accent" },
+    { label: "Receita Plataforma", value: stats ? fmt(stats.platformRevenue) : "—", icon: TrendingUp, accent: "bg-accent/10 text-accent" },
     { label: "Eventos", value: stats?.totalEvents?.toLocaleString("pt-BR") || "0", icon: CalendarDays, accent: "bg-info/10 text-info" },
     { label: "Usuários", value: stats?.totalUsers?.toLocaleString("pt-BR") || "0", icon: Users, accent: "bg-primary/10 text-primary" },
     { label: "Pedidos", value: stats?.totalOrders?.toLocaleString("pt-BR") || "0", icon: ShoppingCart, accent: "bg-accent/10 text-accent" },
