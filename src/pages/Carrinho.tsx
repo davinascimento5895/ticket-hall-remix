@@ -15,7 +15,16 @@ export default function Carrinho() {
   const { items, removeItem, updateQuantity, clearCart, subtotal, platformFee, total, expiresAt, couponCode, setCouponCode, discount, setDiscount, setAppliedCouponId, finalTotal } = useCart();
   const { user } = useAuth();
   const [validatingCoupon, setValidatingCoupon] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
   const navigate = useNavigate();
+
+  const handleCheckout = () => {
+    if (!user) {
+      setShowAuth(true);
+      return;
+    }
+    navigate("/checkout");
+  };
 
   const handleValidateCoupon = async () => {
     if (!couponCode.trim() || items.length === 0) return;
