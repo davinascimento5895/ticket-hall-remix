@@ -343,9 +343,9 @@ export default function Produtores() {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="font-display text-2xl md:text-3xl font-bold mb-3">Perguntas frequentes para produtores</h2>
+            <h2 className="font-display text-2xl md:text-3xl font-bold mb-3">Perguntas frequentes de compradores</h2>
             <p className="text-muted-foreground">
-              Tudo o que você precisa saber para começar a vender, operar seu evento e acompanhar seus resultados.
+              Tudo o que você precisa saber sobre comprar ingressos, formas de pagamento e como usar seus ingressos.
             </p>
           </motion.div>
 
