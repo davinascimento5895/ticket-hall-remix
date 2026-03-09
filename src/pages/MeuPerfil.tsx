@@ -57,17 +57,15 @@ export default function MeuPerfil() {
     { id: "support", icon: HelpCircle, label: "Suporte", href: "/meu-perfil/suporte" },
   ];
 
-  // Producer status card content
   const renderProducerCard = () => {
-    // Already a producer
     if (role === "producer") {
       return (
         <button
           onClick={() => navigate("/producer/dashboard")}
-          className="flex items-center gap-3 w-full p-4 rounded-xl border border-green-500/30 bg-green-500/10 text-left hover:bg-green-500/20 transition-colors"
+          className="flex items-center gap-3 w-full p-4 rounded-xl border border-border bg-muted/30 text-left hover:bg-muted/50 transition-colors"
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/20">
-            <CheckCircle2 className="h-5 w-5 text-green-500" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+            <CheckCircle2 className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-medium text-foreground">Conta de produtor ativa</p>
@@ -78,45 +76,10 @@ export default function MeuPerfil() {
       );
     }
 
-    // Pending approval
-    if (profile?.producer_status === "pending") {
-      return (
-        <div className="flex items-center gap-3 w-full p-4 rounded-xl border border-amber-500/30 bg-amber-500/10">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/20">
-            <Clock className="h-5 w-5 text-amber-500" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-foreground">Aguardando aprovação</p>
-            <p className="text-xs text-muted-foreground">Sua solicitação está sendo analisada</p>
-          </div>
-        </div>
-      );
-    }
-
-    // Rejected
-    if (profile?.producer_status === "rejected") {
-      return (
-        <button
-          onClick={() => setProducerModalOpen(true)}
-          className="flex items-center gap-3 w-full p-4 rounded-xl border border-destructive/30 bg-destructive/10 text-left hover:bg-destructive/20 transition-colors"
-        >
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-destructive/20">
-            <XCircle className="h-5 w-5 text-destructive" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-foreground">Solicitação recusada</p>
-            <p className="text-xs text-muted-foreground">Toque para tentar novamente</p>
-          </div>
-          <ChevronRight className="h-4 w-4 text-muted-foreground" />
-        </button>
-      );
-    }
-
-    // Not requested yet
     return (
       <button
         onClick={() => setProducerModalOpen(true)}
-        className="flex items-center gap-3 w-full p-4 rounded-xl border border-primary/30 bg-primary/5 text-left hover:bg-primary/10 transition-colors"
+        className="flex items-center gap-3 w-full p-4 rounded-xl border border-border bg-primary/5 text-left hover:bg-primary/10 transition-colors"
       >
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/20">
           <Briefcase className="h-5 w-5 text-primary" />
