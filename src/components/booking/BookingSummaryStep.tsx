@@ -224,9 +224,9 @@ export function BookingSummaryStep({
               onChange={(e) => setInstallments(Number(e.target.value))}
               className="w-full mt-1 h-9 rounded-md border border-border bg-background px-3 text-sm"
             >
-              {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
-                <option key={n} value={n}>
-                  {n}x de {fmt(total / n)} {n === 1 ? "(à vista)" : ""}
+              {getInstallmentOptions(total).map((opt) => (
+                <option key={opt.n} value={opt.n}>
+                  {opt.label}
                 </option>
               ))}
             </select>
