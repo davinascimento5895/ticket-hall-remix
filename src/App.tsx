@@ -33,6 +33,7 @@ import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Changelog from "./pages/Changelog";
 import NotificacoesConfig from "./pages/NotificacoesConfig";
+import Cidades from "./pages/Cidades";
 import NotFound from "./pages/NotFound";
 
 // Producer pages — lazy loaded
