@@ -50,76 +50,49 @@ export function MobileBottomNav() {
 
   return (
     <nav 
-      className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/98 backdrop-blur-lg border-t border-border"
-      style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border"
+      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       role="navigation"
       aria-label="Navegação principal"
     >
-      <div className="flex items-end justify-around h-16 px-2">
+      <div className="flex items-center justify-around h-16 px-2">
         {navItems.map((item) => {
           const isActive = item.href === "/" 
             ? location.pathname === "/" 
             : location.pathname.startsWith(item.href.split("?")[0]);
           const Icon = item.icon;
 
-          // Cart button - highlighted center item
-          if (item.isCart) {
-            return (
-              <Link
-                key={item.href}
-                to={item.href}
-                className="relative flex flex-col items-center -mt-4"
-                aria-label={`${item.label}${itemCount > 0 ? `, ${itemCount} itens` : ""}`}
-              >
-                <motion.div
-                  whileTap={{ scale: 0.92 }}
-                  className={cn(
-                    "relative flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all duration-200",
-                    "bg-primary text-primary-foreground",
-                    isActive && "ring-2 ring-primary/30 ring-offset-2 ring-offset-background"
-                  )}
-                >
-                  <Icon className="h-6 w-6" strokeWidth={2} />
-                  
-                  {/* Cart badge */}
-                  {itemCount > 0 && (
-                    <span 
-                      className="absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center px-1.5 text-[11px] font-bold bg-accent text-accent-foreground rounded-full shadow-md"
-                      aria-hidden="true"
-                    >
-                      {itemCount > 99 ? "99+" : itemCount}
-                    </span>
-                  )}
-                </motion.div>
-                <span className="text-[10px] font-medium text-muted-foreground mt-1">
-                  {item.label}
-                </span>
-              </Link>
-            );
-          }
-
-          // Regular nav items
           return (
             <Link
               key={item.href}
               to={item.href}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 min-w-[56px] py-2 transition-colors touch-manipulation",
+                "flex flex-col items-center justify-center gap-0.5 flex-1 py-2 transition-colors touch-manipulation",
                 "active:scale-95"
               )}
               aria-current={isActive ? "page" : undefined}
+              aria-label={item.isCart && itemCount > 0 ? `${item.label}, ${itemCount} itens` : item.label}
             >
-              <motion.div
-                whileTap={{ scale: 0.9 }}
+              <div
                 className={cn(
-                  "flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200",
+                  "relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200",
                   isActive 
-                    ? "bg-primary/10 text-primary" 
+                    ? "bg-primary text-primary-foreground" 
                     : "text-muted-foreground"
                 )}
               >
                 <Icon className="h-5 w-5" strokeWidth={isActive ? 2.5 : 2} />
-              </motion.div>
+                
+                {/* Cart badge */}
+                {item.isCart && itemCount > 0 && (
+                  <span 
+                    className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold bg-accent text-accent-foreground rounded-full"
+                    aria-hidden="true"
+                  >
+                    {itemCount > 99 ? "99+" : itemCount}
+                  </span>
+                )}
+              </div>
               <span 
                 className={cn(
                   "text-[10px] font-medium transition-colors",
