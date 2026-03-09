@@ -14,6 +14,7 @@ export default function AdminOrders() {
   const { data: orders, isLoading } = useQuery({
     queryKey: ["admin-orders", statusFilter],
     queryFn: () => getAllOrders({ status: statusFilter }),
+    staleTime: 30_000,
   });
 
   const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;

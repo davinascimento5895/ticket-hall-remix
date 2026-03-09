@@ -8,13 +8,16 @@ import { Button } from "@/components/ui/button";
 import { getAllUsers } from "@/lib/api-admin";
 import { maskCPF } from "@/lib/validators";
 import { useState } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function AdminUsers() {
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 400);
 
   const { data: users, isLoading } = useQuery({
-    queryKey: ["admin-users", search],
-    queryFn: () => getAllUsers(search || undefined),
+    queryKey: ["admin-users", debouncedSearch],
+    queryFn: () => getAllUsers(debouncedSearch || undefined),
+    staleTime: 30_000,
   });
 
   const roleLabel: Record<string, string> = { admin: "Admin", producer: "Produtor", buyer: "Comprador" };

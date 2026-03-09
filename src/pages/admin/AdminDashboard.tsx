@@ -9,6 +9,7 @@ export default function AdminDashboard() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ["admin-dashboard"],
     queryFn: getAdminDashboardStats,
+    staleTime: 60_000,
   });
 
   const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
