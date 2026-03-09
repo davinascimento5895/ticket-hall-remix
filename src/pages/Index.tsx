@@ -168,7 +168,7 @@ export default function Index() {
         <div className="container">
           <div className="flex items-end justify-between mb-8">
             <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold">Em destaque</h2>
+              <h2 className="font-display text-2xl lg:text-3xl font-bold">Em destaque</h2>
               <p className="text-muted-foreground mt-1">Os eventos mais procurados da semana</p>
             </div>
             <Button variant="ghost" asChild className="hidden sm:inline-flex">
