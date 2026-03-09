@@ -47,6 +47,7 @@ import Favoritos from "./pages/Favoritos";
 import Revenda from "./pages/Revenda";
 import RevendaCheckout from "./pages/RevendaCheckout";
 import RevendaSucesso from "./pages/RevendaSucesso";
+import PedidoRecuperacao from "./pages/PedidoRecuperacao";
 import NotFound from "./pages/NotFound";
 
 // Producer pages — lazy loaded
