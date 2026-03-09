@@ -66,6 +66,8 @@ export default function ProducerEventForm() {
 
   const [tiers, setTiers] = useState<TierDraft[]>([]);
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [seatMapFile, setSeatMapFile] = useState<File | null>(null);
+  const [seatMapImageUrl, setSeatMapImageUrl] = useState<string>("");
 
   // Load capacity groups for tier assignment
   const { data: capacityGroups = [] } = useQuery({
