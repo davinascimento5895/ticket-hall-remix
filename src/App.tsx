@@ -119,6 +119,7 @@ const App = () => {
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/blog/:slug" element={<BlogPost />} />
                 <Route path="/cidades" element={<Cidades />} />
+                <Route path="/faq" element={<FAQ />} />
                 <Route path="/busca" element={<Busca />} />
                 <Route path="/notificacoes" element={<NotificacoesConfig />} />
                 <Route path="/meu-perfil" element={<ProtectedRoute><MeuPerfil /></ProtectedRoute>} />
