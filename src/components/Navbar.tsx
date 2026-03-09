@@ -209,12 +209,10 @@ export function Navbar() {
               </Button>
             )}
 
-            {/* Hamburger menu for logged-out users and admin/producer */}
-            {(!user || isAdminOrProducer) && (
-              <button className="text-foreground p-2" onClick={() => setMobileOpen(!mobileOpen)}>
-                {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </button>
-            )}
+            {/* Hamburger menu — always visible on mobile */}
+            <button className="lg:hidden text-foreground p-2" onClick={() => setMobileOpen(!mobileOpen)}>
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
         </div>
 
