@@ -27,7 +27,7 @@ export default function Checkout() {
   const [boletoUrl, setBoletoUrl] = useState<string | null>(null);
   const [boletoBarcode, setBoletoBarcode] = useState<string | null>(null);
 
-  const { items, subtotal, platformFee, total, expiresAt, clearCart, discount, appliedCouponId, finalTotal } = useCart();
+  const { items, subtotal, platformFee, total, expiresAt, clearCart, discount, appliedCouponId, finalTotal, trackingCode } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
 
