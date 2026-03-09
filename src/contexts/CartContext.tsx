@@ -26,6 +26,13 @@ interface CartContextType {
   itemCount: number;
   expiresAt: Date | null;
   startCheckout: () => void;
+  couponCode: string;
+  setCouponCode: (code: string) => void;
+  discount: number;
+  setDiscount: (amount: number) => void;
+  appliedCouponId: string | null;
+  setAppliedCouponId: (id: string | null) => void;
+  finalTotal: number;
 }
 
 const CART_KEY = "tickethall_cart";
@@ -44,6 +51,13 @@ const CartContext = createContext<CartContextType>({
   itemCount: 0,
   expiresAt: null,
   startCheckout: () => {},
+  couponCode: "",
+  setCouponCode: () => {},
+  discount: 0,
+  setDiscount: () => {},
+  appliedCouponId: null,
+  setAppliedCouponId: () => {},
+  finalTotal: 0,
 });
 
 export const useCart = () => useContext(CartContext);
@@ -71,12 +85,18 @@ function loadExpiry(): Date | null {
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(loadCart);
   const [expiresAt, setExpiresAt] = useState<Date | null>(loadExpiry);
+  const [couponCode, setCouponCode] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [appliedCouponId, setAppliedCouponId] = useState<string | null>(null);
 
   useEffect(() => {
     localStorage.setItem(CART_KEY, JSON.stringify(items));
     if (items.length === 0) {
       localStorage.removeItem(CART_EXPIRY_KEY);
       setExpiresAt(null);
+      setCouponCode("");
+      setDiscount(0);
+      setAppliedCouponId(null);
     }
   }, [items]);
 
@@ -96,9 +116,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = useCallback((item: CartItem) => {
     setItems((prev) => {
-      // Block adding items from a different event
       if (prev.length > 0 && prev[0].eventId !== item.eventId) {
-        // Clear cart and start fresh with new event
         localStorage.removeItem(CART_KEY);
         return [item];
       }
@@ -132,6 +150,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clearCart = useCallback(() => {
     setItems([]);
     setExpiresAt(null);
+    setCouponCode("");
+    setDiscount(0);
+    setAppliedCouponId(null);
     localStorage.removeItem(CART_KEY);
     localStorage.removeItem(CART_EXPIRY_KEY);
   }, []);
@@ -142,6 +163,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return sum + (i.price * i.quantity * feePercent / 100);
   }, 0);
   const total = subtotal + platformFee;
+  const finalTotal = Math.max(0, total - discount);
   const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
 
   const startCheckout = useCallback(() => {
@@ -154,7 +176,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, updateQuantity, clearCart, subtotal, platformFee, total, itemCount, expiresAt, startCheckout }}
+      value={{ items, addItem, removeItem, updateQuantity, clearCart, subtotal, platformFee, total, itemCount, expiresAt, startCheckout, couponCode, setCouponCode, discount, setDiscount, appliedCouponId, setAppliedCouponId, finalTotal }}
     >
       {children}
     </CartContext.Provider>

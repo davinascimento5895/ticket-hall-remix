@@ -1,16 +1,6 @@
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { toast } from "@/hooks/use-toast";
 
 export default function AdminSettings() {
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
-
-  const handleSave = () => {
-    toast({ title: "Configurações salvas!" });
-  };
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -19,14 +9,7 @@ export default function AdminSettings() {
       <Card>
         <CardHeader><CardTitle className="text-base">Modo Manutenção</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center gap-3">
-            <Switch checked={maintenanceMode} onCheckedChange={setMaintenanceMode} />
-            <div>
-              <Label>Ativar modo manutenção</Label>
-              <p className="text-xs text-muted-foreground">Quando ativado, o site exibirá uma página de manutenção para todos os usuários.</p>
-            </div>
-          </div>
-          <Button onClick={handleSave}>Salvar</Button>
+          <p className="text-sm text-muted-foreground text-center py-4">🚧 Em breve — O modo manutenção será disponibilizado em uma versão futura.</p>
         </CardContent>
       </Card>
 

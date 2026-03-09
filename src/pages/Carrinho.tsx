@@ -10,9 +10,7 @@ import { validateCoupon } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 
 export default function Carrinho() {
-  const { items, removeItem, updateQuantity, clearCart, subtotal, platformFee, total, expiresAt } = useCart();
-  const [couponCode, setCouponCode] = useState("");
-  const [discount, setDiscount] = useState(0);
+  const { items, removeItem, updateQuantity, clearCart, subtotal, platformFee, total, expiresAt, couponCode, setCouponCode, discount, setDiscount, setAppliedCouponId, finalTotal } = useCart();
   const [validatingCoupon, setValidatingCoupon] = useState(false);
   const navigate = useNavigate();
 
@@ -28,17 +26,17 @@ export default function Carrinho() {
             ? subtotal * (coupon.discount_value / 100)
             : coupon.discount_value;
         setDiscount(Math.min(discountAmount, subtotal));
+        setAppliedCouponId(coupon.id);
         toast({ title: "Cupom aplicado!", description: `Desconto de R$ ${discountAmount.toFixed(2).replace(".", ",")}` });
       }
     } catch {
       toast({ title: "Cupom inválido", description: "Verifique o código e tente novamente.", variant: "destructive" });
       setDiscount(0);
+      setAppliedCouponId(null);
     } finally {
       setValidatingCoupon(false);
     }
   };
-
-  const finalTotal = Math.max(0, total - discount);
 
   const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
 
