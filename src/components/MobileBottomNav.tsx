@@ -49,11 +49,8 @@ export function MobileBottomNav() {
     return null;
   }
 
-  // For profile: if not logged in, we'll intercept the click to open auth modal
-  const profileHref = !user ? "#" : "/meu-perfil";
-
   const navItems = baseNavItems.map((item) =>
-    item.id === "profile" ? { ...item, href: profileHref } : item
+    item.id === "profile" ? { ...item, href: "/meu-perfil" } : item
   );
 
   const activeId = getActiveId(location.pathname);
