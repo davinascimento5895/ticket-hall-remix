@@ -6,16 +6,23 @@ export default function AuthCallback() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const redirectTo = sessionStorage.getItem("auth_redirect_to") || "/eventos";
+
+    const handleRedirect = (clear = true) => {
+      if (clear) sessionStorage.removeItem("auth_redirect_to");
+      navigate(redirectTo, { replace: true });
+    };
+
     supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN") {
-        navigate("/eventos", { replace: true });
+        handleRedirect();
       }
     });
 
     // Fallback: if already signed in, redirect
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        navigate("/eventos", { replace: true });
+        handleRedirect();
       }
     });
   }, [navigate]);

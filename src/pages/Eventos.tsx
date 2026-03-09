@@ -334,6 +334,7 @@ export default function Eventos() {
                   priceFrom={event._minPrice ?? 0}
                   category={event.category}
                   slug={event.slug}
+                  eventId={event.id}
                 />
               ))}
             </div>
