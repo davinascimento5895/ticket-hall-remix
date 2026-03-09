@@ -153,7 +153,6 @@ const steps = [
 export default function Produtores() {
   const { user, role } = useAuth();
   const navigate = useNavigate();
-  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [producerModalOpen, setProducerModalOpen] = useState(false);
 
   const handleCTA = () => {
