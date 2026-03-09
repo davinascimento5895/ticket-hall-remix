@@ -203,8 +203,9 @@ export function CalculadoraComparador() {
 
   const sliderLabels = [
     { value: 0, label: "0" },
-    { value: 1000, label: "1k" },
+    { value: 2500, label: "2,5k" },
     { value: 5000, label: "5k" },
+    { value: 7500, label: "7,5k" },
     { value: 10000, label: "10k" },
   ];
 
