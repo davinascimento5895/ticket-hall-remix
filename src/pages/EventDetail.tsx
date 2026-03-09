@@ -322,6 +322,8 @@ export default function EventDetail() {
                                 tierId: `product-${p.id}`, eventId: event.id,
                                 tierName: p.name, eventTitle: event.title,
                                 eventSlug: event.slug, price: p.price, quantity: 1,
+                                platformFeePercent: event.platform_fee_percent ?? 7,
+                                maxPerOrder: p.max_per_order ?? 10,
                               });
                               toast({ title: "Produto adicionado ao carrinho" });
                             }}>
