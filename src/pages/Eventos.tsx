@@ -105,11 +105,13 @@ export default function Eventos() {
       }
     }
 
-    // Calendar dates filter
-    if (filters.dateRange && filters.dateRange.length > 0) {
+    // Calendar range filter
+    if (filters.dateRange?.from) {
+      const from = filters.dateRange.from;
+      const to = filters.dateRange.to || from;
       result = result.filter((e: any) => {
         const d = new Date(e.start_date);
-        return filters.dateRange!.some((sel) => isSameDay(d, sel));
+        return isWithinInterval(d, { start: from, end: endOfDay(to) });
       });
     }
 
