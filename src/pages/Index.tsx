@@ -32,11 +32,54 @@ const features = [
 ];
 
 const faqs = [
-  { q: "Como compro ingressos?", a: "Basta acessar a página do evento, selecionar os ingressos desejados e finalizar a compra com PIX, cartão ou boleto." },
-  { q: "Posso transferir meu ingresso?", a: "Sim! Na área 'Meus Ingressos', clique em transferir e informe o e-mail do destinatário." },
-  { q: "Como funciona o reembolso?", a: "Caso o evento seja cancelado, o reembolso é automático. Para outros casos, solicite pelo painel em até 7 dias antes." },
-  { q: "O que é a fila virtual?", a: "Alguns eventos com alta demanda utilizam fila virtual para garantir uma experiência justa na compra." },
-  { q: "É seguro comprar pelo TicketHall?", a: "Sim. Todos os pagamentos são processados com criptografia e seguimos as normas da LGPD." },
+  { 
+    q: "Como compro ingressos?", 
+    a: "Muito simples! Acesse a página do evento, escolha o tipo de ingresso e quantidade desejada. No checkout, informe seus dados e finalize com PIX (aprovação instantânea), cartão de crédito (em até 12x) ou boleto bancário. Seus ingressos chegam por e-mail em segundos!" 
+  },
+  { 
+    q: "Posso transferir meu ingresso?", 
+    a: "Sim! Na área 'Meus Ingressos', clique no botão 'Transferir' do ingresso desejado e informe o e-mail do destinatário. A transferência é gratuita e o novo titular recebe o ingresso digital automaticamente. Você pode acompanhar o status da transferência no seu painel." 
+  },
+  { 
+    q: "Como funciona o reembolso?", 
+    a: "Se o evento for cancelado pelo produtor, o reembolso é automático e integral em até 5 dias úteis. Para outros casos (mudança de data, desistência), você pode solicitar reembolso através do painel 'Meus Ingressos' em até 7 dias antes do evento, sujeito à política de cada produtor." 
+  },
+  { 
+    q: "Meu ingresso é digital ou preciso imprimir?", 
+    a: "Todos os ingressos do TicketHall são 100% digitais! Você recebe um QR Code único que fica no seu celular. Na entrada do evento, basta mostrar o QR Code na tela para fazer o check-in. Sem necessidade de impressão, mais sustentável e prático!" 
+  },
+  { 
+    q: "Como funciona o check-in no evento?", 
+    a: "É super rápido! Na entrada do evento, abra o e-mail com seu ingresso ou acesse 'Meus Ingressos' no site. Mostre o QR Code na tela do celular para o organizador escanear. O sistema valida automaticamente e libera sua entrada. Lembre-se de ter o documento de identidade em mãos!" 
+  },
+  { 
+    q: "O que é a fila virtual?", 
+    a: "Para eventos com alta demanda, alguns produtores ativam a fila virtual. Você entra na fila antes das vendas começarem e aguarda sua vez de comprar. Isso garante uma experiência mais justa e evita que o site trave. Você recebe notificações sobre sua posição na fila." 
+  },
+  { 
+    q: "Posso comprar para outras pessoas?", 
+    a: "Sim! Durante a compra, você pode informar os dados de diferentes pessoas para cada ingresso. Cada ingresso terá o nome do titular para o check-in. Alternativamente, você pode comprar em seu nome e depois transferir os ingressos gratuitamente." 
+  },
+  { 
+    q: "É seguro comprar pelo TicketHall?", 
+    a: "Completamente seguro! Utilizamos criptografia de ponta a ponta, não armazenamos dados do seu cartão, seguimos a LGPD rigorosamente e monitoramos transações 24/7 para prevenir fraudes. Todos os pagamentos são processados por gateways certificados e reconhecidos pelo Banco Central." 
+  },
+  { 
+    q: "Posso parcelar minha compra?", 
+    a: "Sim! Aceitamos cartão de crédito em até 12x sem juros (sujeito à análise do emissor do cartão). Também oferecemos PIX com aprovação instantânea e boleto bancário com vencimento em 3 dias úteis. Escolha a forma que melhor se adequa ao seu orçamento." 
+  },
+  { 
+    q: "E se eu perder meu ingresso ou deletar o e-mail?", 
+    a: "Sem problemas! Seus ingressos ficam salvos para sempre na área 'Meus Ingressos' do site. Basta fazer login com seu e-mail e senha. Você também pode solicitar o reenvio dos ingressos por e-mail a qualquer momento. Seus ingressos estão sempre seguros conosco!" 
+  },
+  { 
+    q: "Posso alterar meus dados após a compra?", 
+    a: "Dados como nome do titular e documento podem ser alterados através da área 'Meus Ingressos' até 24 horas antes do evento. Para outras alterações ou dúvidas específicas, entre em contato com o atendimento do evento através dos dados disponíveis na página do evento." 
+  },
+  { 
+    q: "Como sei se minha compra foi aprovada?", 
+    a: "Você recebe confirmação por e-mail imediatamente após a aprovação do pagamento. PIX é instantâneo, cartão leva até alguns minutos, e boleto até 3 dias úteis. Você pode acompanhar o status em tempo real na área 'Meus Ingressos' e recebe notificações por e-mail sobre qualquer mudança." 
+  }
 ];
 
 export default function Index() {
