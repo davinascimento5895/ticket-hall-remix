@@ -28,7 +28,7 @@ export function MainLayout() {
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       {!hideNavbar && <Navbar />}
-      <main className="pb-20 md:pb-0 overflow-x-hidden">
+      <main className="pb-20 lg:pb-0 overflow-x-hidden">
         <Outlet />
       </main>
       {!isLoggedInArea && <Footer />}
