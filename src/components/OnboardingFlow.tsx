@@ -3,8 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Ticket, Search, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { X, Ticket, Search, Smartphone } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 const slides = [
   {
