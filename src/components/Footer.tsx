@@ -5,7 +5,7 @@ export function Footer() {
   return (
     <footer className="border-t border-border bg-surface">
       <div className="container py-12">
-        <div className="grid md:grid-cols-4 gap-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="space-y-4">
             <TicketHallLogo size="md" />
             <p className="text-sm text-muted-foreground">
