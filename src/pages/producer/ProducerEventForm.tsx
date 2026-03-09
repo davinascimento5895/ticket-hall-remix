@@ -239,9 +239,19 @@ export default function ProducerEventForm() {
 
   const handleSave = async (publish = false) => {
     if (!user) return;
+    if (publish && profile?.producer_status !== "approved") {
+      toast({ title: "Conta pendente", description: "Sua conta de produtor ainda não foi aprovada. Aguarde a aprovação para publicar eventos.", variant: "destructive" });
+      return;
+    }
     try {
       let coverUrl = form.cover_image_url;
       if (coverFile) coverUrl = await handleUploadCover();
+
+      // Ensure unique slug for new events
+      let finalSlug = form.slug;
+      if (!isEdit) {
+        finalSlug = await generateUniqueSlug(form.title);
+      }
 
       let finalSeatMapUrl = seatMapImageUrl;
       if (seatMapFile && user) {
