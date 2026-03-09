@@ -1,10 +1,11 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Trash2, ShoppingCart, ArrowLeft } from "lucide-react";
+import { Trash2, ShoppingCart, ArrowLeft, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { EmptyState } from "@/components/EmptyState";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { validateCoupon } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
