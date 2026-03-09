@@ -93,6 +93,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [couponCode, setCouponCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [appliedCouponId, setAppliedCouponId] = useState<string | null>(null);
+  const [trackingCode, setTrackingCode] = useState<string | null>(() => {
+    try { return sessionStorage.getItem("promoter_tracking_code"); } catch { return null; }
+  });
 
   useEffect(() => {
     localStorage.setItem(CART_KEY, JSON.stringify(items));
