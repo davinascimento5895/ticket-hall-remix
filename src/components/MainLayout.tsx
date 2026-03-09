@@ -29,10 +29,17 @@ export function MainLayout() {
   // Bottom nav only shows for logged-in users on mobile
   const hasBottomNav = user && isMobile;
 
+  // Add top padding when navbar is visible (fixed navbar is h-14 on mobile, h-16 on desktop)
+  const needsTopPadding = !hideNavbar;
+
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       {!hideNavbar && <Navbar />}
-      <main className={cn("overflow-x-hidden", hasBottomNav ? "pb-20 lg:pb-0" : "")}>
+      <main className={cn(
+        "overflow-x-hidden",
+        needsTopPadding && "pt-14 lg:pt-16",
+        hasBottomNav ? "pb-20 lg:pb-0" : ""
+      )}>
         <Outlet />
       </main>
       {!isLoggedInArea && <Footer />}
