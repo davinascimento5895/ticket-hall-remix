@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Copy, Trash2, Users, Link as LinkIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,9 +22,9 @@ export default function ProducerEventPromoters() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [showLink, setShowLink] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [form, setForm] = useState({ promoter_id: "", commission_type: "percentage", commission_value: "", tracking_code: "" });
 
-  // Get all promoters for this producer
   const { data: promoters = [] } = useQuery({
     queryKey: ["promoters", user?.id],
     queryFn: async () => {
@@ -32,9 +33,9 @@ export default function ProducerEventPromoters() {
       return data || [];
     },
     enabled: !!user,
+    staleTime: 30_000,
   });
 
-  // Get promoter_events for this event
   const { data: assignments = [], isLoading } = useQuery({
     queryKey: ["promoter-events", eventId],
     queryFn: async () => {
@@ -47,6 +48,7 @@ export default function ProducerEventPromoters() {
       return data || [];
     },
     enabled: !!eventId,
+    staleTime: 30_000,
   });
 
   const createMut = useMutation({
@@ -79,17 +81,11 @@ export default function ProducerEventPromoters() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["promoter-events", eventId] });
+      setDeletingId(null);
       toast({ title: "Vínculo removido!" });
     },
   });
 
-  const copyLink = (code: string) => {
-    const url = `${window.location.origin}/eventos/${eventId}?ref=${code}`;
-    navigator.clipboard.writeText(url);
-    toast({ title: "Link copiado!" });
-  };
-
-  // Get event slug for proper link
   const { data: event } = useQuery({
     queryKey: ["event-slug", eventId],
     queryFn: async () => {
@@ -97,6 +93,7 @@ export default function ProducerEventPromoters() {
       return data;
     },
     enabled: !!eventId,
+    staleTime: 30_000,
   });
 
   const copyFullLink = (code: string) => {
@@ -155,7 +152,7 @@ export default function ProducerEventPromoters() {
                     <Button size="icon" variant="ghost" onClick={() => copyFullLink(a.tracking_code)} title="Copiar link">
                       <Copy className="h-4 w-4" />
                     </Button>
-                    <Button size="icon" variant="ghost" className="text-destructive" onClick={() => deleteMut.mutate(a.id)}>
+                    <Button size="icon" variant="ghost" className="text-destructive" onClick={() => setDeletingId(a.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -165,6 +162,22 @@ export default function ProducerEventPromoters() {
           ))}
         </div>
       )}
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deletingId} onOpenChange={(open) => { if (!open) setDeletingId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover vínculo?</AlertDialogTitle>
+            <AlertDialogDescription>O promoter será desvinculado deste evento. As comissões existentes serão mantidas.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => deletingId && deleteMut.mutate(deletingId)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Link Promoter Dialog */}
       <Dialog open={showLink} onOpenChange={setShowLink}>

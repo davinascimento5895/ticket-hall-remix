@@ -11,6 +11,7 @@ export default function ProducerEventReconciliation({ producerId }: { producerId
   const { data: events = [], isLoading } = useQuery({
     queryKey: ["event-reconciliation", producerId],
     queryFn: () => getEventReconciliation(producerId),
+    staleTime: 30_000,
   });
 
   const columns: DataTableColumn<any>[] = [
