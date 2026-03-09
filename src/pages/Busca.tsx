@@ -60,8 +60,9 @@ export default function Busca() {
           .limit(200);
 
         if (query.trim()) {
+          const safeQuery = sanitizePostgrestFilter(query);
           q = q.or(
-            `title.ilike.%${query}%,venue_city.ilike.%${query}%,category.ilike.%${query}%,description.ilike.%${query}%`
+            `title.ilike.%${safeQuery}%,venue_city.ilike.%${safeQuery}%,category.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%`
           );
         }
 

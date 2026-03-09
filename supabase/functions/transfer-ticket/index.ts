@@ -83,24 +83,12 @@ serve(async (req) => {
       return jsonResponse({ error: "Você não pode transferir para si mesmo" }, 400);
     }
 
-    // 6. Find or note recipient — look up by email in auth
-    const { data: recipientProfiles } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("id", (
-        await supabase.auth.admin.listUsers()
-      ).data.users.find((u: any) => u.email?.toLowerCase() === recipientEmail.toLowerCase())?.id || "00000000-0000-0000-0000-000000000000");
-
+    // 6. Find recipient by email
     let recipientId: string | null = null;
 
-    // Search for user by email via auth admin API
-    const { data: authUsers } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-    const recipientUser = authUsers?.users?.find(
-      (u: any) => u.email?.toLowerCase() === recipientEmail.toLowerCase()
-    );
-
-    if (recipientUser) {
-      recipientId = recipientUser.id;
+    const { data: recipientData, error: recipientError } = await supabase.auth.admin.getUserByEmail(recipientEmail);
+    if (!recipientError && recipientData?.user) {
+      recipientId = recipientData.user.id;
     }
 
     if (!recipientId) {

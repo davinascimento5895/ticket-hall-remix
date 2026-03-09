@@ -87,12 +87,13 @@ export function SearchBar({
       }
 
       // Search events from database
+      const safeQuery = sanitizePostgrestFilter(searchQuery);
       const { data: events } = await supabase
         .from("events")
         .select("id, title, slug, venue_city, category, start_date")
         .eq("status", "published")
         .or(
-          `title.ilike.%${searchQuery}%,venue_city.ilike.%${searchQuery}%,category.ilike.%${searchQuery}%`
+          `title.ilike.%${safeQuery}%,venue_city.ilike.%${safeQuery}%,category.ilike.%${safeQuery}%`
         )
         .limit(5);
 
