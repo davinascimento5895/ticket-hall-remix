@@ -75,7 +75,7 @@ export default function ProducerEventForm() {
   const { id } = useParams();
   const isEdit = !!id;
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const [step, setStep] = useState(isEdit ? 1 : 0);
