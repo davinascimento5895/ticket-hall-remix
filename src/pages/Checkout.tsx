@@ -205,9 +205,27 @@ export default function Checkout() {
         });
         if (confirmErr) {
           console.error("confirm_order_payment error:", confirmErr);
-          // Fallback: manually activate tickets
           await supabase.from("tickets").update({ status: "active" }).eq("order_id", order.id).eq("status", "reserved");
+        } else if (confirmed === false) {
+          toast({ title: "Erro", description: "Pedido já foi processado anteriormente.", variant: "destructive" });
+          setIsCreatingOrder(false);
+          return;
         }
+
+        // Generate signed JWT QR codes for free tickets
+        const { data: activeTickets } = await supabase
+          .from("tickets")
+          .select("id")
+          .eq("order_id", order.id)
+          .eq("status", "active");
+        if (activeTickets?.length) {
+          await Promise.all(
+            activeTickets.map((t) =>
+              supabase.functions.invoke("generate-qr-code", { body: { ticketId: t.id } })
+            )
+          );
+        }
+
         toast({ title: "Inscrição confirmada!", description: "Seus ingressos foram gerados com sucesso." });
         clearCart();
         setStep(2);
