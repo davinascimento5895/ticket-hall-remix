@@ -55,6 +55,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const ensureProfile = async (userId: string) => {
+    try {
+      await supabase.functions.invoke("ensure-user-profile");
+    } catch (e) {
+      console.warn("ensure-user-profile failed (non-blocking):", e);
+    }
+  };
+
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
