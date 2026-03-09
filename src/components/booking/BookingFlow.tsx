@@ -239,7 +239,23 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
               total={total}
               couponCode={couponCode}
               onCouponChange={setCouponCode}
-              onApplyCoupon={() => {/* TODO: validate coupon */}}
+              onApplyCoupon={async () => {
+                if (!couponCode.trim()) return;
+                try {
+                  const coupon = await validateCoupon(event.id, couponCode);
+                  if (coupon) {
+                    const discountAmount =
+                      coupon.discount_type === "percentage"
+                        ? subtotal * (coupon.discount_value / 100)
+                        : coupon.discount_value;
+                    setDiscount(Math.min(discountAmount, subtotal));
+                    toast({ title: "Cupom aplicado!", description: `Desconto de R$ ${discountAmount.toFixed(2).replace(".", ",")}` });
+                  }
+                } catch {
+                  toast({ title: "Cupom inválido", description: "Verifique o código e tente novamente.", variant: "destructive" });
+                  setDiscount(0);
+                }
+              }}
               paymentMethod={paymentMethod}
               onPaymentMethodChange={setPaymentMethod}
               onConfirm={(cardData, installments) => handleConfirmPayment(paymentMethod, cardData, installments)}
