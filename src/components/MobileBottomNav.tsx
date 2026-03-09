@@ -105,6 +105,12 @@ export function MobileBottomNav() {
             <Link
               key={item.id}
               to={item.href}
+              onClick={(e) => {
+                if (item.id === "profile" && !user) {
+                  e.preventDefault();
+                  setAuthOpen(true);
+                }
+              }}
               className={cn(
                 "flex flex-col items-center justify-center gap-0.5 flex-1 py-2 transition-colors touch-manipulation",
                 "active:scale-95"
@@ -133,6 +139,8 @@ export function MobileBottomNav() {
           );
         })}
       </div>
+
+      <AuthModal open={authOpen} onOpenChange={setAuthOpen} defaultTab="login" />
     </nav>
   );
 }
