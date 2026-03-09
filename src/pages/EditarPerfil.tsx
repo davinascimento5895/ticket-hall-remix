@@ -27,7 +27,7 @@ const BRAZILIAN_STATES = [
 ];
 
 export default function EditarPerfil() {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, refetchRole } = useAuth();
   const navigate = useNavigate();
 
   const nameParts = (profile?.full_name || "").split(" ");
