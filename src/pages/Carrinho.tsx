@@ -89,7 +89,7 @@ export default function Carrinho() {
                     onChange={(e) => updateQuantity(item.tierId, Number(e.target.value))}
                     className="bg-secondary text-foreground text-sm rounded px-2 py-1 border border-border"
                   >
-                    {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                    {Array.from({ length: item.maxPerOrder || 10 }, (_, i) => i + 1).map((n) => (
                       <option key={n} value={n}>{n}</option>
                     ))}
                   </select>
