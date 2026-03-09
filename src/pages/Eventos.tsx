@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
 import { Search, X, LayoutGrid, List, Ticket, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
