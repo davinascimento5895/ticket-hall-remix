@@ -224,6 +224,7 @@ export function Navbar() {
       </header>
 
       <AuthModal open={authOpen} onOpenChange={setAuthOpen} defaultTab={authTab} />
+      <BecomeProducerModal open={producerModalOpen} onOpenChange={setProducerModalOpen} />
     </>
   );
 }
