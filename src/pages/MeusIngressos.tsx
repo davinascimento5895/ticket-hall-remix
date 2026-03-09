@@ -54,6 +54,7 @@ export default function MeusIngressos() {
     queryKey: ["my-resale-listings", user?.id],
     queryFn: () => getMyResaleListings(user!.id),
     enabled: !!user?.id,
+    staleTime: 30_000,
   });
 
   const { data: tickets, isLoading } = useQuery({
