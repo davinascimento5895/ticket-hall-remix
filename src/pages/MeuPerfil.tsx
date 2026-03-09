@@ -1,11 +1,9 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SEOHead } from "@/components/SEOHead";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
+import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import {
   Pencil,
   Lock,
@@ -13,32 +11,20 @@ import {
   CreditCard,
   Bell,
   HelpCircle,
-  Moon,
-  LogOut,
   ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useTheme } from "next-themes";
 
 interface MenuItem {
   id: string;
   icon: React.ElementType;
   label: string;
-  href?: string;
-  action?: () => void;
-  trailing?: React.ReactNode;
+  href: string;
 }
 
 export default function MeuPerfil() {
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
-  const { theme, setTheme } = useTheme();
-  const [isDark, setIsDark] = useState(theme === "dark");
-
-  const handleThemeToggle = (checked: boolean) => {
-    setIsDark(checked);
-    setTheme(checked ? "dark" : "light");
-  };
 
   const handleLogout = async () => {
     await signOut();
@@ -59,54 +45,33 @@ export default function MeuPerfil() {
   const displayPhone = profile?.phone || user?.email || "";
 
   const menuItems: MenuItem[] = [
-    {
-      id: "password",
-      icon: Lock,
-      label: "Alterar senha",
-      href: "/meu-perfil/alterar-senha",
-    },
-    {
-      id: "city",
-      icon: MapPin,
-      label: "Cidade",
-      href: "/meu-perfil/cidade",
-    },
-    {
-      id: "payment",
-      icon: CreditCard,
-      label: "Métodos de pagamento",
-      href: "/meu-perfil/pagamento",
-    },
-    {
-      id: "notifications",
-      icon: Bell,
-      label: "Notificações",
-      href: "/meu-perfil/notificacoes",
-    },
-    {
-      id: "support",
-      icon: HelpCircle,
-      label: "Suporte",
-      href: "/meu-perfil/suporte",
-    },
+    { id: "password", icon: Lock, label: "Alterar senha", href: "/meu-perfil/alterar-senha" },
+    { id: "city", icon: MapPin, label: "Cidade", href: "/meu-perfil/cidade" },
+    { id: "payment", icon: CreditCard, label: "Métodos de pagamento", href: "/meu-perfil/pagamento" },
+    { id: "notifications", icon: Bell, label: "Notificações", href: "/meu-perfil/notificacoes" },
+    { id: "support", icon: HelpCircle, label: "Suporte", href: "/meu-perfil/suporte" },
   ];
 
   return (
     <>
-      <SEOHead
-        title="Meu Perfil | TicketHall"
-        description="Gerencie seu perfil no TicketHall"
-      />
+      <SEOHead title="Meu Perfil | TicketHall" description="Gerencie seu perfil no TicketHall" />
 
       <div className="min-h-screen bg-background">
-        {/* Header */}
+        {/* Mobile Header */}
         <div className="sticky top-0 z-10 bg-background border-b border-border px-4 py-4 md:hidden">
           <h1 className="text-center text-lg font-semibold font-[var(--font-display)]">
             Meu Perfil
           </h1>
         </div>
 
-        <div className="max-w-lg mx-auto px-4 py-6 md:py-12 space-y-6">
+        {/* Desktop Header */}
+        <div className="hidden md:block pt-8 pb-4 max-w-lg mx-auto px-4">
+          <h1 className="text-2xl font-bold text-foreground font-[var(--font-display)]">
+            Meu Perfil
+          </h1>
+        </div>
+
+        <div className="max-w-lg mx-auto px-4 py-6 md:py-4 space-y-6">
           {/* Profile Header */}
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16 border-2 border-border">
@@ -125,7 +90,7 @@ export default function MeuPerfil() {
             </div>
             <button
               onClick={() => navigate("/meu-perfil/editar")}
-              className="flex items-center justify-center w-10 h-10 rounded-full bg-muted hover:bg-muted/80 transition-colors"
+              className="flex items-center justify-center w-10 h-10 rounded-full bg-muted hover:bg-muted/80 transition-colors active:scale-95"
               aria-label="Editar perfil"
             >
               <Pencil className="h-4 w-4 text-foreground" />
@@ -141,8 +106,8 @@ export default function MeuPerfil() {
               return (
                 <button
                   key={item.id}
-                  onClick={() => item.href && navigate(item.href)}
-                  className="flex items-center gap-3 w-full px-3 py-4 rounded-xl hover:bg-muted/50 transition-colors text-left"
+                  onClick={() => navigate(item.href)}
+                  className="flex items-center gap-3 w-full px-3 py-4 rounded-xl hover:bg-muted/50 active:bg-muted transition-colors text-left active:scale-[0.98]"
                 >
                   <Icon className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                   <span className="flex-1 text-sm font-medium text-foreground">
@@ -153,16 +118,12 @@ export default function MeuPerfil() {
               );
             })}
 
-            {/* Dark Theme Toggle */}
-            <div className="flex items-center gap-3 w-full px-3 py-4 rounded-xl">
-              <Moon className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-              <span className="flex-1 text-sm font-medium text-foreground">
+            {/* Dark Theme Toggle — uses same animated circular transition as Navbar */}
+            <div className="flex items-center gap-3 w-full px-3 py-2 rounded-xl">
+              <span className="flex-1 text-sm font-medium text-foreground pl-8">
                 Modo escuro
               </span>
-              <Switch
-                checked={isDark}
-                onCheckedChange={handleThemeToggle}
-              />
+              <AnimatedThemeToggler className="h-10 w-10" />
             </div>
           </div>
 
@@ -171,7 +132,7 @@ export default function MeuPerfil() {
           {/* Logout */}
           <button
             onClick={handleLogout}
-            className="w-full py-3 text-center text-destructive font-medium text-sm hover:underline transition-colors"
+            className="w-full py-3 text-center text-destructive font-medium text-sm hover:underline active:opacity-70 transition-all"
           >
             Sair da conta
           </button>
