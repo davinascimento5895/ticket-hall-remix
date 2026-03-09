@@ -104,14 +104,14 @@ const App = () => {
                 <Route path="/produtores" element={<Produtores />} />
                 <Route path="/eventos" element={<Eventos />} />
                 <Route path="/eventos/:slug" element={<EventDetail />} />
-                <Route path="/carrinho" element={<Carrinho />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/meus-ingressos" element={<MeusIngressos />} />
+              <Route path="/carrinho" element={<Carrinho />} />
+                <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+                <Route path="/meus-ingressos" element={<ProtectedRoute><MeusIngressos /></ProtectedRoute>} />
                 <Route path="/organizador/:slug" element={<OrganizerProfile />} />
-                <Route path="/minha-conta/privacidade" element={<Privacidade />} />
+                <Route path="/minha-conta/privacidade" element={<ProtectedRoute><Privacidade /></ProtectedRoute>} />
                 <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
                 <Route path="/termos-de-uso" element={<TermosDeUso />} />
-                <Route path="/meus-certificados" element={<MeusCertificados />} />
+                <Route path="/meus-certificados" element={<ProtectedRoute><MeusCertificados /></ProtectedRoute>} />
                 <Route path="/fila/:slug" element={<FilaVirtual />} />
                 <Route path="/changelog" element={<Changelog />} />
                 <Route path="/blog" element={<Blog />} />
