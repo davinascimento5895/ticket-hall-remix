@@ -83,6 +83,11 @@ export default function Checkout() {
       toast({ title: "Faça login", description: "Você precisa estar logado para finalizar a compra.", variant: "destructive" });
       return;
     }
+    // If order already created (user went back and forward), skip re-creation
+    if (orderId) {
+      setStep(1);
+      return;
+    }
     setIsCreatingOrder(true);
     try {
       const eventId = items[0]?.eventId;
