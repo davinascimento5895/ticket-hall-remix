@@ -114,7 +114,7 @@ export default function Index() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="font-display text-4xl md:text-6xl lg:text-7xl font-bold leading-tight"
+            className="font-display text-4xl lg:text-6xl xl:text-7xl font-bold leading-tight"
           >
             Seus ingressos para{" "}
             <WordRotate
