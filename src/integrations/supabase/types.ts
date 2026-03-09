@@ -809,6 +809,136 @@ export type Database = {
           },
         ]
       }
+      interest_list_fields: {
+        Row: {
+          created_at: string | null
+          field_name: string
+          field_type: string
+          id: string
+          is_required: boolean | null
+          list_id: string
+          options: Json | null
+          placeholder: string | null
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          field_name: string
+          field_type?: string
+          id?: string
+          is_required?: boolean | null
+          list_id: string
+          options?: Json | null
+          placeholder?: string | null
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          field_name?: string
+          field_type?: string
+          id?: string
+          is_required?: boolean | null
+          list_id?: string
+          options?: Json | null
+          placeholder?: string | null
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interest_list_fields_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "interest_lists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interest_list_submissions: {
+        Row: {
+          answers: Json
+          created_at: string | null
+          id: string
+          ip_address: string | null
+          list_id: string
+          user_id: string | null
+        }
+        Insert: {
+          answers?: Json
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          list_id: string
+          user_id?: string | null
+        }
+        Update: {
+          answers?: Json
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          list_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interest_list_submissions_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "interest_lists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interest_lists: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          expires_at: string | null
+          id: string
+          image_url: string | null
+          max_submissions: number | null
+          name: string
+          producer_id: string
+          slug: string
+          start_date: string | null
+          status: string
+          submissions_count: number
+          updated_at: string | null
+          venue_name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          image_url?: string | null
+          max_submissions?: number | null
+          name: string
+          producer_id: string
+          slug: string
+          start_date?: string | null
+          status?: string
+          submissions_count?: number
+          updated_at?: string | null
+          venue_name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          image_url?: string | null
+          max_submissions?: number | null
+          name?: string
+          producer_id?: string
+          slug?: string
+          start_date?: string | null
+          status?: string
+          submissions_count?: number
+          updated_at?: string | null
+          venue_name?: string | null
+        }
+        Relationships: []
+      }
       lgpd_consents: {
         Row: {
           consent_type: string
