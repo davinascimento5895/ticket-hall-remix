@@ -83,6 +83,9 @@ export default function ProducerEventPanel() {
               <Badge variant={event.status === "published" ? "default" : "secondary"}>
                 {event.status === "published" ? "Publicado" : event.status === "draft" ? "Rascunho" : event.status}
               </Badge>
+              <Button variant="outline" size="sm" onClick={() => setShowEmbed(!showEmbed)} className="ml-auto">
+                <Code className="h-3.5 w-3.5 mr-1" /> Embed
+              </Button>
             </div>
             <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground flex-wrap">
               <span className="flex items-center gap-1">
