@@ -56,6 +56,14 @@ export function Navbar() {
   const openLogin = () => { setAuthTab("login"); setAuthOpen(true); };
   const openRegister = () => { setAuthTab("register"); setAuthOpen(true); };
 
+  const handleNavSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (navSearch.trim()) {
+      navigate(`/busca?q=${encodeURIComponent(navSearch.trim())}`);
+      setNavSearch("");
+    }
+  };
+
   const dashboardLink = role === "admin" ? "/admin/dashboard" : role === "producer" ? "/producer/dashboard" : "/meus-ingressos";
 
   return (
