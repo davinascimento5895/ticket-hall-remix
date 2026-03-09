@@ -1,68 +1,145 @@
+# TicketHall — Plano Mestre de Redesign & Implementação
 
-
-# Análise de Ponta a Ponta — Marketplace de Revenda
-
-## Bugs Encontrados
-
-### Críticos
-
-**1. `purchase-resale` não tem `verify_jwt = false` no config.toml**
-O `config.toml` contém apenas `project_id`. Sem a entrada `[functions.purchase-resale] verify_jwt = false`, a edge function provavelmente falha na invocação porque o JWT é verificado antes do handler executar, mas o código já faz validação manual do token. Isso pode causar erro 401 ou deploy issues.
-
-**2. Sem pagamento real — transferência direta sem cobrança**
-O `purchase-resale` transfere o ticket imediatamente ao comprador sem integração de pagamento. O botão "Confirmar compra" simplesmente chama a edge function que move o ticket sem cobrar nada. O comprador recebe o ingresso de graça. Isso é o bug mais grave do fluxo — deveria integrar com o gateway de pagamento existente (Asaas) ou ao menos ter um fluxo de pending/confirmação.
-
-**3. Race condition na compra concorrente**
-Dois compradores podem clicar "Comprar" ao mesmo tempo. O código verifica `status = 'active'` na query e depois faz UPDATE com `WHERE status = 'active'`, mas entre o SELECT e o UPDATE outro processo pode completar a compra. Sem `FOR UPDATE` ou transaction, é possível vender o mesmo ticket duas vezes. O Supabase JS client não suporta `FOR UPDATE` — precisaria de uma database function.
-
-### Intermediários
-
-**4. Filtro de busca quebrado no `getResaleListings`**
-A linha `.or('events.title.ilike.%${search}%', { foreignTable: "events" })` não funciona com PostgREST. O parâmetro `foreignTable` no `.or()` não é suportado dessa forma. A busca por nome de evento provavelmente retorna erro ou resultados incorretos.
-
-**5. `original_price` não é validado no backend**
-O anti-cambismo (preço <= original) é validado apenas no frontend (`ResaleListingModal`). Um usuário mal-intencionado pode chamar `createResaleListing` diretamente com qualquer `askingPrice`. A edge function `purchase-resale` também não valida isso.
-
-**6. Sem validação de ticket duplicado**
-Um usuário pode criar múltiplos listings para o mesmo ticket. A tabela `resale_listings` não tem constraint UNIQUE em `(ticket_id, status)` para status `active`. Embora o frontend marque `is_for_resale = true` e esconda o botão, a API permite duplicatas.
-
-**7. Console warnings de refs**
-Os logs mostram "Function components cannot be given refs" para `Skeleton` e `EmptyState` no `Revenda.tsx`. `EmptyState` recebe `icon={<Repeat className="h-12 w-12" />}` como ReactNode, mas o componente tenta verificar se é um componente e pode forçar ref. Não quebra funcionalidade mas polui o console.
-
-### Leves
-
-**8. `getMyTickets` não inclui `is_resellable` do tier**
-A query de tickets em `api.ts` seleciona `ticket_tiers(name, price)` mas não inclui `is_resellable` nem `is_transferable`. No `MeusIngressos`, a condição `ticket.ticket_tiers?.is_resellable !== false` sempre será `true` porque o campo nunca é carregado — todos os tickets aparecem como revendáveis.
-
-**9. Sem `staleTime` nas queries de revenda**
-`resale-listings` e `my-resale-listings` não têm `staleTime`, causando refetch a cada foco de janela.
-
-**10. Listagem pública sem filtro de evento expirado**
-`getResaleListings` filtra por `expires_at > now()` mas não verifica se `events.start_date > now()`. Listings de eventos que já começaram mas cuja `expires_at` ainda não passou aparecem no marketplace.
-
-**11. Seller UPDATE policy muito restritiva**
-A policy `"Sellers can update their own listings"` tem `WITH CHECK (auth.uid() = seller_id)` mas não restringe quais campos podem ser alterados. Um seller poderia alterar `buyer_id`, `sold_at`, etc. via client — risco baixo mas inconsistente.
-
-**12. `cancelResaleListing` não verifica ownership**
-A função client-side faz UPDATE direto sem verificar se o caller é o seller. A RLS protege, mas se falhar silenciosamente o ticket fica marcado como `is_for_resale = true` para sempre.
+## Documento de Referência
+Business Case & Product Design Analysis completo fornecido pelo cliente em 2026-03-06.
 
 ---
 
-## Plano de Correção
+## Design System Alvo (Novo)
+- **Tema**: Dark-first (`#0d0d0d` base, `#1a1a1a`/`#1f1f1f`/`#2c2c2c` superfícies)
+- **Cor principal (ação)**: Laranja `#ff472d` — CTAs, badges, ícones ativos, links, bordas de foco
+- **Cor secundária (gamificação)**: Verde-lima `#bad900` — pontos, sucesso, confirmações
+- **Texto principal**: Branco `#ffffff`
+- **Texto secundário**: Cinza claro `#9ca3af`
+- **Texto terciário (inativo)**: Cinza médio `#6b7280`
+- **Tipografia**: Sora (display) + Inter (body) — já configurado
+- **Border radius**: ~12-16px para cards, ~10px para inputs
+- **Componentes**: Chips/Pills, Bottom Sheets, Cards com gradiente escuro, Toggle switches
 
-### Batch 1 — Críticos
-1. Adicionar `[functions.purchase-resale] verify_jwt = false` ao config.toml — **não posso editar config.toml** (auto-gerenciado), mas a edge function precisa existir no deploy
-2. Adicionar validação anti-cambismo no backend (edge function): rejeitar se `asking_price > original_price` no tier
-3. Criar database function `purchase_resale_atomic` com `FOR UPDATE` para prevenir race condition
-4. Documentar que pagamento real está pendente (placeholder) — ou integrar com Asaas
+---
 
-### Batch 2 — Intermediários
-5. Corrigir filtro de busca: usar `ilike` direto na coluna do join ou filtrar client-side
-6. Adicionar UNIQUE partial index: `CREATE UNIQUE INDEX ON resale_listings(ticket_id) WHERE status = 'active'`
-7. Incluir `is_resellable, is_transferable` na query de `getMyTickets`
+## Gap Analysis — Existente vs Documento de Design
 
-### Batch 3 — Leves
-8. Adicionar `staleTime: 30_000` nas queries de revenda
-9. Filtrar eventos já iniciados no `getResaleListings`
-10. Corrigir ref warnings do EmptyState/Skeleton
+### ✅ JÁ IMPLEMENTADO
+- Catálogo de eventos com filtros por categoria
+- Detalhe do evento com descrição, data, local
+- Fluxo de compra (carrinho → checkout → pagamento)
+- Meus Ingressos (lista de ingressos ativos)
+- QR Code por ingresso
+- Transferência de ingresso
+- Sistema de reembolso (RefundDialog)
+- Cupons de desconto
+- Fila virtual
+- Certificados pós-evento
+- Painel do produtor completo
+- Painel admin completo
+- Autenticação (login/registro com email)
+- Notificações (NotificationBell)
+- Blog
+- Página do organizador
+- LGPD/Privacidade
+- Bottom navigation mobile
+- Tema claro/escuro com transição animada
 
+### ❌ FEATURES FALTANTES
+1. **Onboarding** — 2-3 telas de boas-vindas com skip
+2. **Detecção automática de cidade** — GPS
+3. **Seletor de datas horizontal** — Barra scrollável no catálogo
+4. **Top-10 / Ranking** — Seção editorial com badges numerados
+5. **Filtro avançado (Bottom Sheet)** — Sort, range slider, gênero, horário
+6. **Grid view toggle** — Lista/grade no catálogo
+7. **Rating/Avaliação** — Estrelas + reviews de usuários (tabela + UI)
+8. **Random/Discovery** — Evento aleatório
+9. **Cast/Elenco** — Seção de artistas no detalhe
+10. **Mapa de assentos** — Seleção visual interativa
+11. **Sistema de pontos** — Fidelidade no checkout
+12. **Favoritos** — Salvar eventos (tabela + UI)
+13. **Ingressos arquivados** — Ativo/Arquivado com visual P&B
+14. **Chat de suporte** — Bot + quick replies in-app
+15. **Perfil completo** — Editar perfil, cidade, pagamentos, notificações
+16. **Login OTP** — Código por email/telefone
+17. **Login social** — Google, Apple
+18. **Compartilhamento** — Share via link
+19. **Notificações configuráveis** — SMS/Push/Email toggles
+20. **Seções editoriais** — "Novo", "Semana", curadoria
+
+### 🔄 PRECISA REDESIGN VISUAL
+- Todas as páginas públicas (landing, catálogo, detalhe, checkout)
+- Navbar → Dark-first com laranja
+- Bottom Nav → Ícone ativo laranja
+- Cards de evento → Fundo #1f1f1f, gradiente, badges
+- Botões → Fill laranja, outline cinza
+- Inputs → Fundo #1f1f1f, borda #3a3a3a
+- Chips → Ativo laranja, inativo borda cinza
+- Login/Registro → Redesign completo
+- Meus Ingressos → Cards com barcode, ações
+- Painéis Producer/Admin → Dark-first
+
+---
+
+## Fases de Implementação
+
+### Fase 1 — Design System Foundation
+- [ ] Atualizar index.css (CSS variables nova paleta)
+- [ ] Atualizar tailwind.config.ts
+- [ ] Atualizar componentes base (Button, Input, Card, Badge, Chips)
+- [ ] Navbar dark-first com laranja
+- [ ] Bottom Nav com laranja
+- [ ] AuthModal redesign dark-first
+
+### Fase 2 — Páginas Públicas (Buyer UX)
+- [ ] Landing page redesign
+- [ ] Catálogo (seletor datas, chips, banner, Top-10)
+- [ ] Detalhe do evento (reviews, cast, CTA fixo)
+- [ ] Meus Ingressos (ativo/arquivado, barcode, reembolso)
+- [ ] Checkout redesign
+
+### Fase 3 — Features Novas (Prioridade Alta)
+- [ ] Favoritos (tabela + UI)
+- [ ] Rating/Reviews (tabela + UI)
+- [ ] Filtro avançado (Bottom Sheet com Drawer)
+- [ ] Grid view toggle
+- [ ] Compartilhamento social
+- [ ] Perfil completo do usuário
+- [ ] Ingressos arquivados
+
+### Fase 4 — Features Avançadas
+- [ ] Random/Discovery
+- [ ] Sistema de pontos/fidelidade
+- [ ] Chat de suporte in-app
+- [ ] Onboarding (2-3 telas)
+- [ ] Detecção de cidade
+- [ ] Notificações configuráveis
+- [ ] Login OTP + Social
+
+### Fase 5 — Painéis (Producer/Admin)
+- [ ] Redesign dark-first dos dashboards
+- [ ] Consistência com novo design system
+
+---
+
+## Infraestrutura Backend (Plano Anterior — Mantido)
+
+### Bloco 1 — Schema & SQL Functions
+- Funções atômicas: reserve_tickets, confirm_order_payment, apply_coupon
+- Índices de performance
+
+### Bloco 2 — Edge Functions de Pagamento (Asaas)
+- create-payment, asaas-webhook, create-producer-account
+- Secrets: ASAAS_API_KEY, ASAAS_BASE_URL, QR_SECRET
+
+### Bloco 3 — Checkout Real
+- Conectar UI ao create-payment
+- PIX, Cartão, Boleto
+
+### Bloco 4 — QR Codes Seguros + Check-in
+- JWT assinado, validate-checkin
+
+### Bloco 5 — Transferência + Cancelamento
+- transfer-ticket, cancel-event
+
+### Bloco 6 — Cron Jobs
+- cleanup_expired_reservations, event-reminders
+
+### Bloco 7 — Segurança & LGPD
+- Rate limiting, consents, data requests

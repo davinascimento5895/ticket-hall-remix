@@ -28,17 +28,28 @@ export async function getResaleListings(filters?: {
     `)
     .eq("status", "active")
     .gt("expires_at", new Date().toISOString())
+    .gt("events.start_date" as any, new Date().toISOString())
     .order("created_at", { ascending: false });
 
   if (filters?.eventId) query = query.eq("event_id", filters.eventId);
-  if (filters?.search) query = (query as any).or(`events.title.ilike.%${filters.search}%`, { foreignTable: "events" });
   if (filters?.city) query = (query as any).eq("events.venue_city", filters.city);
   if (filters?.category) query = (query as any).eq("events.category", filters.category);
   if (filters?.limit) query = query.limit(filters.limit);
 
   const { data, error } = await query;
   if (error) throw error;
-  return data as any[];
+
+  // Client-side search filter (PostgREST doesn't support .or on foreign tables)
+  let results = data as any[];
+  if (filters?.search) {
+    const search = filters.search.toLowerCase();
+    results = results.filter((l: any) =>
+      l.events?.title?.toLowerCase().includes(search) ||
+      l.events?.venue_name?.toLowerCase().includes(search)
+    );
+  }
+
+  return results;
 }
 
 /** Get a single listing by ID */
@@ -105,14 +116,19 @@ export async function createResaleListing(params: {
 
 /** Cancel a resale listing */
 export async function cancelResaleListing(listingId: string, ticketId: string) {
-  const { error } = await supabase
+  // Update listing - RLS ensures only seller can update their own
+  const { error, data } = await supabase
     .from("resale_listings" as any)
     .update({ status: "cancelled", updated_at: new Date().toISOString() })
-    .eq("id", listingId);
+    .eq("id", listingId)
+    .eq("status", "active")
+    .select()
+    .single();
 
   if (error) throw error;
+  if (!data) throw new Error("Anúncio não encontrado ou já foi processado");
 
-  // Mark ticket as no longer for resale
+  // Only revert ticket if listing was successfully cancelled
   await supabase
     .from("tickets")
     .update({ is_for_resale: false, resale_price: null } as any)
