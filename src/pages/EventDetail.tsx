@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, MapPin, Clock, Share2, Users, ArrowLeft, Lock, Package } from "lucide-react";
+import { Calendar, MapPin, Clock, Share2, Users, ArrowLeft, Lock, Package, ExternalLink } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { getCategoryLabel } from "@/lib/categories";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
