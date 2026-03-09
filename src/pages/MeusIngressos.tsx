@@ -344,6 +344,7 @@ export default function MeusIngressos() {
 
   return (
     <>
+      <SEOHead title="Meus Ingressos" description="Gerencie seus ingressos na TicketHall." />
       <div className="container pt-4 lg:pt-24 pb-16">
         {/* Header with title and search */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
