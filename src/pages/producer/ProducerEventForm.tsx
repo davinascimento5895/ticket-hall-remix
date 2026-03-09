@@ -53,6 +53,8 @@ export default function ProducerEventForm() {
     venue_name: "", venue_address: "", venue_city: "", venue_state: "", venue_zip: "",
     is_online: false, online_url: "",
     minimum_age: 0, max_capacity: 0, cover_image_url: "", status: "draft",
+    has_seat_map: false, has_virtual_queue: false, queue_capacity: 0,
+    has_certificates: false, has_insurance_option: false, insurance_price: 0,
   });
 
   const [tiers, setTiers] = useState<TierDraft[]>([]);
