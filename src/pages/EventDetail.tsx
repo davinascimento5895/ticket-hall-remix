@@ -172,7 +172,7 @@ export default function EventDetail() {
       />
 
       {/* Cover image - cinematic */}
-      <div className="relative w-full h-[300px] md:h-[420px] bg-secondary overflow-hidden">
+      <div className="relative w-full h-[300px] lg:h-[420px] bg-secondary overflow-hidden">
         {event.cover_image_url ? (
           <img src={event.cover_image_url} alt={event.title} className="w-full h-full object-cover" />
         ) : (
@@ -197,7 +197,7 @@ export default function EventDetail() {
               )}
             </div>
 
-            <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground leading-tight">{event.title}</h1>
+            <h1 className="font-display text-3xl lg:text-4xl font-bold text-foreground leading-tight">{event.title}</h1>
 
             {/* Meta row with icons */}
             <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">

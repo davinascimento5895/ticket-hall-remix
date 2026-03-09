@@ -237,13 +237,13 @@ export default function MeusIngressos() {
 
   return (
     <>
-      <div className="container pt-4 md:pt-24 pb-16">
+      <div className="container pt-4 lg:pt-24 pb-16">
         {/* Header with title and search */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <h1 className="font-display text-2xl md:text-3xl font-bold">Ingressos</h1>
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+          <h1 className="font-display text-2xl lg:text-3xl font-bold">Ingressos</h1>
           
           {/* Search bar */}
-          <div className="relative w-full md:w-80">
+          <div className="relative w-full lg:w-80">
             <Input
               type="text"
               placeholder="Buscar pelo nome, email, ingresso ou pedido"

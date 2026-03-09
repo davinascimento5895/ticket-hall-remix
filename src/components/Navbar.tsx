@@ -30,9 +30,7 @@ export function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Check if we're in admin/producer area (they use sidebar navigation)
   const isAdminOrProducer = location.pathname.startsWith("/admin") || location.pathname.startsWith("/producer");
-  // Check if we're on the landing page (hero has its own search bar)
   const isLandingPage = location.pathname === "/";
 
   useEffect(() => {
@@ -74,15 +72,14 @@ export function Navbar() {
           scrolled ? "bg-background/80 backdrop-blur-xl border-b border-border" : "bg-transparent"
         )}
       >
-        <div className="container flex h-14 md:h-16 items-center justify-between">
+        <div className="container flex h-14 lg:h-16 items-center justify-between">
           <Link to="/" className="shrink-0">
-            <TicketHallLogo size="md" className="hidden md:block" />
-            <TicketHallLogo size="sm" className="md:hidden" />
+            <TicketHallLogo size="md" className="hidden lg:block" />
+            <TicketHallLogo size="sm" className="lg:hidden" />
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6">
-            {/* Compact Search - visible when scrolled or not on landing page */}
+          {/* Desktop Navigation — visible at lg+ */}
+          <nav className="hidden lg:flex items-center gap-6">
             {(scrolled || !isLandingPage) && !isAdminOrProducer && (
               <form onSubmit={handleNavSearch} className="relative">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -102,8 +99,8 @@ export function Navbar() {
             ))}
           </nav>
 
-          {/* Desktop Actions */}
-          <div className="hidden md:flex items-center gap-2">
+          {/* Desktop Actions — visible at lg+ */}
+          <div className="hidden lg:flex items-center gap-2">
             <AnimatedThemeToggler />
             {user ? (
               <div className="flex items-center gap-1">
@@ -164,19 +161,17 @@ export function Navbar() {
             )}
           </div>
 
-          {/* Mobile Header - Simplified (no hamburger for regular users) */}
-          <div className="md:hidden flex items-center gap-1">
+          {/* Mobile/Tablet Header — visible below lg */}
+          <div className="lg:hidden flex items-center gap-1">
             <AnimatedThemeToggler />
             {user && <NotificationBell />}
             
-            {/* Only show hamburger for admin/producer areas */}
             {isAdminOrProducer && (
               <button className="text-foreground p-2" onClick={() => setMobileOpen(!mobileOpen)}>
                 {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
             )}
             
-            {/* Show login button for non-logged users on mobile */}
             {!user && !isAdminOrProducer && (
               <Button variant="default" size="sm" className="text-xs px-3 h-8" onClick={openLogin}>
                 Entrar
@@ -187,7 +182,7 @@ export function Navbar() {
 
         {/* Mobile Menu - Only for admin/producer */}
         {mobileOpen && isAdminOrProducer && (
-          <div className="md:hidden bg-background/95 backdrop-blur-xl border-b border-border animate-fade-in">
+          <div className="lg:hidden bg-background/95 backdrop-blur-xl border-b border-border animate-fade-in">
             <div className="container py-4 space-y-3">
               {links.map((l) => (
                 <Link key={l.href} to={l.href} className="block text-sm font-medium text-muted-foreground py-2" onClick={() => setMobileOpen(false)}>
