@@ -375,7 +375,7 @@ export default function EventDetail() {
                     </span>
                   </p>
                   <Button className="w-full" onClick={() => setBookingOpen(true)}>
-                    Comprar ingresso
+                    {lowestPrice === 0 ? "Inscrever-se" : "Comprar ingresso"}
                   </Button>
                 </>
               ) : (
