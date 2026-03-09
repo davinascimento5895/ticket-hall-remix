@@ -96,7 +96,9 @@ export default function Checkout() {
       if (orderErr) throw orderErr;
       setOrderId(order.id);
 
-      for (const item of items) {
+      // Reserve tickets (only for actual ticket tiers, not products)
+      const ticketItems = items.filter((i) => !i.tierId.startsWith("product-"));
+      for (const item of ticketItems) {
         const { data: reserved, error: reserveErr } = await supabase.rpc("reserve_tickets", {
           p_tier_id: item.tierId, p_quantity: item.quantity, p_order_id: order.id,
         });
