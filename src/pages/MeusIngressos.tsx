@@ -263,14 +263,14 @@ export default function MeusIngressos() {
           </div>
         </div>
 
-        {/* Tabs - contained scroll */}
-        <div className="flex border-b border-border mb-6 overflow-x-auto scrollbar-hide">
+        {/* Tabs - grid on mobile for no horizontal scroll */}
+        <div className="grid grid-cols-4 gap-1 md:flex md:gap-0 border-b border-border mb-6">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "pb-3 px-1 mr-6 text-sm font-medium transition-colors border-b-2 whitespace-nowrap",
+                "pb-2 md:pb-3 px-1 md:mr-6 text-xs md:text-sm font-medium transition-colors border-b-2 text-center",
                 activeTab === tab.id
                   ? "border-primary text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground"

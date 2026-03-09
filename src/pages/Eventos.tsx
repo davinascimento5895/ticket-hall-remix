@@ -1,8 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
-import { Search, X, LayoutGrid, List, Ticket, MapPin } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { X, LayoutGrid, List, Ticket, MapPin, ChevronDown, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/EventCard";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
@@ -16,6 +15,9 @@ import { cn } from "@/lib/utils";
 import { addDays, format, isSameDay, startOfToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { EVENT_CATEGORIES, CATEGORY_OPTIONS } from "@/lib/categories";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
 export default function Eventos() {
   const [searchParams] = useSearchParams();
@@ -26,6 +28,9 @@ export default function Eventos() {
   const [gridView, setGridView] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const { city, loading: cityLoading, requestLocation } = useCityDetection();
+  const isMobile = useIsMobile();
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [dateOpen, setDateOpen] = useState(false);
 
   // Sync URL params on mount
   useEffect(() => {
@@ -104,64 +109,161 @@ export default function Eventos() {
           />
         </div>
 
-        {/* Date selector - horizontal scroll contained */}
-        <div className="flex gap-1.5 overflow-x-auto pb-3 mb-4 scrollbar-hide">
-          <button
-            onClick={() => setSelectedDate(null)}
-            className={cn(
-              "flex flex-col items-center min-w-[52px] px-2 py-2 rounded-xl text-xs font-medium transition-colors shrink-0",
-              !selectedDate
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-            )}
-          >
-            <span className="text-[10px] uppercase">Todos</span>
-          </button>
-          {dateRange.map((date) => {
-            const isSelected = selectedDate && isSameDay(date, selectedDate);
-            const isToday = isSameDay(date, today);
-            return (
-              <button
-                key={date.toISOString()}
-                onClick={() => setSelectedDate(isSelected ? null : date)}
-                className={cn(
-                  "flex flex-col items-center min-w-[52px] px-2 py-2 rounded-xl text-xs transition-colors shrink-0",
-                  isSelected
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                )}
-              >
-                <span className="text-[10px] uppercase">
-                  {format(date, "EEE", { locale: ptBR })}
-                </span>
-                <span className={cn("text-base font-bold", isToday && !isSelected && "text-primary")}>
-                  {format(date, "dd")}
-                </span>
-                <span className="text-[10px]">
-                  {format(date, "MMM", { locale: ptBR })}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Category chips - contained */}
-        <div className="flex gap-2 overflow-x-auto pb-4 mb-2 scrollbar-hide">
-          {CATEGORY_OPTIONS.map((cat) => (
+        {/* Date selector - dropdown on mobile, horizontal on desktop */}
+        {isMobile ? (
+          <Popover open={dateOpen} onOpenChange={setDateOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-full justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span>
+                    {selectedDate 
+                      ? format(selectedDate, "dd 'de' MMMM", { locale: ptBR })
+                      : "Todas as datas"
+                    }
+                  </span>
+                </div>
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <CalendarComponent
+                mode="single"
+                selected={selectedDate || undefined}
+                onSelect={(date) => {
+                  setSelectedDate(date || null);
+                  setDateOpen(false);
+                }}
+                locale={ptBR}
+                disabled={(date) => date < today}
+              />
+              {selectedDate && (
+                <div className="p-2 border-t">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full"
+                    onClick={() => {
+                      setSelectedDate(null);
+                      setDateOpen(false);
+                    }}
+                  >
+                    Limpar data
+                  </Button>
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
+        ) : (
+          <div className="flex gap-1.5 overflow-x-auto pb-3 mb-4 scrollbar-hide">
             <button
-              key={cat.value}
-              onClick={() => setCategory(cat.value)}
+              onClick={() => setSelectedDate(null)}
               className={cn(
-                "px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors shrink-0 border",
-                category === cat.value
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "border-border-strong text-muted-foreground hover:text-foreground hover:border-foreground/30"
+                "flex flex-col items-center min-w-[52px] px-2 py-2 rounded-xl text-xs font-medium transition-colors shrink-0",
+                !selectedDate
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
               )}
             >
-              {cat.label}
+              <span className="text-[10px] uppercase">Todos</span>
             </button>
-          ))}
-        </div>
+            {dateRange.map((date) => {
+              const isSelected = selectedDate && isSameDay(date, selectedDate);
+              const isToday = isSameDay(date, today);
+              return (
+                <button
+                  key={date.toISOString()}
+                  onClick={() => setSelectedDate(isSelected ? null : date)}
+                  className={cn(
+                    "flex flex-col items-center min-w-[52px] px-2 py-2 rounded-xl text-xs transition-colors shrink-0",
+                    isSelected
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  )}
+                >
+                  <span className="text-[10px] uppercase">
+                    {format(date, "EEE", { locale: ptBR })}
+                  </span>
+                  <span className={cn("text-base font-bold", isToday && !isSelected && "text-primary")}>
+                    {format(date, "dd")}
+                  </span>
+                  <span className="text-[10px]">
+                    {format(date, "MMM", { locale: ptBR })}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Category selector - dropdown on mobile, horizontal on desktop */}
+        {isMobile ? (
+          <Popover open={categoryOpen} onOpenChange={setCategoryOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-full justify-between mb-4">
+                <span>
+                  {category 
+                    ? CATEGORY_OPTIONS.find(c => c.value === category)?.label || "Categoria"
+                    : "Todas as categorias"
+                  }
+                </span>
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[calc(100vw-2rem)] p-2" align="start">
+              <div className="flex flex-col gap-1">
+                <button
+                  onClick={() => {
+                    setCategory("");
+                    setCategoryOpen(false);
+                  }}
+                  className={cn(
+                    "px-3 py-2 rounded-lg text-sm text-left transition-colors",
+                    !category
+                      ? "bg-primary text-primary-foreground"
+                      : "hover:bg-secondary"
+                  )}
+                >
+                  Todas as categorias
+                </button>
+                {CATEGORY_OPTIONS.map((cat) => (
+                  <button
+                    key={cat.value}
+                    onClick={() => {
+                      setCategory(cat.value);
+                      setCategoryOpen(false);
+                    }}
+                    className={cn(
+                      "px-3 py-2 rounded-lg text-sm text-left transition-colors",
+                      category === cat.value
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-secondary"
+                    )}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+        ) : (
+          <div className="flex gap-2 overflow-x-auto pb-4 mb-2 scrollbar-hide">
+            {CATEGORY_OPTIONS.map((cat) => (
+              <button
+                key={cat.value}
+                onClick={() => setCategory(cat.value)}
+                className={cn(
+                  "px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors shrink-0 border",
+                  category === cat.value
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "border-border-strong text-muted-foreground hover:text-foreground hover:border-foreground/30"
+                )}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* City filter indicator */}
         {cityFilter && (
