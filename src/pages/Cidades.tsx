@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Search, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { SEOHead } from "@/components/SEOHead";
+import { SearchBar } from "@/components/SearchBar";
 import { MAIN_CAPITALS, BRAZILIAN_CAPITALS } from "@/lib/cities";
 import { useIBGEStates, useIBGECities } from "@/hooks/useIBGELocations";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
