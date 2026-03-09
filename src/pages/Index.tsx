@@ -164,7 +164,7 @@ export default function Index() {
       <CategoryCarousel className="bg-secondary/30" />
 
       {/* ===== FEATURED EVENTS ===== */}
-      <section className="py-16 md:py-24">
+      <section className="py-16 lg:py-24">
         <div className="container">
           <div className="flex items-end justify-between mb-8">
             <div>
