@@ -27,7 +27,7 @@ const BRAZILIAN_STATES = [
 ];
 
 export default function EditarPerfil() {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, refetchRole } = useAuth();
   const navigate = useNavigate();
 
   const nameParts = (profile?.full_name || "").split(" ");
@@ -82,6 +82,7 @@ export default function EditarPerfil() {
     if (error) {
       toast.error("Erro ao salvar perfil");
     } else {
+      await refetchRole();
       toast.success("Perfil atualizado!");
       navigate("/meu-perfil");
     }
@@ -90,9 +91,21 @@ export default function EditarPerfil() {
   const handleDeleteAccount = async () => {
     if (!user) return;
     setDeleting(true);
-    await signOut();
-    toast.success("Sua conta foi desativada. Entre em contato com o suporte para exclusão definitiva.");
-    navigate("/");
+    try {
+      const { data, error } = await supabase.functions.invoke("delete-account");
+      if (error) throw error;
+      if (data?.error) {
+        toast.error(data.error);
+        setDeleting(false);
+        return;
+      }
+      await signOut();
+      toast.success("Sua conta foi excluída com sucesso.");
+      navigate("/");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao excluir conta");
+      setDeleting(false);
+    }
   };
 
   return (

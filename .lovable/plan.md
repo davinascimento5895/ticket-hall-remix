@@ -1,166 +1,145 @@
+# TicketHall — Plano Mestre de Redesign & Implementação
 
-
-# Auditoria de Bugs — Rodada 4
-
-Encontrei **15 bugs** de severidades variadas:
-
----
-
-## Bug 1 — SQL Injection nas buscas via `ilike` (CRITICO)
-
-Em `Busca.tsx` (linha 64) e `SearchBar.tsx` (linha 95), a query do usuario e interpolada diretamente na string de filtro PostgREST:
-```
-`title.ilike.%${query}%,venue_city.ilike.%${query}%`
-```
-Se o usuario digitar caracteres especiais como `%`, `_`, `)`, ou `,`, o filtro PostgREST quebra ou retorna resultados inesperados. O mesmo ocorre em `api.ts` (linha 28).
-
-**Correcao:** Sanitizar a query escapando `%`, `_`, e caracteres especiais do PostgREST antes de interpolar.
+## Documento de Referência
+Business Case & Product Design Analysis completo fornecido pelo cliente em 2026-03-06.
 
 ---
 
-## Bug 2 — Transfer-ticket usa `listUsers` sem paginacao (CRITICO)
-
-Em `transfer-ticket/index.ts` (linha 97), o codigo chama `supabase.auth.admin.listUsers({ perPage: 1000 })` para buscar o destinatario por email. Isso:
-- Carrega ate 1000 usuarios na memoria a cada transferencia
-- Falha silenciosamente se houver mais de 1000 usuarios (destinatario nao encontrado)
-- E extremamente lento e ineficiente
-
-**Correcao:** Usar `supabase.auth.admin.getUserByEmail(recipientEmail)` que e O(1) e nao tem limite de paginacao. A chamada redundante na linha 87-92 tambem deve ser removida.
-
----
-
-## Bug 3 — `TicketTierCard` ignora `quantity_reserved` no calculo de disponibilidade (MEDIO)
-
-Em `TicketTierCard.tsx` (linha 36), `available = quantityTotal - quantitySold` nao subtrai `quantity_reserved`. O `BookingTicketStep` faz corretamente (`quantity_reserved ?? 0`), mas o componente usado na pagina de detalhes do evento nao recebe e nao usa esse valor. Usuarios podem tentar comprar ingressos que ja estao reservados.
-
-**Correcao:** Adicionar prop `quantityReserved` ao `TicketTierCard` e subtrair do calculo de disponibilidade. Passar o valor em `EventDetail.tsx`.
+## Design System Alvo (Novo)
+- **Tema**: Dark-first (`#0d0d0d` base, `#1a1a1a`/`#1f1f1f`/`#2c2c2c` superfícies)
+- **Cor principal (ação)**: Laranja `#ff472d` — CTAs, badges, ícones ativos, links, bordas de foco
+- **Cor secundária (gamificação)**: Verde-lima `#bad900` — pontos, sucesso, confirmações
+- **Texto principal**: Branco `#ffffff`
+- **Texto secundário**: Cinza claro `#9ca3af`
+- **Texto terciário (inativo)**: Cinza médio `#6b7280`
+- **Tipografia**: Sora (display) + Inter (body) — já configurado
+- **Border radius**: ~12-16px para cards, ~10px para inputs
+- **Componentes**: Chips/Pills, Bottom Sheets, Cards com gradiente escuro, Toggle switches
 
 ---
 
-## Bug 4 — `RefundDialog` referencia tabela `refunds` inexistente via RLS do cliente (MEDIO)
+## Gap Analysis — Existente vs Documento de Design
 
-O `RefundDialog` (linha 44-46, 71) faz queries diretamente na tabela `refunds` usando o client do usuario (produtor). A tabela existe no schema (`types.ts` confirma), mas se nao houver RLS policies que permitam o produtor inserir/ler refunds, as operacoes falham silenciosamente. Verificando as tabelas fornecidas, `refunds` nao aparece nas RLS policies listadas.
+### ✅ JÁ IMPLEMENTADO
+- Catálogo de eventos com filtros por categoria
+- Detalhe do evento com descrição, data, local
+- Fluxo de compra (carrinho → checkout → pagamento)
+- Meus Ingressos (lista de ingressos ativos)
+- QR Code por ingresso
+- Transferência de ingresso
+- Sistema de reembolso (RefundDialog)
+- Cupons de desconto
+- Fila virtual
+- Certificados pós-evento
+- Painel do produtor completo
+- Painel admin completo
+- Autenticação (login/registro com email)
+- Notificações (NotificationBell)
+- Blog
+- Página do organizador
+- LGPD/Privacidade
+- Bottom navigation mobile
+- Tema claro/escuro com transição animada
 
-**Correcao:** Verificar e criar RLS policies para a tabela `refunds` que permitam produtores gerenciar reembolsos dos seus eventos e admins gerenciar todos.
+### ❌ FEATURES FALTANTES
+1. **Onboarding** — 2-3 telas de boas-vindas com skip
+2. **Detecção automática de cidade** — GPS
+3. **Seletor de datas horizontal** — Barra scrollável no catálogo
+4. **Top-10 / Ranking** — Seção editorial com badges numerados
+5. **Filtro avançado (Bottom Sheet)** — Sort, range slider, gênero, horário
+6. **Grid view toggle** — Lista/grade no catálogo
+7. **Rating/Avaliação** — Estrelas + reviews de usuários (tabela + UI)
+8. **Random/Discovery** — Evento aleatório
+9. **Cast/Elenco** — Seção de artistas no detalhe
+10. **Mapa de assentos** — Seleção visual interativa
+11. **Sistema de pontos** — Fidelidade no checkout
+12. **Favoritos** — Salvar eventos (tabela + UI)
+13. **Ingressos arquivados** — Ativo/Arquivado com visual P&B
+14. **Chat de suporte** — Bot + quick replies in-app
+15. **Perfil completo** — Editar perfil, cidade, pagamentos, notificações
+16. **Login OTP** — Código por email/telefone
+17. **Login social** — Google, Apple
+18. **Compartilhamento** — Share via link
+19. **Notificações configuráveis** — SMS/Push/Email toggles
+20. **Seções editoriais** — "Novo", "Semana", curadoria
 
----
-
-## Bug 5 — `BookingFlow` calcula `platformFee` como percentual errado (MEDIO)
-
-Em `BookingFlow.tsx` (linha 62):
-```js
-const platformFee = Math.round(subtotal * feePercent) / 100;
-```
-Se `feePercent = 7` e `subtotal = 100`, isso calcula `Math.round(100 * 7) / 100 = 7.00`. Parece correto, mas se `subtotal = 33`, calcula `Math.round(33 * 7) / 100 = 231/100 = 2.31`. O `CartContext` usa `price * quantity * feePercent / 100` que e o mesmo. Porem, o arredondamento difere — o `BookingFlow` arredonda o resultado inteiro enquanto o `CartContext` nao arredonda. Isso pode causar valores diferentes entre os dois fluxos de compra.
-
-**Correcao:** Unificar o calculo de taxa em uma funcao utilitaria usada por ambos.
-
----
-
-## Bug 6 — `EditarPerfil` nao atualiza o AuthContext apos salvar (MEDIO)
-
-Em `EditarPerfil.tsx` (linha 86), apos salvar o perfil com sucesso, navega para `/meu-perfil` sem chamar `refetchRole()` ou atualizar o `profile` no AuthContext. O perfil antigo fica em cache ate o proximo reload da pagina.
-
-**Correcao:** Chamar `refetchRole()` do AuthContext apos salvar com sucesso (isso ja busca profile e role juntos).
-
----
-
-## Bug 7 — `Carrinho` AuthModal nao redireciona apos login via OAuth (MEDIO)
-
-Em `Carrinho.tsx` (linha 182-188), o `AuthModal` tem `onOpenChange` que verifica se `user` existe apos fechar. Porem, apos login via OAuth, o usuario e redirecionado para `/auth/callback` e nunca volta ao carrinho automaticamente. O `redirectTo="/checkout"` passado ao `AuthModal` pode nao funcionar para OAuth (depende de como o callback esta configurado).
-
-**Correcao:** Verificar que `AuthCallback.tsx` respeita o `redirectTo` stored antes do OAuth redirect.
-
----
-
-## Bug 8 — `ProducerEventForm` nao deleta tiers removidos (MEDIO)
-
-Em `ProducerEventForm.tsx` (linhas 304-323), ao salvar o evento editado, o codigo itera sobre `tiers[]` e cria/atualiza cada um. Porem, se o produtor **removeu** um tier (via `removeTier` na linha 218), o tier deletado do state local nao e deletado do banco. O tier antigo continua existindo no banco.
-
-**Correcao:** Antes de iterar os tiers atuais, buscar os IDs existentes e deletar os que nao estao mais na lista.
-
----
-
-## Bug 9 — `ProtectedRoute` permite acesso quando `role` e null e `allowedRoles` e definido (MEDIO)
-
-Em `ProtectedRoute.tsx` (linha 23):
-```js
-if (allowedRoles && role && !allowedRoles.includes(role))
-```
-Se `role` for `null` (ainda carregando ou sem role), a condicao `role &&` e false, entao o componente renderiza os children sem verificar. Um usuario sem role (ou com role ainda carregando) pode acessar paginas de admin/producer momentaneamente.
-
-**Correcao:** Adicionar check: se `allowedRoles` definido e `role` for null (apos loading=false), redirecionar.
-
----
-
-## Bug 10 — `notifications` INSERT bloqueado por RLS (MEDIO)
-
-A tabela `notifications` tem RLS mas **nao** tem policy de INSERT (conforme documentado: "Can't INSERT records"). Edge functions usam `service_role` entao funcionam, mas o `RefundDialog` (que roda no client) nao cria notificacoes. Porem, se algum fluxo futuro tentar inserir notificacoes do client, falhara silenciosamente. Nao e um bug ativo, mas e uma armadilha.
-
-**Correcao:** Documentar que notificacoes so podem ser inseridas via service_role (edge functions).
+### 🔄 PRECISA REDESIGN VISUAL
+- Todas as páginas públicas (landing, catálogo, detalhe, checkout)
+- Navbar → Dark-first com laranja
+- Bottom Nav → Ícone ativo laranja
+- Cards de evento → Fundo #1f1f1f, gradiente, badges
+- Botões → Fill laranja, outline cinza
+- Inputs → Fundo #1f1f1f, borda #3a3a3a
+- Chips → Ativo laranja, inativo borda cinza
+- Login/Registro → Redesign completo
+- Meus Ingressos → Cards com barcode, ações
+- Painéis Producer/Admin → Dark-first
 
 ---
 
-## Bug 11 — `MeusIngressos` `now` recriado a cada render, invalida memoizacao (BAIXO)
+## Fases de Implementação
 
-Em `MeusIngressos.tsx` (linha 67), `const now = new Date()` e criado no corpo do componente. Como `now` e uma dependencia do `useMemo` na linha 115, o memo e recalculado a cada render (nova referencia de Date a cada vez).
+### Fase 1 — Design System Foundation
+- [ ] Atualizar index.css (CSS variables nova paleta)
+- [ ] Atualizar tailwind.config.ts
+- [ ] Atualizar componentes base (Button, Input, Card, Badge, Chips)
+- [ ] Navbar dark-first com laranja
+- [ ] Bottom Nav com laranja
+- [ ] AuthModal redesign dark-first
 
-**Correcao:** Usar `useMemo(() => new Date(), [])` ou `useRef(new Date()).current` para estabilizar.
+### Fase 2 — Páginas Públicas (Buyer UX)
+- [ ] Landing page redesign
+- [ ] Catálogo (seletor datas, chips, banner, Top-10)
+- [ ] Detalhe do evento (reviews, cast, CTA fixo)
+- [ ] Meus Ingressos (ativo/arquivado, barcode, reembolso)
+- [ ] Checkout redesign
+
+### Fase 3 — Features Novas (Prioridade Alta)
+- [ ] Favoritos (tabela + UI)
+- [ ] Rating/Reviews (tabela + UI)
+- [ ] Filtro avançado (Bottom Sheet com Drawer)
+- [ ] Grid view toggle
+- [ ] Compartilhamento social
+- [ ] Perfil completo do usuário
+- [ ] Ingressos arquivados
+
+### Fase 4 — Features Avançadas
+- [ ] Random/Discovery
+- [ ] Sistema de pontos/fidelidade
+- [ ] Chat de suporte in-app
+- [ ] Onboarding (2-3 telas)
+- [ ] Detecção de cidade
+- [ ] Notificações configuráveis
+- [ ] Login OTP + Social
+
+### Fase 5 — Painéis (Producer/Admin)
+- [ ] Redesign dark-first dos dashboards
+- [ ] Consistência com novo design system
 
 ---
 
-## Bug 12 — `BookingFlow` nao tem listener realtime para pagamentos PIX/boleto (MEDIO)
+## Infraestrutura Backend (Plano Anterior — Mantido)
 
-O `Checkout.tsx` tem um channel realtime para escutar mudancas de status do pedido (linhas 52-79). O `BookingFlow` nao tem nenhum listener — apos criar um pagamento PIX/boleto, o usuario ve "Aguardando pagamento" e vai para a tela de confirmacao sem nunca receber a atualizacao.
+### Bloco 1 — Schema & SQL Functions
+- Funções atômicas: reserve_tickets, confirm_order_payment, apply_coupon
+- Índices de performance
 
-**Correcao:** Adicionar subscription realtime no `BookingFlow` ou redirecionar o usuario para uma pagina de status do pedido.
+### Bloco 2 — Edge Functions de Pagamento (Asaas)
+- create-payment, asaas-webhook, create-producer-account
+- Secrets: ASAAS_API_KEY, ASAAS_BASE_URL, QR_SECRET
 
----
+### Bloco 3 — Checkout Real
+- Conectar UI ao create-payment
+- PIX, Cartão, Boleto
 
-## Bug 13 — `handleDeleteAccount` nao deleta a conta, so faz signOut (BAIXO)
+### Bloco 4 — QR Codes Seguros + Check-in
+- JWT assinado, validate-checkin
 
-Em `EditarPerfil.tsx` (linha 90-96), `handleDeleteAccount` apenas chama `signOut()` e mostra um toast dizendo "conta desativada". A conta nao e realmente excluida ou desativada no banco. O usuario pode fazer login novamente normalmente.
+### Bloco 5 — Transferência + Cancelamento
+- transfer-ticket, cancel-event
 
-**Correcao:** Criar uma edge function `delete-account` que anonimiza os dados do perfil e/ou desativa a conta via `supabase.auth.admin.deleteUser()`.
+### Bloco 6 — Cron Jobs
+- cleanup_expired_reservations, event-reminders
 
----
-
-## Bug 14 — Coupon discount pode exceder `total` no `BookingFlow` (BAIXO)
-
-Em `BookingFlow.tsx` (linha 271), o desconto e limitado a `subtotal` (`Math.min(discountAmount, subtotal)`), mas a taxa de plataforma ja foi adicionada ao `total`. Se o desconto for igual ao subtotal, o total fica como apenas a `platformFee`, que pode nao ser a intencao. No `CartContext`, o `finalTotal = Math.max(0, total - discount)` inclui a taxa.
-
-**Correcao:** Alinhar logica — se o ingresso e gratis pelo cupom, a taxa tambem deveria ser zero.
-
----
-
-## Bug 15 — `EventDetail` view count nao e incrementado (BAIXO)
-
-O evento tem campo `views_count` usado para ordenacao por popularidade, mas nenhum lugar no codigo incrementa esse contador quando um usuario visita a pagina de detalhes do evento.
-
-**Correcao:** Adicionar chamada RPC ou update para incrementar `views_count` no `EventDetail` (com debounce por sessao para evitar inflacao).
-
----
-
-## Plano de Implementacao
-
-### Prioridade Alta (bugs criticos)
-1. **SQL Injection nas buscas** — Criar funcao `sanitizePostgrestFilter()` e aplicar em `Busca.tsx`, `SearchBar.tsx` e `api.ts`
-2. **Transfer-ticket listUsers** — Substituir `listUsers` por `getUserByEmail` na edge function
-3. **TicketTierCard disponibilidade** — Adicionar prop `quantityReserved`, subtrair no calculo
-
-### Prioridade Media
-4. **RefundDialog RLS** — Criar migration com policies para tabela `refunds`
-5. **BookingFlow platformFee** — Extrair calculo para `lib/utils` e unificar
-6. **EditarPerfil sem refetch** — Chamar `refetchRole()` apos salvar
-7. **ProducerEventForm nao deleta tiers** — Comparar IDs existentes e deletar removidos
-8. **ProtectedRoute role null** — Adicionar check para role null com allowedRoles
-9. **BookingFlow sem realtime** — Adicionar subscription ou redirecionar para pagina de status
-
-### Prioridade Baixa
-10. **MeusIngressos now instavel** — Estabilizar com useMemo
-11. **handleDeleteAccount fake** — Criar edge function real de exclusao
-12. **Coupon + platformFee** — Zerar taxa para pedidos 100% descontados
-13. **EventDetail views_count** — Incrementar via RPC com debounce por sessao
-14. **Carrinho OAuth redirect** — Verificar fluxo de callback
-15. **notifications INSERT docs** — Documentar restricao
-
+### Bloco 7 — Segurança & LGPD
+- Rate limiting, consents, data requests

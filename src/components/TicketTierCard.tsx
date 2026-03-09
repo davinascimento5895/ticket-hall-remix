@@ -11,6 +11,7 @@ interface TicketTierCardProps {
   originalPrice?: number | null;
   quantityTotal: number;
   quantitySold: number;
+  quantityReserved?: number;
   minPerOrder: number;
   maxPerOrder: number;
   tierType: string;
@@ -26,6 +27,7 @@ export function TicketTierCard({
   originalPrice,
   quantityTotal,
   quantitySold,
+  quantityReserved = 0,
   minPerOrder,
   maxPerOrder,
   tierType,
@@ -33,7 +35,7 @@ export function TicketTierCard({
   className,
 }: TicketTierCardProps) {
   const [quantity, setQuantity] = useState(minPerOrder);
-  const available = quantityTotal - quantitySold;
+  const available = quantityTotal - quantitySold - quantityReserved;
   const isSoldOut = available <= 0;
   const isLow = available > 0 && available <= 20;
 

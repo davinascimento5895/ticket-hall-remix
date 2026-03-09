@@ -111,6 +111,19 @@ export default function EventDetail() {
     enabled: !!event?.id,
   });
 
+  // Increment views_count once per session per event
+  useEffect(() => {
+    if (!event?.id) return;
+    const viewedKey = `event_viewed_${event.id}`;
+    if (sessionStorage.getItem(viewedKey)) return;
+    sessionStorage.setItem(viewedKey, "1");
+    supabase
+      .from("events")
+      .update({ views_count: (event.views_count ?? 0) + 1 })
+      .eq("id", event.id)
+      .then(() => {});
+  }, [event?.id]);
+
   const tiers = allTiers?.filter((t: any) => {
     if (!t.is_visible) return false;
     if (t.is_hidden_by_default && t.unlock_code) {
@@ -345,6 +358,7 @@ export default function EventDetail() {
                     <TicketTierCard key={tier.id} id={tier.id} name={tier.name} description={tier.description}
                       price={tier.price ?? 0} originalPrice={tier.original_price}
                       quantityTotal={tier.quantity_total} quantitySold={tier.quantity_sold ?? 0}
+                      quantityReserved={tier.quantity_reserved ?? 0}
                       minPerOrder={tier.min_per_order ?? 1} maxPerOrder={tier.max_per_order ?? 10}
                       tierType={tier.tier_type ?? "paid"} onAdd={handleAddToCart} />
                   ))

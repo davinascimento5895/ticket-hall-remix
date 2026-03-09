@@ -10,7 +10,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { SEOHead } from "@/components/SEOHead";
 import { SearchFilters, defaultFilters, type SearchFilterValues } from "@/components/SearchFilters";
 import { supabase } from "@/integrations/supabase/client";
-import { fuzzyMatch } from "@/lib/search";
+import { fuzzyMatch, sanitizePostgrestFilter } from "@/lib/search";
 import { getCategoryLabel, EVENT_CATEGORIES } from "@/lib/categories";
 import { format, getHours } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -60,8 +60,9 @@ export default function Busca() {
           .limit(200);
 
         if (query.trim()) {
+          const safeQuery = sanitizePostgrestFilter(query);
           q = q.or(
-            `title.ilike.%${query}%,venue_city.ilike.%${query}%,category.ilike.%${query}%,description.ilike.%${query}%`
+            `title.ilike.%${safeQuery}%,venue_city.ilike.%${safeQuery}%,category.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%`
           );
         }
 
