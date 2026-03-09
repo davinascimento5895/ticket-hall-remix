@@ -113,7 +113,7 @@ export default function Eventos() {
         description="Encontre os melhores eventos, shows, festivais e experiências perto de você. Compre ingressos com segurança no TicketHall."
       />
 
-      <div className="container pt-4 md:pt-24 pb-16">
+      <div className="container pt-4 lg:pt-24 pb-16">
         {/* Global Search bar */}
         <div className="mb-6">
           <SearchBar 
@@ -213,7 +213,7 @@ export default function Eventos() {
         {/* Header with view toggle */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <h1 className="font-display text-xl md:text-2xl font-bold">
+            <h1 className="font-display text-xl lg:text-2xl font-bold">
               {selectedDate
                 ? format(selectedDate, "dd 'de' MMMM", { locale: ptBR })
                 : "Todos os eventos"}
@@ -225,8 +225,8 @@ export default function Eventos() {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <RandomDiscoveryButton className="hidden md:flex" />
-            <div className="hidden md:flex items-center gap-1 border border-border rounded-lg p-0.5">
+            <RandomDiscoveryButton className="hidden lg:flex" />
+            <div className="hidden lg:flex items-center gap-1 border border-border rounded-lg p-0.5">
               <button
                 onClick={() => setGridView(false)}
                 className={cn("p-1.5 rounded-md transition-colors", !gridView ? "bg-secondary text-foreground" : "text-muted-foreground")}
@@ -286,8 +286,8 @@ export default function Eventos() {
             <div className={cn(
               "grid gap-5",
               gridView
-                ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-                : "md:grid-cols-2 lg:grid-cols-3"
+                ? "grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                : "sm:grid-cols-2 lg:grid-cols-3"
             )}>
               {(gridView ? filteredEvents : restEvents).map((event: any) => (
                 <EventCard

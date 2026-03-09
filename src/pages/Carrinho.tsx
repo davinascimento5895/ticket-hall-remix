@@ -45,7 +45,7 @@ export default function Carrinho() {
   if (items.length === 0) {
     return (
       <>
-        <div className="container pt-4 md:pt-24 pb-16">
+        <div className="container pt-4 lg:pt-24 pb-16">
           <EmptyState
             icon={<ShoppingCart className="h-12 w-12" />}
             title="Seu carrinho está vazio"
@@ -60,7 +60,7 @@ export default function Carrinho() {
 
   return (
     <>
-      <div className="container pt-4 md:pt-24 pb-16">
+      <div className="container pt-4 lg:pt-24 pb-16">
         <Link to="/eventos" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
           <ArrowLeft className="h-4 w-4" /> Continuar comprando
         </Link>

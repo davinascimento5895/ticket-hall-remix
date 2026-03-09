@@ -114,7 +114,7 @@ export default function Index() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="font-display text-4xl md:text-6xl lg:text-7xl font-bold leading-tight"
+            className="font-display text-4xl lg:text-6xl xl:text-7xl font-bold leading-tight"
           >
             Seus ingressos para{" "}
             <WordRotate
@@ -127,7 +127,7 @@ export default function Index() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.15 }}
-            className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto"
+            className="text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto"
           >
             Compre, transfira e gerencie seus ingressos com segurança. A plataforma completa para produtores e compradores.
           </motion.p>
@@ -164,11 +164,11 @@ export default function Index() {
       <CategoryCarousel className="bg-secondary/30" />
 
       {/* ===== FEATURED EVENTS ===== */}
-      <section className="py-16 md:py-24">
+      <section className="py-16 lg:py-24">
         <div className="container">
           <div className="flex items-end justify-between mb-8">
             <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold">Em destaque</h2>
+              <h2 className="font-display text-2xl lg:text-3xl font-bold">Em destaque</h2>
               <p className="text-muted-foreground mt-1">Os eventos mais procurados da semana</p>
             </div>
             <Button variant="ghost" asChild className="hidden sm:inline-flex">
@@ -206,10 +206,10 @@ export default function Index() {
       </section>
 
       {/* ===== FEATURES ===== */}
-      <section className="py-16 md:py-24 bg-muted/30">
+      <section className="py-16 lg:py-24 bg-muted/30">
         <div className="container">
           <div className="text-center mb-12">
-            <h2 className="font-display text-2xl md:text-3xl font-bold">Por que o TicketHall?</h2>
+            <h2 className="font-display text-2xl lg:text-3xl font-bold">Por que o TicketHall?</h2>
             <p className="text-muted-foreground mt-2 max-w-lg mx-auto">
               Tudo o que você precisa para comprar e vender ingressos online.
             </p>
@@ -240,9 +240,9 @@ export default function Index() {
       <CityCarousel className="bg-secondary/30" />
 
       {/* ===== CTA PRODUTOR ===== */}
-      <section className="py-16 md:py-24">
+      <section className="py-16 lg:py-24">
         <div className="container text-center space-y-6">
-          <h2 className="font-display text-2xl md:text-3xl font-bold">É produtor de eventos?</h2>
+          <h2 className="font-display text-2xl lg:text-3xl font-bold">É produtor de eventos?</h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
             Crie seus eventos, venda ingressos e gerencie check-in com uma plataforma completa e sem mensalidade.
           </p>
@@ -255,9 +255,9 @@ export default function Index() {
       </section>
 
       {/* ===== FAQ ===== */}
-      <section className="py-16 md:py-24 bg-muted/30">
+      <section className="py-16 lg:py-24 bg-muted/30">
         <div className="container max-w-2xl">
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-center mb-8">Perguntas frequentes</h2>
+          <h2 className="font-display text-2xl lg:text-3xl font-bold text-center mb-8">Perguntas frequentes</h2>
           <Accordion type="single" collapsible className="space-y-2">
             {faqs.map((faq, i) => (
               <AccordionItem key={i} value={`faq-${i}`} className="border border-border rounded-lg px-4">
