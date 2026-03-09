@@ -113,7 +113,7 @@ export default function Eventos() {
         description="Encontre os melhores eventos, shows, festivais e experiências perto de você. Compre ingressos com segurança no TicketHall."
       />
 
-      <div className="container pt-4 md:pt-24 pb-16">
+      <div className="container pt-4 lg:pt-24 pb-16">
         {/* Global Search bar */}
         <div className="mb-6">
           <SearchBar 
