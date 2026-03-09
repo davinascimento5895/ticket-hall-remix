@@ -91,7 +91,22 @@ export default function Index() {
 
   const { data: featuredEvents = [], isLoading: loadingEvents } = useQuery({
     queryKey: ["featured-events"],
-    queryFn: getFeaturedEvents,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("events")
+        .select("*, ticket_tiers(price)")
+        .eq("status", "published")
+        .eq("is_featured", true)
+        .order("start_date", { ascending: true })
+        .limit(6);
+      if (error) throw error;
+      return (data || []).map((e: any) => {
+        const prices = (e.ticket_tiers || []).map((t: any) => t.price ?? 0);
+        const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+        const { ticket_tiers, ...rest } = e;
+        return { ...rest, min_price: minPrice };
+      });
+    },
   });
 
   // Redirect logged-in users to their dashboard
