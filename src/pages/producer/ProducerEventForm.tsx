@@ -84,6 +84,12 @@ export default function ProducerEventForm() {
           online_url: data.online_url || "", minimum_age: data.minimum_age || 0,
           max_capacity: data.max_capacity || 0, cover_image_url: data.cover_image_url || "",
           status: data.status || "draft",
+          has_seat_map: data.has_seat_map || false,
+          has_virtual_queue: data.has_virtual_queue || false,
+          queue_capacity: data.queue_capacity || 0,
+          has_certificates: data.has_certificates || false,
+          has_insurance_option: data.has_insurance_option || false,
+          insurance_price: data.insurance_price || 0,
         });
       }
       return data;
