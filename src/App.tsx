@@ -34,6 +34,7 @@ import BlogPost from "./pages/BlogPost";
 import Changelog from "./pages/Changelog";
 import NotificacoesConfig from "./pages/NotificacoesConfig";
 import Cidades from "./pages/Cidades";
+import Busca from "./pages/Busca";
 import NotFound from "./pages/NotFound";
 
 // Producer pages — lazy loaded
