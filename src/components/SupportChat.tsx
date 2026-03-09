@@ -141,6 +141,7 @@ export function SupportChat() {
       <AnimatePresence>
         {!open && (
           <motion.button
+            key="chat-fab"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
@@ -156,6 +157,7 @@ export function SupportChat() {
       <AnimatePresence>
         {open && (
           <motion.div
+            key="chat-panel"
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
