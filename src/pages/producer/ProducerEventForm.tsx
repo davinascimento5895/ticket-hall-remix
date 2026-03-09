@@ -25,6 +25,11 @@ import { useIBGEStates, useIBGECities } from "@/hooks/useIBGELocations";
 
 const stepLabels = ["Informações", "Local", "Ingressos", "Formulário", "Produtos", "Configurações", "Revisão"];
 
+const SECTOR_COLORS = [
+  "#E53E3E", "#DD6B20", "#D69E2E", "#38A169", "#3182CE",
+  "#805AD5", "#D53F8C", "#2B6CB0", "#2C7A7B", "#9B2C2C",
+];
+
 interface TierDraft {
   id?: string;
   name: string;
@@ -38,6 +43,7 @@ interface TierDraft {
   capacity_group_id: string | null;
   is_hidden_by_default: boolean;
   unlock_code: string;
+  sector_color: string;
 }
 
 export default function ProducerEventForm() {
