@@ -64,11 +64,6 @@ export default function PedidoRecuperacao() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (!user) {
-    navigate("/?login=true");
-    return null;
-  }
-
   if (isLoading) {
     return (
       <div className="container pt-4 lg:pt-24 pb-16 max-w-2xl">

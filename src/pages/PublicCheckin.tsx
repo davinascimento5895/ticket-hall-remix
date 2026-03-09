@@ -1,21 +1,26 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { QrCode, CheckCircle2, XCircle, Search, AlertTriangle } from "lucide-react";
+import { QrCode, CheckCircle2, XCircle, Search, AlertTriangle, Camera, CameraOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
-import { validateCheckinByTicketId, type CheckinResult } from "@/lib/api-checkin";
+import { validateCheckin, validateCheckinByTicketId, type CheckinResult } from "@/lib/api-checkin";
 import { toast } from "@/hooks/use-toast";
+import { Html5Qrcode } from "html5-qrcode";
 
 export default function PublicCheckin() {
   const { accessCode } = useParams<{ accessCode: string }>();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [lastResult, setLastResult] = useState<CheckinResult | null>(null);
+  const [scannerActive, setScannerActive] = useState(false);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const scannerContainerRef = useRef<string>("qr-pub-" + Math.random().toString(36).slice(2));
+  const lastScannedRef = useRef<string>("");
 
   const { data: checkinList, isLoading: loadingList } = useQuery({
     queryKey: ["checkin-list-public", accessCode],
@@ -53,6 +58,7 @@ export default function PublicCheckin() {
     enabled: !!eventId && !!checkinList,
   });
 
+  // Manual check-in by ticket ID (list button)
   const checkinMutation = useMutation({
     mutationFn: (ticketId: string) =>
       validateCheckinByTicketId({ ticketId, checkinListId: checkinList?.id }),
@@ -66,6 +72,60 @@ export default function PublicCheckin() {
       toast({ title: "Erro no check-in", description: err.message, variant: "destructive" });
     },
   });
+
+  // QR scanner check-in
+  const scanCheckinMutation = useMutation({
+    mutationFn: (qrCode: string) =>
+      validateCheckin({ qrCode, checkinListId: checkinList?.id }),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["checkin-tickets"] });
+      setLastResult(result);
+      toast({ title: "Check-in realizado!", description: result.attendeeName });
+    },
+    onError: (err: any) => {
+      setLastResult({ success: false, result: "error", message: err.message });
+      toast({ title: "Erro no check-in", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const startScanner = useCallback(async () => {
+    const containerId = scannerContainerRef.current;
+    if (scannerRef.current) return;
+    try {
+      const scanner = new Html5Qrcode(containerId);
+      scannerRef.current = scanner;
+      await scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        (decodedText) => {
+          if (lastScannedRef.current === decodedText) return;
+          lastScannedRef.current = decodedText;
+          scanCheckinMutation.mutate(decodedText);
+          setTimeout(() => { lastScannedRef.current = ""; }, 3000);
+        },
+        () => {}
+      );
+      setScannerActive(true);
+    } catch (err: any) {
+      toast({ title: "Erro ao abrir câmera", description: err.message || "Permissão de câmera negada", variant: "destructive" });
+      scannerRef.current = null;
+    }
+  }, [scanCheckinMutation]);
+
+  const stopScanner = useCallback(async () => {
+    if (scannerRef.current) {
+      try {
+        await scannerRef.current.stop();
+        scannerRef.current.clear();
+      } catch (_) {}
+      scannerRef.current = null;
+    }
+    setScannerActive(false);
+  }, []);
+
+  useEffect(() => {
+    return () => { stopScanner(); };
+  }, [stopScanner]);
 
   const totalTickets = tickets.length;
   const checkedIn = tickets.filter((t: any) => t.status === "used").length;
@@ -142,12 +202,30 @@ export default function PublicCheckin() {
         </Card>
       )}
 
+      {/* QR Scanner */}
       <Card>
-        <CardContent className="pt-4 pb-4">
-          <div className="w-full h-40 bg-muted rounded-lg flex flex-col items-center justify-center gap-2 border border-dashed border-border">
-            <QrCode className="h-8 w-8 text-muted-foreground" />
-            <p className="text-xs text-muted-foreground">Scanner de câmera (em breve)</p>
-          </div>
+        <CardContent className="pt-4 pb-4 space-y-3">
+          <div
+            id={scannerContainerRef.current}
+            className={`w-full rounded-lg overflow-hidden ${scannerActive ? "h-64" : "h-0"}`}
+          />
+          {!scannerActive && (
+            <div className="w-full h-40 bg-muted rounded-lg flex flex-col items-center justify-center gap-2 border border-dashed border-border">
+              <QrCode className="h-8 w-8 text-muted-foreground" />
+              <p className="text-xs text-muted-foreground">Toque abaixo para escanear</p>
+            </div>
+          )}
+          <Button
+            variant={scannerActive ? "destructive" : "default"}
+            className="w-full"
+            onClick={scannerActive ? stopScanner : startScanner}
+          >
+            {scannerActive ? (
+              <><CameraOff className="h-4 w-4 mr-2" /> Parar Scanner</>
+            ) : (
+              <><Camera className="h-4 w-4 mr-2" /> Abrir Scanner</>
+            )}
+          </Button>
         </CardContent>
       </Card>
 

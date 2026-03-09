@@ -259,8 +259,7 @@ export default function Checkout() {
 
   // Redirect if cart empty (after all hooks)
   if (items.length === 0 && step < 2) {
-    navigate("/carrinho");
-    return null;
+    return <Navigate to="/carrinho" replace />;
   }
 
   return (
