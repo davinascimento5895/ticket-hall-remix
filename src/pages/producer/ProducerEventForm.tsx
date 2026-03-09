@@ -20,6 +20,7 @@ import { CapacityGroupsManager } from "@/components/producer/CapacityGroupsManag
 import { EventProductsManager } from "@/components/producer/EventProductsManager";
 import { getCapacityGroups } from "@/lib/api-checkout";
 import { EVENT_CATEGORIES } from "@/lib/categories";
+import { useIBGEStates, useIBGECities } from "@/hooks/useIBGELocations";
 
 const stepLabels = ["Informações", "Local", "Ingressos", "Formulário", "Produtos", "Configurações", "Revisão"];
 
