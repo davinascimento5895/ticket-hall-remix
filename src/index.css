@@ -138,12 +138,54 @@
     @apply border-border;
   }
 
-  body {
-    @apply bg-background text-foreground font-body antialiased;
+  /* Prevent horizontal scroll on mobile - critical for native-like feel */
+  html, body {
+    overflow-x: hidden;
+    overscroll-behavior-x: none;
   }
 
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Typography scales - accessible sizing */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
+  }
+
+  /* Minimum touch target size for accessibility (44x44 recommended) */
+  button, a, [role="button"] {
+    min-height: 44px;
+  }
+
+  /* Exception for inline text links and small UI elements */
+  a:not([class*="button"]):not([class*="nav"]):not([role="button"]) {
+    min-height: auto;
+  }
+
+  /* Ensure readable line height on mobile */
+  p, li, span {
+    line-height: 1.6;
+  }
+
+  @media (max-width: 768px) {
+    /* Mobile-specific font sizing for readability */
+    html {
+      font-size: 16px; /* Prevents iOS zoom on input focus */
+    }
+
+    /* Prevent text selection issues on mobile */
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Ensure inputs don't zoom on iOS */
+    input, textarea, select {
+      font-size: 16px !important;
+    }
   }
 }
 
