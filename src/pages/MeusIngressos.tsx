@@ -267,7 +267,7 @@ export default function MeusIngressos() {
               <Download className="h-4 w-4" /> Baixar
             </Button>
           )}
-          {isTransferable && (
+          {isTransferable && !isForResale && (
             <Button
               variant="ghost"
               size="sm"
@@ -282,6 +282,26 @@ export default function MeusIngressos() {
               }
             >
               <Send className="h-4 w-4" /> Transferir
+            </Button>
+          )}
+          {isResellable && !isForResale && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-muted-foreground"
+              onClick={() => setResaleModal({ open: true, ticket })}
+            >
+              <Repeat className="h-4 w-4" /> Revender
+            </Button>
+          )}
+          {isForResale && activeListing && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-destructive"
+              onClick={() => handleCancelResale(activeListing.id, ticket.id)}
+            >
+              <XCircle className="h-4 w-4" /> Cancelar Revenda
             </Button>
           )}
           {(activeTab === "past" || activeTab === "archived") && (
