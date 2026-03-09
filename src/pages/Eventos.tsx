@@ -121,11 +121,11 @@ export default function Eventos() {
             type="text"
             placeholder="Buscar eventos, artistas, locais..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearch(e.target.value)}
             className="pl-10 bg-muted/50 border-border"
           />
           {search && (
-            <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7" onClick={() => setSearch("")}>
+            <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7" onClick={() => { setSearch(""); setDebouncedSearch(""); }}>
               <X className="h-3.5 w-3.5" />
             </Button>
           )}

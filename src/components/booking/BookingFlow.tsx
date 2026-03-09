@@ -248,6 +248,7 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
           )}
           {step === "summary" && (
             <BookingSummaryStep
+              isFree={total === 0}
               event={event}
               selectedDate={selectedDate}
               selectedTier={selectedTier}
