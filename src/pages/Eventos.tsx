@@ -79,11 +79,12 @@ export default function Eventos() {
     return filteredEvents.filter((e: any) => e.id !== featuredEvent.id);
   }, [filteredEvents, featuredEvent]);
 
-  const hasActiveFilters = category || selectedDate;
+  const hasActiveFilters = category || selectedDate || cityFilter;
 
   const clearFilters = () => {
     setCategory("");
     setSelectedDate(null);
+    setCityFilter("");
   };
 
   return (
