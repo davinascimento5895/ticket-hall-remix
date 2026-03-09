@@ -409,6 +409,14 @@ export default function EventDetail() {
                     <div className="w-full h-48 bg-secondary rounded-lg flex items-center justify-center text-sm text-muted-foreground border border-border mt-4">
                       Mapa em breve
                     </div>
+                    {event.venue_name && (
+                      <Link
+                        to={`/eventos?local=${encodeURIComponent(event.venue_name)}`}
+                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-2"
+                      >
+                        Mais eventos neste local <ExternalLink className="h-3 w-3" />
+                      </Link>
+                    )}
                   </div>
                 ) : event.is_online ? (
                   <p className="text-sm text-muted-foreground">Este é um evento online.</p>
