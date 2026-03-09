@@ -219,13 +219,8 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
               tiers={tiers}
               selectedDate={selectedDate}
               onSelectTier={handleSelectTier}
-            />
-          )}
-          {step === "seats" && (
-            <BookingSeatMap
               seatMapConfig={event.seat_map_config}
-              onSelectSeat={handleSelectSeat}
-              selectedSeat={selectedSeat}
+              hasSeatMap={!!event.has_seat_map}
             />
           )}
           {step === "summary" && (
@@ -235,7 +230,7 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
               selectedDate={selectedDate}
               selectedTier={selectedTier}
               quantity={quantity}
-              selectedSeat={selectedSeat}
+              selectedSeat={null}
               subtotal={subtotal}
               platformFee={platformFee}
               discount={discount}
