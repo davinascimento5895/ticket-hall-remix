@@ -38,6 +38,7 @@ import Busca from "./pages/Busca";
 import MeuPerfil from "./pages/MeuPerfil";
 import EditarPerfil from "./pages/EditarPerfil";
 import AlterarSenha from "./pages/AlterarSenha";
+import ResetPassword from "./pages/ResetPassword";
 import PerfilCidade from "./pages/PerfilCidade";
 import MetodosPagamento from "./pages/MetodosPagamento";
 import PerfilNotificacoes from "./pages/PerfilNotificacoes";
