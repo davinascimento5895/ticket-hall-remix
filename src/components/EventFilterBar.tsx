@@ -304,7 +304,7 @@ export function EventFilterBar({ filters, onChange }: Props) {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => update({ datePreset: null, dateRange: null })}
+                onClick={() => update({ datePreset: null, dateRange: undefined })}
               >
                 Limpar
               </Button>
