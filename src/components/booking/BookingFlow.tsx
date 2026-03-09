@@ -129,11 +129,33 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
 
       // Free order: confirm immediately via RPC
       if (isFree) {
-        await supabase.rpc("confirm_order_payment", {
+        const { data: confirmed, error: confirmErr } = await supabase.rpc("confirm_order_payment", {
           p_order_id: order.id,
           p_asaas_payment: "free",
           p_net_value: 0,
         });
+        if (confirmErr) {
+          console.error("confirm_order_payment error:", confirmErr);
+        } else if (confirmed === false) {
+          toast({ title: "Erro", description: "Pedido já foi processado anteriormente.", variant: "destructive" });
+          setIsProcessing(false);
+          return;
+        }
+
+        // Generate signed JWT QR codes for free tickets
+        const { data: activeTickets } = await supabase
+          .from("tickets")
+          .select("id")
+          .eq("order_id", order.id)
+          .eq("status", "active");
+        if (activeTickets?.length) {
+          await Promise.all(
+            activeTickets.map((t) =>
+              supabase.functions.invoke("generate-qr-code", { body: { ticketId: t.id } })
+            )
+          );
+        }
+
         toast({ title: "Inscrição confirmada!", description: "Seus ingressos foram gerados." });
         setStep("confirmation");
       } else {
