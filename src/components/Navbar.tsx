@@ -81,7 +81,20 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-6">
+            {/* Compact Search - visible when scrolled or not on landing page */}
+            {(scrolled || !isLandingPage) && !isAdminOrProducer && (
+              <form onSubmit={handleNavSearch} className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  value={navSearch}
+                  onChange={(e) => setNavSearch(e.target.value)}
+                  placeholder="Buscar..."
+                  className="h-8 w-[180px] pl-8 pr-3 text-sm rounded-full bg-muted/50 border-transparent focus:border-border focus:bg-background transition-all"
+                />
+              </form>
+            )}
             {links.map((l) => (
               <Link key={l.href} to={l.href} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                 {l.label}
