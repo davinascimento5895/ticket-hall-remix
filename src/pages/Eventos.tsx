@@ -276,6 +276,26 @@ export default function Eventos() {
             )}
           </div>
           <div className="flex items-center gap-2">
+            {/* Create Event CTA */}
+            <Button
+              variant={isPendingProducer ? "outline" : "default"}
+              size="sm"
+              onClick={handleCreateEvent}
+              disabled={isPendingProducer}
+              className="gap-1.5"
+            >
+              {isPendingProducer ? (
+                <>
+                  <Clock className="h-4 w-4" />
+                  <span className="hidden sm:inline">Aguardando aprovação</span>
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4" />
+                  <span className="hidden sm:inline">Criar evento</span>
+                </>
+              )}
+            </Button>
             <RandomDiscoveryButton className="hidden lg:flex" />
             <div className="hidden lg:flex items-center gap-1 border border-border rounded-lg p-0.5">
               <button
