@@ -45,10 +45,7 @@ verify_jwt = false
 [functions.lgpd-data]
 verify_jwt = false
 
-[functions.become-producer]
-verify_jwt = false
-
-[functions.generate-certificate]
+[functions.manage-queue]
 verify_jwt = false
 
 [functions.generate-certificate]
