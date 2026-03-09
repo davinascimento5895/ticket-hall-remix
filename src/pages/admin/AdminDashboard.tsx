@@ -11,6 +11,9 @@ import { format, subDays, startOfMonth, startOfYear } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
+const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(142 71% 45%)", "hsl(38 92% 50%)"];
+type ChartGranularity = "month" | "day";
+
 const presets = [
   { label: "Últimos 7 dias", days: 7 },
   { label: "Últimos 30 dias", days: 30 },
