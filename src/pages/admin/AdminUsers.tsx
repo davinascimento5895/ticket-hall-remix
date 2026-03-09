@@ -1,18 +1,29 @@
-import { useQuery } from "@tanstack/react-query";
-import { Search, Download } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Search, Download, Shield, ShieldOff, Loader2 } from "lucide-react";
 import { exportToCSV, userCSVColumns } from "@/lib/csv-export";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { getAllUsers } from "@/lib/api-admin";
+import { supabase } from "@/integrations/supabase/client";
 import { maskCPF } from "@/lib/validators";
 import { useState } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
+import { toast } from "@/hooks/use-toast";
+
+async function changeUserRole(userId: string, newRole: string) {
+  // Delete existing roles, then insert new one
+  await supabase.from("user_roles").delete().eq("user_id", userId);
+  const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: newRole } as any);
+  if (error) throw error;
+}
 
 export default function AdminUsers() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 400);
+  const queryClient = useQueryClient();
 
   const { data: users, isLoading } = useQuery({
     queryKey: ["admin-users", debouncedSearch],
@@ -20,7 +31,19 @@ export default function AdminUsers() {
     staleTime: 30_000,
   });
 
+  const roleMutation = useMutation({
+    mutationFn: ({ userId, role }: { userId: string; role: string }) => changeUserRole(userId, role),
+    onSuccess: () => {
+      toast({ title: "Papel atualizado com sucesso!" });
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro ao atualizar papel", description: err.message, variant: "destructive" });
+    },
+  });
+
   const roleLabel: Record<string, string> = { admin: "Admin", producer: "Produtor", buyer: "Comprador" };
+  const availableRoles = ["buyer", "producer", "admin"];
 
   return (
     <div className="space-y-6">
@@ -52,6 +75,7 @@ export default function AdminUsers() {
                     <th className="p-3 font-medium">Telefone</th>
                     <th className="p-3 font-medium">Papel</th>
                     <th className="p-3 font-medium">Cadastro</th>
+                    <th className="p-3 font-medium">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -68,6 +92,31 @@ export default function AdminUsers() {
                           </span>
                         </td>
                         <td className="p-3 text-muted-foreground">{new Date(user.created_at).toLocaleDateString("pt-BR")}</td>
+                        <td className="p-3">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" disabled={roleMutation.isPending}>
+                                {roleMutation.isPending && roleMutation.variables?.userId === user.id ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <Shield className="h-3.5 w-3.5" />
+                                )}
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {availableRoles
+                                .filter((r) => r !== role)
+                                .map((r) => (
+                                  <DropdownMenuItem
+                                    key={r}
+                                    onClick={() => roleMutation.mutate({ userId: user.id, role: r })}
+                                  >
+                                    Alterar para {roleLabel[r]}
+                                  </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
                       </tr>
                     );
                   })}
