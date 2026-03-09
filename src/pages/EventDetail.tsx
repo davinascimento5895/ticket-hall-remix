@@ -105,6 +105,7 @@ export default function EventDetail() {
       eventTitle: event.title, eventSlug: event.slug,
       price: tier.price ?? 0, quantity,
       coverImageUrl: event.cover_image_url ?? undefined,
+      platformFeePercent: event.platform_fee_percent ?? 7,
     });
     toast({ title: "Adicionado ao carrinho", description: `${quantity}x ${tier.name}` });
   };
