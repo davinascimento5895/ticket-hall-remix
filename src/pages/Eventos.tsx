@@ -34,17 +34,10 @@ export default function Eventos() {
   const [authModalOpen, setAuthModalOpen] = useState(= useState(false);
 
   const handleCreateEvent = () => {
-    // Already a producer — go to create event
     if (role === "producer") {
       navigate("/producer/events/new");
       return;
     }
-    // Not logged in — open auth modal
-    if (!user) {
-      setAuthModalOpen(true);
-      return;
-    }
-    // Logged in but not producer — open become producer modal
     setProducerModalOpen(true);
   };
 
