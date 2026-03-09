@@ -250,6 +250,23 @@ function FilterBody({
           ))}
         </div>
       </div>
+
+      <Separator />
+
+      {/* Modality */}
+      <div>
+        <Label className="text-sm font-semibold mb-3 block">Modalidade</Label>
+        <div className="flex flex-wrap gap-2">
+          {MODALITY_OPTIONS.map((m) => (
+            <FilterChip
+              key={m.value}
+              label={m.label}
+              active={filters.modality === m.value}
+              onClick={() => setLocal((f) => ({ ...f, modality: m.value }))}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
