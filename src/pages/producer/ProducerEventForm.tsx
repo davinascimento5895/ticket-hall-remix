@@ -100,6 +100,9 @@ export default function ProducerEventForm() {
           has_insurance_option: data.has_insurance_option || false,
           insurance_price: data.insurance_price || 0,
         });
+        // Load seat map image URL from config
+        const smc = data.seat_map_config as any;
+        if (smc?.imageUrl) setSeatMapImageUrl(smc.imageUrl);
       }
       return data;
     },
