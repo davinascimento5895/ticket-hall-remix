@@ -4,6 +4,7 @@ import { ArrowLeft, Calendar, MapPin, Shield, AlertTriangle, CheckCircle2, Tag, 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SEOHead } from "@/components/SEOHead";
+import { AuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { getResaleListingById, purchaseResaleListing, calculateResaleFee } from "@/lib/api-resale";
@@ -16,6 +17,7 @@ export default function RevendaCheckout() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [confirmed, setConfirmed] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
 
   const { data: listing, isLoading, error } = useQuery({
     queryKey: ["resale-listing", listingId],
@@ -26,11 +28,18 @@ export default function RevendaCheckout() {
 
   const purchaseMutation = useMutation({
     mutationFn: () => purchaseResaleListing(listingId!),
-    onSuccess: () => {
-      toast({ title: "Ingresso adquirido!", description: "O ingresso foi transferido para sua conta." });
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["my-tickets"] });
       queryClient.invalidateQueries({ queryKey: ["resale-listings"] });
-      navigate("/meus-ingressos");
+      navigate(`/revenda/${listingId}/sucesso`, {
+        state: {
+          ticketId: data?.ticketId,
+          total: data?.total,
+          eventTitle: listing?.events?.title,
+          tierName: listing?.ticket_tiers?.name,
+          eventSlug: listing?.events?.slug,
+        },
+      });
     },
     onError: (err: any) => {
       toast({ title: "Erro na compra", description: err.message || "Tente novamente", variant: "destructive" });
@@ -154,9 +163,12 @@ export default function RevendaCheckout() {
             Você não pode comprar seu próprio ingresso.
           </div>
         ) : !user ? (
-          <Button className="w-full" onClick={() => navigate("/?login=true")}>
-            Faça login para comprar
-          </Button>
+          <>
+            <Button className="w-full" onClick={() => setShowAuth(true)}>
+              Faça login para comprar
+            </Button>
+            <AuthModal open={showAuth} onOpenChange={setShowAuth} />
+          </>
         ) : (
           <div className="space-y-3">
             <label className="flex items-start gap-2 cursor-pointer">

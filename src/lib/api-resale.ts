@@ -69,7 +69,7 @@ export async function getResaleListingById(id: string) {
   return data as any;
 }
 
-/** Create a resale listing */
+/** Create a resale listing (atomic via RPC) */
 export async function createResaleListing(params: {
   ticketId: string;
   eventId: string;
@@ -79,38 +79,18 @@ export async function createResaleListing(params: {
   originalPrice: number;
   expiresAt: string;
 }) {
-  const { platformFee, sellerReceives } = calculateResaleFee(params.askingPrice);
+  const { data, error } = await supabase.rpc("create_resale_listing_atomic" as any, {
+    p_ticket_id: params.ticketId,
+    p_seller_id: params.sellerId,
+    p_event_id: params.eventId,
+    p_tier_id: params.tierId,
+    p_asking_price: params.askingPrice,
+    p_original_price: params.originalPrice,
+    p_expires_at: params.expiresAt,
+  });
 
-  // Mark ticket as for resale
-  await supabase
-    .from("tickets")
-    .update({ is_for_resale: true, resale_price: params.askingPrice } as any)
-    .eq("id", params.ticketId);
-
-  const { data, error } = await supabase
-    .from("resale_listings" as any)
-    .insert({
-      ticket_id: params.ticketId,
-      seller_id: params.sellerId,
-      event_id: params.eventId,
-      tier_id: params.tierId,
-      original_price: params.originalPrice,
-      asking_price: params.askingPrice,
-      platform_fee_amount: platformFee,
-      seller_receives: sellerReceives,
-      expires_at: params.expiresAt,
-    })
-    .select()
-    .single();
-
-  if (error) {
-    // Revert ticket
-    await supabase
-      .from("tickets")
-      .update({ is_for_resale: false, resale_price: null } as any)
-      .eq("id", params.ticketId);
-    throw error;
-  }
+  if (error) throw error;
+  if ((data as any)?.error) throw new Error((data as any).error);
   return data;
 }
 
