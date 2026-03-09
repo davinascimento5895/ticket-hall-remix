@@ -36,10 +36,6 @@ export interface EventFilters {
   modality: "all" | "presential" | "online";
   sort: "date" | "relevance";
 }
-  priceMax: string;
-  modality: "all" | "presential" | "online";
-  sort: "date" | "relevance";
-}
 
 export const defaultEventFilters: EventFilters = {
   category: "",
