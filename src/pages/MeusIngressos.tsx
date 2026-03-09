@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { normalizeText } from "@/lib/search";
 import { useToast } from "@/hooks/use-toast";
+import { generateGoogleCalendarUrl } from "@/lib/calendar";
 
 type TabId = "active" | "pending" | "cancelled" | "past" | "archived";
 
