@@ -1,31 +1,115 @@
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { DollarSign, Ticket, CalendarDays, Users, ShoppingCart, TrendingUp } from "lucide-react";
+import { DollarSign, Ticket, CalendarDays, Users, ShoppingCart, TrendingUp, CalendarIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { getAdminDashboardStats } from "@/lib/api-admin";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { format, subDays, startOfMonth, startOfYear } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+
+const presets = [
+  { label: "Últimos 7 dias", days: 7 },
+  { label: "Últimos 30 dias", days: 30 },
+  { label: "Últimos 90 dias", days: 90 },
+  { label: "Este mês", getRange: () => ({ from: startOfMonth(new Date()), to: new Date() }) },
+  { label: "Este ano", getRange: () => ({ from: startOfYear(new Date()), to: new Date() }) },
+  { label: "Todo o período", days: 0 },
+];
 
 export default function AdminDashboard() {
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+    from: undefined,
+    to: undefined,
+  });
+  const [activePreset, setActivePreset] = useState("Todo o período");
+
+  const queryDateRange = useMemo(() => {
+    if (!dateRange.from) return undefined;
+    return {
+      from: dateRange.from.toISOString(),
+      to: dateRange.to ? dateRange.to.toISOString() : new Date().toISOString(),
+    };
+  }, [dateRange]);
+
   const { data: stats, isLoading } = useQuery({
-    queryKey: ["admin-dashboard"],
-    queryFn: getAdminDashboardStats,
+    queryKey: ["admin-dashboard", queryDateRange],
+    queryFn: () => getAdminDashboardStats(queryDateRange),
     staleTime: 60_000,
   });
+
+  const handlePreset = (preset: typeof presets[number]) => {
+    setActivePreset(preset.label);
+    if (preset.days === 0) {
+      setDateRange({ from: undefined, to: undefined });
+    } else if (preset.getRange) {
+      const range = preset.getRange();
+      setDateRange({ from: range.from, to: range.to });
+    } else {
+      setDateRange({ from: subDays(new Date(), preset.days), to: new Date() });
+    }
+  };
 
   const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
 
   const metrics = [
     { label: "GMV Total", value: stats ? fmt(stats.totalGMV) : "—", icon: DollarSign, accent: "bg-primary/10 text-primary" },
     { label: "Receita Plataforma", value: stats ? fmt(stats.platformRevenue) : "—", icon: TrendingUp, accent: "bg-accent/10 text-accent" },
-    { label: "Eventos", value: stats?.totalEvents?.toLocaleString("pt-BR") || "0", icon: CalendarDays, accent: "bg-info/10 text-info" },
-    { label: "Usuários", value: stats?.totalUsers?.toLocaleString("pt-BR") || "0", icon: Users, accent: "bg-primary/10 text-primary" },
-    { label: "Pedidos", value: stats?.totalOrders?.toLocaleString("pt-BR") || "0", icon: ShoppingCart, accent: "bg-accent/10 text-accent" },
-    { label: "Ingressos Vendidos", value: stats?.ticketsSold?.toLocaleString("pt-BR") || "0", icon: Ticket, accent: "bg-info/10 text-info" },
+    { label: "Eventos", value: stats?.totalEvents?.toLocaleString("pt-BR") || "0", icon: CalendarDays, accent: "bg-primary/10 text-primary" },
+    { label: "Usuários", value: stats?.totalUsers?.toLocaleString("pt-BR") || "0", icon: Users, accent: "bg-accent/10 text-accent" },
+    { label: "Pedidos", value: stats?.totalOrders?.toLocaleString("pt-BR") || "0", icon: ShoppingCart, accent: "bg-primary/10 text-primary" },
+    { label: "Ingressos Vendidos", value: stats?.ticketsSold?.toLocaleString("pt-BR") || "0", icon: Ticket, accent: "bg-accent/10 text-accent" },
   ];
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-2xl font-bold">Dashboard Admin</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1 className="font-display text-2xl font-bold">Dashboard</h1>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          {presets.map((p) => (
+            <button
+              key={p.label}
+              onClick={() => handlePreset(p)}
+              className={cn(
+                "px-3 py-1.5 text-xs rounded-full transition-colors font-medium",
+                activePreset === p.label
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {p.label}
+            </button>
+          ))}
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs h-7">
+                <CalendarIcon className="h-3.5 w-3.5" />
+                {dateRange.from
+                  ? `${format(dateRange.from, "dd/MM/yy")} — ${dateRange.to ? format(dateRange.to, "dd/MM/yy") : "hoje"}`
+                  : "Personalizado"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="range"
+                selected={dateRange.from ? { from: dateRange.from, to: dateRange.to } : undefined}
+                onSelect={(range) => {
+                  setDateRange({ from: range?.from, to: range?.to });
+                  setActivePreset("");
+                }}
+                numberOfMonths={2}
+                locale={ptBR}
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
 
       {/* Metric cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -38,11 +122,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-muted-foreground truncate">{m.label}</p>
-                  {isLoading ? (
-                    <Skeleton className="h-7 w-24 mt-1" />
-                  ) : (
-                    <p className="text-xl font-display font-bold">{m.value}</p>
-                  )}
+                  <p className={cn("text-xl font-display font-bold", isLoading && "animate-pulse text-muted-foreground")}>{m.value}</p>
                 </div>
               </div>
             </CardContent>
@@ -56,9 +136,7 @@ export default function AdminDashboard() {
           <CardTitle className="text-base font-semibold">Receita por Mês</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <Skeleton className="h-64 w-full" />
-          ) : stats?.revenueByMonth && stats.revenueByMonth.length > 0 ? (
+          {stats?.revenueByMonth && stats.revenueByMonth.length > 0 ? (
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={stats.revenueByMonth}>
                 <XAxis dataKey="month" tick={{ fontSize: 12, className: "fill-muted-foreground" }} axisLine={false} tickLine={false} />
@@ -77,7 +155,9 @@ export default function AdminDashboard() {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-8">Sem dados</p>
+            <p className="text-sm text-muted-foreground text-center py-8">
+              {isLoading ? "Carregando..." : "Sem dados para o período selecionado"}
+            </p>
           )}
         </CardContent>
       </Card>
@@ -89,7 +169,7 @@ export default function AdminDashboard() {
             <CardTitle className="text-base font-semibold">Eventos por Status</CardTitle>
           </CardHeader>
           <CardContent>
-            {stats?.eventsByStatus ? (
+            {stats?.eventsByStatus && Object.keys(stats.eventsByStatus).length > 0 ? (
               <div className="space-y-3">
                 {Object.entries(stats.eventsByStatus).map(([status, count]) => {
                   const label = status === "draft" ? "Rascunho" : status === "published" ? "Publicado" : status === "cancelled" ? "Cancelado" : "Encerrado";
@@ -109,7 +189,9 @@ export default function AdminDashboard() {
                 })}
               </div>
             ) : (
-              <Skeleton className="h-20 w-full" />
+              <p className="text-sm text-muted-foreground text-center py-4">
+                {isLoading ? "Carregando..." : "Sem dados"}
+              </p>
             )}
           </CardContent>
         </Card>
@@ -119,7 +201,7 @@ export default function AdminDashboard() {
             <CardTitle className="text-base font-semibold">Pedidos por Status</CardTitle>
           </CardHeader>
           <CardContent>
-            {stats?.ordersByStatus ? (
+            {stats?.ordersByStatus && Object.keys(stats.ordersByStatus).length > 0 ? (
               <div className="space-y-3">
                 {Object.entries(stats.ordersByStatus).map(([status, count]) => {
                   const label = status === "paid" ? "Pago" : status === "pending" ? "Pendente" : status === "cancelled" ? "Cancelado" : status;
@@ -139,7 +221,9 @@ export default function AdminDashboard() {
                 })}
               </div>
             ) : (
-              <Skeleton className="h-20 w-full" />
+              <p className="text-sm text-muted-foreground text-center py-4">
+                {isLoading ? "Carregando..." : "Sem dados"}
+              </p>
             )}
           </CardContent>
         </Card>

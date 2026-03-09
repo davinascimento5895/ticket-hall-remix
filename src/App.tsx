@@ -69,7 +69,7 @@ const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminProducers = lazy(() => import("./pages/admin/AdminProducers"));
 const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
 const AdminFinance = lazy(() => import("./pages/admin/AdminFinance"));
-const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
+
 
 const LazyFallback = () => (
   <div className="flex items-center justify-center min-h-[50vh]">
@@ -167,7 +167,7 @@ const App = () => {
                 <Route path="producers" element={<AdminProducers />} />
                 <Route path="orders" element={<AdminOrders />} />
                 <Route path="finance" element={<AdminFinance />} />
-                <Route path="settings" element={<AdminSettings />} />
+                
               </Route>
 
               <Route path="*" element={<NotFound />} />

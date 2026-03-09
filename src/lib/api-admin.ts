@@ -4,19 +4,40 @@ import { supabase } from "@/integrations/supabase/client";
 // ADMIN — DASHBOARD
 // ============================================================
 
-export async function getAdminDashboardStats() {
-  // Use count-only queries and minimal selects to avoid downloading all rows
-  const [eventsCountRes, ordersCountRes, usersCountRes, analyticsRes, eventStatusRes, orderStatusRes, recentOrdersRes] = await Promise.all([
-    supabase.from("events").select("id", { count: "exact", head: true }),
-    supabase.from("orders").select("id", { count: "exact", head: true }),
+export async function getAdminDashboardStats(dateRange?: { from: string; to: string }) {
+  const fromDate = dateRange?.from;
+  const toDate = dateRange?.to;
+
+  // Build date-filtered queries
+  let eventsQuery = supabase.from("events").select("id", { count: "exact", head: true });
+  let ordersCountQuery = supabase.from("orders").select("id", { count: "exact", head: true });
+  let eventStatusQuery = supabase.from("events").select("status");
+  let orderStatusQuery = supabase.from("orders").select("status");
+  let revenueQuery = supabase.from("orders").select("total, created_at").eq("status", "paid");
+
+  if (fromDate) {
+    eventsQuery = eventsQuery.gte("created_at", fromDate);
+    ordersCountQuery = ordersCountQuery.gte("created_at", fromDate);
+    eventStatusQuery = eventStatusQuery.gte("created_at", fromDate);
+    orderStatusQuery = orderStatusQuery.gte("created_at", fromDate);
+    revenueQuery = revenueQuery.gte("created_at", fromDate);
+  }
+  if (toDate) {
+    eventsQuery = eventsQuery.lte("created_at", toDate);
+    ordersCountQuery = ordersCountQuery.lte("created_at", toDate);
+    eventStatusQuery = eventStatusQuery.lte("created_at", toDate);
+    orderStatusQuery = orderStatusQuery.lte("created_at", toDate);
+    revenueQuery = revenueQuery.lte("created_at", toDate);
+  }
+
+  const [eventsCountRes, ordersCountRes, usersCountRes, analyticsRes, eventStatusRes, orderStatusRes, revenueOrdersRes] = await Promise.all([
+    eventsQuery,
+    ordersCountQuery,
     supabase.from("profiles").select("id", { count: "exact", head: true }),
     supabase.from("event_analytics").select("total_revenue, platform_revenue, tickets_sold"),
-    supabase.from("events").select("status"),
-    supabase.from("orders").select("status"),
-    // Only fetch paid orders from last 6 months for the chart
-    supabase.from("orders").select("total, created_at")
-      .eq("status", "paid")
-      .gte("created_at", new Date(new Date().getFullYear(), new Date().getMonth() - 5, 1).toISOString()),
+    eventStatusQuery,
+    orderStatusQuery,
+    revenueQuery,
   ]);
 
   const analytics = analyticsRes.data || [];
@@ -24,7 +45,6 @@ export async function getAdminDashboardStats() {
   const platformRevenue = analytics.reduce((s, a) => s + (a.platform_revenue || 0), 0);
   const ticketsSold = analytics.reduce((s, a) => s + (a.tickets_sold || 0), 0);
 
-  // Count statuses client-side from minimal data
   const eventsByStatus: Record<string, number> = {};
   (eventStatusRes.data || []).forEach((e) => {
     const s = e.status || "draft";
@@ -37,19 +57,24 @@ export async function getAdminDashboardStats() {
     ordersByStatus[s] = (ordersByStatus[s] || 0) + 1;
   });
 
-  // Revenue by month (last 6 months) — only from recent paid orders
-  const recentOrders = recentOrdersRes.data || [];
-  const revenueByMonth: { month: string; revenue: number }[] = [];
-  const now = new Date();
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const label = d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" });
-    const monthOrders = recentOrders.filter((o) => {
-      const od = new Date(o.created_at);
-      return od.getMonth() === d.getMonth() && od.getFullYear() === d.getFullYear();
-    });
-    revenueByMonth.push({ month: label, revenue: monthOrders.reduce((s, o) => s + (o.total || 0), 0) });
-  }
+  // Group revenue by month
+  const revenueOrders = revenueOrdersRes.data || [];
+  const monthMap: Record<string, number> = {};
+  revenueOrders.forEach((o) => {
+    const d = new Date(o.created_at);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    monthMap[key] = (monthMap[key] || 0) + (o.total || 0);
+  });
+
+  const sortedMonths = Object.keys(monthMap).sort();
+  const revenueByMonth = sortedMonths.map((key) => {
+    const [y, m] = key.split("-");
+    const d = new Date(Number(y), Number(m) - 1, 1);
+    return {
+      month: d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" }),
+      revenue: monthMap[key],
+    };
+  });
 
   return {
     totalGMV,
@@ -69,7 +94,7 @@ export async function getAdminDashboardStats() {
 // ============================================================
 
 export async function getAllEvents(filters?: { status?: string; search?: string }) {
-  let query = supabase.from("events").select("id, title, status, start_date, is_featured, platform_fee_percent, created_at, profiles!events_producer_id_fkey(full_name)").order("created_at", { ascending: false }).limit(100);
+  let query = supabase.from("events").select("id, title, status, start_date, is_featured, platform_fee_percent, created_at, profiles!events_producer_id_fkey(full_name)").order("created_at", { ascending: false });
   if (filters?.status && filters.status !== "all") query = query.eq("status", filters.status);
   if (filters?.search) query = query.ilike("title", `%${filters.search}%`);
   const { data, error } = await query;
@@ -88,7 +113,7 @@ export async function adminUpdateEvent(eventId: string, updates: Record<string, 
 // ============================================================
 
 export async function getAllUsers(search?: string) {
-  let query = supabase.from("profiles").select("id, full_name, cpf, phone, created_at, user_roles(role)").order("created_at", { ascending: false }).limit(100);
+  let query = supabase.from("profiles").select("id, full_name, cpf, phone, created_at, user_roles(role)").order("created_at", { ascending: false });
   if (search) query = query.ilike("full_name", `%${search}%`);
   const { data, error } = await query;
   if (error) throw error;
@@ -104,8 +129,7 @@ export async function getProducers(statusFilter?: string) {
     .from("profiles")
     .select("id, full_name, phone, created_at, producer_status, user_roles!inner(role)")
     .eq("user_roles.role", "producer" as any)
-    .order("created_at", { ascending: false })
-    .limit(100);
+    .order("created_at", { ascending: false });
   if (statusFilter && statusFilter !== "all") query = query.eq("producer_status", statusFilter as any);
   const { data, error } = await query;
   if (error) throw error;
@@ -126,8 +150,7 @@ export async function getAllOrders(filters?: { status?: string; search?: string 
   let query = supabase
     .from("orders")
     .select("id, status, total, payment_method, created_at, events(title), profiles!orders_buyer_id_fkey(full_name)")
-    .order("created_at", { ascending: false })
-    .limit(100);
+    .order("created_at", { ascending: false });
   if (filters?.status && filters.status !== "all") query = query.eq("status", filters.status);
   if (filters?.search) query = query.ilike("id", `%${filters.search}%`);
   const { data, error } = await query;
@@ -139,11 +162,16 @@ export async function getAllOrders(filters?: { status?: string; search?: string 
 // ADMIN — FINANCE
 // ============================================================
 
-export async function getFinanceData() {
-  const { data: orders, error } = await supabase
+export async function getFinanceData(dateRange?: { from: string; to: string }) {
+  let query = supabase
     .from("orders")
     .select("total, platform_fee, payment_gateway_fee, payment_method")
     .eq("status", "paid");
+
+  if (dateRange?.from) query = query.gte("created_at", dateRange.from);
+  if (dateRange?.to) query = query.lte("created_at", dateRange.to);
+
+  const { data: orders, error } = await query;
   if (error) throw error;
 
   const totalGMV = orders?.reduce((s, o) => s + (o.total || 0), 0) || 0;
