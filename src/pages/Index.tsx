@@ -14,7 +14,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getFeaturedEvents } from "@/lib/api";
+import { supabase } from "@/integrations/supabase/client";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -70,7 +70,7 @@ const faqs = [
   },
   { 
     q: "Posso parcelar minha compra?", 
-    a: "Sim! Aceitamos cartão de crédito em até 12x sem juros (sujeito à análise do emissor do cartão). Também oferecemos PIX com aprovação instantânea e boleto bancário com vencimento em 3 dias úteis. Escolha a forma que melhor se adequa ao seu orçamento." 
+    a: "Sim! Aceitamos cartão de crédito em até 12x (em até 3x sem juros). Também oferecemos PIX com aprovação instantânea e boleto bancário com vencimento em 3 dias úteis. Escolha a forma que melhor se adequa ao seu orçamento." 
   },
   { 
     q: "E se eu perder meu ingresso ou deletar o e-mail?", 
@@ -91,7 +91,22 @@ export default function Index() {
 
   const { data: featuredEvents = [], isLoading: loadingEvents } = useQuery({
     queryKey: ["featured-events"],
-    queryFn: getFeaturedEvents,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("events")
+        .select("*, ticket_tiers(price)")
+        .eq("status", "published")
+        .eq("is_featured", true)
+        .order("start_date", { ascending: true })
+        .limit(6);
+      if (error) throw error;
+      return (data || []).map((e: any) => {
+        const prices = (e.ticket_tiers || []).map((t: any) => t.price ?? 0);
+        const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+        const { ticket_tiers, ...rest } = e;
+        return { ...rest, min_price: minPrice };
+      });
+    },
   });
 
   // Redirect logged-in users to their dashboard
@@ -187,7 +202,7 @@ export default function Index() {
                   date={format(new Date(event.start_date), "dd MMM yyyy · HH'h'mm", { locale: ptBR })}
                   city={event.venue_city || "Online"}
                   imageUrl={event.cover_image_url || "/placeholder.svg"}
-                  priceFrom={0}
+                  priceFrom={event.min_price ?? 0}
                   category={event.category}
                   slug={event.slug}
                 />
