@@ -144,6 +144,60 @@ Deno.serve(async (req) => {
           .eq("order_id", orderId)
           .in("status", ["active", "reserved"]);
 
+        // Reverse promoter commissions if applicable
+        if (order.promoter_event_id) {
+          // Get commission for this order
+          const { data: commission } = await supabase
+            .from("promoter_commissions")
+            .select("id, commission_amount, promoter_event_id, promoter_id")
+            .eq("order_id", orderId)
+            .eq("status", "pending")
+            .maybeSingle();
+
+          if (commission) {
+            // Cancel the commission
+            await supabase
+              .from("promoter_commissions")
+              .update({ status: "cancelled" })
+              .eq("id", commission.id);
+
+            // Decrement promoter_events stats
+            const { data: pe } = await supabase
+              .from("promoter_events")
+              .select("revenue_generated, conversions, commission_total")
+              .eq("id", commission.promoter_event_id)
+              .single();
+
+            if (pe) {
+              await supabase
+                .from("promoter_events")
+                .update({
+                  revenue_generated: Math.max(0, (pe.revenue_generated || 0) - payment.value),
+                  conversions: Math.max(0, (pe.conversions || 0) - 1),
+                  commission_total: Math.max(0, (pe.commission_total || 0) - commission.commission_amount),
+                })
+                .eq("id", commission.promoter_event_id);
+            }
+
+            // Decrement promoter totals
+            const { data: promoter } = await supabase
+              .from("promoters")
+              .select("total_sales, total_commission_earned")
+              .eq("id", commission.promoter_id)
+              .single();
+
+            if (promoter) {
+              await supabase
+                .from("promoters")
+                .update({
+                  total_sales: Math.max(0, (promoter.total_sales || 0) - payment.value),
+                  total_commission_earned: Math.max(0, (promoter.total_commission_earned || 0) - commission.commission_amount),
+                })
+                .eq("id", commission.promoter_id);
+            }
+          }
+        }
+
         console.log("Payment refunded for order:", orderId);
         break;
       }
