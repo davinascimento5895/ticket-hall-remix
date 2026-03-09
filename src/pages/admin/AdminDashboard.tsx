@@ -59,14 +59,28 @@ export default function AdminDashboard() {
 
   const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
 
+  const avgTicket = stats && stats.totalOrders > 0 ? stats.totalGMV / stats.totalOrders : 0;
+
   const metrics = [
     { label: "GMV Total", value: stats ? fmt(stats.totalGMV) : "—", icon: DollarSign, accent: "bg-primary/10 text-primary" },
     { label: "Receita Plataforma", value: stats ? fmt(stats.platformRevenue) : "—", icon: TrendingUp, accent: "bg-accent/10 text-accent" },
-    { label: "Eventos", value: stats?.totalEvents?.toLocaleString("pt-BR") || "0", icon: CalendarDays, accent: "bg-primary/10 text-primary" },
-    { label: "Usuários", value: stats?.totalUsers?.toLocaleString("pt-BR") || "0", icon: Users, accent: "bg-accent/10 text-accent" },
-    { label: "Pedidos", value: stats?.totalOrders?.toLocaleString("pt-BR") || "0", icon: ShoppingCart, accent: "bg-primary/10 text-primary" },
-    { label: "Ingressos Vendidos", value: stats?.ticketsSold?.toLocaleString("pt-BR") || "0", icon: Ticket, accent: "bg-accent/10 text-accent" },
+    { label: "Ticket Médio", value: stats ? fmt(avgTicket) : "—", icon: DollarSign, accent: "bg-primary/10 text-primary" },
+    { label: "Eventos", value: stats?.totalEvents?.toLocaleString("pt-BR") || "0", icon: CalendarDays, accent: "bg-accent/10 text-accent" },
+    { label: "Usuários", value: stats?.totalUsers?.toLocaleString("pt-BR") || "0", icon: Users, accent: "bg-primary/10 text-primary" },
+    { label: "Pedidos", value: stats?.totalOrders?.toLocaleString("pt-BR") || "0", icon: ShoppingCart, accent: "bg-accent/10 text-accent" },
+    { label: "Ingressos Vendidos", value: stats?.ticketsSold?.toLocaleString("pt-BR") || "0", icon: Ticket, accent: "bg-primary/10 text-primary" },
   ];
+
+  // Payment methods pie data
+  const paymentPieData = stats?.paymentMethodMap
+    ? Object.entries(stats.paymentMethodMap).map(([method, data]: [string, any]) => ({
+        name: method === "pix" ? "PIX" : method === "credit_card" ? "Cartão" : method === "boleto" ? "Boleto" : method,
+        value: data.total,
+      }))
+    : [];
+
+  const chartData = granularity === "month" ? stats?.revenueByMonth : stats?.revenueByDay;
+  const chartDataKey = granularity === "month" ? "month" : "day";
 
   return (
     <div className="space-y-6">
