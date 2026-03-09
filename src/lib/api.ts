@@ -3,6 +3,7 @@
  * All Supabase calls go through here for portability to native apps.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { sanitizePostgrestFilter } from "@/lib/search";
 
 // ============================================================
 // EVENTS
