@@ -145,40 +145,42 @@ export function BookingSummaryStep({
         </div>
       </div>
 
-      {/* Payment method */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium">Método de pagamento</Label>
-        <div className="space-y-2">
-          {paymentMethods.map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              onClick={() => onPaymentMethodChange(m.id)}
-              className={cn(
-                "w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left",
-                paymentMethod === m.id
-                  ? "border-primary bg-primary/5 ring-1 ring-primary/20"
-                  : "border-border hover:border-primary/30"
-              )}
-            >
-              <m.icon className="h-5 w-5 text-muted-foreground shrink-0" />
-              <div className="flex-1">
-                <p className="text-sm font-medium">{m.label}</p>
-                <p className="text-xs text-muted-foreground">{m.desc}</p>
-              </div>
-              <div className={cn(
-                "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0",
-                paymentMethod === m.id ? "border-primary" : "border-muted-foreground/30"
-              )}>
-                {paymentMethod === m.id && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
-              </div>
-            </button>
-          ))}
+      {/* Payment method - only for paid events */}
+      {!isFree && (
+        <div className="space-y-3">
+          <Label className="text-sm font-medium">Método de pagamento</Label>
+          <div className="space-y-2">
+            {paymentMethods.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => onPaymentMethodChange(m.id)}
+                className={cn(
+                  "w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left",
+                  paymentMethod === m.id
+                    ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                    : "border-border hover:border-primary/30"
+                )}
+              >
+                <m.icon className="h-5 w-5 text-muted-foreground shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">{m.label}</p>
+                  <p className="text-xs text-muted-foreground">{m.desc}</p>
+                </div>
+                <div className={cn(
+                  "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0",
+                  paymentMethod === m.id ? "border-primary" : "border-muted-foreground/30"
+                )}>
+                  {paymentMethod === m.id && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Credit card fields */}
-      {paymentMethod === "credit_card" && (
+      {!isFree && paymentMethod === "credit_card" && (
         <div className="space-y-3 p-3 rounded-xl border border-border bg-muted/20">
           <div>
             <Label className="text-xs">Número do cartão</Label>
@@ -241,7 +243,7 @@ export function BookingSummaryStep({
 
       {/* Confirm button */}
       <Button className="w-full" size="lg" onClick={handleConfirm} disabled={isProcessing}>
-        {isProcessing ? "Processando..." : `Pagar ${fmt(total)}`}
+        {isProcessing ? "Processando..." : isFree ? "Confirmar inscrição" : `Pagar ${fmt(total)}`}
       </Button>
     </div>
   );
