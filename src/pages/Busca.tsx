@@ -116,8 +116,15 @@ export default function Busca() {
       result = result.filter((e) => e.venue_city === filters.city);
     }
 
-    // Price (we don't have price in the query, but we filter what we can)
-    // Price filtering would need ticket_tiers join — skip for now, presets are UX placeholders
+    // Price filter (using min_price from tiers)
+    if (filters.priceMax) {
+      const max = Number(filters.priceMax);
+      result = result.filter((e) => e.min_price !== null && e.min_price <= max);
+    }
+    if (filters.priceMin) {
+      const min = Number(filters.priceMin);
+      result = result.filter((e) => e.min_price !== null && e.min_price >= min);
+    }
 
     // Time of day
     if (filters.timeOfDay && filters.timeOfDay !== "all") {
@@ -128,10 +135,10 @@ export default function Busca() {
     if (filters.sort === "popular") {
       result.sort((a, b) => (b.views_count || 0) - (a.views_count || 0));
     } else if (filters.sort === "deals") {
-      // Prioritize "deals" category
+      // Prioritize events with real discounts (original_price > price)
       result.sort((a, b) => {
-        const aDeals = a.category === "deals" ? 1 : 0;
-        const bDeals = b.category === "deals" ? 1 : 0;
+        const aDeals = a.has_discount ? 1 : 0;
+        const bDeals = b.has_discount ? 1 : 0;
         return bDeals - aDeals;
       });
     }
