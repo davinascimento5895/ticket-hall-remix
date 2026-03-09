@@ -184,6 +184,32 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
     }
   }, [user, selectedTier, quantity, event, subtotal, platformFee, total, discount]);
 
+  // Realtime subscription for PIX/boleto payment confirmation
+  useEffect(() => {
+    if (!orderId || step !== "confirmation") return;
+    // Don't listen for free orders (already confirmed)
+    if (total === 0) return;
+
+    const channel = supabase
+      .channel(`booking-order-${orderId}`)
+      .on("postgres_changes", {
+        event: "UPDATE",
+        schema: "public",
+        table: "orders",
+        filter: `id=eq.${orderId}`,
+      }, (payload) => {
+        const newStatus = (payload.new as any)?.status;
+        if (newStatus === "paid") {
+          toast({ title: "Pagamento confirmado!", description: "Seus ingressos foram gerados com sucesso." });
+        } else if (newStatus === "cancelled" || newStatus === "expired") {
+          toast({ title: "Pagamento não aprovado", description: "Tente novamente.", variant: "destructive" });
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [orderId, step, total]);
+
   const handleGoToTickets = () => {
     onOpenChange(false);
     navigate("/meus-ingressos");
