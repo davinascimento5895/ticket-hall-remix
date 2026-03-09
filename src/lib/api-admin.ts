@@ -112,6 +112,8 @@ export async function getAdminDashboardStats(dateRange?: { from: string; to: str
     eventsByStatus,
     ordersByStatus,
     revenueByMonth,
+    revenueByDay,
+    paymentMethodMap,
   };
 }
 
