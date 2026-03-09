@@ -2438,6 +2438,18 @@ export type Database = {
         }
         Returns: boolean
       }
+      create_resale_listing_atomic: {
+        Args: {
+          p_asking_price: number
+          p_event_id: string
+          p_expires_at: string
+          p_original_price: number
+          p_seller_id: string
+          p_ticket_id: string
+          p_tier_id: string
+        }
+        Returns: Json
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
