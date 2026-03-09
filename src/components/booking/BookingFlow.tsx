@@ -59,7 +59,7 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
   const unitPrice = selectedTier?.price ?? 0;
   const subtotal = unitPrice * quantity;
   const feePercent = event.platform_fee_percent ?? 7;
-  const platformFee = Math.round(subtotal * feePercent / 100 * 100) / 100;
+  const platformFee = discount >= subtotal ? 0 : Math.round(subtotal * feePercent / 100 * 100) / 100;
   const total = Math.max(0, subtotal + platformFee - discount);
 
   const stepOrder: Step[] = [...(isMultiDay ? ["date" as Step] : []), "tickets", "summary", "confirmation"];
