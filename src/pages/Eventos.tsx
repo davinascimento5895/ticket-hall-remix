@@ -152,7 +152,7 @@ export default function Eventos() {
     return filteredEvents.filter((e: any) => e.id !== featuredEvent.id);
   }, [filteredEvents, featuredEvent]);
 
-  const hasActiveFilters = filters.category || filters.datePreset || (filters.dateRange && filters.dateRange.length > 0) || filters.priceMin || filters.priceMax || filters.modality !== "all" || filters.sort !== "date" || cityFilter;
+  const hasActiveFilters = filters.category || filters.datePreset || filters.dateRange?.from || filters.priceMin || filters.priceMax || filters.modality !== "all" || filters.sort !== "date" || cityFilter;
 
   const clearAll = () => {
     setFilters({ ...defaultEventFilters });
