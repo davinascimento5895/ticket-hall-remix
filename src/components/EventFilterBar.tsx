@@ -256,7 +256,7 @@ export function EventFilterBar({ filters, onChange }: Props) {
           label="Data"
           active={!!hasDateFilter}
           activeLabel={dateLabel}
-          onClear={() => update({ datePreset: null, dateRange: null })}
+          onClear={() => update({ datePreset: null, dateRange: undefined })}
           className="w-auto"
         >
           <div className="min-w-[300px] sm:min-w-[580px]">
