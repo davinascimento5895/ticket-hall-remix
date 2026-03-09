@@ -11,6 +11,7 @@ interface TicketTierCardProps {
   originalPrice?: number | null;
   quantityTotal: number;
   quantitySold: number;
+  quantityReserved?: number;
   minPerOrder: number;
   maxPerOrder: number;
   tierType: string;
