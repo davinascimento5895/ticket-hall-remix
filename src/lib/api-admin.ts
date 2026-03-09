@@ -133,22 +133,61 @@ export async function getAllUsers(search?: string) {
 // ADMIN — PRODUCERS
 // ============================================================
 
-export async function getProducers(statusFilter?: string) {
+export async function getProducers(search?: string) {
+  // Get all users with producer role
+  const { data: producerRoles, error: rolesError } = await supabase
+    .from("user_roles")
+    .select("user_id")
+    .eq("role", "producer" as any);
+  if (rolesError) throw rolesError;
+  if (!producerRoles || producerRoles.length === 0) return [];
+
+  const producerIds = producerRoles.map((r: any) => r.user_id);
+
   let query = supabase
     .from("profiles")
-    .select("id, full_name, phone, created_at, producer_status")
-    .not("producer_status", "is", null)
+    .select("id, full_name, phone, created_at")
+    .in("id", producerIds)
     .order("created_at", { ascending: false });
-  if (statusFilter && statusFilter !== "all") query = query.eq("producer_status", statusFilter as any);
-  const { data, error } = await query;
+
+  if (search) query = query.ilike("full_name", `%${search}%`);
+
+  const { data: profiles, error } = await query;
   if (error) throw error;
-  return data;
+  if (!profiles) return [];
+
+  // Count events per producer
+  const { data: events } = await supabase
+    .from("events")
+    .select("producer_id")
+    .in("producer_id", producerIds);
+
+  const countMap = new Map<string, number>();
+  (events || []).forEach((e: any) => {
+    countMap.set(e.producer_id, (countMap.get(e.producer_id) || 0) + 1);
+  });
+
+  return profiles.map((p) => ({ ...p, events_count: countMap.get(p.id) || 0 }));
+}
+
+export async function getProducerDetail(producerId: string) {
+  const [profileRes, eventsRes] = await Promise.all([
+    supabase.from("profiles").select("id, full_name, phone, created_at").eq("id", producerId).single(),
+    supabase.from("events").select("id, title, status, start_date, created_at").eq("producer_id", producerId).order("created_at", { ascending: false }),
+  ]);
+  if (profileRes.error) throw profileRes.error;
+  return { profile: profileRes.data, events: eventsRes.data || [] };
 }
 
 export async function updateProducerStatus(userId: string, status: string) {
   const { data, error } = await supabase.from("profiles").update({ producer_status: status as any }).eq("id", userId).select().single();
   if (error) throw error;
   return data;
+}
+
+export async function adminDeleteEvent(eventId: string) {
+  const { error } = await supabase.from("events").delete().eq("id", eventId);
+  if (error) throw error;
 }
 
 // ============================================================
