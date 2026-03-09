@@ -38,7 +38,9 @@ export default function EventDetail() {
     enabled: !!slug,
   });
 
-  // Track affiliate click from ?ref=CODE
+  const { setTrackingCode } = useCart();
+
+  // Track affiliate click from ?ref=CODE and save as promoter tracking code
   useEffect(() => {
     const ref = searchParams.get("ref");
     if (!ref || !event?.id) return;
@@ -46,8 +48,10 @@ export default function EventDetail() {
     if (sessionStorage.getItem(trackedKey)) return;
     sessionStorage.setItem("affiliate_ref", ref);
     sessionStorage.setItem(trackedKey, "1");
+    // Save tracking code for the new promoter system
+    setTrackingCode(ref);
     trackAffiliateClick(event.id, ref);
-  }, [event?.id, searchParams]);
+  }, [event?.id, searchParams, setTrackingCode]);
 
   const { data: allTiers, isLoading: loadingTiers } = useQuery({
     queryKey: ["event-tiers-all", event?.id],

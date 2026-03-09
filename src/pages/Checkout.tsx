@@ -27,7 +27,7 @@ export default function Checkout() {
   const [boletoUrl, setBoletoUrl] = useState<string | null>(null);
   const [boletoBarcode, setBoletoBarcode] = useState<string | null>(null);
 
-  const { items, subtotal, platformFee, total, expiresAt, clearCart, discount, appliedCouponId, finalTotal } = useCart();
+  const { items, subtotal, platformFee, total, expiresAt, clearCart, discount, appliedCouponId, finalTotal, trackingCode } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -88,12 +88,26 @@ export default function Checkout() {
       const eventId = items[0]?.eventId;
       if (!eventId) throw new Error("No event in cart");
 
+      // Resolve promoter_event_id from tracking code
+      let promoterEventId: string | null = null;
+      if (trackingCode) {
+        const { data: pe } = await supabase
+          .from("promoter_events")
+          .select("id")
+          .eq("tracking_code", trackingCode)
+          .eq("event_id", eventId)
+          .eq("is_active", true)
+          .maybeSingle();
+        if (pe) promoterEventId = pe.id;
+      }
+
       const isFreeOrder = finalTotal === 0;
 
       const { data: order, error: orderErr } = await supabase.from("orders").insert({
         buyer_id: user.id, event_id: eventId, subtotal, platform_fee: isFreeOrder ? 0 : platformFee, total: isFreeOrder ? 0 : finalTotal,
         discount_amount: discount > 0 ? discount : 0,
         coupon_id: appliedCouponId || null,
+        promoter_event_id: promoterEventId,
         status: isFreeOrder ? "paid" : "pending",
         payment_status: isFreeOrder ? "paid" : "pending",
         payment_method: isFreeOrder ? "free" : null,

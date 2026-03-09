@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation, Link, Outlet } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, LayoutDashboard, Ticket, Users, ScanLine, DollarSign, Mail, Tag, ChevronDown, Globe, MapPin, Calendar } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, Ticket, Users, ScanLine, DollarSign, Mail, Tag, ChevronDown, Globe, MapPin, Calendar, Megaphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -14,6 +14,7 @@ const TABS = [
   { key: "participants", label: "Participantes", icon: Users, path: "/participants" },
   { key: "checkin", label: "Check-in", icon: ScanLine, path: "/checkin" },
   { key: "financial", label: "Financeiro", icon: DollarSign, path: "/financial" },
+  { key: "promoters", label: "Promoters", icon: Megaphone, path: "/promoters" },
   { key: "messages", label: "Mensagens", icon: Mail, path: "/messages" },
   { key: "coupons", label: "Cupons", icon: Tag, path: "/coupons" },
 ];
