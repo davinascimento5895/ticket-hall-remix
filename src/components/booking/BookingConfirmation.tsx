@@ -16,9 +16,9 @@ export function BookingConfirmation({ orderId, eventTitle, onGoToTickets, onClos
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", duration: 0.5 }}
-        className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center"
+        className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center"
       >
-        <Check className="h-10 w-10 text-green-500" strokeWidth={3} />
+        <Check className="h-10 w-10 text-primary" strokeWidth={3} />
       </motion.div>
 
       <motion.div
