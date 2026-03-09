@@ -288,10 +288,10 @@ export function EventFilterBar({ filters, onChange }: Props) {
 
             {/* Calendar */}
             <Calendar
-              mode="multiple"
-              selected={filters.dateRange || undefined}
-              onSelect={(dates) =>
-                update({ dateRange: dates && dates.length > 0 ? dates : null, datePreset: null })
+              mode="range"
+              selected={filters.dateRange}
+              onSelect={(range) =>
+                update({ dateRange: range, datePreset: null })
               }
               numberOfMonths={2}
               locale={ptBR}
