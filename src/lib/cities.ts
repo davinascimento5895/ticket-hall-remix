@@ -34,12 +34,12 @@ export const BRAZILIAN_CAPITALS: BrazilianCapital[] = [
   { name: "Aracaju", state: "Sergipe", uf: "SE", population: 670_000, imageUrl: "/images/cities/aracaju.webp", featured: false },
   { name: "Cuiabá", state: "Mato Grosso", uf: "MT", population: 620_000, imageUrl: "/images/cities/cuiaba.jpg", featured: false },
   { name: "Florianópolis", state: "Santa Catarina", uf: "SC", population: 510_000, imageUrl: "/images/cities/florianopolis.jpg", featured: true },
-  { name: "Porto Velho", state: "Rondônia", uf: "RO", population: 540_000, imageUrl: "/images/cities/belem.jpg", featured: false },
-  { name: "Macapá", state: "Amapá", uf: "AP", population: 520_000, imageUrl: "/images/cities/belem.jpg", featured: false },
+  { name: "Porto Velho", state: "Rondônia", uf: "RO", population: 540_000, imageUrl: "/images/cities/porto-velho.jpg", featured: false },
+  { name: "Macapá", state: "Amapá", uf: "AP", population: 520_000, imageUrl: "/images/cities/macapa.webp", featured: false },
   { name: "Vitória", state: "Espírito Santo", uf: "ES", population: 370_000, imageUrl: "/images/cities/florianopolis.jpg", featured: false },
-  { name: "Rio Branco", state: "Acre", uf: "AC", population: 420_000, imageUrl: "/images/cities/belem.jpg", featured: false },
+  { name: "Rio Branco", state: "Acre", uf: "AC", population: 420_000, imageUrl: "/images/cities/rio-branco.webp", featured: false },
   { name: "Boa Vista", state: "Roraima", uf: "RR", population: 420_000, imageUrl: "/images/cities/boa-vista.jpg", featured: false },
-  { name: "Palmas", state: "Tocantins", uf: "TO", population: 310_000, imageUrl: "/images/cities/brasilia.jpg", featured: false },
+  { name: "Palmas", state: "Tocantins", uf: "TO", population: 310_000, imageUrl: "/images/cities/palmas.jpg", featured: false },
 ];
 
 export const FEATURED_CAPITALS = BRAZILIAN_CAPITALS.filter((c) => c.featured);
