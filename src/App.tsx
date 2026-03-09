@@ -44,6 +44,8 @@ import MetodosPagamento from "./pages/MetodosPagamento";
 import PerfilNotificacoes from "./pages/PerfilNotificacoes";
 import PerfilSuporte from "./pages/PerfilSuporte";
 import Favoritos from "./pages/Favoritos";
+import Revenda from "./pages/Revenda";
+import RevendaCheckout from "./pages/RevendaCheckout";
 import NotFound from "./pages/NotFound";
 
 // Producer pages — lazy loaded
@@ -135,6 +137,8 @@ const App = () => {
                 <Route path="/meu-perfil/notificacoes" element={<ProtectedRoute><PerfilNotificacoes /></ProtectedRoute>} />
                 <Route path="/meu-perfil/suporte" element={<ProtectedRoute><PerfilSuporte /></ProtectedRoute>} />
                 <Route path="/favoritos" element={<ProtectedRoute><Favoritos /></ProtectedRoute>} />
+                <Route path="/revenda" element={<Revenda />} />
+                <Route path="/revenda/:listingId" element={<ProtectedRoute><RevendaCheckout /></ProtectedRoute>} />
               </Route>
 
               {/* Standalone pages (no shared Navbar/Footer) */}
