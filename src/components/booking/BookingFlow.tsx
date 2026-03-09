@@ -81,25 +81,9 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
   const handleSelectTier = (tier: any, qty: number) => {
     setSelectedTier(tier);
     setQuantity(qty);
-    // Check if free: skip to confirmation-like flow
-    const tierPrice = tier.price ?? 0;
-    const tierTotal = tierPrice * qty;
-    if (tierTotal === 0) {
-      // Free event — go to summary but payment will auto-confirm
-      setStep("summary");
-      return;
-    }
-    if (event.has_seat_map) {
-      setStep("seats");
-    } else {
-      setStep("summary");
-    }
-  };
-
-  const handleSelectSeat = (seatId: string) => {
-    setSelectedSeat(seatId);
     setStep("summary");
   };
+
 
   const handleConfirmPayment = useCallback(async (method: string, cardData?: CreditCardData, installments?: number) => {
     const isFree = total === 0;
