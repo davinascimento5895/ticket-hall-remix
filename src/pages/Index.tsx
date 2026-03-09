@@ -224,6 +224,9 @@ export default function Index() {
         </div>
       </section>
 
+      {/* ===== CITY CAROUSEL ===== */}
+      <CityCarousel className="bg-secondary/30" />
+
       {/* ===== CTA PRODUTOR ===== */}
       <section className="py-16 md:py-24">
         <div className="container text-center space-y-6">

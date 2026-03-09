@@ -98,6 +98,7 @@ const App = () => {
                 <Route path="/changelog" element={<Changelog />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/blog/:slug" element={<BlogPost />} />
+                <Route path="/cidades" element={<Cidades />} />
                 <Route path="/notificacoes" element={<NotificacoesConfig />} />
               </Route>
 
