@@ -57,6 +57,9 @@ const ProducerEventCoupons = lazy(() => import("./pages/producer/ProducerEventCo
 const ProducerSettings = lazy(() => import("./pages/producer/ProducerSettings"));
 const ProducerEventAffiliates = lazy(() => import("./pages/producer/ProducerEventAffiliates"));
 const ProducerEventMessages = lazy(() => import("./pages/producer/ProducerEventMessages"));
+const ProducerInterestLists = lazy(() => import("./pages/producer/ProducerInterestLists"));
+const ProducerInterestListForm = lazy(() => import("./pages/producer/ProducerInterestListForm"));
+const InterestListPublic = lazy(() => import("./pages/InterestListPublic"));
 
 // Admin pages — lazy loaded
 const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
