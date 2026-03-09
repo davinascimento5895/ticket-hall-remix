@@ -104,6 +104,13 @@ export default function ProducerEventPanel() {
         ) : null}
       </div>
 
+      {/* Embed Snippet */}
+      {showEmbed && event && (
+        <div className="mb-6">
+          <EmbedSnippetGenerator eventSlug={(event as any).slug || id!} />
+        </div>
+      )}
+
       {/* Tab Navigation - Desktop */}
       <div className="hidden lg:flex items-center gap-1 border-b border-border mb-6 -mx-1">
         {TABS.map((tab) => {
