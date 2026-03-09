@@ -173,10 +173,21 @@ export async function getEventReconciliation(producerId: string) {
 
   const eventIds = events.map(e => e.id);
 
-  const { data: orders } = await supabase
-    .from("orders")
-    .select("event_id, status, total, platform_fee, payment_gateway_fee, refunded_amount")
-    .in("event_id", eventIds);
+  // Paginate orders to avoid 1000-row limit
+  let allOrders: any[] = [];
+  const PAGE_SIZE = 1000;
+  let offset = 0;
+  while (true) {
+    const { data: batch } = await supabase
+      .from("orders")
+      .select("event_id, status, total, platform_fee, payment_gateway_fee, refunded_amount")
+      .in("event_id", eventIds)
+      .range(offset, offset + PAGE_SIZE - 1);
+    if (!batch || batch.length === 0) break;
+    allOrders = allOrders.concat(batch);
+    if (batch.length < PAGE_SIZE) break;
+    offset += PAGE_SIZE;
+  }
 
   const { data: analytics } = await supabase
     .from("event_analytics")
@@ -184,7 +195,7 @@ export async function getEventReconciliation(producerId: string) {
     .in("event_id", eventIds);
 
   return events.map(event => {
-    const eventOrders = (orders || []).filter(o => o.event_id === event.id);
+    const eventOrders = allOrders.filter(o => o.event_id === event.id);
     const paidOrders = eventOrders.filter(o => o.status === "paid");
     const refundedOrders = eventOrders.filter(o => o.status === "refunded");
     const eventAnalytics = (analytics || []).find(a => a.event_id === event.id);
