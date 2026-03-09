@@ -145,6 +145,17 @@ const App = () => {
                 <Route path="events" element={<ProducerEvents />} />
                 <Route path="events/new" element={<ProducerEventForm />} />
                 <Route path="events/:id/edit" element={<ProducerEventForm />} />
+                {/* Unified Event Panel */}
+                <Route path="events/:id/panel" element={<ProducerEventPanel />}>
+                  <Route index element={<ProducerEventDashboardTab />} />
+                  <Route path="tickets" element={<ProducerEventTicketsTab />} />
+                  <Route path="participants" element={<ProducerEventParticipants />} />
+                  <Route path="checkin" element={<ProducerEventCheckin />} />
+                  <Route path="financial" element={<ProducerEventFinancial />} />
+                  <Route path="messages" element={<ProducerEventMessages />} />
+                  <Route path="coupons" element={<ProducerEventCoupons />} />
+                </Route>
+                {/* Legacy direct routes (still work) */}
                 <Route path="events/:id/reports" element={<ProducerEventReports />} />
                 <Route path="events/:id/orders" element={<ProducerEventOrders />} />
                 <Route path="events/:id/checkin" element={<ProducerEventCheckin />} />
