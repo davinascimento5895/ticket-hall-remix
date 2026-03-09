@@ -192,7 +192,7 @@ export default function EventDetail() {
               </Link>
               {event.category && (
                 <span className="ml-3 inline-block px-2.5 py-1 text-xs font-medium rounded-full bg-primary/90 text-primary-foreground">
-                  {event.category}
+                  {getCategoryLabel(event.category)}
                 </span>
               )}
             </div>
