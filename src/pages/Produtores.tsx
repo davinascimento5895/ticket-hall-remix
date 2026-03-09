@@ -156,19 +156,10 @@ export default function Produtores() {
   const [producerModalOpen, setProducerModalOpen] = useState(false);
 
   const handleCTA = () => {
-    // Already a producer — go to dashboard
     if (role === "producer") {
       navigate("/producer/dashboard");
       return;
     }
-
-    // Not logged in — open auth modal
-    if (!user) {
-      setAuthModalOpen(true);
-      return;
-    }
-
-    // Logged in but not producer — open become producer modal
     setProducerModalOpen(true);
   };
 
