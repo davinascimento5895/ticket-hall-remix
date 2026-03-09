@@ -110,14 +110,11 @@ export default function Index() {
     },
   });
 
-  // Redirect logged-in users to their dashboard
+  // Redirect admin/producer to their dashboards; buyers stay on landing
   if (!loading && user && role) {
-    const redirectMap: Record<string, string> = {
-      admin: "/admin/dashboard",
-      producer: "/producer/dashboard",
-      buyer: "/eventos",
-    };
-    return <Navigate to={redirectMap[role] || "/meus-ingressos"} replace />;
+    if (role === "admin") return <Navigate to="/admin/dashboard" replace />;
+    if (role === "producer") return <Navigate to="/producer/dashboard" replace />;
+    // Buyers can see the landing page
   }
 
   return (

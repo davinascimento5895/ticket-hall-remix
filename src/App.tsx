@@ -47,6 +47,7 @@ import Favoritos from "./pages/Favoritos";
 import Revenda from "./pages/Revenda";
 import RevendaCheckout from "./pages/RevendaCheckout";
 import RevendaSucesso from "./pages/RevendaSucesso";
+import PedidoRecuperacao from "./pages/PedidoRecuperacao";
 import NotFound from "./pages/NotFound";
 
 // Producer pages — lazy loaded
@@ -116,6 +117,7 @@ const App = () => {
                 <Route path="/eventos/:slug" element={<EventDetail />} />
               <Route path="/carrinho" element={<Carrinho />} />
                 <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+                <Route path="/pedido/:orderId" element={<ProtectedRoute><PedidoRecuperacao /></ProtectedRoute>} />
                 <Route path="/meus-ingressos" element={<ProtectedRoute><MeusIngressos /></ProtectedRoute>} />
                 <Route path="/organizador/:slug" element={<OrganizerProfile />} />
                 <Route path="/minha-conta/privacidade" element={<ProtectedRoute><Privacidade /></ProtectedRoute>} />

@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { SEOHead } from "@/components/SEOHead";
 import { Ticket, Calendar, MapPin, QrCode, Send, Clock, Search, Archive, Download, Repeat, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -343,6 +344,7 @@ export default function MeusIngressos() {
 
   return (
     <>
+      <SEOHead title="Meus Ingressos" description="Gerencie seus ingressos na TicketHall." />
       <div className="container pt-4 lg:pt-24 pb-16">
         {/* Header with title and search */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">

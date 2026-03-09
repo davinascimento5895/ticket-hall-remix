@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SEOHead } from "@/components/SEOHead";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -175,6 +176,10 @@ export default function Produtores() {
 
   return (
     <>
+      <SEOHead
+        title="Para Produtores — Venda Ingressos Online"
+        description="Crie e gerencie eventos na TicketHall. Venda ingressos com taxa a partir de 7%, check-in por QR Code, relatórios em tempo real e muito mais."
+      />
       <BecomeProducerModal
         open={producerModalOpen}
         onOpenChange={setProducerModalOpen}
