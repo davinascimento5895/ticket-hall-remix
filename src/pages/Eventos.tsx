@@ -329,7 +329,7 @@ export default function Eventos() {
                 ? "grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
                 : "sm:grid-cols-2 lg:grid-cols-3"
             )}>
-              {(gridView ? filteredEvents : restEvents).map((event: any) => (
+              {(gridView ? filteredEvents : restEvents).slice(0, visibleCount).map((event: any) => (
                 <EventCard
                   key={event.id}
                   title={event.title}
