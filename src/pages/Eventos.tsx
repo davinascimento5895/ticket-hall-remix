@@ -30,7 +30,7 @@ export default function Eventos() {
   const [gridView, setGridView] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const { city, loading: cityLoading, requestLocation } = useCityDetection();
-  const [authModalOpen, setAuthModalOpen] = useState(= useState(false);
+  const [producerModalOpen, setProducerModalOpen] = useState(false);
 
   const handleCreateEvent = () => {
     if (role === "producer") {
