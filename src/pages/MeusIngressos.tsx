@@ -270,7 +270,7 @@ export default function MeusIngressos() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "pb-3 px-1 mr-6 text-sm font-medium transition-colors border-b-2 whitespace-nowrap",
+                "pb-2 md:pb-3 px-1 md:mr-6 text-xs md:text-sm font-medium transition-colors border-b-2 text-center",
                 activeTab === tab.id
                   ? "border-primary text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground"
