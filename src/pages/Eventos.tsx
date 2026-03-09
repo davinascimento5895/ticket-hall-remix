@@ -24,7 +24,7 @@ import { EVENT_CATEGORIES, CATEGORY_OPTIONS } from "@/lib/categories";
 export default function Eventos() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user, role, profile } = useAuth();
+  const { user, role } = useAuth();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>(searchParams.get("categoria") || "");
   const [cityFilter, setCityFilter] = useState<string>(searchParams.get("cidade") || "");
