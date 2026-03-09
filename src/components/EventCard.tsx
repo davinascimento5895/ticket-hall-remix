@@ -58,7 +58,7 @@ export function EventCard({ title, date, city, imageUrl, priceFrom, category, sl
             </span>
           </span>
           <Button size="sm" variant="default" className="text-xs">
-            Comprar
+            {priceFrom === 0 ? "Inscrever-se" : "Comprar"}
           </Button>
         </div>
       </div>

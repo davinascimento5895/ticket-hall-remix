@@ -125,7 +125,7 @@ export default function Carrinho() {
                   <span className="text-foreground">{fmt(subtotal)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Taxa de serviço (7%)</span>
+                  <span className="text-muted-foreground">Taxa de serviço ({items[0]?.platformFeePercent ?? 7}%)</span>
                   <span className="text-foreground">{fmt(platformFee)}</span>
                 </div>
                 {discount > 0 && (

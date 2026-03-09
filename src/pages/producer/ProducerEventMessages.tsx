@@ -101,7 +101,7 @@ export default function ProducerEventMessages() {
       queryClient.invalidateQueries({ queryKey: ["event-messages"] });
       setSubject("");
       setBody("");
-      toast({ title: "Mensagem enviada!", description: "Os e-mails estão sendo processados." });
+      toast({ title: "Mensagem salva", description: "🚧 O envio de e-mails em massa será disponibilizado em breve. A mensagem foi salva como rascunho." });
     },
     onError: (err: any) => toast({ title: "Erro ao enviar", description: err.message, variant: "destructive" }),
   });
