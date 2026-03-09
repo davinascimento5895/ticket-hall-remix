@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { EmptyState } from "@/components/EmptyState";
+import { AuthModal } from "@/components/AuthModal";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
@@ -14,7 +15,16 @@ export default function Carrinho() {
   const { items, removeItem, updateQuantity, clearCart, subtotal, platformFee, total, expiresAt, couponCode, setCouponCode, discount, setDiscount, setAppliedCouponId, finalTotal } = useCart();
   const { user } = useAuth();
   const [validatingCoupon, setValidatingCoupon] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
   const navigate = useNavigate();
+
+  const handleCheckout = () => {
+    if (!user) {
+      setShowAuth(true);
+      return;
+    }
+    navigate("/checkout");
+  };
 
   const handleValidateCoupon = async () => {
     if (!couponCode.trim() || items.length === 0) return;
@@ -163,9 +173,21 @@ export default function Carrinho() {
                 </div>
               )}
 
-              <Button className="w-full" asChild>
-                <Link to="/checkout">Finalizar compra</Link>
+              <Button className="w-full" onClick={handleCheckout}>
+                Finalizar compra
               </Button>
+
+              <AuthModal
+                open={showAuth}
+                onOpenChange={(open) => {
+                  setShowAuth(open);
+                  // After closing, if user is now logged in, go to checkout
+                  if (!open && user) {
+                    navigate("/checkout");
+                  }
+                }}
+                redirectTo="/checkout"
+              />
             </div>
           </div>
         </div>

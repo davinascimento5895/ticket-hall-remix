@@ -191,6 +191,17 @@ Deno.serve(async (req) => {
         updated_at: new Date().toISOString(),
       };
 
+      if (paymentMethod === "credit_card") {
+        // Block credit card in stub mode — no real gateway to charge
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: "Pagamento por cartão de crédito não está disponível no momento. Por favor, utilize PIX ou boleto.",
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       if (paymentMethod === "pix") {
         updateData.pix_qr_code = `STUB_PIX_${orderId}`;
         updateData.pix_qr_code_image = null;
@@ -200,11 +211,6 @@ Deno.serve(async (req) => {
         stubResult.pixQrCode = updateData.pix_qr_code;
         stubResult.pixQrCodeImage = null;
         stubResult.expiresAt = updateData.expires_at;
-      } else if (paymentMethod === "credit_card") {
-        // In stub mode, simulate immediate confirmation
-        updateData.status = "paid";
-        updateData.payment_status = "paid";
-        stubResult.immediateConfirmation = true;
       } else if (paymentMethod === "boleto") {
         updateData.boleto_url = `https://stub.asaas.com/boleto/${orderId}`;
         updateData.boleto_barcode = `23793.38128 60000.000003 00000.000402 1 ${Math.floor(
@@ -218,15 +224,6 @@ Deno.serve(async (req) => {
         .from("orders")
         .update(updateData)
         .eq("id", orderId);
-
-      // If credit card stub, also confirm payment
-      if (paymentMethod === "credit_card") {
-        await supabaseAdmin.rpc("confirm_order_payment", {
-          p_order_id: orderId,
-          p_asaas_payment: `stub_${orderId}`,
-          p_net_value: order.total * 0.98,
-        });
-      }
 
       return new Response(JSON.stringify(stubResult), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
