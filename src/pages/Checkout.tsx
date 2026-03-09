@@ -77,7 +77,7 @@ export default function Checkout() {
     return () => { supabase.removeChannel(channel); };
   }, [orderId, awaitingPayment, clearCart]);
 
-  // Create order when advancing from Step 0 to Step 1
+  // Create order when advancing from Step 0 to Step 1 (or directly to confirmation if free)
   const handleCreateOrder = useCallback(async () => {
     if (!user) {
       toast({ title: "Faça login", description: "Você precisa estar logado para finalizar a compra.", variant: "destructive" });
@@ -88,10 +88,14 @@ export default function Checkout() {
       const eventId = items[0]?.eventId;
       if (!eventId) throw new Error("No event in cart");
 
+      const isFreeOrder = total === 0;
+
       const { data: order, error: orderErr } = await supabase.from("orders").insert({
-        buyer_id: user.id, event_id: eventId, subtotal, platform_fee: platformFee, total,
-        status: "pending", payment_status: "pending",
-        expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+        buyer_id: user.id, event_id: eventId, subtotal, platform_fee: isFreeOrder ? 0 : platformFee, total: isFreeOrder ? 0 : total,
+        status: isFreeOrder ? "paid" : "pending",
+        payment_status: isFreeOrder ? "paid" : "pending",
+        payment_method: isFreeOrder ? "free" : null,
+        expires_at: isFreeOrder ? null : new Date(Date.now() + 15 * 60 * 1000).toISOString(),
       }).select().single();
       if (orderErr) throw orderErr;
       setOrderId(order.id);
@@ -153,14 +157,28 @@ export default function Checkout() {
         await supabase.from("checkout_answers").insert(answersToSave);
       }
 
-      setStep(1);
+      // Free order: activate tickets and go straight to confirmation
+      if (isFreeOrder) {
+        await supabase.from("tickets").update({ status: "active" }).eq("order_id", order.id).eq("status", "reserved");
+        // Update sold counts
+        for (const item of ticketItems) {
+          await supabase.from("ticket_tiers").update({
+            quantity_sold: item.quantity, // Will be handled by RPC in real flow, but for free we do it manually
+          }).eq("id", item.tierId);
+        }
+        toast({ title: "Inscrição confirmada!", description: "Seus ingressos foram gerados com sucesso." });
+        clearCart();
+        setStep(2);
+      } else {
+        setStep(1);
+      }
     } catch (error: any) {
       console.error("Order creation error:", error);
       toast({ title: "Erro ao criar pedido", description: error.message || "Tente novamente.", variant: "destructive" });
     } finally {
       setIsCreatingOrder(false);
     }
-  }, [user, items, subtotal, platformFee, total, attendeeData, questionAnswers]);
+  }, [user, items, subtotal, platformFee, total, attendeeData, questionAnswers, clearCart]);
 
   // Process payment
   const handleConfirmPayment = useCallback(async (method: string, cardData?: CreditCardData, installments?: number) => {
