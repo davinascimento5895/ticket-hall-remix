@@ -23,6 +23,8 @@ import { EVENT_CATEGORIES, CATEGORY_OPTIONS } from "@/lib/categories";
 
 export default function Eventos() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { user, role, profile } = useAuth();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>(searchParams.get("categoria") || "");
   const [cityFilter, setCityFilter] = useState<string>(searchParams.get("cidade") || "");
@@ -30,6 +32,25 @@ export default function Eventos() {
   const [gridView, setGridView] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const { city, loading: cityLoading, requestLocation } = useCityDetection();
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [producerModalOpen, setProducerModalOpen] = useState(false);
+
+  const handleCreateEvent = () => {
+    // Already a producer — go to create event
+    if (role === "producer") {
+      navigate("/producer/events/new");
+      return;
+    }
+    // Not logged in — open auth modal
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+    // Logged in but not producer — open become producer modal
+    setProducerModalOpen(true);
+  };
+
+  const isPendingProducer = profile?.producer_status === "pending";
 
   // Sync URL params on mount
   useEffect(() => {
