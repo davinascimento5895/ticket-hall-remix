@@ -11,6 +11,7 @@ import { ResaleListingModal } from "@/components/ResaleListingModal";
 import { EmptyState } from "@/components/EmptyState";
 import { useAuth } from "@/contexts/AuthContext";
 import { getMyTickets } from "@/lib/api";
+import { supabase } from "@/integrations/supabase/client";
 import { cancelResaleListing, getMyResaleListings } from "@/lib/api-resale";
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
