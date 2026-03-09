@@ -138,7 +138,7 @@ export default function Eventos() {
 
         {/* Category chips */}
         <div className="flex gap-2 overflow-x-auto pb-4 mb-2 scrollbar-hide">
-          {categories.map((cat) => (
+          {CATEGORY_OPTIONS.map((cat) => (
             <button
               key={cat.value}
               onClick={() => setCategory(cat.value)}
