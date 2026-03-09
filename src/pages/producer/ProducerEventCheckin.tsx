@@ -40,6 +40,7 @@ export default function ProducerEventCheckin() {
     staleTime: 30_000,
   });
 
+  // Mutation for manual check-in by ticket ID (list button click)
   const checkinMutation = useMutation({
     mutationFn: (ticketId: string) => validateCheckinByTicketId({ ticketId, scannedBy: user?.id }),
     onSuccess: (result) => {
