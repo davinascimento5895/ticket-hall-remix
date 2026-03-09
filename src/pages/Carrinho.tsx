@@ -140,6 +140,13 @@ export default function Carrinho() {
                 </div>
               </div>
 
+              {!user && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground bg-secondary rounded-lg px-3 py-2">
+                  <LogIn className="h-3.5 w-3.5 shrink-0" />
+                  <span>Você precisará fazer login para finalizar a compra.</span>
+                </div>
+              )}
+
               <Button className="w-full" asChild>
                 <Link to="/checkout">Finalizar compra</Link>
               </Button>

@@ -119,6 +119,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems((prev) => {
       if (prev.length > 0 && prev[0].eventId !== item.eventId) {
         localStorage.removeItem(CART_KEY);
+        toast({
+          title: "Carrinho atualizado",
+          description: "Itens do evento anterior foram removidos. Só é possível comprar ingressos de um evento por vez.",
+        });
         return [item];
       }
       const existing = prev.find((i) => i.tierId === item.tierId);
