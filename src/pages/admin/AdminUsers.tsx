@@ -56,7 +56,7 @@ export default function AdminUsers() {
                 </thead>
                 <tbody>
                   {users.map((user: any) => {
-                    const role = user.user_roles?.[0]?.role || "buyer";
+                    const role = user.role || "buyer";
                     return (
                       <tr key={user.id} className="border-b border-border/50 hover:bg-muted/30">
                         <td className="p-3 font-medium">{user.full_name || "—"}</td>
