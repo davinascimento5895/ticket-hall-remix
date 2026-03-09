@@ -44,7 +44,7 @@ export interface EventFilters {
 export const defaultEventFilters: EventFilters = {
   category: "",
   datePreset: null,
-  dateRange: null,
+  dateRange: undefined,
   priceMin: "",
   priceMax: "",
   modality: "all",
