@@ -183,13 +183,15 @@ export default function ProducerEventFinancial() {
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr className="border-t border-border font-medium">
-                    <td colSpan={3} className="p-3 text-right text-muted-foreground">Total</td>
-                    <td className="p-3">{fmt(filteredOrders.reduce((s: number, o: any) => s + (o.total || 0), 0))}</td>
-                    <td className="p-3 text-muted-foreground">{fmt(filteredOrders.reduce((s: number, o: any) => s + (o.platform_fee || 0), 0))}</td>
-                    <td className="p-3">{fmt(filteredOrders.reduce((s: number, o: any) => s + ((o.total || 0) - (o.platform_fee || 0)), 0))}</td>
-                    <td className="p-3"></td>
-                  </tr>
+                   <tr className="border-t border-border font-medium">
+                     <td colSpan={3} className="p-3 text-right text-muted-foreground">Total</td>
+                     <td className="p-3">{fmt(filteredOrders.reduce((s: number, o: any) => s + (o.subtotal || 0), 0))}</td>
+                     <td className="p-3 text-muted-foreground">{fmt(filteredOrders.reduce((s: number, o: any) => s + (o.discount_amount || 0), 0))}</td>
+                     <td className="p-3">{fmt(filteredOrders.reduce((s: number, o: any) => s + (o.total || 0), 0))}</td>
+                     <td className="p-3 text-muted-foreground">{fmt(filteredOrders.reduce((s: number, o: any) => s + (o.platform_fee || 0), 0))}</td>
+                     <td className="p-3">{fmt(filteredOrders.reduce((s: number, o: any) => s + ((o.total || 0) - (o.platform_fee || 0)), 0))}</td>
+                     <td className="p-3"></td>
+                   </tr>
                 </tfoot>
               </table>
             </div>
