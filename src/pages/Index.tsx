@@ -97,6 +97,7 @@ export default function Index() {
         .select("*, ticket_tiers(price)")
         .eq("status", "published")
         .eq("is_featured", true)
+        .gte("end_date", new Date().toISOString())
         .order("start_date", { ascending: true })
         .limit(6);
       if (error) throw error;

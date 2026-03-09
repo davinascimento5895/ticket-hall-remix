@@ -114,13 +114,21 @@ export default function Eventos() {
       />
 
       <div className="container pt-4 lg:pt-24 pb-16">
-        {/* Global Search bar */}
-        <div className="mb-6">
-          <SearchBar 
-            variant="page" 
-            placeholder="Buscar eventos, artistas, locais..." 
-            className="max-w-2xl"
+        {/* Local Search bar */}
+        <div className="mb-6 max-w-2xl relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Buscar eventos, artistas, locais..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10 bg-muted/50 border-border"
           />
+          {search && (
+            <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7" onClick={() => setSearch("")}>
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          )}
         </div>
 
         {/* Date selector - horizontal scroll contained */}

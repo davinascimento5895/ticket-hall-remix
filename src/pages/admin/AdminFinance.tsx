@@ -94,7 +94,7 @@ export default function AdminFinance() {
       <Card>
         <CardHeader><CardTitle className="text-base">Repasses Pendentes</CardTitle></CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground text-center py-6">PAYOUT_INTEGRATION_POINT — Funcionalidade de repasse automático será implementada com integração do gateway de pagamento.</p>
+          <p className="text-sm text-muted-foreground text-center py-6">🚧 Em breve — O repasse automático para produtores será disponibilizado após a integração com o gateway de pagamento.</p>
         </CardContent>
       </Card>
     </div>

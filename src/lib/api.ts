@@ -8,19 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 // EVENTS
 // ============================================================
 
-/** Fetch published featured events */
-export async function getFeaturedEvents() {
-  const { data, error } = await supabase
-    .from("events")
-    .select("*")
-    .eq("status", "published")
-    .eq("is_featured", true)
-    .order("start_date", { ascending: true })
-    .limit(6);
-  if (error) throw error;
-  return data;
-}
-
 /** Fetch published events with optional filters */
 export async function getEvents(filters?: {
   category?: string;
