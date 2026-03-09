@@ -174,8 +174,28 @@ export default function ProducerEventForm() {
       let coverUrl = form.cover_image_url;
       if (coverFile) coverUrl = await handleUploadCover();
 
+      // Upload seat map image if provided
+      let finalSeatMapUrl = seatMapImageUrl;
+      if (seatMapFile && user) {
+        const ext = seatMapFile.name.split(".").pop();
+        const path = `${user.id}/seatmap-${Date.now()}.${ext}`;
+        const { error: smErr } = await supabase.storage.from("event-images").upload(path, seatMapFile);
+        if (smErr) throw smErr;
+        const { data: smData } = supabase.storage.from("event-images").getPublicUrl(path);
+        finalSeatMapUrl = smData.publicUrl;
+      }
+
+      // Build seat_map_config with image URL and tier colors
+      const seatMapConfig = form.has_seat_map ? {
+        imageUrl: finalSeatMapUrl || null,
+        tierColors: Object.fromEntries(
+          tiers.filter(t => t.sector_color).map(t => [t.name, t.sector_color])
+        ),
+      } : null;
+
       const eventData: any = {
         ...form, cover_image_url: coverUrl,
+        seat_map_config: seatMapConfig,
         start_date: new Date(form.start_date).toISOString(),
         end_date: new Date(form.end_date).toISOString(),
         doors_open_time: form.doors_open_time ? new Date(form.doors_open_time).toISOString() : null,
