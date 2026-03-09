@@ -50,7 +50,7 @@ export function CityCarousel({ className }: CityCarouselProps) {
 
           <div
             ref={scrollRef}
-            className="flex gap-3 md:gap-4 overflow-x-auto scrollbar-hide -mx-1 px-1 pb-2 snap-x snap-mandatory"
+            className="flex gap-3 md:gap-4 overflow-x-auto scrollbar-hide pb-2 snap-x snap-mandatory"
           >
             {FEATURED_CAPITALS.map((city) => (
               <Link
