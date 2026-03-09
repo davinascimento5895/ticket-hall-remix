@@ -124,6 +124,8 @@ export default function EventDetail() {
     }
   };
 
+  const isPastEvent = event ? new Date(event.end_date) < new Date() : false;
+
   const fmt = (v: number) => `R$ ${Number(v).toFixed(2).replace(".", ",")}`;
 
   if (loadingEvent) {
