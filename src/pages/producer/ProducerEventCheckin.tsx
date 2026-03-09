@@ -83,7 +83,7 @@ export default function ProducerEventCheckin() {
       toast({ title: "Erro ao abrir câmera", description: err.message || "Permissão de câmera negada", variant: "destructive" });
       scannerRef.current = null;
     }
-  }, [checkinMutation]);
+  }, [scanCheckinMutation]);
 
   const stopScanner = useCallback(async () => {
     if (scannerRef.current) {
