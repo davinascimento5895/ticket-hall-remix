@@ -184,23 +184,71 @@ export function Navbar() {
           {/* Mobile/Tablet Header — visible below lg */}
           <div className="lg:hidden flex items-center gap-1">
             <AnimatedThemeToggler />
-            {user && <NotificationBell />}
-            
-            {isAdminOrProducer && (
-              <button className="text-foreground p-2" onClick={() => setMobileOpen(!mobileOpen)}>
-                {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </button>
+
+            {/* Cart icon for logged-out users on mobile */}
+            {!user && !isAdminOrProducer && (
+              <Link
+                to="/carrinho"
+                className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
+                aria-label={`Carrinho${itemCount > 0 ? `, ${itemCount} itens` : ""}`}
+              >
+                <ShoppingBag className="h-5 w-5" />
+                {itemCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold bg-primary text-primary-foreground rounded-full">
+                    {itemCount > 99 ? "99+" : itemCount}
+                  </span>
+                )}
+              </Link>
             )}
-            
+
+            {user && <NotificationBell />}
+
             {!user && !isAdminOrProducer && (
               <Button variant="default" size="sm" className="text-xs px-3 h-8" onClick={openLogin}>
                 Entrar
               </Button>
             )}
+
+            {/* Hamburger menu for logged-out users and admin/producer */}
+            {(!user || isAdminOrProducer) && (
+              <button className="text-foreground p-2" onClick={() => setMobileOpen(!mobileOpen)}>
+                {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Mobile Menu - Only for admin/producer */}
+        {/* Mobile Menu — logged-out users */}
+        {mobileOpen && !user && !isAdminOrProducer && (
+          <div className="lg:hidden bg-background/95 backdrop-blur-xl border-b border-border animate-fade-in">
+            <div className="container py-4 space-y-1">
+              {links.map((l) => (
+                <Link
+                  key={l.href}
+                  to={l.href}
+                  className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 transition-colors"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {l.label}
+                </Link>
+              ))}
+              <div className="border-t border-border my-2" />
+              <button
+                className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 w-full transition-colors"
+                onClick={() => { handleCreateEvent(); setMobileOpen(false); }}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Crie seu evento
+              </button>
+              <div className="flex gap-3 pt-3">
+                <Button variant="ghost" size="sm" className="flex-1" onClick={() => { openLogin(); setMobileOpen(false); }}>Entrar</Button>
+                <Button variant="default" size="sm" className="flex-1" onClick={() => { openRegister(); setMobileOpen(false); }}>Criar Conta</Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Menu — admin/producer */}
         {mobileOpen && isAdminOrProducer && (
           <div className="lg:hidden bg-background/95 backdrop-blur-xl border-b border-border animate-fade-in">
             <div className="container py-4 space-y-3">
