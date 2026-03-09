@@ -66,6 +66,8 @@ const ProducerEventMessages = lazy(() => import("./pages/producer/ProducerEventM
 const ProducerInterestLists = lazy(() => import("./pages/producer/ProducerInterestLists"));
 const ProducerInterestListForm = lazy(() => import("./pages/producer/ProducerInterestListForm"));
 const InterestListPublic = lazy(() => import("./pages/InterestListPublic"));
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+const FAQ = lazy(() => import("./pages/FAQ"));
 
 // Admin pages — lazy loaded
 const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
