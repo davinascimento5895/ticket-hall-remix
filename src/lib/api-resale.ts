@@ -20,7 +20,7 @@ export async function getResaleListings(filters?: {
   limit?: number;
 }) {
   let query = supabase
-    .from("resale_listings")
+    .from("resale_listings" as any)
     .select(`
       *,
       events!inner(id, title, slug, cover_image_url, start_date, end_date, venue_name, venue_city, venue_state, category),
