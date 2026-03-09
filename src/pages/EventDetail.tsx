@@ -360,7 +360,10 @@ export default function EventDetail() {
                       quantityTotal={tier.quantity_total} quantitySold={tier.quantity_sold ?? 0}
                       quantityReserved={tier.quantity_reserved ?? 0}
                       minPerOrder={tier.min_per_order ?? 1} maxPerOrder={tier.max_per_order ?? 10}
-                      tierType={tier.tier_type ?? "paid"} onAdd={handleAddToCart} />
+                      tierType={tier.tier_type ?? "paid"} onAdd={handleAddToCart}
+                      salesStartDate={tier.sales_start_date}
+                      salesEndDate={tier.sales_end_date}
+                      eventId={event.id} />
                   ))
                 ) : (
                   <p className="text-muted-foreground text-sm py-4">Nenhum ingresso disponível no momento.</p>
