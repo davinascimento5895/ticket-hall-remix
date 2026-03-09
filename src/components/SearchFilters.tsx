@@ -43,7 +43,6 @@ const defaultFilters: SearchFilterValues = {
 
 const SORT_OPTIONS = [
   { value: "popular", label: "Popular" },
-  { value: "rating", label: "Maior avaliação" },
   { value: "deals", label: "Ofertas" },
 ];
 

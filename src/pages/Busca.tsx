@@ -280,7 +280,7 @@ export default function Busca() {
                         })}
                         city={event.venue_city || "Online"}
                         imageUrl={event.cover_image_url || "/placeholder.svg"}
-                        priceFrom={0}
+                        priceFrom={event.min_price ?? 0}
                         category={event.category || undefined}
                         slug={event.slug}
                       />
