@@ -38,7 +38,7 @@ interface BookingFlowProps {
   tiers: any[];
 }
 
-type Step = "date" | "tickets" | "seats" | "summary" | "confirmation";
+type Step = "date" | "tickets" | "summary" | "confirmation";
 
 export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowProps) {
   const isMobile = useIsMobile();
@@ -50,7 +50,6 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
   const [selectedDate, setSelectedDate] = useState<Date>(new Date(event.start_date));
   const [selectedTier, setSelectedTier] = useState<any>(null);
   const [quantity, setQuantity] = useState(1);
-  const [selectedSeat, setSelectedSeat] = useState<string | null>(null);
   const [couponCode, setCouponCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState("pix");
@@ -63,7 +62,7 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
   const platformFee = Math.round(subtotal * feePercent) / 100;
   const total = Math.max(0, subtotal + platformFee - discount);
 
-  const stepOrder: Step[] = [...(isMultiDay ? ["date" as Step] : []), "tickets", ...(event.has_seat_map ? ["seats" as Step] : []), "summary", "confirmation"];
+  const stepOrder: Step[] = [...(isMultiDay ? ["date" as Step] : []), "tickets", "summary", "confirmation"];
   const currentStepIndex = stepOrder.indexOf(step);
 
   const handleBack = () => {
@@ -82,25 +81,9 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
   const handleSelectTier = (tier: any, qty: number) => {
     setSelectedTier(tier);
     setQuantity(qty);
-    // Check if free: skip to confirmation-like flow
-    const tierPrice = tier.price ?? 0;
-    const tierTotal = tierPrice * qty;
-    if (tierTotal === 0) {
-      // Free event — go to summary but payment will auto-confirm
-      setStep("summary");
-      return;
-    }
-    if (event.has_seat_map) {
-      setStep("seats");
-    } else {
-      setStep("summary");
-    }
-  };
-
-  const handleSelectSeat = (seatId: string) => {
-    setSelectedSeat(seatId);
     setStep("summary");
   };
+
 
   const handleConfirmPayment = useCallback(async (method: string, cardData?: CreditCardData, installments?: number) => {
     const isFree = total === 0;
@@ -187,7 +170,6 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
   const stepLabels: Record<Step, string> = {
     date: "Data",
     tickets: "Ingressos",
-    seats: "Assentos",
     summary: "Resumo",
     confirmation: "Confirmação",
   };
@@ -237,13 +219,8 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
               tiers={tiers}
               selectedDate={selectedDate}
               onSelectTier={handleSelectTier}
-            />
-          )}
-          {step === "seats" && (
-            <BookingSeatMap
               seatMapConfig={event.seat_map_config}
-              onSelectSeat={handleSelectSeat}
-              selectedSeat={selectedSeat}
+              hasSeatMap={!!event.has_seat_map}
             />
           )}
           {step === "summary" && (
@@ -253,7 +230,7 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
               selectedDate={selectedDate}
               selectedTier={selectedTier}
               quantity={quantity}
-              selectedSeat={selectedSeat}
+              selectedSeat={null}
               subtotal={subtotal}
               platformFee={platformFee}
               discount={discount}

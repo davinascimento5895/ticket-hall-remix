@@ -25,6 +25,11 @@ import { useIBGEStates, useIBGECities } from "@/hooks/useIBGELocations";
 
 const stepLabels = ["Informações", "Local", "Ingressos", "Formulário", "Produtos", "Configurações", "Revisão"];
 
+const SECTOR_COLORS = [
+  "#E53E3E", "#DD6B20", "#D69E2E", "#38A169", "#3182CE",
+  "#805AD5", "#D53F8C", "#2B6CB0", "#2C7A7B", "#9B2C2C",
+];
+
 interface TierDraft {
   id?: string;
   name: string;
@@ -38,6 +43,7 @@ interface TierDraft {
   capacity_group_id: string | null;
   is_hidden_by_default: boolean;
   unlock_code: string;
+  sector_color: string;
 }
 
 export default function ProducerEventForm() {
@@ -60,6 +66,8 @@ export default function ProducerEventForm() {
 
   const [tiers, setTiers] = useState<TierDraft[]>([]);
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [seatMapFile, setSeatMapFile] = useState<File | null>(null);
+  const [seatMapImageUrl, setSeatMapImageUrl] = useState<string>("");
 
   // Load capacity groups for tier assignment
   const { data: capacityGroups = [] } = useQuery({
@@ -92,6 +100,9 @@ export default function ProducerEventForm() {
           has_insurance_option: data.has_insurance_option || false,
           insurance_price: data.insurance_price || 0,
         });
+        // Load seat map image URL from config
+        const smc = data.seat_map_config as any;
+        if (smc?.imageUrl) setSeatMapImageUrl(smc.imageUrl);
       }
       return data;
     },
@@ -104,7 +115,7 @@ export default function ProducerEventForm() {
       const { data, error } = await supabase.from("ticket_tiers").select("*").eq("event_id", id).order("sort_order");
       if (error) throw error;
       if (data) {
-        setTiers(data.map((t) => ({
+        setTiers(data.map((t, idx) => ({
           id: t.id, name: t.name, tier_type: t.tier_type || "paid",
           price: t.price || 0, quantity_total: t.quantity_total,
           description: t.description || "",
@@ -113,6 +124,7 @@ export default function ProducerEventForm() {
           capacity_group_id: (t as any).capacity_group_id || null,
           is_hidden_by_default: (t as any).is_hidden_by_default ?? false,
           unlock_code: (t as any).unlock_code || "",
+          sector_color: SECTOR_COLORS[idx % SECTOR_COLORS.length],
         })));
       }
       return data;
@@ -134,6 +146,7 @@ export default function ProducerEventForm() {
       name: "", tier_type: "paid", price: 0, quantity_total: 100, description: "",
       min_per_order: 1, max_per_order: 10, is_transferable: true,
       capacity_group_id: null, is_hidden_by_default: false, unlock_code: "",
+      sector_color: SECTOR_COLORS[prev.length % SECTOR_COLORS.length],
     }]);
   };
 
@@ -161,8 +174,28 @@ export default function ProducerEventForm() {
       let coverUrl = form.cover_image_url;
       if (coverFile) coverUrl = await handleUploadCover();
 
+      // Upload seat map image if provided
+      let finalSeatMapUrl = seatMapImageUrl;
+      if (seatMapFile && user) {
+        const ext = seatMapFile.name.split(".").pop();
+        const path = `${user.id}/seatmap-${Date.now()}.${ext}`;
+        const { error: smErr } = await supabase.storage.from("event-images").upload(path, seatMapFile);
+        if (smErr) throw smErr;
+        const { data: smData } = supabase.storage.from("event-images").getPublicUrl(path);
+        finalSeatMapUrl = smData.publicUrl;
+      }
+
+      // Build seat_map_config with image URL and tier colors
+      const seatMapConfig = form.has_seat_map ? {
+        imageUrl: finalSeatMapUrl || null,
+        tierColors: Object.fromEntries(
+          tiers.filter(t => t.sector_color).map(t => [t.name, t.sector_color])
+        ),
+      } : null;
+
       const eventData: any = {
         ...form, cover_image_url: coverUrl,
+        seat_map_config: seatMapConfig,
         start_date: new Date(form.start_date).toISOString(),
         end_date: new Date(form.end_date).toISOString(),
         doors_open_time: form.doors_open_time ? new Date(form.doors_open_time).toISOString() : null,
@@ -320,6 +353,32 @@ export default function ProducerEventForm() {
                       <Input value={tier.unlock_code} onChange={(e) => updateTier(i, "unlock_code", e.target.value)} placeholder="Ex: VIP2025" maxLength={50} />
                     </div>
                   )}
+
+                  {/* Sector color picker - only when seat map is active */}
+                  {form.has_seat_map && (
+                    <div className="flex items-center gap-3">
+                      <Label className="text-xs whitespace-nowrap">Cor do setor</Label>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {SECTOR_COLORS.map((color) => (
+                          <button
+                            key={color}
+                            type="button"
+                            onClick={() => updateTier(i, "sector_color", color)}
+                            className={`w-6 h-6 rounded-full border-2 transition-all ${tier.sector_color === color ? "border-foreground scale-110 ring-2 ring-primary/30" : "border-transparent hover:scale-105"}`}
+                            style={{ backgroundColor: color }}
+                            title={color}
+                          />
+                        ))}
+                        <input
+                          type="color"
+                          value={tier.sector_color || "#3182CE"}
+                          onChange={(e) => updateTier(i, "sector_color", e.target.value)}
+                          className="w-6 h-6 rounded cursor-pointer border-0 p-0"
+                          title="Cor personalizada"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </CardContent>
@@ -371,11 +430,32 @@ export default function ProducerEventForm() {
 
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-sm">Mapa de assentos</Label>
-                <p className="text-xs text-muted-foreground">Permite selecionar assentos numerados</p>
+                <Label className="text-sm">Mapa de setores</Label>
+                <p className="text-xs text-muted-foreground">Upload de imagem do mapa com setores coloridos</p>
               </div>
               <Switch checked={form.has_seat_map} onCheckedChange={(v) => updateField("has_seat_map", v)} />
             </div>
+            {form.has_seat_map && (
+              <div className="space-y-3 pl-4 border-l-2 border-primary/20">
+                <div>
+                  <Label className="text-xs">Imagem do mapa de setores</Label>
+                  <p className="text-xs text-muted-foreground mb-1">Envie uma imagem (PNG/JPG) com o layout do evento mostrando os setores.</p>
+                  {seatMapImageUrl && (
+                    <img src={seatMapImageUrl} alt="Mapa de setores" className="w-full max-h-48 object-contain rounded-lg border border-border mb-2 bg-muted/30" />
+                  )}
+                  <Input type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setSeatMapFile(file);
+                      setSeatMapImageUrl(URL.createObjectURL(file));
+                    }
+                  }} />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  💡 Defina a cor de cada setor no lote correspondente (etapa "Ingressos").
+                </p>
+              </div>
+            )}
 
             <div className="flex items-center justify-between">
               <div>
