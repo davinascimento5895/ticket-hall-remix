@@ -262,6 +262,9 @@ export default function EventDetail() {
                     Classificação indicativa: {event.minimum_age} anos
                   </div>
                 )}
+
+                {/* Reviews section */}
+                <EventReviews eventId={event.id} isPastEvent={isPastEvent} />
               </div>
             )}
 
