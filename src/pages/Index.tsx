@@ -127,7 +127,7 @@ export default function Index() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.15 }}
-            className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto"
+            className="text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto"
           >
             Compre, transfira e gerencie seus ingressos com segurança. A plataforma completa para produtores e compradores.
           </motion.p>
