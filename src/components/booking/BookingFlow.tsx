@@ -50,7 +50,6 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
   const [selectedDate, setSelectedDate] = useState<Date>(new Date(event.start_date));
   const [selectedTier, setSelectedTier] = useState<any>(null);
   const [quantity, setQuantity] = useState(1);
-  const [selectedSeat, setSelectedSeat] = useState<string | null>(null);
   const [couponCode, setCouponCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState("pix");
