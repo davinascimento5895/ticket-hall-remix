@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { Search, X, LayoutGrid, List, Ticket } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -14,20 +15,12 @@ import { cn } from "@/lib/utils";
 import { addDays, format, isSameDay, startOfToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { MapPin } from "lucide-react";
-
-const categories = [
-  { value: "", label: "Todos" },
-  { value: "music", label: "Música" },
-  { value: "sports", label: "Esportes" },
-  { value: "theater", label: "Teatro" },
-  { value: "festival", label: "Festival" },
-  { value: "corporate", label: "Corporativo" },
-  { value: "education", label: "Educação" },
-];
+import { EVENT_CATEGORIES, CATEGORY_OPTIONS } from "@/lib/categories";
 
 export default function Eventos() {
+  const [searchParams] = useSearchParams();
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState<string>("");
+  const [category, setCategory] = useState<string>(searchParams.get("categoria") || "");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [gridView, setGridView] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -145,7 +138,7 @@ export default function Eventos() {
 
         {/* Category chips */}
         <div className="flex gap-2 overflow-x-auto pb-4 mb-2 scrollbar-hide">
-          {categories.map((cat) => (
+          {CATEGORY_OPTIONS.map((cat) => (
             <button
               key={cat.value}
               onClick={() => setCategory(cat.value)}
@@ -240,7 +233,7 @@ export default function Eventos() {
                 <div className="absolute bottom-0 left-0 right-0 p-6">
                   {featuredEvent.category && (
                     <span className="inline-block px-2.5 py-1 text-xs font-medium rounded-full bg-primary/90 text-primary-foreground mb-3">
-                      {categories.find(c => c.value === featuredEvent.category)?.label || featuredEvent.category}
+                      {CATEGORY_OPTIONS.find(c => c.value === featuredEvent.category)?.label || featuredEvent.category}
                     </span>
                   )}
                   <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-1">{featuredEvent.title}</h2>

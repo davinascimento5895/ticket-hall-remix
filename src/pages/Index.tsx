@@ -2,6 +2,7 @@ import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/EventCard";
+import { CategoryCarousel } from "@/components/CategoryCarousel";
 import { Spotlight } from "@/components/core/spotlight";
 import { WordRotate } from "@/components/ui/word-rotate";
 import { motion } from "framer-motion";
@@ -21,6 +22,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { getCategoryLabel } from "@/lib/categories";
 
 const features = [
   { icon: CreditCard, title: "Pagamento seguro", desc: "PIX, cartão de crédito e boleto. Checkout rápido e protegido." },
@@ -144,6 +146,9 @@ export default function Index() {
           </motion.div>
         </div>
       </section>
+
+      {/* ===== CATEGORY CAROUSEL ===== */}
+      <CategoryCarousel className="bg-secondary/30" />
 
       {/* ===== FEATURED EVENTS ===== */}
       <section className="py-16 md:py-24">
