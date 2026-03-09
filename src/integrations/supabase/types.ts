@@ -2449,6 +2449,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      purchase_resale_atomic: {
+        Args: {
+          p_buyer_email: string
+          p_buyer_id: string
+          p_listing_id: string
+          p_new_qr_code: string
+          p_new_qr_image_url: string
+        }
+        Returns: Json
+      }
       reserve_tickets: {
         Args: { p_order_id: string; p_quantity: number; p_tier_id: string }
         Returns: boolean
