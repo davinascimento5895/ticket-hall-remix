@@ -20,11 +20,13 @@ export default function ProducerPromoterRanking({ producerId }: { producerId: st
   const { data: events = [] } = useQuery({
     queryKey: ["producer-events", producerId],
     queryFn: () => getProducerEvents(producerId),
+    staleTime: 30_000,
   });
 
   const { data: ranking = [], isLoading } = useQuery({
     queryKey: ["promoter-ranking", producerId, eventFilter],
     queryFn: () => getPromoterRanking(producerId, eventFilter === "all" ? undefined : eventFilter),
+    staleTime: 30_000,
   });
 
   if (isLoading) return <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20" />)}</div>;

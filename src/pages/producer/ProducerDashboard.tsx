@@ -15,6 +15,7 @@ export default function ProducerDashboard() {
     queryKey: ["producer-dashboard", user?.id],
     queryFn: () => getProducerDashboardStats(user!.id),
     enabled: !!user?.id,
+    staleTime: 30_000,
   });
 
   const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;

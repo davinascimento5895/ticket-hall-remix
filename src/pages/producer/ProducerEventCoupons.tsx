@@ -39,12 +39,14 @@ export default function ProducerEventCoupons() {
     queryKey: ["producer-event", id],
     queryFn: async () => { const { data } = await supabase.from("events").select("title").eq("id", id).single(); return data; },
     enabled: !!id,
+    staleTime: 30_000,
   });
 
   const { data: coupons, isLoading } = useQuery({
     queryKey: ["event-coupons", id],
     queryFn: () => getEventCoupons(id!),
     enabled: !!id,
+    staleTime: 30_000,
   });
 
   const { data: tiers = [] } = useQuery({
