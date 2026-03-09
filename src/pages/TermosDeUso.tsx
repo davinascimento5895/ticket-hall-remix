@@ -15,6 +15,7 @@ const sections = [
   { id: "ingressos", label: "Entrega e Utilização de Ingressos" },
   { id: "cancelamento", label: "Cancelamento e Reembolso" },
   { id: "transferencia", label: "Transferência de Ingressos" },
+  { id: "revenda", label: "Revenda de Ingressos" },
   { id: "responsabilidades", label: "Responsabilidades" },
   { id: "propriedade", label: "Propriedade Intelectual" },
   { id: "seguranca", label: "Segurança da Plataforma" },
