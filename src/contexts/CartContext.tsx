@@ -95,6 +95,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = useCallback((item: CartItem) => {
     setItems((prev) => {
+      // Block adding items from a different event
+      if (prev.length > 0 && prev[0].eventId !== item.eventId) {
+        // Clear cart and start fresh with new event
+        localStorage.removeItem(CART_KEY);
+        return [item];
+      }
       const existing = prev.find((i) => i.tierId === item.tierId);
       if (existing) {
         return prev.map((i) =>
