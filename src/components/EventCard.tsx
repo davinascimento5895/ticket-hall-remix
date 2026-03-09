@@ -17,7 +17,7 @@ interface EventCardProps {
   className?: string;
 }
 
-export function EventCard({ title, date, city, imageUrl, priceFrom, category, slug, className }: EventCardProps) {
+export function EventCard({ title, date, city, imageUrl, priceFrom, category, slug, eventId, className }: EventCardProps) {
   const Wrapper = slug ? Link : "div";
   const wrapperProps = slug ? { to: `/eventos/${slug}` } : {};
   return (
