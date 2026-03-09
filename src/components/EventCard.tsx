@@ -1,6 +1,7 @@
 import { Calendar, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { FavoriteButton } from "@/components/FavoriteButton";
 import { cn } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/categories";
 
