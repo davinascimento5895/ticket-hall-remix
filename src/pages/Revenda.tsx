@@ -22,6 +22,7 @@ export default function Revenda() {
       search: debouncedSearch || undefined,
       limit: 50,
     }),
+    staleTime: 30_000,
   });
 
   // Group by event
