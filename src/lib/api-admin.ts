@@ -76,6 +76,32 @@ export async function getAdminDashboardStats(dateRange?: { from: string; to: str
     };
   });
 
+  // Group revenue by day
+  const dayMap: Record<string, number> = {};
+  revenueOrders.forEach((o) => {
+    const d = new Date(o.created_at);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    dayMap[key] = (dayMap[key] || 0) + (o.total || 0);
+  });
+  const sortedDays = Object.keys(dayMap).sort();
+  const revenueByDay = sortedDays.map((key) => {
+    const [y, m, day] = key.split("-");
+    const d = new Date(Number(y), Number(m) - 1, Number(day));
+    return {
+      day: d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
+      revenue: dayMap[key],
+    };
+  });
+
+  // Payment methods breakdown
+  const paymentMethodMap: Record<string, { count: number; total: number }> = {};
+  revenueOrders.forEach((o) => {
+    const method = o.payment_method || "outro";
+    if (!paymentMethodMap[method]) paymentMethodMap[method] = { count: 0, total: 0 };
+    paymentMethodMap[method].count++;
+    paymentMethodMap[method].total += o.total || 0;
+  });
+
   return {
     totalGMV,
     platformRevenue,
