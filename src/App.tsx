@@ -21,6 +21,7 @@ import EventDetail from "./pages/EventDetail";
 import Carrinho from "./pages/Carrinho";
 import Checkout from "./pages/Checkout";
 import MeusIngressos from "./pages/MeusIngressos";
+import MeusPedidos from "./pages/MeusPedidos";
 import PublicCheckin from "./pages/PublicCheckin";
 import OrganizerProfile from "./pages/OrganizerProfile";
 import EmbedWidget from "./pages/EmbedWidget";
