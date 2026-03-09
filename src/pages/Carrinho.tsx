@@ -173,9 +173,21 @@ export default function Carrinho() {
                 </div>
               )}
 
-              <Button className="w-full" asChild>
-                <Link to="/checkout">Finalizar compra</Link>
+              <Button className="w-full" onClick={handleCheckout}>
+                Finalizar compra
               </Button>
+
+              <AuthModal
+                open={showAuth}
+                onOpenChange={(open) => {
+                  setShowAuth(open);
+                  // After closing, if user is now logged in, go to checkout
+                  if (!open && user) {
+                    navigate("/checkout");
+                  }
+                }}
+                redirectTo="/checkout"
+              />
             </div>
           </div>
         </div>

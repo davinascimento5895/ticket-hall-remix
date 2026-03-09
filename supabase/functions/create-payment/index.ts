@@ -225,15 +225,6 @@ Deno.serve(async (req) => {
         .update(updateData)
         .eq("id", orderId);
 
-      // If credit card stub, also confirm payment
-      if (paymentMethod === "credit_card") {
-        await supabaseAdmin.rpc("confirm_order_payment", {
-          p_order_id: orderId,
-          p_asaas_payment: `stub_${orderId}`,
-          p_net_value: order.total * 0.98,
-        });
-      }
-
       return new Response(JSON.stringify(stubResult), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
