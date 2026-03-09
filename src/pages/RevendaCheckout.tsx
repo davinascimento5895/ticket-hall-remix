@@ -21,6 +21,7 @@ export default function RevendaCheckout() {
     queryKey: ["resale-listing", listingId],
     queryFn: () => getResaleListingById(listingId!),
     enabled: !!listingId,
+    staleTime: 30_000,
   });
 
   const purchaseMutation = useMutation({

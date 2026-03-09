@@ -187,6 +187,7 @@ export default function Revenda() {
             icon={<Repeat className="h-12 w-12" />}
             title="Nenhum ingresso à venda"
             description={searchQuery ? "Nenhum resultado encontrado. Tente outra busca." : "No momento não há ingressos disponíveis para revenda."}
+            children={undefined}
           />
         )}
       </div>
