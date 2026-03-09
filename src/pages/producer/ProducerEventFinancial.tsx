@@ -19,7 +19,7 @@ export default function ProducerEventFinancial() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select("id, total, platform_fee, net_amount, payment_method, status, payment_status, created_at, profiles:buyer_id(full_name)")
+        .select("id, total, subtotal, discount_amount, platform_fee, net_amount, payment_method, status, payment_status, coupon_id, created_at, profiles:buyer_id(full_name)")
         .eq("event_id", id!)
         .order("created_at", { ascending: false });
       if (error) throw error;
