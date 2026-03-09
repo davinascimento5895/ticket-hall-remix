@@ -1,138 +1,40 @@
 
+## Arquitetura do Mapa de Assentos
 
-## Análise Completa — Inconsistências e Melhorias do Site
+Como você pediu, estruturei a visão completa de como isso funciona no mercado (o modelo complexo) e a solução exata que vamos implementar agora (baseada em setores/áreas e cores).
 
-Analisei o codebase completo, ignorando integrações externas (pagamento, APIs de email, analytics). Aqui está o relatório completo:
-
----
-
-### 1. PERÍODO DO DIA — Já Implementado Corretamente ✓
-
-O sistema **já calcula automaticamente** o período do dia baseado no horário de início do evento:
-
-```typescript
-// src/pages/Busca.tsx (linhas 33-39)
-function getTimeOfDay(dateStr: string): string {
-  const h = getHours(new Date(dateStr));
-  if (h < 6) return "dawn";      // Madrugada (antes das 6h)
-  if (h < 13) return "morning";  // Manhã (6h-13h)
-  if (h < 18) return "afternoon"; // Tarde (13h-18h)
-  return "evening";              // Noite (18h+)
-}
-```
-
-Os filtros de busca (`SearchFilters.tsx`) também usam essa lógica:
-- Manhã: 6h-13h
-- Tarde: 13h-18h  
-- Noite: 18h+
-- Madrugada: antes das 6h
-
-**Status:** Funcionando corretamente. O produtor **não** precisa informar isso manualmente.
+### 1. O Modelo Complexo (Para o Futuro)
+Para criar um sistema onde o cliente clica na cadeira exata (como em cinemas ou teatros grandes), a melhor prática de mercado não usa imagens estáticas, mas sim o seguinte formato:
+*   **Vetorização (SVG):** O mapa é um arquivo vetorial interativo. Cada bolinha (cadeira) é um elemento manipulável no código com um ID único (ex: `seat-A1`).
+*   **Editor Visual (Canvas/Paint):** O produtor usa uma ferramenta (bibliotecas como *Fabric.js* ou *Konva.js*) dentro do painel para desenhar o palco, criar blocos de assentos em grade e atribuir preços a blocos específicos.
+*   **Concorrência (Locks):** Se o Cliente 1 clica no assento `A1`, o sistema usa *WebSockets* (como o Supabase Realtime) para bloquear visualmente e no banco de dados aquele assento por 10 minutos, impedindo que o Cliente 2 compre ao mesmo tempo (evitando *overselling*).
+*   *Por que não fazer agora?* Exige construir um "Figma/Paint" simplificado do zero e gerenciar uma tabela imensa de cadeiras individuais, o que aumentaria absurdamente a complexidade do MVP.
 
 ---
 
-### 2. FUNCIONALIDADES PLACEHOLDER (Prometem mas não entregam)
+### 2. A Solução Atual (Setores por Imagem + Cores)
 
-| Feature | Localização | Problema |
-|---------|-------------|----------|
-| **Mapa de Assentos** | `ProducerEventForm.tsx` + `BookingSeatMap.tsx` | O switch "Mapa de assentos" existe mas o mapa é **100% fake** — gera assentos dummy sem integração real com o BD |
-| **Fila Virtual** | `FilaVirtual.tsx` + `manage-queue` | Funciona parcialmente, mas a lógica de **admissão automática** não está conectada a eventos reais |
-| **Certificados** | `MeusCertificados.tsx` | A página existe mas `generate-certificate` edge function depende de templates não configurados |
-| **Repasses Pendentes** | `AdminFinance.tsx:179` | Mostra "🚧 Em breve" — placeholder honesto |
+Para resolver a necessidade atual de forma realista, intuitiva e sem atrito, vamos adotar a abordagem de **Mapa de Setores Visuais**.
 
----
+**Como vai funcionar no Painel do Produtor:**
+1.  **Ativação e Upload:** Vou reativar o botão de "Mapa de Assentos" no formulário de criação. Ao ativar, aparecerá um campo para o produtor fazer o **upload de uma imagem** (PNG/JPG) com o desenho do evento (mostrando Palco, Pista, Camarote, Setor Azul, etc).
+2.  **Cores nos Ingressos:** Na etapa de criar os Ingressos, adicionarei uma opção de **Cor do Setor no Mapa**. O produtor cria o ingresso "Setor Azul" e escolhe a cor `#0000FF`.
+3.  **Armazenamento Inteligente:** Não precisamos criar colunas novas no banco. Salvaremos a URL da imagem e o mapeamento de cores dentro do campo `seat_map_config` (que já existe e é feito para receber dados flexíveis em JSON).
 
-### 3. INCONSISTÊNCIAS DE DADOS NO ADMIN
+**Como vai funcionar para o Cliente (Checkout):**
+1.  No fluxo de compra, vou remover aquele grid genérico de cadeiras falsas.
+2.  No lugar, o cliente verá a **Imagem do Mapa** carregada pelo produtor em destaque (podendo dar zoom para ver os detalhes).
+3.  Abaixo do mapa (ou na hora de selecionar os ingressos), a lista de categorias mostrará uma bolinha/tag com a **cor correspondente** definida pelo produtor. 
+4.  O cliente olha o mapa, entende que o "Amarelo" é perto do palco e compra o ingresso que tem a tag amarela.
 
-**3.1. Problema com `getAllUsers` — roleMap guarda apenas 1 role por usuário**
+### Plano de Modificações Técnicas
 
-```typescript
-// src/lib/api-admin.ts (linha 127)
-(roles || []).forEach((r: any) => roleMap.set(r.user_id, r.role));
-```
+*   **`src/pages/producer/ProducerEventForm.tsx`**: 
+    *   Habilitar o switch "Permite selecionar assentos".
+    *   Adicionar campo de upload de imagem para o mapa (salvando no storage `event-images` e registrando a URL no `seat_map_config.imageUrl`).
+    *   Na criação/edição de lotes, se o mapa estiver ativo, exibir um color picker simples.
+*   **`src/components/booking/BookingSeatMap.tsx` / `BookingTicketStep.tsx`**: 
+    *   Substituir a lógica atual por um visualizador de imagem interativo.
+    *   Integrar a escolha do ingresso com as cores configuradas, permitindo que a imagem sirva como um guia de referência claro para a seleção das categorias.
 
-Se um usuário tem múltiplos roles (ex: admin + producer + buyer), o Map **sobrescreve** e mostra apenas o último. O usuário "Davi Nascimento" aparece como "buyer" quando na verdade é admin/producer/buyer.
-
-**Fix:** Priorizar roles (admin > producer > buyer) ao mapear:
-
-```typescript
-const rolePriority = { admin: 1, producer: 2, buyer: 3 };
-roles.sort((a, b) => (rolePriority[a.role] || 99) - (rolePriority[b.role] || 99));
-(roles || []).forEach((r: any) => {
-  if (!roleMap.has(r.user_id)) roleMap.set(r.user_id, r.role);
-});
-```
-
----
-
-### 4. DEAD CODE E INCONSISTÊNCIAS FUNCIONAIS
-
-| Arquivo | Issue |
-|---------|-------|
-| `api-admin.ts:182` | `updateProducerStatus()` ainda existe mas a UI de aprovar/rejeitar produtores foi removida |
-| `profiles.producer_status` | Campo ainda existe no BD mas não é usado em nenhum lugar relevante |
-
----
-
-### 5. MAPA DE ASSENTOS — PRECISA DE ATENÇÃO
-
-A feature **existe na UI** mas é um **fake completo**:
-
-1. O produtor ativa "Mapa de assentos" no formulário
-2. O `BookingSeatMap.tsx` gera um grid genérico de 8x12 assentos
-3. **Nenhum assento é salvo no BD** — é gerado dinamicamente toda vez
-4. A seleção de assento **não afeta nada** — não é vinculado ao ticket
-
-**Opções:**
-- A) Remover o toggle e esconder a feature até implementação real
-- B) Marcar como "Em breve" igual ao repasse
-
----
-
-### 6. FILA VIRTUAL — PARCIALMENTE FUNCIONAL
-
-O sistema de fila existe (`virtual_queue` table + `manage-queue` edge function), mas:
-
-1. A página `/fila/:slug` funciona
-2. A admissão automática (`action: "process"`) só roda quando chamada manualmente
-3. Não há trigger/cron que processe a fila automaticamente quando alguém sai
-
-**Funciona para:** Evento manual onde o produtor processa a fila
-**Não funciona para:** Fluxo automatizado tipo shows grandes
-
----
-
-### 7. EVENTO SEM INGRESSOS CADASTRADOS
-
-Se um produtor cria um evento mas não adiciona tiers de ingresso:
-- A página do evento aparece sem preço
-- O botão "Comprar ingresso" não faz nada útil
-
-**Sugestão:** Validar no formulário que pelo menos 1 tier existe antes de publicar.
-
----
-
-## Plano de Correções
-
-### Correções Rápidas (implementar agora):
-
-1. **Fix roleMap no Admin** — Priorizar admin > producer > buyer
-2. **Remover dead code** — `updateProducerStatus()` e funções não usadas
-3. **Mapa de assentos como placeholder** — Desabilitar toggle e mostrar "Em breve"
-4. **Validação de tiers antes de publicar** — Exigir pelo menos 1 ingresso
-
-### Melhorias Futuras (não implementar agora):
-
-- Mapa de assentos real com persistência
-- Certificados funcionais
-- Fila virtual com processamento automático
-
----
-
-### Arquivos a modificar:
-
-- `src/lib/api-admin.ts` — Fix roleMap priority
-- `src/pages/admin/AdminUsers.tsx` — Mostrar badge com role prioritário
-- `src/pages/producer/ProducerEventForm.tsx` — Desabilitar mapa de assentos
-- `src/lib/api-admin.ts` — Remover `updateProducerStatus`
-
+Essa abordagem resolve perfeitamente a divisão por setores (arquibancada, pista, superior) integrando com o sistema de lotes atual, fechando o escopo ponta a ponta.
