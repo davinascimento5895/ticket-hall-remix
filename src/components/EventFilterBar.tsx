@@ -190,17 +190,17 @@ export function EventFilterBar({ filters, onChange }: Props) {
     if (filters.datePreset) {
       return DATE_PRESETS.find((p) => p.value === filters.datePreset)?.label;
     }
-    if (filters.dateRange && filters.dateRange.length > 0) {
-      if (filters.dateRange.length === 1) {
-        return format(filters.dateRange[0], "dd/MM/yyyy");
+    if (filters.dateRange?.from) {
+      if (filters.dateRange.to) {
+        return `${format(filters.dateRange.from, "dd/MM")} – ${format(filters.dateRange.to, "dd/MM")}`;
       }
-      return `${filters.dateRange.length} datas`;
+      return format(filters.dateRange.from, "dd/MM/yyyy");
     }
     return undefined;
   };
 
   const dateLabel = getDateLabel();
-  const hasDateFilter = !!filters.datePreset || (filters.dateRange && filters.dateRange.length > 0);
+  const hasDateFilter = !!filters.datePreset || !!filters.dateRange?.from;
   const hasPriceFilter = !!filters.priceMin || !!filters.priceMax;
 
   const priceLabel = hasPriceFilter
