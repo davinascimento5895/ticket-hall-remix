@@ -53,7 +53,7 @@ export default function Busca() {
       try {
         let q = supabase
           .from("events")
-          .select("id, title, slug, venue_city, category, start_date, cover_image_url, is_featured, views_count")
+          .select("id, title, slug, venue_city, category, start_date, cover_image_url, is_featured, views_count, ticket_tiers(price, original_price)")
           .eq("status", "published")
           .gte("end_date", new Date().toISOString())
           .order("start_date", { ascending: true })
