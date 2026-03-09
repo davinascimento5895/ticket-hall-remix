@@ -16,12 +16,6 @@ import {
 import { NavLink } from "@/components/NavLink";
 import { TicketHallLogo } from "@/components/TicketHallLogo";
 import { LayoutDashboard, CalendarDays, ClipboardList, Settings, LogOut, ExternalLink } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
-import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
-import { NotificationBell } from "@/components/NotificationBell";
-import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const navItems = [
   { title: "Dashboard", url: "/producer/dashboard", icon: LayoutDashboard },
