@@ -29,6 +29,7 @@ export default function ProducerAccountsPayable({ producerId }: { producerId: st
       type: "payable",
       status: statusFilter === "all" ? undefined : statusFilter,
     }),
+    staleTime: 30_000,
   });
 
   const createMut = useMutation({

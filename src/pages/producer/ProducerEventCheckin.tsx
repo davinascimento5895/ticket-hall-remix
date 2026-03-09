@@ -30,12 +30,14 @@ export default function ProducerEventCheckin() {
     queryKey: ["producer-event", id],
     queryFn: () => getProducerEventBasic(id!),
     enabled: !!id,
+    staleTime: 30_000,
   });
 
   const { data: tickets, isLoading } = useQuery({
     queryKey: ["event-tickets-checkin", id],
     queryFn: () => getEventTickets(id!),
     enabled: !!id,
+    staleTime: 30_000,
   });
 
   const checkinMutation = useMutation({

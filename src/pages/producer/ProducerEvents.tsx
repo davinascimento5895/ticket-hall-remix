@@ -30,6 +30,7 @@ export default function ProducerEvents() {
     queryKey: ["producer-events", user?.id],
     queryFn: () => getProducerEvents(user!.id),
     enabled: !!user?.id,
+    staleTime: 30_000,
   });
 
   const statusLabel: Record<string, string> = {
