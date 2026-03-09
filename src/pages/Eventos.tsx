@@ -18,8 +18,9 @@ import { MapPin } from "lucide-react";
 import { EVENT_CATEGORIES, CATEGORY_OPTIONS } from "@/lib/categories";
 
 export default function Eventos() {
+  const [searchParams] = useSearchParams();
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState<string>("");
+  const [category, setCategory] = useState<string>(searchParams.get("categoria") || "");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [gridView, setGridView] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState("");
