@@ -45,7 +45,8 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [step, setStep] = useState<Step>("date");
+  const isMultiDay = event.is_multi_day || new Date(event.start_date).toDateString() !== new Date(event.end_date).toDateString();
+  const [step, setStep] = useState<Step>(isMultiDay ? "date" : "tickets");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date(event.start_date));
   const [selectedTier, setSelectedTier] = useState<any>(null);
   const [quantity, setQuantity] = useState(1);
@@ -62,7 +63,7 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
   const platformFee = Math.round(subtotal * feePercent) / 100;
   const total = Math.max(0, subtotal + platformFee - discount);
 
-  const stepOrder: Step[] = ["date", "tickets", ...(event.has_seat_map ? ["seats" as Step] : []), "summary", "confirmation"];
+  const stepOrder: Step[] = [...(isMultiDay ? ["date" as Step] : []), "tickets", ...(event.has_seat_map ? ["seats" as Step] : []), "summary", "confirmation"];
   const currentStepIndex = stepOrder.indexOf(step);
 
   const handleBack = () => {

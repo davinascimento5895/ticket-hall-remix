@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 import { createEvent, updateEvent, createTicketTier, deleteTicketTier } from "@/lib/api-producer";
 import { getEventBySlug, getEventTiers } from "@/lib/api";
@@ -53,6 +54,8 @@ export default function ProducerEventForm() {
     venue_name: "", venue_address: "", venue_city: "", venue_state: "", venue_zip: "",
     is_online: false, online_url: "",
     minimum_age: 0, max_capacity: 0, cover_image_url: "", status: "draft",
+    has_seat_map: false, has_virtual_queue: false, queue_capacity: 0,
+    has_certificates: false, has_insurance_option: false, insurance_price: 0,
   });
 
   const [tiers, setTiers] = useState<TierDraft[]>([]);
@@ -82,6 +85,12 @@ export default function ProducerEventForm() {
           online_url: data.online_url || "", minimum_age: data.minimum_age || 0,
           max_capacity: data.max_capacity || 0, cover_image_url: data.cover_image_url || "",
           status: data.status || "draft",
+          has_seat_map: data.has_seat_map || false,
+          has_virtual_queue: data.has_virtual_queue || false,
+          queue_capacity: data.queue_capacity || 0,
+          has_certificates: data.has_certificates || false,
+          has_insurance_option: data.has_insurance_option || false,
+          insurance_price: data.insurance_price || 0,
         });
       }
       return data;
@@ -356,6 +365,47 @@ export default function ProducerEventForm() {
               {form.cover_image_url && <img src={form.cover_image_url} alt="Capa" className="w-full h-40 object-cover rounded-lg mb-2" />}
               <Input type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] || null)} />
             </div>
+
+            <Separator className="my-2" />
+            <h4 className="font-medium text-sm text-foreground">Funcionalidades avançadas</h4>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-sm">Mapa de assentos</Label>
+                <p className="text-xs text-muted-foreground">Permite selecionar assentos numerados</p>
+              </div>
+              <Switch checked={form.has_seat_map} onCheckedChange={(v) => updateField("has_seat_map", v)} />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-sm">Fila virtual</Label>
+                <p className="text-xs text-muted-foreground">Ativa fila de espera para alta demanda</p>
+              </div>
+              <Switch checked={form.has_virtual_queue} onCheckedChange={(v) => updateField("has_virtual_queue", v)} />
+            </div>
+            {form.has_virtual_queue && (
+              <div><Label className="text-xs">Capacidade da fila</Label><Input type="number" min={0} value={form.queue_capacity} onChange={(e) => updateField("queue_capacity", parseInt(e.target.value) || 0)} /></div>
+            )}
+
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-sm">Certificados</Label>
+                <p className="text-xs text-muted-foreground">Emitir certificados de participação</p>
+              </div>
+              <Switch checked={form.has_certificates} onCheckedChange={(v) => updateField("has_certificates", v)} />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-sm">Seguro de ingresso</Label>
+                <p className="text-xs text-muted-foreground">Oferecer seguro opcional na compra</p>
+              </div>
+              <Switch checked={form.has_insurance_option} onCheckedChange={(v) => updateField("has_insurance_option", v)} />
+            </div>
+            {form.has_insurance_option && (
+              <div><Label className="text-xs">Preço do seguro (R$)</Label><Input type="number" min={0} step={0.01} value={form.insurance_price} onChange={(e) => updateField("insurance_price", parseFloat(e.target.value) || 0)} /></div>
+            )}
           </CardContent>
         </Card>
       )}

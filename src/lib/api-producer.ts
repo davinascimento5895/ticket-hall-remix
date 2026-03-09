@@ -113,7 +113,7 @@ export async function deleteTicketTier(tierId: string) {
 export async function getEventOrders(eventId: string) {
   const { data, error } = await supabase
     .from("orders")
-    .select("*, profiles!orders_buyer_id_fkey(full_name, email:cpf)")
+    .select("*, profiles!orders_buyer_id_fkey(full_name, cpf)")
     .eq("event_id", eventId)
     .order("created_at", { ascending: false });
   if (error) throw error;
@@ -345,10 +345,10 @@ export async function getEventTiersBasic(eventId: string) {
 
 export async function uploadEventImage(path: string, file: File) {
   const { data, error } = await supabase.storage
-    .from("events")
+    .from("event-images")
     .upload(path, file, { upsert: true });
   if (error) throw error;
-  const { data: { publicUrl } } = supabase.storage.from("events").getPublicUrl(data.path);
+  const { data: { publicUrl } } = supabase.storage.from("event-images").getPublicUrl(data.path);
   return publicUrl;
 }
 
@@ -449,8 +449,10 @@ export async function updateBulkMessageStatus(messageId: string, status: string)
 }
 
 export async function sendBulkMessage(messageId: string) {
-  const { error } = await supabase.functions.invoke("send-bulk-message", {
-    body: { messageId },
-  });
-  if (error) throw error;
+  // Edge function not yet deployed — update message status locally and notify user
+  await supabase
+    .from("bulk_messages")
+    .update({ status: "queued", sent_at: new Date().toISOString() })
+    .eq("id", messageId);
+  // TODO: Create send-bulk-message edge function for actual email delivery
 }

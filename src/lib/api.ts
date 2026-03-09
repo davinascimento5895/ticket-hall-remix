@@ -33,6 +33,7 @@ export async function getEvents(filters?: {
     .from("events")
     .select("*")
     .eq("status", "published")
+    .gte("end_date", new Date().toISOString())
     .order("start_date", { ascending: true });
 
   if (filters?.category) query = query.eq("category", filters.category);
@@ -46,12 +47,13 @@ export async function getEvents(filters?: {
   return data;
 }
 
-/** Get event by slug */
+/** Get event by slug (published only for public access) */
 export async function getEventBySlug(slug: string) {
   const { data, error } = await supabase
     .from("events")
     .select("*")
     .eq("slug", slug)
+    .eq("status", "published")
     .single();
   if (error) throw error;
   return data;

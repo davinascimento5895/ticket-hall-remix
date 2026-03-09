@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, MapPin, Clock, Share2, Users, ArrowLeft, Lock, Package, Star } from "lucide-react";
+import { Calendar, MapPin, Clock, Share2, Users, ArrowLeft, Lock, Package } from "lucide-react";
+import { getCategoryLabel } from "@/lib/categories";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { TicketTierCard } from "@/components/TicketTierCard";
@@ -192,7 +193,7 @@ export default function EventDetail() {
               </Link>
               {event.category && (
                 <span className="ml-3 inline-block px-2.5 py-1 text-xs font-medium rounded-full bg-primary/90 text-primary-foreground">
-                  {event.category}
+                  {getCategoryLabel(event.category)}
                 </span>
               )}
             </div>

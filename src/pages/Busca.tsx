@@ -32,10 +32,9 @@ interface SearchResultEvent {
 
 function getTimeOfDay(dateStr: string): string {
   const h = getHours(new Date(dateStr));
-  if (h >= 5 && h < 12) return "morning";
-  if (h >= 12 && h < 18) return "afternoon";
-  if (h >= 18 && h < 24) return "evening";
-  return "dawn";
+  if (h < 13) return "morning";
+  if (h < 18) return "afternoon";
+  return "evening";
 }
 
 export default function Busca() {
