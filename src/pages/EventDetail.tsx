@@ -69,6 +69,20 @@ export default function EventDetail() {
     enabled: !!event?.id,
   });
 
+  // Fetch producer profile
+  const { data: producer } = useQuery({
+    queryKey: ["producer-profile", event?.producer_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, full_name, organizer_slug, organizer_logo_url, organizer_bio")
+        .eq("id", event!.producer_id)
+        .single();
+      return data;
+    },
+    enabled: !!event?.producer_id,
+  });
+
   const { addItem } = useCart();
 
   useRealtimeSubscription({
