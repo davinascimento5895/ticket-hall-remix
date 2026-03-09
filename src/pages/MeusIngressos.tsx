@@ -62,14 +62,20 @@ export default function MeusIngressos() {
 
   // Categorize tickets
   const categorizedTickets = useMemo(() => {
-    if (!tickets) return { active: [], pending: [], cancelled: [], past: [] };
+    if (!tickets) return { active: [], pending: [], cancelled: [], past: [], archived: [] };
 
     const active: any[] = [];
     const pending: any[] = [];
     const cancelled: any[] = [];
     const past: any[] = [];
+    const archived: any[] = [];
 
     for (const ticket of tickets) {
+      if (archivedIds.includes(ticket.id)) {
+        archived.push(ticket);
+        continue;
+      }
+
       const eventDate = ticket.events?.start_date ? new Date(ticket.events.start_date) : null;
       const isPastEvent = eventDate && eventDate < now;
 
@@ -86,8 +92,8 @@ export default function MeusIngressos() {
       }
     }
 
-    return { active, pending, cancelled, past };
-  }, [tickets, now]);
+    return { active, pending, cancelled, past, archived };
+  }, [tickets, now, archivedIds]);
 
   // Filter by search query
   const filteredTickets = useMemo(() => {
