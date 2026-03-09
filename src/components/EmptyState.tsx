@@ -12,7 +12,8 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({ icon, title, description, actionLabel, onAction, children }: EmptyStateProps) {
-  const isComponent = typeof icon === "function";
+  // Support both <Icon /> JSX elements and Icon component references (including forwardRef)
+  const isComponent = typeof icon === "function" || (typeof icon === "object" && icon !== null && "$$typeof" in icon && "render" in (icon as any));
   const IconComponent = isComponent ? (icon as ComponentType<LucideProps>) : null;
 
   return (
