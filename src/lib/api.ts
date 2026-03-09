@@ -33,6 +33,7 @@ export async function getEvents(filters?: {
     .from("events")
     .select("*")
     .eq("status", "published")
+    .gte("end_date", new Date().toISOString())
     .order("start_date", { ascending: true });
 
   if (filters?.category) query = query.eq("category", filters.category);
