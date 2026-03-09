@@ -25,11 +25,20 @@ export function Navbar() {
   const [authOpen, setAuthOpen] = useState(false);
   const [authTab, setAuthTab] = useState<"login" | "register">("login");
   const [navSearch, setNavSearch] = useState("");
+  const [producerModalOpen, setProducerModalOpen] = useState(false);
   const { user, profile, role, signOut } = useAuth();
   const { itemCount } = useCart();
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const handleCreateEvent = () => {
+    if (role === "producer") {
+      navigate("/producer/events/new");
+    } else {
+      setProducerModalOpen(true);
+    }
+  };
 
   const isAdminOrProducer = location.pathname.startsWith("/admin") || location.pathname.startsWith("/producer");
   const isLandingPage = location.pathname === "/";
