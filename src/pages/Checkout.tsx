@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { SEOHead } from "@/components/SEOHead";
-import { useNavigate, Link } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Check } from "lucide-react";
 import { CountdownTimer } from "@/components/CountdownTimer";
