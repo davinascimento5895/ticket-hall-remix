@@ -210,7 +210,7 @@ export async function getPendingProducers() {
 
 export async function getProducerDetail(producerId: string) {
   const [profileRes, eventsRes] = await Promise.all([
-    supabase.from("profiles").select("id, full_name, phone, created_at").eq("id", producerId).single(),
+    supabase.from("profiles").select("id, full_name, phone, created_at, producer_status").eq("id", producerId).single(),
     supabase.from("events").select("id, title, status, start_date, created_at").eq("producer_id", producerId).order("created_at", { ascending: false }),
   ]);
   if (profileRes.error) throw profileRes.error;
