@@ -31,8 +31,8 @@ export default function Carrinho() {
         setAppliedCouponId(coupon.id);
         toast({ title: "Cupom aplicado!", description: `Desconto de R$ ${discountAmount.toFixed(2).replace(".", ",")}` });
       }
-    } catch {
-      toast({ title: "Cupom inválido", description: "Verifique o código e tente novamente.", variant: "destructive" });
+    } catch (err: any) {
+      toast({ title: "Cupom inválido", description: err?.message || "Verifique o código e tente novamente.", variant: "destructive" });
       setDiscount(0);
       setAppliedCouponId(null);
     } finally {
