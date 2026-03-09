@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation, useSearchParams } from "react-router-dom";
-import { Menu, X, User, LogOut, ShoppingBag } from "lucide-react";
+import { Link, useLocation, useSearchParams, useNavigate } from "react-router-dom";
+import { Menu, X, User, LogOut, ShoppingBag, Search } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { TicketHallLogo } from "@/components/TicketHallLogo";
 import { AuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/contexts/AuthContext";
