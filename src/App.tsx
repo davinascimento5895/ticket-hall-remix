@@ -146,6 +146,9 @@ const App = () => {
                 <Route path="events/:id/coupons" element={<ProducerEventCoupons />} />
                 <Route path="events/:id/affiliates" element={<ProducerEventAffiliates />} />
                 <Route path="events/:id/messages" element={<ProducerEventMessages />} />
+                <Route path="interest-lists" element={<ProducerInterestLists />} />
+                <Route path="interest-lists/new" element={<ProducerInterestListForm />} />
+                <Route path="interest-lists/:id/edit" element={<ProducerInterestListForm />} />
                 <Route path="settings" element={<ProducerSettings />} />
               </Route>
 
