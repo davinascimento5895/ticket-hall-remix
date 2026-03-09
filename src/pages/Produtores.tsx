@@ -1,7 +1,12 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { CalculadoraComparador } from "@/components/CalculadoraComparador";
 import { TabelaComparativo } from "@/components/TabelaComparativo";
+import { AuthModal } from "@/components/AuthModal";
+import { BecomeProducerModal } from "@/components/BecomeProducerModal";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Layers,
   QrCode,
@@ -17,6 +22,7 @@ import {
   Lock,
   CreditCard,
   CheckCircle2,
+  Clock,
 } from "lucide-react";
 import {
   Accordion,
@@ -146,8 +152,62 @@ const steps = [
 ];
 
 export default function Produtores() {
+  const { user, role, profile } = useAuth();
+  const navigate = useNavigate();
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [producerModalOpen, setProducerModalOpen] = useState(false);
+
+  const handleCTA = () => {
+    // Already a producer — go to dashboard
+    if (role === "producer") {
+      navigate("/producer/dashboard");
+      return;
+    }
+
+    // Not logged in — open auth modal
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+
+    // Logged in but not producer — open become producer modal
+    setProducerModalOpen(true);
+  };
+
+  // Determine button label/state
+  const getButtonContent = () => {
+    if (role === "producer") {
+      return { label: "Acessar painel", icon: ArrowRight };
+    }
+    if (profile?.producer_status === "pending") {
+      return { label: "Aguardando aprovação", icon: Clock, disabled: true };
+    }
+    return { label: "Criar minha conta de produtor", icon: null };
+  };
+
+  const buttonContent = getButtonContent();
+
   return (
     <>
+      {/* Auth Modal */}
+      <AuthModal
+        open={authModalOpen}
+        onOpenChange={(open) => {
+          setAuthModalOpen(open);
+          // After successful auth, open producer modal
+          if (!open && user && role !== "producer") {
+            setTimeout(() => setProducerModalOpen(true), 300);
+          }
+        }}
+        defaultTab="register"
+      />
+
+      {/* Become Producer Modal */}
+      <BecomeProducerModal
+        open={producerModalOpen}
+        onOpenChange={setProducerModalOpen}
+      />
+
       {/* HERO */}
       <section className="relative min-h-[80vh] flex items-center bg-hero-gradient overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
@@ -165,8 +225,14 @@ export default function Produtores() {
               <span className="text-accent font-bold text-xl">7%</span>. Simples, transparente, justo.
             </motion.p>
             <motion.div initial="hidden" animate="visible" custom={2} variants={fadeUp}>
-              <Button variant="hero" size="xl">
-                Criar minha conta de produtor
+              <Button
+                variant="hero"
+                size="xl"
+                onClick={handleCTA}
+                disabled={buttonContent.disabled}
+              >
+                {buttonContent.label}
+                {buttonContent.icon && <buttonContent.icon className="h-5 w-5 ml-2" />}
               </Button>
             </motion.div>
           </div>
@@ -370,8 +436,14 @@ export default function Produtores() {
             Pronto para vender com a menor taxa do Brasil?
           </h2>
           <p className="text-muted-foreground text-lg">Comece grátis agora. Sem mensalidades, sem surpresas.</p>
-          <Button variant="hero" size="xl">
-            Começar a vender grátis <ArrowRight className="h-5 w-5 ml-2" />
+          <Button
+            variant="hero"
+            size="xl"
+            onClick={handleCTA}
+            disabled={buttonContent.disabled}
+          >
+            {role === "producer" ? "Acessar painel" : "Começar a vender grátis"}
+            <ArrowRight className="h-5 w-5 ml-2" />
           </Button>
         </div>
       </section>
