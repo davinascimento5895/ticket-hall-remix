@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Search, Ticket, User, ShoppingBag } from "lucide-react";
+import { LayoutGrid, Search, Ticket, User, ShoppingBag } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { cn } from "@/lib/utils";
@@ -13,20 +13,19 @@ interface NavItem {
 }
 
 const baseNavItems: NavItem[] = [
-  { id: "home", href: "/", icon: Home, label: "Início" },
-  { id: "events", href: "/eventos", icon: Search, label: "Eventos" },
+  { id: "catalog", href: "/eventos", icon: LayoutGrid, label: "Catálogo" },
+  { id: "search", href: "/busca", icon: Search, label: "Pesquisar" },
   { id: "cart", href: "/carrinho", icon: ShoppingBag, label: "Carrinho", isCart: true },
   { id: "tickets", href: "/meus-ingressos", icon: Ticket, label: "Ingressos" },
   { id: "profile", href: "/meu-perfil", icon: User, label: "Perfil" },
 ];
 
 function getActiveId(pathname: string): string | null {
-  // Order matters: more specific paths first
-  if (pathname === "/") return "home";
+  if (pathname.startsWith("/busca")) return "search";
   if (pathname.startsWith("/meus-ingressos") || pathname.startsWith("/meus-certificados")) return "tickets";
   if (pathname.startsWith("/carrinho")) return "cart";
-  if (pathname.startsWith("/eventos") || pathname.startsWith("/evento/") || pathname.startsWith("/busca") || pathname.startsWith("/cidades")) return "events";
-  if (pathname.startsWith("/notificacoes") || pathname.startsWith("/meu-perfil")) return "profile";
+  if (pathname.startsWith("/meu-perfil") || pathname.startsWith("/notificacoes")) return "profile";
+  if (pathname.startsWith("/eventos") || pathname.startsWith("/evento/") || pathname.startsWith("/cidades")) return "catalog";
   return null;
 }
 
@@ -45,10 +44,8 @@ export function MobileBottomNav() {
     return null;
   }
 
-  // Determine profile destination based on role
-  const profileHref = !user
-    ? "/?login=true"
-    : "/meu-perfil";
+  // Determine profile destination based on auth
+  const profileHref = !user ? "/?login=true" : "/meu-perfil";
 
   const navItems = baseNavItems.map((item) =>
     item.id === "profile" ? { ...item, href: profileHref } : item

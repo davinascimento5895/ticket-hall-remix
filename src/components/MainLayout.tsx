@@ -10,6 +10,10 @@ const loggedInPaths = [
   "/carrinho",
   "/notificacoes",
   "/meu-perfil",
+  "/eventos",
+  "/busca",
+  "/cidades",
+  "/evento/",
 ];
 
 export function MainLayout() {

@@ -99,7 +99,7 @@ export default function Index() {
     const redirectMap: Record<string, string> = {
       admin: "/admin/dashboard",
       producer: "/producer/dashboard",
-      buyer: "/meus-ingressos",
+      buyer: "/eventos",
     };
     return <Navigate to={redirectMap[role] || "/meus-ingressos"} replace />;
   }
