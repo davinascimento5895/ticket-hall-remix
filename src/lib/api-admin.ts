@@ -13,7 +13,7 @@ export async function getAdminDashboardStats(dateRange?: { from: string; to: str
   let ordersCountQuery = supabase.from("orders").select("id", { count: "exact", head: true });
   let eventStatusQuery = supabase.from("events").select("status");
   let orderStatusQuery = supabase.from("orders").select("status");
-  let revenueQuery = supabase.from("orders").select("total, created_at").eq("status", "paid");
+  let revenueQuery = supabase.from("orders").select("total, created_at, payment_method").eq("status", "paid");
 
   if (fromDate) {
     eventsQuery = eventsQuery.gte("created_at", fromDate);
