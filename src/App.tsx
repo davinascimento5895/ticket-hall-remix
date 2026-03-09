@@ -66,6 +66,8 @@ const ProducerEventMessages = lazy(() => import("./pages/producer/ProducerEventM
 const ProducerInterestLists = lazy(() => import("./pages/producer/ProducerInterestLists"));
 const ProducerInterestListForm = lazy(() => import("./pages/producer/ProducerInterestListForm"));
 const InterestListPublic = lazy(() => import("./pages/InterestListPublic"));
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+const FAQ = lazy(() => import("./pages/FAQ"));
 
 // Admin pages — lazy loaded
 const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
@@ -104,35 +106,37 @@ const App = () => {
                 <Route path="/produtores" element={<Produtores />} />
                 <Route path="/eventos" element={<Eventos />} />
                 <Route path="/eventos/:slug" element={<EventDetail />} />
-                <Route path="/carrinho" element={<Carrinho />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/meus-ingressos" element={<MeusIngressos />} />
+              <Route path="/carrinho" element={<Carrinho />} />
+                <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+                <Route path="/meus-ingressos" element={<ProtectedRoute><MeusIngressos /></ProtectedRoute>} />
                 <Route path="/organizador/:slug" element={<OrganizerProfile />} />
-                <Route path="/minha-conta/privacidade" element={<Privacidade />} />
+                <Route path="/minha-conta/privacidade" element={<ProtectedRoute><Privacidade /></ProtectedRoute>} />
                 <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
                 <Route path="/termos-de-uso" element={<TermosDeUso />} />
-                <Route path="/meus-certificados" element={<MeusCertificados />} />
+                <Route path="/meus-certificados" element={<ProtectedRoute><MeusCertificados /></ProtectedRoute>} />
                 <Route path="/fila/:slug" element={<FilaVirtual />} />
                 <Route path="/changelog" element={<Changelog />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/blog/:slug" element={<BlogPost />} />
                 <Route path="/cidades" element={<Cidades />} />
+                <Route path="/faq" element={<FAQ />} />
                 <Route path="/busca" element={<Busca />} />
                 <Route path="/notificacoes" element={<NotificacoesConfig />} />
-                <Route path="/meu-perfil" element={<MeuPerfil />} />
-                <Route path="/meu-perfil/editar" element={<EditarPerfil />} />
-                <Route path="/meu-perfil/alterar-senha" element={<AlterarSenha />} />
-                <Route path="/meu-perfil/cidade" element={<PerfilCidade />} />
-                <Route path="/meu-perfil/pagamento" element={<MetodosPagamento />} />
-                <Route path="/meu-perfil/notificacoes" element={<PerfilNotificacoes />} />
-                <Route path="/meu-perfil/suporte" element={<PerfilSuporte />} />
-                <Route path="/favoritos" element={<Favoritos />} />
+                <Route path="/meu-perfil" element={<ProtectedRoute><MeuPerfil /></ProtectedRoute>} />
+                <Route path="/meu-perfil/editar" element={<ProtectedRoute><EditarPerfil /></ProtectedRoute>} />
+                <Route path="/meu-perfil/alterar-senha" element={<ProtectedRoute><AlterarSenha /></ProtectedRoute>} />
+                <Route path="/meu-perfil/cidade" element={<ProtectedRoute><PerfilCidade /></ProtectedRoute>} />
+                <Route path="/meu-perfil/pagamento" element={<ProtectedRoute><MetodosPagamento /></ProtectedRoute>} />
+                <Route path="/meu-perfil/notificacoes" element={<ProtectedRoute><PerfilNotificacoes /></ProtectedRoute>} />
+                <Route path="/meu-perfil/suporte" element={<ProtectedRoute><PerfilSuporte /></ProtectedRoute>} />
+                <Route path="/favoritos" element={<ProtectedRoute><Favoritos /></ProtectedRoute>} />
               </Route>
 
               {/* Standalone pages (no shared Navbar/Footer) */}
               <Route path="/checkin/:accessCode" element={<PublicCheckin />} />
               <Route path="/embed" element={<EmbedWidget />} />
               <Route path="/lista/:slug" element={<InterestListPublic />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
 
               {/* Producer Panel */}
               <Route
