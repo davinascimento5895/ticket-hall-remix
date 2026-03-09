@@ -62,14 +62,13 @@ export default function MeusIngressos() {
 
       if (ticket.status === "cancelled" || ticket.status === "refunded") {
         cancelled.push(ticket);
-      } else if (ticket.status === "pending") {
+      } else if (ticket.status === "pending" || ticket.status === "reserved") {
         pending.push(ticket);
       } else if (isPastEvent || ticket.status === "used") {
         past.push(ticket);
       } else if (ticket.status === "active") {
         active.push(ticket);
       } else {
-        // Default to active for any other status
         active.push(ticket);
       }
     }

@@ -157,14 +157,17 @@ export default function Checkout() {
         await supabase.from("checkout_answers").insert(answersToSave);
       }
 
-      // Free order: activate tickets and go straight to confirmation
+      // Free order: use confirm_order_payment RPC to properly handle sold counts
       if (isFreeOrder) {
-        await supabase.from("tickets").update({ status: "active" }).eq("order_id", order.id).eq("status", "reserved");
-        // Update sold counts
-        for (const item of ticketItems) {
-          await supabase.from("ticket_tiers").update({
-            quantity_sold: item.quantity, // Will be handled by RPC in real flow, but for free we do it manually
-          }).eq("id", item.tierId);
+        const { data: confirmed, error: confirmErr } = await supabase.rpc("confirm_order_payment", {
+          p_order_id: order.id,
+          p_asaas_payment: "free",
+          p_net_value: 0,
+        });
+        if (confirmErr) {
+          console.error("confirm_order_payment error:", confirmErr);
+          // Fallback: manually activate tickets
+          await supabase.from("tickets").update({ status: "active" }).eq("order_id", order.id).eq("status", "reserved");
         }
         toast({ title: "Inscrição confirmada!", description: "Seus ingressos foram gerados com sucesso." });
         clearCart();
