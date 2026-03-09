@@ -139,7 +139,8 @@ const App = () => {
                 <Route path="/meu-perfil/suporte" element={<ProtectedRoute><PerfilSuporte /></ProtectedRoute>} />
                 <Route path="/favoritos" element={<ProtectedRoute><Favoritos /></ProtectedRoute>} />
                 <Route path="/revenda" element={<Revenda />} />
-                <Route path="/revenda/:listingId" element={<ProtectedRoute><RevendaCheckout /></ProtectedRoute>} />
+                <Route path="/revenda/:listingId" element={<RevendaCheckout />} />
+                <Route path="/revenda/:listingId/sucesso" element={<ProtectedRoute><RevendaSucesso /></ProtectedRoute>} />
               </Route>
 
               {/* Standalone pages (no shared Navbar/Footer) */}
