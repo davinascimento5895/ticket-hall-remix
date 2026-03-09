@@ -1,145 +1,123 @@
-# TicketHall — Plano Mestre de Redesign & Implementação
 
-## Documento de Referência
-Business Case & Product Design Analysis completo fornecido pelo cliente em 2026-03-06.
 
----
+# Varredura Completa — TicketHall
 
-## Design System Alvo (Novo)
-- **Tema**: Dark-first (`#0d0d0d` base, `#1a1a1a`/`#1f1f1f`/`#2c2c2c` superfícies)
-- **Cor principal (ação)**: Laranja `#ff472d` — CTAs, badges, ícones ativos, links, bordas de foco
-- **Cor secundária (gamificação)**: Verde-lima `#bad900` — pontos, sucesso, confirmações
-- **Texto principal**: Branco `#ffffff`
-- **Texto secundário**: Cinza claro `#9ca3af`
-- **Texto terciário (inativo)**: Cinza médio `#6b7280`
-- **Tipografia**: Sora (display) + Inter (body) — já configurado
-- **Border radius**: ~12-16px para cards, ~10px para inputs
-- **Componentes**: Chips/Pills, Bottom Sheets, Cards com gradiente escuro, Toggle switches
+## PARTE 1: Bugs Críticos (Bloqueia Funcionalidade)
 
----
+### 1.1 Trigger `on_auth_user_created` NÃO EXISTE
+A function `handle_new_user()` existe, mas o trigger no `auth.users` **não foi aplicado** (Cloud não permite triggers em schemas reservados como `auth`). Isso significa que **nenhum novo usuário terá profile nem role `buyer` criados automaticamente**. O AuthContext consulta `profiles` e `user_roles` — sem eles, o usuário fica sem role/profile.
 
-## Gap Analysis — Existente vs Documento de Design
+**Correção:** Mover a lógica para o lado do cliente. Após signup/login, verificar se `profiles` tem registro para o `user.id` e, se não, inserir profile + buyer role via edge function (usando service role key). Alternativa: usar a `become-producer` edge function como modelo e criar `ensure-user-profile`.
 
-### ✅ JÁ IMPLEMENTADO
-- Catálogo de eventos com filtros por categoria
-- Detalhe do evento com descrição, data, local
-- Fluxo de compra (carrinho → checkout → pagamento)
-- Meus Ingressos (lista de ingressos ativos)
-- QR Code por ingresso
-- Transferência de ingresso
-- Sistema de reembolso (RefundDialog)
-- Cupons de desconto
-- Fila virtual
-- Certificados pós-evento
-- Painel do produtor completo
-- Painel admin completo
-- Autenticação (login/registro com email)
-- Notificações (NotificationBell)
-- Blog
-- Página do organizador
-- LGPD/Privacidade
-- Bottom navigation mobile
-- Tema claro/escuro com transição animada
+### 1.2 ProducerSettings "Bancário" salva em campos inexistentes
+A aba "Bancário" do `ProducerSettings` tenta salvar `bank_pix_key`, `bank_name`, `bank_agency`, `bank_account` na tabela `profiles` — esses campos **não existem**. A tabela `bank_accounts` foi criada exatamente para isso, mas o Settings antigo não a usa.
 
-### ❌ FEATURES FALTANTES
-1. **Onboarding** — 2-3 telas de boas-vindas com skip
-2. **Detecção automática de cidade** — GPS
-3. **Seletor de datas horizontal** — Barra scrollável no catálogo
-4. **Top-10 / Ranking** — Seção editorial com badges numerados
-5. **Filtro avançado (Bottom Sheet)** — Sort, range slider, gênero, horário
-6. **Grid view toggle** — Lista/grade no catálogo
-7. **Rating/Avaliação** — Estrelas + reviews de usuários (tabela + UI)
-8. **Random/Discovery** — Evento aleatório
-9. **Cast/Elenco** — Seção de artistas no detalhe
-10. **Mapa de assentos** — Seleção visual interativa
-11. **Sistema de pontos** — Fidelidade no checkout
-12. **Favoritos** — Salvar eventos (tabela + UI)
-13. **Ingressos arquivados** — Ativo/Arquivado com visual P&B
-14. **Chat de suporte** — Bot + quick replies in-app
-15. **Perfil completo** — Editar perfil, cidade, pagamentos, notificações
-16. **Login OTP** — Código por email/telefone
-17. **Login social** — Google, Apple
-18. **Compartilhamento** — Share via link
-19. **Notificações configuráveis** — SMS/Push/Email toggles
-20. **Seções editoriais** — "Novo", "Semana", curadoria
+**Correção:** Substituir a aba "Bancário" no ProducerSettings para usar a tabela `bank_accounts` (como já faz `ProducerBankAccounts`), ou redirecionar para `/producer/financial` tab "bank".
 
-### 🔄 PRECISA REDESIGN VISUAL
-- Todas as páginas públicas (landing, catálogo, detalhe, checkout)
-- Navbar → Dark-first com laranja
-- Bottom Nav → Ícone ativo laranja
-- Cards de evento → Fundo #1f1f1f, gradiente, badges
-- Botões → Fill laranja, outline cinza
-- Inputs → Fundo #1f1f1f, borda #3a3a3a
-- Chips → Ativo laranja, inativo borda cinza
-- Login/Registro → Redesign completo
-- Meus Ingressos → Cards com barcode, ações
-- Painéis Producer/Admin → Dark-first
+### 1.3 Admin Settings não está registrado no Router
+`AdminSettings` existe como componente mas **não tem rota** no `App.tsx`. Não pode ser acessado.
+
+**Correção:** Adicionar `<Route path="settings" element={<AdminSettings />} />` dentro do bloco admin.
 
 ---
 
-## Fases de Implementação
+## PARTE 2: Integrações Incompletas
 
-### Fase 1 — Design System Foundation
-- [ ] Atualizar index.css (CSS variables nova paleta)
-- [ ] Atualizar tailwind.config.ts
-- [ ] Atualizar componentes base (Button, Input, Card, Badge, Chips)
-- [ ] Navbar dark-first com laranja
-- [ ] Bottom Nav com laranja
-- [ ] AuthModal redesign dark-first
+### 2.1 Guestlist e Orders ausentes do Event Panel
+As tabs Guestlist e Orders existem como páginas legacy (`/producer/events/:id/guestlist`, `/producer/events/:id/orders`) mas **não estão no EventPanel**. O produtor não tem acesso direto a elas pelo painel unificado.
 
-### Fase 2 — Páginas Públicas (Buyer UX)
-- [ ] Landing page redesign
-- [ ] Catálogo (seletor datas, chips, banner, Top-10)
-- [ ] Detalhe do evento (reviews, cast, CTA fixo)
-- [ ] Meus Ingressos (ativo/arquivado, barcode, reembolso)
-- [ ] Checkout redesign
+**Correção:** Adicionar tabs "Pedidos" e "Guest List" ao `ProducerEventPanel` TABS array e registrar os sub-routes correspondentes.
 
-### Fase 3 — Features Novas (Prioridade Alta)
-- [ ] Favoritos (tabela + UI)
-- [ ] Rating/Reviews (tabela + UI)
-- [ ] Filtro avançado (Bottom Sheet com Drawer)
-- [ ] Grid view toggle
-- [ ] Compartilhamento social
-- [ ] Perfil completo do usuário
-- [ ] Ingressos arquivados
+### 2.2 Bulk Messages não envia e-mails
+O `sendBulkMessage` em `api-producer.ts` apenas atualiza o status para "queued" localmente. Não existe edge function `send-bulk-message`. O toast já avisa "será disponibilizado em breve", mas precisa ser implementado.
 
-### Fase 4 — Features Avançadas
-- [ ] Random/Discovery
-- [ ] Sistema de pontos/fidelidade
-- [ ] Chat de suporte in-app
-- [ ] Onboarding (2-3 telas)
-- [ ] Detecção de cidade
-- [ ] Notificações configuráveis
-- [ ] Login OTP + Social
+**Correção:** Criar edge function `send-bulk-message` que lê destinatários da tabela `tickets` (por `event_id` + filtro de tier) e envia e-mails. Alternativamente, integrar com Resend/Mailgun — precisa de API key.
 
-### Fase 5 — Painéis (Producer/Admin)
-- [ ] Redesign dark-first dos dashboards
-- [ ] Consistência com novo design system
+### 2.3 Coupons: formulário de criação incompleto
+O formulário de criação de cupons (`ProducerEventCoupons`) só permite definir código, tipo de desconto, valor e limite de usos. **Faltam:** `valid_from`, `valid_until`, `min_order_value`, `applicable_tier_ids` — campos que o banco suporta e o carrinho valida.
+
+**Correção:** Expandir o formulário para incluir data de início/fim, valor mínimo do pedido e seletor de tiers aplicáveis.
+
+### 2.4 Affiliates (tabela legacy) ainda existe e é referenciada
+A tabela `affiliates` ainda existe e `trackAffiliateClick` em `api.ts` escreve nela. Mas o novo sistema usa `promoter_events`. O `EventDetail` chama ambos (`trackAffiliateClick` + `setTrackingCode`), criando dados duplicados.
+
+**Correção:** Remover chamada a `trackAffiliateClick` do `EventDetail`, atualizar para incrementar `clicks` em `promoter_events` (buscar pelo `tracking_code`). A tabela `affiliates` pode ser mantida como legacy read-only.
 
 ---
 
-## Infraestrutura Backend (Plano Anterior — Mantido)
+## PARTE 3: Gaps de UX/UI
 
-### Bloco 1 — Schema & SQL Functions
-- Funções atômicas: reserve_tickets, confirm_order_payment, apply_coupon
-- Índices de performance
+### 3.1 Checkout "Voltar" do Step 1 recria order
+Se o usuário clica "Voltar" no passo de pagamento (step 1 → step 0), o `handleCreateOrder` será chamado novamente ao avançar, criando um **novo pedido** sem cancelar o anterior. As reservas do pedido anterior ficam presas até expirar.
 
-### Bloco 2 — Edge Functions de Pagamento (Asaas)
-- create-payment, asaas-webhook, create-producer-account
-- Secrets: ASAAS_API_KEY, ASAAS_BASE_URL, QR_SECRET
+**Correção:** Se `orderId` já existe, pular a criação do order ao avançar novamente. Adicionar check `if (orderId) { setStep(1); return; }`.
 
-### Bloco 3 — Checkout Real
-- Conectar UI ao create-payment
-- PIX, Cartão, Boleto
+### 3.2 Redirecionamento após reset de senha aponta para rota inexistente
+O `handleForgotPassword` redireciona para `/reset-password`, mas essa rota não existe no router. Deveria ser `/meu-perfil/alterar-senha` ou um handler em `/auth/callback`.
 
-### Bloco 4 — QR Codes Seguros + Check-in
-- JWT assinado, validate-checkin
+**Correção:** Mudar redirectTo para `${window.location.origin}/meu-perfil/alterar-senha` ou criar rota `/reset-password`.
 
-### Bloco 5 — Transferência + Cancelamento
-- transfer-ticket, cancel-event
+### 3.3 Falta confirmação antes de deletar (eventos, cupons, promoters)
+Deletar promoters, cupons, e guest list entries não pede confirmação. Um clique acidental exclui permanentemente.
 
-### Bloco 6 — Cron Jobs
-- cleanup_expired_reservations, event-reminders
+**Correção:** Adicionar `AlertDialog` de confirmação antes de mutações de delete.
 
-### Bloco 7 — Segurança & LGPD
-- Rate limiting, consents, data requests
+### 3.4 Mobile: Event Panel tabs em dropdown oculta contexto
+O EventPanel mobile usa dropdown para navegar entre tabs. Funciona, mas perde contexto visual. Alternativa: horizontal scroll com pills (já usada no ProducerEventPanel desktop).
+
+---
+
+## PARTE 4: Dados e Integridade
+
+### 4.1 `promoter_events.tracking_code` precisa de UNIQUE constraint
+Dois promoters vinculados ao mesmo evento poderiam ter o mesmo `tracking_code` acidentalmente. O Checkout busca por `tracking_code + event_id`, mas sem unique constraint, pode retornar ambíguo.
+
+**Correção:** Migration `ALTER TABLE promoter_events ADD CONSTRAINT promoter_events_tracking_code_event_id_key UNIQUE (tracking_code, event_id);`
+
+### 4.2 Falta FK em orders.promoter_event_id
+A coluna existe mas a migration pode não ter aplicado o FK constraint.
+
+**Verificação necessária.** Se não existir, adicionar `ALTER TABLE orders ADD CONSTRAINT orders_promoter_event_id_fkey FOREIGN KEY (promoter_event_id) REFERENCES promoter_events(id);`
+
+### 4.3 Comissão não é revertida em reembolso
+Quando um order é reembolsado (via `asaas-webhook` PAYMENT_REFUNDED), os registros de `promoter_commissions` não são cancelados e `promoter_events` stats não são decrementados.
+
+**Correção:** No webhook de reembolso, atualizar `promoter_commissions` para `status = 'cancelled'` e decrementar `promoter_events.revenue_generated`, `conversions`, `commission_total`.
+
+---
+
+## PARTE 5: Performance e Robustez
+
+### 5.1 Dashboard do produtor faz queries em cascata
+`getProducerDashboardStats` faz 3 queries sequenciais. Poderia ser paralelizado com `Promise.all`.
+
+### 5.2 Reconciliação de eventos não pagina
+`getEventReconciliation` busca TODOS os orders de TODOS os eventos do produtor. Para produtores com muitos eventos, isso pode ultrapassar o limite de 1000 rows.
+
+### 5.3 Falta `staleTime` em várias queries
+Queries como `event-tiers-all`, `event-participants`, `event-financial-orders` não definem `staleTime`, causando refetches desnecessários.
+
+---
+
+## Plano de Implementação (ordenado por prioridade)
+
+### Sprint 1 — Críticos
+1. **Criar edge function `ensure-user-profile`** — chamada após login/signup para garantir profile + role
+2. **Fix ProducerSettings bancário** — usar tabela `bank_accounts` em vez de campos inexistentes
+3. **Adicionar rota AdminSettings** ao App.tsx
+4. **Fix duplicate order on back** — skip `handleCreateOrder` se `orderId` já existe
+5. **Adicionar UNIQUE constraint** em `promoter_events(tracking_code, event_id)`
+
+### Sprint 2 — Integrações
+6. **Adicionar tabs Orders e Guestlist** ao EventPanel
+7. **Expandir formulário de cupons** (datas, valor mínimo, tiers)
+8. **Unificar affiliate tracking** — remover `trackAffiliateClick`, incrementar clicks no `promoter_events`
+9. **Fix redirectTo de reset de senha**
+10. **Reverter comissões em reembolso** no webhook
+
+### Sprint 3 — Polish
+11. **Confirmação de delete** em ações destrutivas
+12. **Paralelizar queries** do dashboard
+13. **Paginar reconciliação** de eventos
+14. **Adicionar staleTime** nas queries principais
+
