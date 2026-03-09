@@ -221,7 +221,7 @@ export default function ProducerEventForm() {
             <div><Label>Categoria</Label>
               <Select value={form.category} onValueChange={(v) => updateField("category", v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{categories.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
+                <SelectContent>{EVENT_CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div><Label>Descrição</Label><Textarea value={form.description} onChange={(e) => updateField("description", e.target.value)} rows={5} placeholder="Descreva o evento..." /></div>
