@@ -121,9 +121,7 @@ function getBotResponse(text: string): string {
 
 export function SupportChat() {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    { id: "welcome", text: "Olá! 👋 Como posso ajudar?", from: "bot", timestamp: new Date() },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([DISCLAIMER_MESSAGE]);
   const [input, setInput] = useState("");
   const location = useLocation();
 
