@@ -167,8 +167,8 @@ export default function Busca() {
       <div className="min-h-screen pt-4 lg:pt-20">
         {/* Search Header */}
         <section className="bg-muted/30 border-b border-border">
-          <div className="container py-6 md:py-12">
-            <h1 className="text-xl md:text-3xl font-bold mb-4">
+          <div className="container py-6 lg:py-12">
+            <h1 className="text-xl lg:text-3xl font-bold mb-4">
               {query ? (
                 <>
                   Resultados para{" "}
