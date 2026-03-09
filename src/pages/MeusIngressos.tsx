@@ -42,6 +42,20 @@ export default function MeusIngressos() {
     tierName: string;
   }>({ open: false, ticketId: "", eventTitle: "", tierName: "" });
 
+  const [resaleModal, setResaleModal] = useState<{
+    open: boolean;
+    ticket: any;
+  }>({ open: false, ticket: null });
+
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: myResaleListings } = useQuery({
+    queryKey: ["my-resale-listings", user?.id],
+    queryFn: () => getMyResaleListings(user!.id),
+    enabled: !!user?.id,
+  });
+
   const { data: tickets, isLoading } = useQuery({
     queryKey: ["my-tickets", user?.id],
     queryFn: () => getMyTickets(user!.id),
