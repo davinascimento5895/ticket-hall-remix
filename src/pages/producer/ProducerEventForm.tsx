@@ -194,12 +194,7 @@ export default function ProducerEventForm() {
     }
   };
 
-  const categories = [
-    { value: "music", label: "Música" }, { value: "sports", label: "Esportes" },
-    { value: "theater", label: "Teatro" }, { value: "festival", label: "Festival" },
-    { value: "corporate", label: "Corporativo" }, { value: "education", label: "Educação" },
-    { value: "other", label: "Outros" },
-  ];
+  // Use centralized categories from lib/categories.ts
 
   return (
     <div className="max-w-3xl space-y-6">
