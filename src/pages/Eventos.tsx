@@ -347,6 +347,18 @@ export default function Eventos() {
                 />
               ))}
             </div>
+
+            {/* Load more */}
+            {(gridView ? filteredEvents : restEvents).length > visibleCount && (
+              <div className="flex justify-center pt-8" ref={loadMoreRef}>
+                <Button
+                  variant="outline"
+                  onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                >
+                  Carregar mais eventos
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>
