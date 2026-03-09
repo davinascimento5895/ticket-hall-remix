@@ -30,8 +30,12 @@ import { ptBR } from "date-fns/locale";
 export interface EventFilters {
   category: string;
   datePreset: DatePreset;
-  dateRange: Date[] | null; // calendar-picked dates
+  dateRange: DateRange | undefined;
   priceMin: string;
+  priceMax: string;
+  modality: "all" | "presential" | "online";
+  sort: "date" | "relevance";
+}
   priceMax: string;
   modality: "all" | "presential" | "online";
   sort: "date" | "relevance";
