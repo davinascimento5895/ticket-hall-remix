@@ -128,6 +128,7 @@ export default function Privacidade() {
 
   return (
     <>
+      <SEOHead title="Privacidade e Dados" description="Gerencie seus dados e privacidade na TicketHall." />
       <div className="container pt-24 pb-16 max-w-2xl">
         <div className="flex items-center gap-3 mb-6">
           <Shield className="h-6 w-6 text-primary" />
