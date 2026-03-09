@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { DollarSign, Ticket, Clock, TrendingUp, CreditCard, Download, Users } from "lucide-react";
+import { DollarSign, Ticket, Clock, TrendingUp, CreditCard, Download, Users, UserCheck, UserX, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,19 +21,37 @@ export default function ProducerEventDashboardTab() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
-        .select("title, start_date, platform_fee_percent")
+        .select("title, start_date, platform_fee_percent, max_capacity")
         .eq("id", id)
         .single();
       if (error) throw error;
       return data;
     },
     enabled: !!id,
+    staleTime: 30_000,
   });
 
   const { data: analytics, isLoading } = useQuery({
     queryKey: ["event-analytics", id],
     queryFn: () => getEventAnalytics(id!),
     enabled: !!id,
+    staleTime: 30_000,
+  });
+
+  // Tickets for attendance/no-show calculation
+  const { data: ticketsData } = useQuery({
+    queryKey: ["event-tickets-attendance", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tickets")
+        .select("id, status, checked_in_at, tier_id, ticket_tiers(name)")
+        .eq("event_id", id!)
+        .in("status", ["active", "used"]);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+    staleTime: 30_000,
   });
 
   const { data: tiers } = useQuery({
@@ -94,6 +112,25 @@ export default function ProducerEventDashboardTab() {
   const freeSold = tiers?.filter((t) => t.tier_type === "free").reduce((s, t) => s + (t.quantity_sold || 0), 0) || 0;
   const paidSold = totalSold - freeSold;
   const avgTicket = paidOrders.length > 0 ? totalRevenue / paidOrders.length : 0;
+
+  // Attendance & no-show
+  const checkedInCount = ticketsData?.filter((t) => t.checked_in_at).length || 0;
+  const totalActiveTickets = ticketsData?.length || 0;
+  const attendanceRate = totalActiveTickets > 0 ? (checkedInCount / totalActiveTickets) * 100 : 0;
+
+  // No-show by tier
+  const noShowByTier = (ticketsData || [])
+    .filter((t) => !t.checked_in_at)
+    .reduce<Record<string, { name: string; count: number }>>((acc, t) => {
+      const tierName = (t.ticket_tiers as any)?.name || "Sem lote";
+      if (!acc[tierName]) acc[tierName] = { name: tierName, count: 0 };
+      acc[tierName].count++;
+      return acc;
+    }, {});
+
+  // Occupancy
+  const maxCapacity = event?.max_capacity || 0;
+  const occupancyRate = maxCapacity > 0 ? (totalSold / maxCapacity) * 100 : null;
 
   // Payment methods breakdown
   const paymentMethods = paidOrders.reduce<Record<string, number>>((acc, o) => {
@@ -177,6 +214,69 @@ export default function ProducerEventDashboardTab() {
         </div>
       )}
 
+      {/* Attendance, No-show, Occupancy row */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="pt-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10">
+                <UserCheck className="h-5 w-5 text-accent" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Taxa de Comparecimento</p>
+                <p className="text-2xl font-display font-bold">{attendanceRate.toFixed(1)}%</p>
+                <p className="text-xs text-muted-foreground">{checkedInCount}/{totalActiveTickets} check-ins</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/10">
+                <UserX className="h-5 w-5 text-destructive" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">No-shows</p>
+                <p className="text-2xl font-display font-bold">{totalActiveTickets - checkedInCount}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {occupancyRate !== null ? (
+          <Card>
+            <CardContent className="pt-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                  <Building2 className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Taxa de Ocupação</p>
+                  <p className="text-2xl font-display font-bold">{occupancyRate.toFixed(1)}%</p>
+                  <p className="text-xs text-muted-foreground">{totalSold}/{maxCapacity} ingressos</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="pt-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
+                  <Building2 className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Taxa de Ocupação</p>
+                  <p className="text-sm text-muted-foreground">Capacidade não definida</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
       {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Tickets by tier */}
@@ -238,6 +338,33 @@ export default function ProducerEventDashboardTab() {
           )}
         </CardContent>
       </Card>
+
+      {/* No-show by tier */}
+      {Object.keys(noShowByTier).length > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">No-show por lote</CardTitle></CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border text-left text-muted-foreground">
+                    <th className="p-3 font-medium">Lote</th>
+                    <th className="p-3 font-medium">No-shows</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.values(noShowByTier).map((tier) => (
+                    <tr key={tier.name} className="border-b border-border/50">
+                      <td className="p-3 font-medium text-foreground">{tier.name}</td>
+                      <td className="p-3 text-muted-foreground">{tier.count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Tier table */}
       {tiers && tiers.length > 0 && (
