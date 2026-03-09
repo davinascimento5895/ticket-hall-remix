@@ -88,7 +88,7 @@ export async function getMyOrders(userId: string) {
 export async function getMyTickets(userId: string) {
   const { data, error } = await supabase
     .from("tickets")
-    .select("*, ticket_tiers(name, price), events(title, slug, cover_image_url, start_date, venue_city, venue_name)")
+    .select("*, ticket_tiers(name, price, is_resellable, is_transferable), events(title, slug, cover_image_url, start_date, venue_city, venue_name)")
     .eq("owner_id", userId)
     .order("created_at", { ascending: false });
   if (error) throw error;
