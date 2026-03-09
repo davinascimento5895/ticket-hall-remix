@@ -39,6 +39,7 @@ export default function ProducerEventTicketsTab() {
       return { confirmed, pending, cancelled };
     },
     enabled: !!id,
+    staleTime: 30_000,
   });
 
   const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
