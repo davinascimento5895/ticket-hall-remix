@@ -81,6 +81,7 @@ const AdminProducers = lazy(() => import("./pages/admin/AdminProducers"));
 const AdminProducerDetail = lazy(() => import("./pages/admin/AdminProducerDetail"));
 const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
 const AdminFinance = lazy(() => import("./pages/admin/AdminFinance"));
+const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 
 
 const LazyFallback = () => (
@@ -158,7 +159,9 @@ const App = () => {
                 <Route path="events/:id/panel" element={<ProducerEventPanel />}>
                   <Route index element={<ProducerEventDashboardTab />} />
                   <Route path="tickets" element={<ProducerEventTicketsTab />} />
+                  <Route path="orders" element={<ProducerEventOrders />} />
                   <Route path="participants" element={<ProducerEventParticipants />} />
+                  <Route path="guestlist" element={<ProducerEventGuestlist />} />
                   <Route path="checkin" element={<ProducerEventCheckin />} />
                   <Route path="financial" element={<ProducerEventFinancial />} />
                   <Route path="messages" element={<ProducerEventMessages />} />
@@ -197,7 +200,7 @@ const App = () => {
                 <Route path="producers/:producerId" element={<AdminProducerDetail />} />
                 <Route path="orders" element={<AdminOrders />} />
                 <Route path="finance" element={<AdminFinance />} />
-                
+                <Route path="settings" element={<AdminSettings />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />

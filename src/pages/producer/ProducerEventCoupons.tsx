@@ -8,7 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getEventCoupons, createCoupon, updateCoupon, deleteCoupon } from "@/lib/api-producer";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { getEventCoupons, createCoupon, updateCoupon, deleteCoupon, getEventTiersBasic } from "@/lib/api-producer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -19,7 +24,16 @@ export default function ProducerEventCoupons() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ code: "", discount_type: "percentage", discount_value: 10, max_uses: 100 });
+  const [form, setForm] = useState({
+    code: "",
+    discount_type: "percentage",
+    discount_value: 10,
+    max_uses: 100,
+    valid_from: "",
+    valid_until: "",
+    min_order_value: 0,
+    applicable_tier_ids: [] as string[],
+  });
 
   const { data: event } = useQuery({
     queryKey: ["producer-event", id],
@@ -33,6 +47,12 @@ export default function ProducerEventCoupons() {
     enabled: !!id,
   });
 
+  const { data: tiers = [] } = useQuery({
+    queryKey: ["event-tiers-basic", id],
+    queryFn: () => getEventTiersBasic(id!),
+    enabled: !!id,
+  });
+
   const createMutation = useMutation({
     mutationFn: () =>
       createCoupon({
@@ -42,10 +62,14 @@ export default function ProducerEventCoupons() {
         discount_type: form.discount_type,
         discount_value: form.discount_value,
         max_uses: form.max_uses,
+        valid_from: form.valid_from || undefined,
+        valid_until: form.valid_until || undefined,
+        min_order_value: form.min_order_value || undefined,
+        applicable_tier_ids: form.applicable_tier_ids.length > 0 ? form.applicable_tier_ids : undefined,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["event-coupons", id] });
-      setForm({ code: "", discount_type: "percentage", discount_value: 10, max_uses: 100 });
+      setForm({ code: "", discount_type: "percentage", discount_value: 10, max_uses: 100, valid_from: "", valid_until: "", min_order_value: 0, applicable_tier_ids: [] });
       setShowForm(false);
       toast({ title: "Cupom criado!" });
     },
@@ -65,14 +89,20 @@ export default function ProducerEventCoupons() {
     },
   });
 
+  const toggleTier = (tierId: string) => {
+    setForm((p) => ({
+      ...p,
+      applicable_tier_ids: p.applicable_tier_ids.includes(tierId)
+        ? p.applicable_tier_ids.filter((id) => id !== tierId)
+        : [...p.applicable_tier_ids, tierId],
+    }));
+  };
+
   return (
     <div className="space-y-6">
       <div>
-        <Link to="/producer/events" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2">
-          <ArrowLeft className="h-4 w-4" /> Voltar
-        </Link>
         <div className="flex items-center justify-between">
-          <h1 className="font-display text-2xl font-bold">Cupons — {event?.title || "..."}</h1>
+          <h2 className="font-display text-lg font-bold">Cupons — {event?.title || "..."}</h2>
           <Button size="sm" onClick={() => setShowForm(!showForm)} className="gap-1"><Plus className="h-4 w-4" />Criar cupom</Button>
         </div>
       </div>
@@ -93,7 +123,28 @@ export default function ProducerEventCoupons() {
               </div>
               <div><Label className="text-xs">Valor do desconto</Label><Input type="number" min={0} value={form.discount_value} onChange={(e) => setForm((p) => ({ ...p, discount_value: parseFloat(e.target.value) || 0 }))} /></div>
               <div><Label className="text-xs">Limite de usos</Label><Input type="number" min={1} value={form.max_uses} onChange={(e) => setForm((p) => ({ ...p, max_uses: parseInt(e.target.value) || 100 }))} /></div>
+              <div><Label className="text-xs">Válido a partir de</Label><Input type="datetime-local" value={form.valid_from} onChange={(e) => setForm((p) => ({ ...p, valid_from: e.target.value }))} /></div>
+              <div><Label className="text-xs">Válido até</Label><Input type="datetime-local" value={form.valid_until} onChange={(e) => setForm((p) => ({ ...p, valid_until: e.target.value }))} /></div>
+              <div><Label className="text-xs">Valor mínimo do pedido (R$)</Label><Input type="number" min={0} value={form.min_order_value} onChange={(e) => setForm((p) => ({ ...p, min_order_value: parseFloat(e.target.value) || 0 }))} /></div>
             </div>
+
+            {tiers.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-xs">Ingressos aplicáveis (vazio = todos)</Label>
+                <div className="flex flex-wrap gap-3">
+                  {tiers.map((tier: any) => (
+                    <label key={tier.id} className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        checked={form.applicable_tier_ids.includes(tier.id)}
+                        onCheckedChange={() => toggleTier(tier.id)}
+                      />
+                      {tier.name}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <Button size="sm" onClick={() => createMutation.mutate()} disabled={createMutation.isPending || !form.code}>Criar</Button>
           </CardContent>
         </Card>
@@ -113,6 +164,7 @@ export default function ProducerEventCoupons() {
                     <th className="p-3 font-medium">Código</th>
                     <th className="p-3 font-medium">Desconto</th>
                     <th className="p-3 font-medium">Usos</th>
+                    <th className="p-3 font-medium">Validade</th>
                     <th className="p-3 font-medium">Ativo</th>
                     <th className="p-3 font-medium"></th>
                   </tr>
@@ -123,11 +175,32 @@ export default function ProducerEventCoupons() {
                       <td className="p-3 font-mono font-medium">{coupon.code}</td>
                       <td className="p-3">{coupon.discount_type === "percentage" ? `${coupon.discount_value}%` : `R$ ${coupon.discount_value.toFixed(2).replace(".", ",")}`}</td>
                       <td className="p-3 text-muted-foreground">{coupon.uses_count || 0}{coupon.max_uses ? ` / ${coupon.max_uses}` : ""}</td>
+                      <td className="p-3 text-muted-foreground text-xs">
+                        {coupon.valid_from ? new Date(coupon.valid_from).toLocaleDateString("pt-BR") : "—"}
+                        {" → "}
+                        {coupon.valid_until ? new Date(coupon.valid_until).toLocaleDateString("pt-BR") : "—"}
+                      </td>
                       <td className="p-3">
                         <Switch checked={coupon.is_active} onCheckedChange={(v) => toggleMutation.mutate({ couponId: coupon.id, isActive: v })} />
                       </td>
                       <td className="p-3">
-                        <button onClick={() => deleteMutation.mutate(coupon.id)} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <button className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Remover cupom?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                O cupom <strong>{coupon.code}</strong> será removido permanentemente.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteMutation.mutate(coupon.id)}>Remover</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </td>
                     </tr>
                   ))}

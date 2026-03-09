@@ -11,7 +11,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 const TABS = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "" },
   { key: "tickets", label: "Ingressos", icon: Ticket, path: "/tickets" },
+  { key: "orders", label: "Pedidos", icon: DollarSign, path: "/orders" },
   { key: "participants", label: "Participantes", icon: Users, path: "/participants" },
+  { key: "guestlist", label: "Guest List", icon: Users, path: "/guestlist" },
   { key: "checkin", label: "Check-in", icon: ScanLine, path: "/checkin" },
   { key: "financial", label: "Financeiro", icon: DollarSign, path: "/financial" },
   { key: "promoters", label: "Promoters", icon: Megaphone, path: "/promoters" },
