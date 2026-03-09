@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { X, ArrowLeft, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -59,7 +59,7 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
   const unitPrice = selectedTier?.price ?? 0;
   const subtotal = unitPrice * quantity;
   const feePercent = event.platform_fee_percent ?? 7;
-  const platformFee = Math.round(subtotal * feePercent / 100 * 100) / 100;
+  const platformFee = discount >= subtotal ? 0 : Math.round(subtotal * feePercent / 100 * 100) / 100;
   const total = Math.max(0, subtotal + platformFee - discount);
 
   const stepOrder: Step[] = [...(isMultiDay ? ["date" as Step] : []), "tickets", "summary", "confirmation"];
@@ -183,6 +183,32 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
       setIsProcessing(false);
     }
   }, [user, selectedTier, quantity, event, subtotal, platformFee, total, discount]);
+
+  // Realtime subscription for PIX/boleto payment confirmation
+  useEffect(() => {
+    if (!orderId || step !== "confirmation") return;
+    // Don't listen for free orders (already confirmed)
+    if (total === 0) return;
+
+    const channel = supabase
+      .channel(`booking-order-${orderId}`)
+      .on("postgres_changes", {
+        event: "UPDATE",
+        schema: "public",
+        table: "orders",
+        filter: `id=eq.${orderId}`,
+      }, (payload) => {
+        const newStatus = (payload.new as any)?.status;
+        if (newStatus === "paid") {
+          toast({ title: "Pagamento confirmado!", description: "Seus ingressos foram gerados com sucesso." });
+        } else if (newStatus === "cancelled" || newStatus === "expired") {
+          toast({ title: "Pagamento não aprovado", description: "Tente novamente.", variant: "destructive" });
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [orderId, step, total]);
 
   const handleGoToTickets = () => {
     onOpenChange(false);
