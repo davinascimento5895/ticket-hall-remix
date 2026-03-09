@@ -41,6 +41,9 @@ export function EventCard({ title, date, city, imageUrl, priceFrom, category, sl
             {getCategoryLabel(category)}
           </span>
         )}
+        {eventId && (
+          <FavoriteButton eventId={eventId} className="absolute top-3 right-3" />
+        )}
       </div>
       <div className="p-4 space-y-2">
         <h3 className="font-display font-semibold text-foreground line-clamp-2 leading-tight">{title}</h3>
