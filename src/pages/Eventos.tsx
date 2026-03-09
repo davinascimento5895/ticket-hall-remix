@@ -1,14 +1,17 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useSearchParams } from "react-router-dom";
-import { Search, X, LayoutGrid, List, Ticket, MapPin } from "lucide-react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { Search, X, LayoutGrid, List, Ticket, MapPin, Plus, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/EventCard";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { SEOHead } from "@/components/SEOHead";
+import { AuthModal } from "@/components/AuthModal";
+import { BecomeProducerModal } from "@/components/BecomeProducerModal";
+import { useAuth } from "@/contexts/AuthContext";
 
 import { getEvents } from "@/lib/api";
 import { RandomDiscoveryButton } from "@/components/RandomDiscoveryButton";
