@@ -21,11 +21,12 @@ const baseNavItems: NavItem[] = [
 ];
 
 function getActiveId(pathname: string): string | null {
+  // Order matters: more specific paths first
   if (pathname === "/") return "home";
-  if (pathname.startsWith("/eventos") || pathname.startsWith("/evento/") || pathname.startsWith("/busca")) return "events";
-  if (pathname.startsWith("/carrinho")) return "cart";
   if (pathname.startsWith("/meus-ingressos") || pathname.startsWith("/meus-certificados")) return "tickets";
-  if (pathname.startsWith("/meu-perfil") || pathname.startsWith("/admin") || pathname.startsWith("/producer") || pathname.startsWith("/notificacoes")) return "profile";
+  if (pathname.startsWith("/carrinho")) return "cart";
+  if (pathname.startsWith("/eventos") || pathname.startsWith("/evento/") || pathname.startsWith("/busca") || pathname.startsWith("/cidades")) return "events";
+  if (pathname.startsWith("/notificacoes") || pathname.startsWith("/meu-perfil")) return "profile";
   return null;
 }
 
