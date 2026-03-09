@@ -57,6 +57,7 @@ export function Navbar() {
 
   const links = [
     { label: "Eventos", href: "/eventos" },
+    { label: "Revenda", href: "/revenda" },
     { label: "Produtores", href: "/produtores" },
     { label: "Blog", href: "/blog" },
   ];
