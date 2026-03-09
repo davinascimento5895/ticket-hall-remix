@@ -11,15 +11,9 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   const { user, role, loading } = useAuth();
   const location = useLocation();
 
+  // Auth loading is handled by parent Suspense - don't show extra spinner
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="space-y-4 text-center">
-          <div className="h-8 w-8 mx-auto rounded-full bg-primary/20 animate-pulse" />
-          <p className="text-sm text-muted-foreground">Carregando...</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (!user) {

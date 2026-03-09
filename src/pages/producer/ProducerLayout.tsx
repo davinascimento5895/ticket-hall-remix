@@ -148,13 +148,7 @@ export default function ProducerLayout() {
 
           {/* Content */}
           <main className="flex-1 p-4 md:p-6 overflow-auto">
-            <Suspense fallback={
-              <div className="flex items-center justify-center min-h-[40vh]">
-                <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-primary" />
-              </div>
-            }>
-              <Outlet />
-            </Suspense>
+            <Outlet />
           </main>
         </div>
       </div>
