@@ -17,7 +17,7 @@ import { getEvents } from "@/lib/api";
 import { RandomDiscoveryButton } from "@/components/RandomDiscoveryButton";
 import { useCityDetection } from "@/hooks/useCityDetection";
 import { cn } from "@/lib/utils";
-import { isSameDay, isWithinInterval, format } from "date-fns";
+import { isSameDay, isWithinInterval, format, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CATEGORY_OPTIONS } from "@/lib/categories";
 
@@ -105,11 +105,13 @@ export default function Eventos() {
       }
     }
 
-    // Calendar dates filter
-    if (filters.dateRange && filters.dateRange.length > 0) {
+    // Calendar range filter
+    if (filters.dateRange?.from) {
+      const from = filters.dateRange.from;
+      const to = filters.dateRange.to || from;
       result = result.filter((e: any) => {
         const d = new Date(e.start_date);
-        return filters.dateRange!.some((sel) => isSameDay(d, sel));
+        return isWithinInterval(d, { start: from, end: endOfDay(to) });
       });
     }
 
@@ -150,7 +152,7 @@ export default function Eventos() {
     return filteredEvents.filter((e: any) => e.id !== featuredEvent.id);
   }, [filteredEvents, featuredEvent]);
 
-  const hasActiveFilters = filters.category || filters.datePreset || (filters.dateRange && filters.dateRange.length > 0) || filters.priceMin || filters.priceMax || filters.modality !== "all" || filters.sort !== "date" || cityFilter;
+  const hasActiveFilters = filters.category || filters.datePreset || filters.dateRange?.from || filters.priceMin || filters.priceMax || filters.modality !== "all" || filters.sort !== "date" || cityFilter;
 
   const clearAll = () => {
     setFilters({ ...defaultEventFilters });
