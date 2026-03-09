@@ -209,7 +209,7 @@ export default function Index() {
       <section className="py-16 lg:py-24 bg-muted/30">
         <div className="container">
           <div className="text-center mb-12">
-            <h2 className="font-display text-2xl md:text-3xl font-bold">Por que o TicketHall?</h2>
+            <h2 className="font-display text-2xl lg:text-3xl font-bold">Por que o TicketHall?</h2>
             <p className="text-muted-foreground mt-2 max-w-lg mx-auto">
               Tudo o que você precisa para comprar e vender ingressos online.
             </p>
