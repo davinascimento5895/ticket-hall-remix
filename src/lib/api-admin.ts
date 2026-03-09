@@ -136,8 +136,8 @@ export async function getAllUsers(search?: string) {
 export async function getProducers(statusFilter?: string) {
   let query = supabase
     .from("profiles")
-    .select("id, full_name, phone, created_at, producer_status, user_roles!inner(role)")
-    .eq("user_roles.role", "producer" as any)
+    .select("id, full_name, phone, created_at, producer_status")
+    .not("producer_status", "is", null)
     .order("created_at", { ascending: false });
   if (statusFilter && statusFilter !== "all") query = query.eq("producer_status", statusFilter as any);
   const { data, error } = await query;
