@@ -45,7 +45,8 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [step, setStep] = useState<Step>("date");
+  const isMultiDay = event.is_multi_day || new Date(event.start_date).toDateString() !== new Date(event.end_date).toDateString();
+  const [step, setStep] = useState<Step>(isMultiDay ? "date" : "tickets");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date(event.start_date));
   const [selectedTier, setSelectedTier] = useState<any>(null);
   const [quantity, setQuantity] = useState(1);
