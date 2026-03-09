@@ -9,7 +9,7 @@ import { EventCard } from "@/components/EventCard";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { SEOHead } from "@/components/SEOHead";
-import { AuthModal } from "@/components/AuthModal";
+
 import { BecomeProducerModal } from "@/components/BecomeProducerModal";
 import { useAuth } from "@/contexts/AuthContext";
 
