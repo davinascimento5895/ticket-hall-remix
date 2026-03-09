@@ -164,7 +164,7 @@ export default function Busca() {
         description={`Resultados da busca por "${query}" no TicketHall. Encontre eventos, shows e experiências.`}
       />
 
-      <div className="min-h-screen pt-4 lg:pt-20">
+      <div className="min-h-screen pt-16 lg:pt-20">
         {/* Search Header */}
         <section className="bg-muted/30 border-b border-border">
           <div className="container py-6 lg:py-12">

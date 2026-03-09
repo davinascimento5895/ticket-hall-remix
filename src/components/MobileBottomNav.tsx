@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { LayoutGrid, Search, Ticket, User, ShoppingBag } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { cn } from "@/lib/utils";
+import { AuthModal } from "@/components/AuthModal";
 
 interface NavItem {
   id: string;
@@ -33,6 +35,7 @@ export function MobileBottomNav() {
   const { user, role } = useAuth();
   const { itemCount } = useCart();
   const location = useLocation();
+  const [authOpen, setAuthOpen] = useState(false);
 
   // Hide on admin/producer panels
   if (location.pathname.startsWith("/admin") || location.pathname.startsWith("/producer")) {
@@ -44,8 +47,8 @@ export function MobileBottomNav() {
     return null;
   }
 
-  // Determine profile destination based on auth
-  const profileHref = !user ? "/?login=true" : "/meu-perfil";
+  // For profile: if not logged in, we'll intercept the click to open auth modal
+  const profileHref = !user ? "#" : "/meu-perfil";
 
   const navItems = baseNavItems.map((item) =>
     item.id === "profile" ? { ...item, href: profileHref } : item
@@ -102,6 +105,12 @@ export function MobileBottomNav() {
             <Link
               key={item.id}
               to={item.href}
+              onClick={(e) => {
+                if (item.id === "profile" && !user) {
+                  e.preventDefault();
+                  setAuthOpen(true);
+                }
+              }}
               className={cn(
                 "flex flex-col items-center justify-center gap-0.5 flex-1 py-2 transition-colors touch-manipulation",
                 "active:scale-95"
@@ -130,6 +139,8 @@ export function MobileBottomNav() {
           );
         })}
       </div>
+
+      <AuthModal open={authOpen} onOpenChange={setAuthOpen} defaultTab="login" />
     </nav>
   );
 }
