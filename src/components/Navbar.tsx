@@ -170,7 +170,7 @@ export function Navbar() {
                     </span>
                   )}
                 </Link>
-                <Button variant="outline" size="sm" onClick={() => setProducerModalOpen(true)} className="gap-1.5">
+                <Button variant="outline" size="sm" onClick={handleCreateEvent} className="gap-1.5">
                   <Plus className="h-3.5 w-3.5" />
                   Crie seu evento
                 </Button>
