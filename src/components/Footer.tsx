@@ -52,7 +52,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><Link to="/termos-de-uso" className="hover:text-foreground transition-colors">Termos de Uso</Link></li>
               <li><Link to="/politica-de-privacidade" className="hover:text-foreground transition-colors">Política de Privacidade</Link></li>
-              <li><Link to="/blog" className="hover:text-foreground transition-colors">Perguntas Frequentes</Link></li>
+              <li><Link to="/faq" className="hover:text-foreground transition-colors">Perguntas Frequentes</Link></li>
             </ul>
           </div>
 

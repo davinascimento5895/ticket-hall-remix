@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, Plus, Trash2, ArrowLeft, ArrowRight, Upload, MapPin, Globe, Video, Link2, Image as ImageIcon, Calendar, Ticket, FileText, Settings, Eye, ChevronDown, ChevronUp, Clock, Users, EyeOff } from "lucide-react";
@@ -25,6 +25,7 @@ import { getCapacityGroups } from "@/lib/api-checkout";
 import { EVENT_CATEGORIES } from "@/lib/categories";
 import { useIBGEStates, useIBGECities } from "@/hooks/useIBGELocations";
 import { fetchAddress } from "@/lib/cep";
+import { generateUniqueSlug } from "@/lib/slug";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
@@ -74,7 +75,7 @@ export default function ProducerEventForm() {
   const { id } = useParams();
   const isEdit = !!id;
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const [step, setStep] = useState(isEdit ? 1 : 0);
@@ -238,9 +239,19 @@ export default function ProducerEventForm() {
 
   const handleSave = async (publish = false) => {
     if (!user) return;
+    if (publish && profile?.producer_status !== "approved") {
+      toast({ title: "Conta pendente", description: "Sua conta de produtor ainda não foi aprovada. Aguarde a aprovação para publicar eventos.", variant: "destructive" });
+      return;
+    }
     try {
       let coverUrl = form.cover_image_url;
       if (coverFile) coverUrl = await handleUploadCover();
+
+      // Ensure unique slug for new events
+      let finalSlug = form.slug;
+      if (!isEdit) {
+        finalSlug = await generateUniqueSlug(form.title);
+      }
 
       let finalSeatMapUrl = seatMapImageUrl;
       if (seatMapFile && user) {
@@ -265,7 +276,7 @@ export default function ProducerEventForm() {
       if (form.venue_neighborhood) fullAddress += `, ${form.venue_neighborhood}`;
 
       const eventData: any = {
-        title: form.title, slug: form.slug, description: form.description,
+        title: form.title, slug: finalSlug, description: form.description,
         category: form.category, venue_name: form.venue_name,
         venue_address: fullAddress, venue_city: form.venue_city,
         venue_state: form.venue_state, venue_zip: form.venue_zip,
