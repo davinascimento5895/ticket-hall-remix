@@ -22,7 +22,7 @@ import { EventProductsManager } from "@/components/producer/EventProductsManager
 import { getCapacityGroups } from "@/lib/api-checkout";
 import { EVENT_CATEGORIES } from "@/lib/categories";
 import { useIBGEStates, useIBGECities } from "@/hooks/useIBGELocations";
-import { fetchAddressFromCEP } from "@/lib/cep";
+import { fetchAddress } from "@/lib/cep";
 import { cn } from "@/lib/utils";
 
 const stepLabels = ["Tipo", "Informações", "Local", "Ingressos", "Formulário", "Produtos", "Configurações", "Revisão"];
