@@ -35,7 +35,11 @@ export function MobileBottomNav() {
   const { user, role } = useAuth();
   const { itemCount } = useCart();
   const location = useLocation();
-  const [authOpen, setAuthOpen] = useState(false);
+
+  // Only show for logged-in users
+  if (!user) {
+    return null;
+  }
 
   // Hide on admin/producer panels
   if (location.pathname.startsWith("/admin") || location.pathname.startsWith("/producer")) {
