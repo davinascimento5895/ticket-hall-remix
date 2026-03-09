@@ -113,6 +113,25 @@ export default function ProducerEventDashboardTab() {
   const paidSold = totalSold - freeSold;
   const avgTicket = paidOrders.length > 0 ? totalRevenue / paidOrders.length : 0;
 
+  // Attendance & no-show
+  const checkedInCount = ticketsData?.filter((t) => t.checked_in_at).length || 0;
+  const totalActiveTickets = ticketsData?.length || 0;
+  const attendanceRate = totalActiveTickets > 0 ? (checkedInCount / totalActiveTickets) * 100 : 0;
+
+  // No-show by tier
+  const noShowByTier = (ticketsData || [])
+    .filter((t) => !t.checked_in_at)
+    .reduce<Record<string, { name: string; count: number }>>((acc, t) => {
+      const tierName = (t.ticket_tiers as any)?.name || "Sem lote";
+      if (!acc[tierName]) acc[tierName] = { name: tierName, count: 0 };
+      acc[tierName].count++;
+      return acc;
+    }, {});
+
+  // Occupancy
+  const maxCapacity = event?.max_capacity || 0;
+  const occupancyRate = maxCapacity > 0 ? (totalSold / maxCapacity) * 100 : null;
+
   // Payment methods breakdown
   const paymentMethods = paidOrders.reduce<Record<string, number>>((acc, o) => {
     const method = o.payment_method || "Outro";
