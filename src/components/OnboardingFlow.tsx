@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Ticket, Search, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 const slides = [
   {
@@ -29,11 +30,14 @@ const STORAGE_KEY = "tickethall_onboarding_done";
 export function OnboardingFlow() {
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState(0);
+  const { role } = useAuth();
 
   useEffect(() => {
+    // Only show onboarding for guest/buyer users, not producers/admins
     const done = localStorage.getItem(STORAGE_KEY);
-    if (!done) setVisible(true);
-  }, []);
+    if (!done && (!role || role === "buyer")) setVisible(true);
+    else setVisible(false);
+  }, [role]);
 
   const dismiss = () => {
     localStorage.setItem(STORAGE_KEY, "true");

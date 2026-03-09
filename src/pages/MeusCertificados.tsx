@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { SEOHead } from "@/components/SEOHead";
 import { Award, Download, ExternalLink } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ export default function MeusCertificados() {
 
   return (
     <>
+      <SEOHead title="Meus Certificados" description="Seus certificados de eventos na TicketHall." />
       <div className="container pt-24 pb-16 max-w-2xl">
         <div className="flex items-center gap-3 mb-6">
           <Award className="h-6 w-6 text-primary" />

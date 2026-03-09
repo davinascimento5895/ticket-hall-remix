@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
+import { EmbedSnippetGenerator } from "@/components/EmbedSnippetGenerator";
 import { useParams, useNavigate, useLocation, Link, Outlet } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, LayoutDashboard, Ticket, Users, ScanLine, DollarSign, Mail, Tag, ChevronDown, Globe, MapPin, Calendar, Megaphone } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, Ticket, Users, ScanLine, DollarSign, Mail, Tag, ChevronDown, Globe, MapPin, Calendar, Megaphone, Code } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const TABS = [
@@ -27,13 +29,14 @@ export default function ProducerEventPanel() {
   const location = useLocation();
   const isMobile = useIsMobile();
   const [mobileTabsOpen, setMobileTabsOpen] = useState(false);
+  const [showEmbed, setShowEmbed] = useState(false);
 
   const { data: event, isLoading } = useQuery({
     queryKey: ["producer-event-panel", id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
-        .select("title, start_date, end_date, is_online, venue_city, venue_name, status, cover_image_url")
+        .select("title, slug, start_date, end_date, is_online, venue_city, venue_name, status, cover_image_url")
         .eq("id", id)
         .single();
       if (error) throw error;
@@ -81,6 +84,9 @@ export default function ProducerEventPanel() {
               <Badge variant={event.status === "published" ? "default" : "secondary"}>
                 {event.status === "published" ? "Publicado" : event.status === "draft" ? "Rascunho" : event.status}
               </Badge>
+              <Button variant="outline" size="sm" onClick={() => setShowEmbed(!showEmbed)} className="ml-auto">
+                <Code className="h-3.5 w-3.5 mr-1" /> Embed
+              </Button>
             </div>
             <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground flex-wrap">
               <span className="flex items-center gap-1">
@@ -97,6 +103,13 @@ export default function ProducerEventPanel() {
           </div>
         ) : null}
       </div>
+
+      {/* Embed Snippet */}
+      {showEmbed && event && (
+        <div className="mb-6">
+          <EmbedSnippetGenerator eventSlug={(event as any).slug || id!} />
+        </div>
+      )}
 
       {/* Tab Navigation - Desktop */}
       <div className="hidden lg:flex items-center gap-1 border-b border-border mb-6 -mx-1">
