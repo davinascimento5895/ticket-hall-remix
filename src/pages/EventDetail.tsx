@@ -442,9 +442,36 @@ export default function EventDetail() {
                       {[event.venue_city, event.venue_state].filter(Boolean).join(", ")}
                       {event.venue_zip ? ` — CEP ${event.venue_zip}` : ""}
                     </p>
-                    <div className="w-full h-48 bg-secondary rounded-lg flex items-center justify-center text-sm text-muted-foreground border border-border mt-4">
-                      Mapa em breve
-                    </div>
+                    {/* Google Maps embed */}
+                    {event.venue_latitude && event.venue_longitude ? (
+                      <div className="w-full h-64 rounded-lg overflow-hidden border border-border mt-4">
+                        <iframe
+                          title="Mapa do local"
+                          width="100%"
+                          height="100%"
+                          style={{ border: 0 }}
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade"
+                          src={`https://maps.google.com/maps?q=${event.venue_latitude},${event.venue_longitude}&z=15&output=embed`}
+                        />
+                      </div>
+                    ) : event.venue_address ? (
+                      <div className="w-full h-64 rounded-lg overflow-hidden border border-border mt-4">
+                        <iframe
+                          title="Mapa do local"
+                          width="100%"
+                          height="100%"
+                          style={{ border: 0 }}
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade"
+                          src={`https://maps.google.com/maps?q=${encodeURIComponent([event.venue_name, event.venue_address, event.venue_city].filter(Boolean).join(", "))}&output=embed`}
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-full h-48 bg-secondary rounded-lg flex items-center justify-center text-sm text-muted-foreground border border-border mt-4">
+                        Mapa indisponível
+                      </div>
+                    )}
                     {event.venue_name && (
                       <Link
                         to={`/eventos?local=${encodeURIComponent(event.venue_name)}`}

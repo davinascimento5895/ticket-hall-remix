@@ -138,14 +138,20 @@ export default function Carrinho() {
           {/* Items */}
           <div className="flex-1 space-y-3">
             {items.map((item) => (
-              <div key={item.tierId} className="flex items-center gap-4 p-4 rounded-lg border border-border bg-card">
-                {item.coverImageUrl && (
+              <div key={item.tierId} className={`flex items-center gap-4 p-4 rounded-lg border bg-card ${unavailableItems.includes(item.tierId) ? "border-destructive/50" : "border-border"}`}>
+                {unavailableItems.includes(item.tierId) && (
+                  <AlertTriangle className="h-5 w-5 text-destructive shrink-0" />
+                )}
+                {item.coverImageUrl && !unavailableItems.includes(item.tierId) && (
                   <img src={item.coverImageUrl} alt="" className="w-16 h-16 rounded object-cover hidden sm:block" />
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="font-display font-semibold text-foreground truncate">{item.eventTitle}</p>
                   <p className="text-sm text-muted-foreground">{item.tierName}</p>
                   <p className="text-sm font-medium text-foreground">{fmt(item.price)} × {item.quantity}</p>
+                  {unavailableItems.includes(item.tierId) && (
+                    <p className="text-xs text-destructive mt-1">Disponibilidade insuficiente — remova ou reduza a quantidade</p>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <select
