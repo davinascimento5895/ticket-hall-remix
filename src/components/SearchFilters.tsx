@@ -29,6 +29,7 @@ export interface SearchFilterValues {
   category: string;
   city: string;
   timeOfDay: string;
+  modality: string;
 }
 
 const defaultFilters: SearchFilterValues = {
