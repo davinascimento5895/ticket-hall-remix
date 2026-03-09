@@ -8,6 +8,9 @@ import { ptBR } from "date-fns/locale";
 import { TicketTierCard } from "@/components/TicketTierCard";
 import { BookingFlow } from "@/components/booking/BookingFlow";
 import { SEOHead } from "@/components/SEOHead";
+import { FavoriteButton } from "@/components/FavoriteButton";
+import { ShareSheet } from "@/components/ShareSheet";
+import { EventReviews } from "@/components/EventReviews";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -121,6 +124,8 @@ export default function EventDetail() {
     }
   };
 
+  const isPastEvent = event ? new Date(event.end_date) < new Date() : false;
+
   const fmt = (v: number) => `R$ ${Number(v).toFixed(2).replace(".", ",")}`;
 
   if (loadingEvent) {
@@ -182,6 +187,7 @@ export default function EventDetail() {
           <div className="w-full h-full bg-secondary" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+        <FavoriteButton eventId={event.id} size="md" className="absolute top-4 right-4" />
       </div>
 
       <div className="container relative -mt-28 pb-16">
@@ -256,6 +262,9 @@ export default function EventDetail() {
                     Classificação indicativa: {event.minimum_age} anos
                   </div>
                 )}
+
+                {/* Reviews section */}
+                <EventReviews eventId={event.id} isPastEvent={isPastEvent} />
               </div>
             )}
 
@@ -381,9 +390,11 @@ export default function EventDetail() {
               ) : (
                 <p className="text-sm text-muted-foreground">Em breve</p>
               )}
-              <Button variant="outline" size="sm" className="w-full gap-2" onClick={handleShare}>
-                <Share2 className="h-4 w-4" /> Compartilhar
-              </Button>
+              <ShareSheet url={window.location.href} title={event.title}>
+                <Button variant="outline" size="sm" className="w-full gap-2">
+                  <Share2 className="h-4 w-4" /> Compartilhar
+                </Button>
+              </ShareSheet>
             </div>
           </aside>
         </div>

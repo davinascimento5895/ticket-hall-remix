@@ -29,6 +29,7 @@ export interface SearchFilterValues {
   category: string;
   city: string;
   timeOfDay: string;
+  modality: string;
 }
 
 const defaultFilters: SearchFilterValues = {
@@ -39,6 +40,7 @@ const defaultFilters: SearchFilterValues = {
   category: "",
   city: "",
   timeOfDay: "all",
+  modality: "all",
 };
 
 const SORT_OPTIONS = [
@@ -58,6 +60,12 @@ const TIME_OPTIONS = [
   { value: "afternoon", label: "Tarde" },
   { value: "evening", label: "Noite" },
   { value: "dawn", label: "Madrugada" },
+];
+
+const MODALITY_OPTIONS = [
+  { value: "all", label: "Todos" },
+  { value: "presential", label: "Presencial" },
+  { value: "online", label: "Online" },
 ];
 
 const topCities = BRAZILIAN_CAPITALS.filter((c) => c.featured).map((c) => c.name);
@@ -238,6 +246,23 @@ function FilterBody({
               label={t.label}
               active={filters.timeOfDay === t.value}
               onClick={() => setLocal((f) => ({ ...f, timeOfDay: t.value }))}
+            />
+          ))}
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Modality */}
+      <div>
+        <Label className="text-sm font-semibold mb-3 block">Modalidade</Label>
+        <div className="flex flex-wrap gap-2">
+          {MODALITY_OPTIONS.map((m) => (
+            <FilterChip
+              key={m.value}
+              label={m.label}
+              active={filters.modality === m.value}
+              onClick={() => setLocal((f) => ({ ...f, modality: m.value }))}
             />
           ))}
         </div>
