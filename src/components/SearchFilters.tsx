@@ -62,6 +62,12 @@ const TIME_OPTIONS = [
   { value: "dawn", label: "Madrugada" },
 ];
 
+const MODALITY_OPTIONS = [
+  { value: "all", label: "Todos" },
+  { value: "presential", label: "Presencial" },
+  { value: "online", label: "Online" },
+];
+
 const topCities = BRAZILIAN_CAPITALS.filter((c) => c.featured).map((c) => c.name);
 
 interface Props {
