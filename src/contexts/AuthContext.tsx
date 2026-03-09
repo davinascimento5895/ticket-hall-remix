@@ -47,6 +47,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<AppRole | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const ensureProfile = async (userId: string) => {
+    try {
+      await supabase.functions.invoke("ensure-user-profile");
+    } catch (e) {
+      console.warn("ensure-user-profile failed (non-blocking):", e);
+    }
+  };
+
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
