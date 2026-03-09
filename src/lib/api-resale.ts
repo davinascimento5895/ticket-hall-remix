@@ -28,17 +28,28 @@ export async function getResaleListings(filters?: {
     `)
     .eq("status", "active")
     .gt("expires_at", new Date().toISOString())
+    .gt("events.start_date" as any, new Date().toISOString())
     .order("created_at", { ascending: false });
 
   if (filters?.eventId) query = query.eq("event_id", filters.eventId);
-  if (filters?.search) query = (query as any).or(`events.title.ilike.%${filters.search}%`, { foreignTable: "events" });
   if (filters?.city) query = (query as any).eq("events.venue_city", filters.city);
   if (filters?.category) query = (query as any).eq("events.category", filters.category);
   if (filters?.limit) query = query.limit(filters.limit);
 
   const { data, error } = await query;
   if (error) throw error;
-  return data as any[];
+
+  // Client-side search filter (PostgREST doesn't support .or on foreign tables)
+  let results = data as any[];
+  if (filters?.search) {
+    const search = filters.search.toLowerCase();
+    results = results.filter((l: any) =>
+      l.events?.title?.toLowerCase().includes(search) ||
+      l.events?.venue_name?.toLowerCase().includes(search)
+    );
+  }
+
+  return results;
 }
 
 /** Get a single listing by ID */
