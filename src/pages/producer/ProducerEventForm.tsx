@@ -409,3 +409,77 @@ export default function ProducerEventForm() {
     </div>
   );
 }
+
+/** Venue step with IBGE API for state/city autocomplete */
+function VenueStepWithIBGE({ form, updateField }: { form: any; updateField: (f: string, v: any) => void }) {
+  const { states } = useIBGEStates();
+  const { cities, loading: citiesLoading } = useIBGECities(form.venue_state);
+  const [citySearch, setCitySearch] = useState("");
+
+  const filteredCities = citySearch
+    ? cities.filter((c) => c.nome.toLowerCase().includes(citySearch.toLowerCase()))
+    : cities;
+
+  return (
+    <Card>
+      <CardHeader><CardTitle>Local</CardTitle></CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center gap-3">
+          <Switch checked={form.is_online} onCheckedChange={(v) => updateField("is_online", v)} />
+          <Label>Evento online</Label>
+        </div>
+        {form.is_online ? (
+          <div><Label>URL da transmissão</Label><Input value={form.online_url} onChange={(e) => updateField("online_url", e.target.value)} placeholder="https://..." /></div>
+        ) : (
+          <>
+            <div><Label>Nome do local</Label><Input value={form.venue_name} onChange={(e) => updateField("venue_name", e.target.value)} placeholder="Ex: Allianz Parque" /></div>
+            <div><Label>Endereço</Label><Input value={form.venue_address} onChange={(e) => updateField("venue_address", e.target.value)} /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Estado</Label>
+                <Select value={form.venue_state} onValueChange={(v) => { updateField("venue_state", v); updateField("venue_city", ""); setCitySearch(""); }}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    {states.map((s) => (
+                      <SelectItem key={s.sigla} value={s.sigla}>{s.nome} ({s.sigla})</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Cidade</Label>
+                {citiesLoading ? (
+                  <Input disabled placeholder="Carregando..." />
+                ) : form.venue_state ? (
+                  <Select value={form.venue_city} onValueChange={(v) => updateField("venue_city", v)}>
+                    <SelectTrigger><SelectValue placeholder="Selecione a cidade" /></SelectTrigger>
+                    <SelectContent>
+                      <div className="px-2 pb-2">
+                        <Input
+                          placeholder="Buscar cidade..."
+                          value={citySearch}
+                          onChange={(e) => setCitySearch(e.target.value)}
+                          className="h-8 text-sm"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                      {filteredCities.slice(0, 100).map((c) => (
+                        <SelectItem key={c.id} value={c.nome}>{c.nome}</SelectItem>
+                      ))}
+                      {filteredCities.length > 100 && (
+                        <p className="text-xs text-muted-foreground px-2 py-1">Digite para filtrar mais cidades...</p>
+                      )}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input disabled placeholder="Selecione o estado primeiro" />
+                )}
+              </div>
+            </div>
+            <div><Label>CEP</Label><Input value={form.venue_zip} onChange={(e) => updateField("venue_zip", e.target.value)} placeholder="00000-000" /></div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
