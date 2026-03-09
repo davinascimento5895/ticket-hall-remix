@@ -176,6 +176,10 @@ export default function Produtores() {
 
   return (
     <>
+      <SEOHead
+        title="Para Produtores — Venda Ingressos Online"
+        description="Crie e gerencie eventos na TicketHall. Venda ingressos com taxa a partir de 7%, check-in por QR Code, relatórios em tempo real e muito mais."
+      />
       <BecomeProducerModal
         open={producerModalOpen}
         onOpenChange={setProducerModalOpen}
