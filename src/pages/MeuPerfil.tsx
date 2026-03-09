@@ -15,9 +15,7 @@ import {
   HelpCircle,
   ChevronRight,
   Briefcase,
-  Clock,
   CheckCircle2,
-  XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
