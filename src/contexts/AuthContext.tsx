@@ -25,6 +25,7 @@ interface AuthContextType {
   role: AppRole | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  refetchRole: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -34,6 +35,7 @@ const AuthContext = createContext<AuthContextType>({
   role: null,
   loading: true,
   signOut: async () => {},
+  refetchRole: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -110,8 +112,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRole(null);
   };
 
+  const refetchRole = async () => {
+    const { data: { session: s } } = await supabase.auth.getSession();
+    if (s?.user) {
+      await Promise.all([fetchProfile(s.user.id), fetchRole(s.user.id)]);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ session, user, profile, role, loading, signOut }}>
+    <AuthContext.Provider value={{ session, user, profile, role, loading, signOut, refetchRole }}>
       {children}
     </AuthContext.Provider>
   );

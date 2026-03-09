@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatCPF, validateCPF, formatPhone } from "@/lib/validators";
-import { Loader2, CheckCircle2, Clock } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface BecomeProducerModalProps {
   open: boolean;
@@ -15,11 +16,11 @@ interface BecomeProducerModalProps {
 }
 
 export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalProps) {
-  const { user, profile } = useAuth();
+  const { user, profile, refetchRole } = useAuth();
+  const navigate = useNavigate();
   const [cpf, setCpf] = useState(profile?.cpf || "");
   const [phone, setPhone] = useState(profile?.phone || "");
   const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
 
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCpf(formatCPF(e.target.value));
@@ -31,7 +32,7 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const cleanCpf = cpf.replace(/\D/g, "");
     if (!validateCPF(cleanCpf)) {
       toast.error("CPF inválido");
@@ -51,84 +52,31 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
 
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          cpf: cleanCpf,
-          phone: cleanPhone,
-          producer_status: "pending",
-        })
-        .eq("id", user.id);
+      const { error } = await supabase.functions.invoke("become-producer", {
+        body: { cpf: cleanCpf, phone: cleanPhone },
+      });
 
       if (error) throw error;
 
-      setSubmitted(true);
-      toast.success("Solicitação enviada com sucesso!");
+      toast.success("Conta de produtor ativada! Bem-vindo!");
+      await refetchRole();
+      onOpenChange(false);
+      navigate("/producer/dashboard");
     } catch (err: any) {
       console.error(err);
-      toast.error("Erro ao enviar solicitação");
+      toast.error("Erro ao ativar conta de produtor");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleClose = () => {
-    onOpenChange(false);
-    // Reset state after close animation
-    setTimeout(() => setSubmitted(false), 300);
-  };
-
-  // Already pending
-  if (profile?.producer_status === "pending") {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-amber-500" />
-              Aguardando aprovação
-            </DialogTitle>
-            <DialogDescription>
-              Sua solicitação para se tornar produtor está sendo analisada. Você receberá uma notificação quando for aprovado.
-            </DialogDescription>
-          </DialogHeader>
-          <Button onClick={handleClose} className="w-full mt-4">
-            Entendi
-          </Button>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  // Success state
-  if (submitted) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
-              Solicitação enviada!
-            </DialogTitle>
-            <DialogDescription>
-              Recebemos sua solicitação para se tornar produtor. Nossa equipe irá analisar e você será notificado em breve.
-            </DialogDescription>
-          </DialogHeader>
-          <Button onClick={handleClose} className="w-full mt-4">
-            Fechar
-          </Button>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Quero ser produtor</DialogTitle>
+          <DialogTitle>Criar conta de produtor</DialogTitle>
           <DialogDescription>
-            Preencha seus dados para solicitar acesso como produtor de eventos. A aprovação é feita pela nossa equipe.
+            Preencha seus dados para ativar sua conta de produtor e começar a criar eventos agora mesmo.
           </DialogDescription>
         </DialogHeader>
 
@@ -161,10 +109,10 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Enviando...
+                Ativando conta...
               </>
             ) : (
-              "Enviar solicitação"
+              "Ativar conta de produtor"
             )}
           </Button>
         </form>

@@ -22,7 +22,6 @@ import {
   Lock,
   CreditCard,
   CheckCircle2,
-  Clock,
 } from "lucide-react";
 import {
   Accordion,
@@ -152,7 +151,7 @@ const steps = [
 ];
 
 export default function Produtores() {
-  const { user, role, profile } = useAuth();
+  const { user, role } = useAuth();
   const navigate = useNavigate();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [producerModalOpen, setProducerModalOpen] = useState(false);
@@ -178,9 +177,6 @@ export default function Produtores() {
   const getButtonContent = () => {
     if (role === "producer") {
       return { label: "Acessar painel", icon: ArrowRight };
-    }
-    if (profile?.producer_status === "pending") {
-      return { label: "Aguardando aprovação", icon: Clock, disabled: true };
     }
     return { label: "Criar minha conta de produtor", icon: null };
   };
@@ -229,7 +225,6 @@ export default function Produtores() {
                 variant="hero"
                 size="xl"
                 onClick={handleCTA}
-                disabled={buttonContent.disabled}
               >
                 {buttonContent.label}
                 {buttonContent.icon && <buttonContent.icon className="h-5 w-5 ml-2" />}
@@ -440,7 +435,6 @@ export default function Produtores() {
             variant="hero"
             size="xl"
             onClick={handleCTA}
-            disabled={buttonContent.disabled}
           >
             {role === "producer" ? "Acessar painel" : "Começar a vender grátis"}
             <ArrowRight className="h-5 w-5 ml-2" />
