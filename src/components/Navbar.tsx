@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useSearchParams, useNavigate } from "react-router-dom";
-import { Menu, X, User, LogOut, ShoppingBag, Search } from "lucide-react";
+import { Menu, X, User, LogOut, ShoppingBag, Search, Plus } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TicketHallLogo } from "@/components/TicketHallLogo";
 import { AuthModal } from "@/components/AuthModal";
+import { BecomeProducerModal } from "@/components/BecomeProducerModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { cn } from "@/lib/utils";
@@ -24,11 +25,20 @@ export function Navbar() {
   const [authOpen, setAuthOpen] = useState(false);
   const [authTab, setAuthTab] = useState<"login" | "register">("login");
   const [navSearch, setNavSearch] = useState("");
+  const [producerModalOpen, setProducerModalOpen] = useState(false);
   const { user, profile, role, signOut } = useAuth();
   const { itemCount } = useCart();
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const handleCreateEvent = () => {
+    if (role === "producer") {
+      navigate("/producer/events/new");
+    } else {
+      setProducerModalOpen(true);
+    }
+  };
 
   const isAdminOrProducer = location.pathname.startsWith("/admin") || location.pathname.startsWith("/producer");
   const isLandingPage = location.pathname === "/";
@@ -135,6 +145,11 @@ export function Navbar() {
                       <Link to="/notificacoes">Notificações</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleCreateEvent}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Criar evento
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={signOut} className="text-destructive">
                       <LogOut className="h-4 w-4 mr-2" /> Sair
                     </DropdownMenuItem>
@@ -209,6 +224,7 @@ export function Navbar() {
       </header>
 
       <AuthModal open={authOpen} onOpenChange={setAuthOpen} defaultTab={authTab} />
+      <BecomeProducerModal open={producerModalOpen} onOpenChange={setProducerModalOpen} />
     </>
   );
 }
