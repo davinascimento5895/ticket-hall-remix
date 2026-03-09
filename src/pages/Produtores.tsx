@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { CalculadoraComparador } from "@/components/CalculadoraComparador";
 import { TabelaComparativo } from "@/components/TabelaComparativo";
-import { AuthModal } from "@/components/AuthModal";
+
 import { BecomeProducerModal } from "@/components/BecomeProducerModal";
 import { useAuth } from "@/contexts/AuthContext";
 import {
