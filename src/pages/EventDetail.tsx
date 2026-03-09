@@ -369,8 +369,8 @@ export default function EventDetail() {
                       {lowestPrice === 0 ? "Grátis" : fmt(lowestPrice)}
                     </span>
                   </p>
-                  <Button className="w-full" onClick={() => setActiveSection("tickets")}>
-                    Ver ingressos
+                  <Button className="w-full" onClick={() => setBookingOpen(true)}>
+                    Comprar ingresso
                   </Button>
                 </>
               ) : (
