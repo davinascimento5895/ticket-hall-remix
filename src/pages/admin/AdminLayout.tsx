@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
 import { TicketHallLogo } from "@/components/TicketHallLogo";
-import { LayoutDashboard, CalendarDays, Users, UserCheck, ShoppingCart, DollarSign, Settings, LogOut, ExternalLink, Shield } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Users, UserCheck, ShoppingCart, DollarSign, LogOut, ExternalLink } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
@@ -30,7 +30,6 @@ const navItems = [
   { title: "Produtores", url: "/admin/producers", icon: UserCheck },
   { title: "Pedidos", url: "/admin/orders", icon: ShoppingCart },
   { title: "Financeiro", url: "/admin/finance", icon: DollarSign },
-  { title: "Configurações", url: "/admin/settings", icon: Settings },
 ];
 
 function AdminSidebar() {
