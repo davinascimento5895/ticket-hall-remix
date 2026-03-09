@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Calendar, MapPin, Tag, ArrowRight, ShoppingBag, Repeat } from "lucide-react";
+import { Search, Calendar, MapPin, Tag, ArrowRight, ShoppingBag, Repeat, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,9 +10,79 @@ import { SEOHead } from "@/components/SEOHead";
 import { EmptyState } from "@/components/EmptyState";
 import { getResaleListings } from "@/lib/api-resale";
 import { useDebounce } from "@/hooks/useDebounce";
+import { cn } from "@/lib/utils";
+import {
+  startOfToday,
+  startOfTomorrow,
+  endOfTomorrow,
+  startOfWeek,
+  endOfWeek,
+  addWeeks,
+  isWithinInterval,
+  nextSaturday,
+  nextSunday,
+  isSaturday,
+  isSunday,
+  endOfDay,
+} from "date-fns";
+
+type DatePreset = "hoje" | "amanha" | "semana" | "fim_de_semana" | "proxima_semana" | null;
+
+const DATE_PRESETS: { value: DatePreset; label: string }[] = [
+  { value: "hoje", label: "Hoje" },
+  { value: "amanha", label: "Amanhã" },
+  { value: "semana", label: "Nesta semana" },
+  { value: "fim_de_semana", label: "Neste fim de semana" },
+  { value: "proxima_semana", label: "Na próxima semana" },
+];
+
+function getDateRange(preset: DatePreset): { start: Date; end: Date } | null {
+  if (!preset) return null;
+  const today = startOfToday();
+  switch (preset) {
+    case "hoje":
+      return { start: today, end: endOfDay(today) };
+    case "amanha": {
+      const tom = startOfTomorrow();
+      return { start: tom, end: endOfTomorrow() };
+    }
+    case "semana": {
+      const weekStart = startOfWeek(today, { weekStartsOn: 0 });
+      const weekEnd = endOfWeek(today, { weekStartsOn: 0 });
+      return { start: today > weekStart ? today : weekStart, end: weekEnd };
+    }
+    case "fim_de_semana": {
+      let sat: Date;
+      let sun: Date;
+      if (isSaturday(today)) {
+        sat = today;
+        sun = endOfDay(addWeeks(today, 0));
+        // Sunday is next day
+        const nextDay = new Date(today);
+        nextDay.setDate(nextDay.getDate() + 1);
+        sun = endOfDay(nextDay);
+      } else if (isSunday(today)) {
+        sat = today;
+        sun = endOfDay(today);
+      } else {
+        sat = nextSaturday(today);
+        sun = endOfDay(nextSunday(today));
+      }
+      return { start: sat, end: sun };
+    }
+    case "proxima_semana": {
+      const nextWeekStart = startOfWeek(addWeeks(today, 1), { weekStartsOn: 0 });
+      const nextWeekEnd = endOfWeek(addWeeks(today, 1), { weekStartsOn: 0 });
+      return { start: nextWeekStart, end: nextWeekEnd };
+    }
+    default:
+      return null;
+  }
+}
 
 export default function Revenda() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [datePreset, setDatePreset] = useState<DatePreset>(null);
   const debouncedSearch = useDebounce(searchQuery, 300);
   const navigate = useNavigate();
 
@@ -25,8 +95,19 @@ export default function Revenda() {
     staleTime: 30_000,
   });
 
+  // Apply date filter client-side
+  const filteredListings = useMemo(() => {
+    const all = listings || [];
+    const range = getDateRange(datePreset);
+    if (!range) return all;
+    return all.filter((listing: any) => {
+      const eventDate = new Date(listing.events?.start_date);
+      return isWithinInterval(eventDate, { start: range.start, end: range.end });
+    });
+  }, [listings, datePreset]);
+
   // Group by event
-  const groupedByEvent = (listings || []).reduce((acc: Record<string, any>, listing: any) => {
+  const groupedByEvent = filteredListings.reduce((acc: Record<string, any>, listing: any) => {
     const eventId = listing.event_id;
     if (!acc[eventId]) {
       acc[eventId] = {
@@ -39,6 +120,10 @@ export default function Revenda() {
   }, {});
 
   const eventGroups = Object.values(groupedByEvent) as { event: any; listings: any[] }[];
+
+  const togglePreset = (preset: DatePreset) => {
+    setDatePreset((prev) => (prev === preset ? null : preset));
+  };
 
   return (
     <>
@@ -62,7 +147,7 @@ export default function Revenda() {
         </div>
 
         {/* Search */}
-        <div className="relative max-w-md mb-8">
+        <div className="relative max-w-md mb-4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="text"
@@ -71,6 +156,33 @@ export default function Revenda() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 bg-muted/50"
           />
+          {searchQuery && (
+            <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7" onClick={() => setSearchQuery("")}>
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          )}
+        </div>
+
+        {/* Date presets */}
+        <div className="flex gap-2 overflow-x-auto pb-4 mb-4 scrollbar-hide">
+          {DATE_PRESETS.map((p) => {
+            const isActive = datePreset === p.value;
+            return (
+              <button
+                key={p.value}
+                onClick={() => togglePreset(p.value)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium whitespace-nowrap border transition-colors shrink-0",
+                  isActive
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-background text-foreground border-border hover:bg-muted"
+                )}
+              >
+                {p.label}
+                {isActive && <X className="h-3 w-3" />}
+              </button>
+            );
+          })}
         </div>
 
         {/* Info banner */}
@@ -184,10 +296,15 @@ export default function Revenda() {
           </div>
         ) : (
           <EmptyState
-            icon={<Repeat className="h-12 w-12" />}
+            icon={Repeat}
             title="Nenhum ingresso à venda"
-            description={searchQuery ? "Nenhum resultado encontrado. Tente outra busca." : "No momento não há ingressos disponíveis para revenda."}
-            children={undefined}
+            description={
+              searchQuery || datePreset
+                ? "Nenhum resultado encontrado. Tente outra busca ou altere o filtro de data."
+                : "No momento não há ingressos disponíveis para revenda."
+            }
+            actionLabel={datePreset ? "Limpar filtros" : undefined}
+            onAction={datePreset ? () => setDatePreset(null) : undefined}
           />
         )}
       </div>
