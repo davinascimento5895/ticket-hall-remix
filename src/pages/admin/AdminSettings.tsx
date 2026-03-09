@@ -48,7 +48,7 @@ export default function AdminSettings() {
       <Card>
         <CardHeader><CardTitle className="text-base">Templates de E-mail</CardTitle></CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground text-center py-4">EMAIL_TEMPLATE_INTEGRATION_POINT — Configuração de templates de e-mail será implementada em versão futura.</p>
+          <p className="text-sm text-muted-foreground text-center py-4">🚧 Em breve — A configuração de templates de e-mail será disponibilizada em uma versão futura.</p>
         </CardContent>
       </Card>
     </div>

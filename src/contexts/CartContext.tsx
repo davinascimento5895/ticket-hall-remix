@@ -10,6 +10,7 @@ export interface CartItem {
   price: number;
   quantity: number;
   coverImageUrl?: string;
+  platformFeePercent?: number;
 }
 
 interface CartContextType {
@@ -94,6 +95,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = useCallback((item: CartItem) => {
     setItems((prev) => {
+      // Block adding items from a different event
+      if (prev.length > 0 && prev[0].eventId !== item.eventId) {
+        // Clear cart and start fresh with new event
+        localStorage.removeItem(CART_KEY);
+        return [item];
+      }
       const existing = prev.find((i) => i.tierId === item.tierId);
       if (existing) {
         return prev.map((i) =>
@@ -129,7 +136,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const platformFee = subtotal * (config.platformFeePercent / 100);
+  const platformFee = subtotal === 0 ? 0 : items.reduce((sum, i) => {
+    const feePercent = i.platformFeePercent ?? config.platformFeePercent;
+    return sum + (i.price * i.quantity * feePercent / 100);
+  }, 0);
   const total = subtotal + platformFee;
   const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
 

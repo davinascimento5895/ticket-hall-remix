@@ -8,19 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 // EVENTS
 // ============================================================
 
-/** Fetch published featured events */
-export async function getFeaturedEvents() {
-  const { data, error } = await supabase
-    .from("events")
-    .select("*")
-    .eq("status", "published")
-    .eq("is_featured", true)
-    .order("start_date", { ascending: true })
-    .limit(6);
-  if (error) throw error;
-  return data;
-}
-
 /** Fetch published events with optional filters */
 export async function getEvents(filters?: {
   category?: string;
@@ -47,16 +34,25 @@ export async function getEvents(filters?: {
   return data;
 }
 
-/** Get event by slug (published only for public access) */
+/** Get event by slug. Published events are public; producers can also see their own drafts. */
 export async function getEventBySlug(slug: string) {
+  // First try published
   const { data, error } = await supabase
     .from("events")
     .select("*")
     .eq("slug", slug)
     .eq("status", "published")
     .single();
-  if (error) throw error;
-  return data;
+  if (!error && data) return data;
+
+  // If not found as published, try as the producer's own event (RLS allows producers to see their own)
+  const { data: ownEvent, error: ownError } = await supabase
+    .from("events")
+    .select("*")
+    .eq("slug", slug)
+    .single();
+  if (ownError) throw ownError;
+  return ownEvent;
 }
 
 /** Get ticket tiers for an event */

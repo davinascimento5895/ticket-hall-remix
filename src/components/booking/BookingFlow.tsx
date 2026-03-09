@@ -82,6 +82,14 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
   const handleSelectTier = (tier: any, qty: number) => {
     setSelectedTier(tier);
     setQuantity(qty);
+    // Check if free: skip to confirmation-like flow
+    const tierPrice = tier.price ?? 0;
+    const tierTotal = tierPrice * qty;
+    if (tierTotal === 0) {
+      // Free event — go to summary but payment will auto-confirm
+      setStep("summary");
+      return;
+    }
     if (event.has_seat_map) {
       setStep("seats");
     } else {
@@ -95,6 +103,7 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
   };
 
   const handleConfirmPayment = useCallback(async (method: string, cardData?: CreditCardData, installments?: number) => {
+    const isFree = total === 0;
     if (!user) {
       toast({ title: "Faça login", description: "Você precisa estar logado para comprar.", variant: "destructive" });
       return;
@@ -108,13 +117,13 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
         buyer_id: user.id,
         event_id: event.id,
         subtotal,
-        platform_fee: platformFee,
-        total,
+        platform_fee: isFree ? 0 : platformFee,
+        total: isFree ? 0 : total,
         discount_amount: discount,
-        status: "pending",
-        payment_status: "pending",
-        payment_method: method,
-        expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+        status: isFree ? "paid" : "pending",
+        payment_status: isFree ? "paid" : "pending",
+        payment_method: isFree ? "free" : method,
+        expires_at: isFree ? null : new Date(Date.now() + 15 * 60 * 1000).toISOString(),
       }).select().single();
 
       if (orderErr) throw orderErr;
@@ -133,24 +142,34 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
         return;
       }
 
-      // Process payment
-      const result = await createPayment(order.id, method as "pix" | "credit_card" | "boleto", cardData, installments);
-
-      if (!result.success) {
-        toast({ title: "Erro no pagamento", description: result.error || "Tente novamente.", variant: "destructive" });
-        setIsProcessing(false);
-        return;
-      }
-
       setOrderId(order.id);
 
-      if (result.immediateConfirmation || result.stub) {
-        toast({ title: "Pagamento confirmado!", description: "Seus ingressos foram gerados." });
+      // Free order: confirm immediately via RPC
+      if (isFree) {
+        await supabase.rpc("confirm_order_payment", {
+          p_order_id: order.id,
+          p_asaas_payment: "free",
+          p_net_value: 0,
+        });
+        toast({ title: "Inscrição confirmada!", description: "Seus ingressos foram gerados." });
         setStep("confirmation");
       } else {
-        // For PIX/boleto - would need realtime listener, simplified here
-        toast({ title: "Aguardando pagamento", description: "Complete o pagamento para receber seus ingressos." });
-        setStep("confirmation");
+        // Process payment
+        const result = await createPayment(order.id, method as "pix" | "credit_card" | "boleto", cardData, installments);
+
+        if (!result.success) {
+          toast({ title: "Erro no pagamento", description: result.error || "Tente novamente.", variant: "destructive" });
+          setIsProcessing(false);
+          return;
+        }
+
+        if (result.immediateConfirmation || result.stub) {
+          toast({ title: "Pagamento confirmado!", description: "Seus ingressos foram gerados." });
+          setStep("confirmation");
+        } else {
+          toast({ title: "Aguardando pagamento", description: "Complete o pagamento para receber seus ingressos." });
+          setStep("confirmation");
+        }
       }
     } catch (error: any) {
       console.error("Booking error:", error);
