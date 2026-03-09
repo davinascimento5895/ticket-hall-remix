@@ -20,19 +20,96 @@ const quickReplies = [
   "Como transferir ingresso?",
 ];
 
-const faqResponses: Record<string, string> = {
-  "como comprar ingressos?": "Para comprar ingressos, acesse a página do evento, selecione o lote desejado, adicione ao carrinho e finalize o pagamento via PIX, cartão ou boleto.",
-  "quero pedir reembolso": "Para solicitar reembolso, acesse 'Meus Ingressos', selecione o ingresso e clique em 'Solicitar Reembolso'. O prazo é de até 7 dias úteis.",
-  "meu qr code não funciona": "Tente atualizar a página ou acessar pelo e-mail de confirmação. Se persistir, entre em contato pelo e-mail suporte@tickethall.com.br.",
-  "como transferir ingresso?": "Em 'Meus Ingressos', selecione o ingresso e clique em 'Transferir'. Informe o e-mail do destinatário e confirme a transferência.",
-};
+// FAQ responses with keyword matching
+interface FaqItem {
+  keywords: string[];
+  response: string;
+}
+
+const faqItems: FaqItem[] = [
+  {
+    keywords: ["comprar", "compra", "adquirir", "ingresso", "ticket", "como compro", "quero comprar", "onde compro", "pagamento", "pagar", "pix", "cartão", "boleto", "forma de pagamento"],
+    response: "Para comprar ingressos, acesse a página do evento, selecione o lote desejado, adicione ao carrinho e finalize o pagamento via PIX, cartão ou boleto. Aceitamos todas as bandeiras de cartão de crédito com parcelamento em até 12x.",
+  },
+  {
+    keywords: ["reembolso", "reembolsar", "devolver", "devolução", "dinheiro de volta", "estorno", "cancelar compra", "cancelamento", "cancela", "reaver", "valor de volta", "quero meu dinheiro", "arrependimento", "desistir", "desistência"],
+    response: "Para solicitar reembolso, acesse 'Meus Ingressos', selecione o ingresso e clique em 'Solicitar Reembolso'. O prazo para estorno é de até 7 dias úteis após aprovação. Lembre-se: reembolsos só podem ser solicitados até 48h antes do evento.",
+  },
+  {
+    keywords: ["qr", "qrcode", "qr code", "código", "não funciona", "não aparece", "não leio", "erro", "problema", "entrada", "validar", "validação", "escanear", "scanner", "leitura"],
+    response: "Se seu QR Code não está funcionando: 1) Atualize a página do ingresso; 2) Verifique o e-mail de confirmação para o QR Code original; 3) Aumente o brilho da tela; 4) Se persistir, entre em contato pelo e-mail suporte@tickethall.com.br com o número do pedido.",
+  },
+  {
+    keywords: ["transferir", "transferência", "passar", "enviar", "presente", "dar", "nome", "trocar nome", "mudar nome", "outro nome", "amigo", "familiar"],
+    response: "Para transferir seu ingresso: acesse 'Meus Ingressos', selecione o ingresso desejado e clique em 'Transferir'. Informe o e-mail do destinatário e confirme. O destinatário receberá o ingresso automaticamente na conta dele.",
+  },
+  {
+    keywords: ["meia", "meia-entrada", "estudante", "idoso", "desconto", "documento", "comprovante", "pcd", "deficiente", "professor", "doador"],
+    response: "Para meia-entrada, você deve apresentar documento válido na entrada do evento (carteira de estudante, ID jovem, carteira de idoso, etc.). Ao comprar, selecione o lote de meia-entrada e tenha o documento em mãos no dia.",
+  },
+  {
+    keywords: ["evento", "cancelado", "adiado", "remarcado", "nova data", "acontece", "vai ter", "confirmado"],
+    response: "Se um evento for cancelado ou adiado, você será notificado por e-mail. Em caso de cancelamento, o reembolso é automático. Para adiamentos, seu ingresso continua válido para a nova data, ou você pode solicitar reembolso.",
+  },
+  {
+    keywords: ["conta", "login", "senha", "acessar", "entrar", "cadastro", "cadastrar", "email", "não consigo entrar", "esqueci"],
+    response: "Problemas com acesso? Clique em 'Esqueci minha senha' na tela de login para redefinir. Se o problema persistir, verifique se está usando o mesmo e-mail do cadastro. Para mais ajuda: suporte@tickethall.com.br",
+  },
+  {
+    keywords: ["horário", "hora", "quando", "que horas", "abertura", "portão", "entrada", "começa", "início"],
+    response: "O horário de abertura dos portões e início do evento estão na página do evento. Recomendamos chegar com antecedência para evitar filas. Confira os detalhes completos na sua confirmação de compra.",
+  },
+  {
+    keywords: ["local", "endereço", "onde", "localização", "como chegar", "mapa", "estacionamento"],
+    response: "O endereço completo do evento está na página do evento e no seu ingresso. Clique no endereço para abrir no mapa. Informações sobre estacionamento também estão disponíveis na descrição do evento.",
+  },
+  {
+    keywords: ["ajuda", "suporte", "contato", "falar", "atendimento", "problema", "dúvida", "humano", "atendente"],
+    response: "Para suporte personalizado, envie um e-mail para suporte@tickethall.com.br com o número do seu pedido e descreva seu problema. Nossa equipe responde em até 24 horas úteis.",
+  },
+];
+
+function normalizeText(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\w\s]/g, "")
+    .trim();
+}
 
 function getBotResponse(text: string): string {
-  const key = text.toLowerCase().trim();
-  for (const [q, a] of Object.entries(faqResponses)) {
-    if (key.includes(q.split(" ").slice(0, 3).join(" "))) return a;
+  const normalizedInput = normalizeText(text);
+  const inputWords = normalizedInput.split(/\s+/);
+  
+  let bestMatch: { item: FaqItem; score: number } | null = null;
+  
+  for (const item of faqItems) {
+    let score = 0;
+    for (const keyword of item.keywords) {
+      const normalizedKeyword = normalizeText(keyword);
+      // Check if keyword appears in input
+      if (normalizedInput.includes(normalizedKeyword)) {
+        score += normalizedKeyword.length; // Longer matches = higher score
+      }
+      // Check individual words
+      for (const word of inputWords) {
+        if (normalizedKeyword.includes(word) && word.length >= 3) {
+          score += 1;
+        }
+      }
+    }
+    
+    if (score > 0 && (!bestMatch || score > bestMatch.score)) {
+      bestMatch = { item, score };
+    }
   }
-  return "Entendi! Para suporte personalizado, envie um e-mail para suporte@tickethall.com.br ou aguarde — em breve teremos atendimento ao vivo por aqui.";
+  
+  if (bestMatch && bestMatch.score >= 2) {
+    return bestMatch.item.response;
+  }
+  
+  return "Entendi! Para suporte personalizado, envie um e-mail para suporte@tickethall.com.br ou aguarde — em breve teremos atendimento ao vivo por aqui. Você também pode tentar perguntar de outra forma.";
 }
 
 export function SupportChat() {
