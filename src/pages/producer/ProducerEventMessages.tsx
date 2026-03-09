@@ -34,18 +34,21 @@ export default function ProducerEventMessages() {
     queryKey: ["producer-event", id],
     queryFn: () => getProducerEventBasic(id!),
     enabled: !!id,
+    staleTime: 30_000,
   });
 
   const { data: tiers = [] } = useQuery({
     queryKey: ["event-tiers-messages", id],
     queryFn: () => getEventTiersBasic(id!),
     enabled: !!id,
+    staleTime: 30_000,
   });
 
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ["event-messages", id],
     queryFn: () => getEventMessages(id!),
     enabled: !!id,
+    staleTime: 30_000,
   });
 
   // Count recipients
