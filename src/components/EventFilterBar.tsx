@@ -272,9 +272,14 @@ export function EventFilterBar({ filters, onChange }: Props) {
                   active={filters.datePreset === p.value}
                   onClick={() => {
                     if (filters.datePreset === p.value) {
-                      update({ datePreset: null });
+                      update({ datePreset: null, dateRange: undefined });
                     } else {
-                      update({ datePreset: p.value, dateRange: null });
+                      // Set preset and also set dateRange for calendar visual
+                      const range = getDateRangeFromPreset(p.value);
+                      update({
+                        datePreset: p.value,
+                        dateRange: range ? { from: range.start, to: range.end } : undefined,
+                      });
                     }
                   }}
                 />
