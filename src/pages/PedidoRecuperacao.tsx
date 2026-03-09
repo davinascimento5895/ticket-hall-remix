@@ -148,7 +148,7 @@ export default function PedidoRecuperacao() {
             {isPending && order.expires_at && (
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Expira em</span>
-                <CountdownTimer expiresAt={order.expires_at} onExpire={() => refetch()} />
+                <CountdownTimer expiresAt={new Date(order.expires_at)} onExpire={() => refetch()} />
               </div>
             )}
           </CardContent>
