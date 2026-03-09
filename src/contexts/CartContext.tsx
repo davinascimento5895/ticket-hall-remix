@@ -10,6 +10,7 @@ export interface CartItem {
   price: number;
   quantity: number;
   coverImageUrl?: string;
+  platformFeePercent?: number;
 }
 
 interface CartContextType {
