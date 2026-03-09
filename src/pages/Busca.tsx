@@ -183,7 +183,7 @@ export default function Busca() {
               <div className="flex-1">
                 <SearchBar variant="page" autoFocus={!query} className="max-w-2xl" />
               </div>
-              <div className="md:hidden">
+              <div className="lg:hidden">
                 <SearchFilters
                   filters={filters}
                   onChange={setFilters}
