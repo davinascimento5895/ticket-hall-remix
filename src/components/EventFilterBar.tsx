@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import type { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { CATEGORY_OPTIONS } from "@/lib/categories";
 import {
@@ -28,7 +29,7 @@ import { ptBR } from "date-fns/locale";
 export interface EventFilters {
   category: string;
   datePreset: DatePreset;
-  dateRange: Date[] | null; // calendar-picked dates
+  dateRange: DateRange | undefined;
   priceMin: string;
   priceMax: string;
   modality: "all" | "presential" | "online";
@@ -38,7 +39,7 @@ export interface EventFilters {
 export const defaultEventFilters: EventFilters = {
   category: "",
   datePreset: null,
-  dateRange: null,
+  dateRange: undefined,
   priceMin: "",
   priceMax: "",
   modality: "all",
@@ -184,17 +185,17 @@ export function EventFilterBar({ filters, onChange }: Props) {
     if (filters.datePreset) {
       return DATE_PRESETS.find((p) => p.value === filters.datePreset)?.label;
     }
-    if (filters.dateRange && filters.dateRange.length > 0) {
-      if (filters.dateRange.length === 1) {
-        return format(filters.dateRange[0], "dd/MM/yyyy");
+    if (filters.dateRange?.from) {
+      if (filters.dateRange.to) {
+        return `${format(filters.dateRange.from, "dd/MM")} – ${format(filters.dateRange.to, "dd/MM")}`;
       }
-      return `${filters.dateRange.length} datas`;
+      return format(filters.dateRange.from, "dd/MM/yyyy");
     }
     return undefined;
   };
 
   const dateLabel = getDateLabel();
-  const hasDateFilter = !!filters.datePreset || (filters.dateRange && filters.dateRange.length > 0);
+  const hasDateFilter = !!filters.datePreset || !!filters.dateRange?.from;
   const hasPriceFilter = !!filters.priceMin || !!filters.priceMax;
 
   const priceLabel = hasPriceFilter
@@ -250,7 +251,7 @@ export function EventFilterBar({ filters, onChange }: Props) {
           label="Data"
           active={!!hasDateFilter}
           activeLabel={dateLabel}
-          onClear={() => update({ datePreset: null, dateRange: null })}
+          onClear={() => update({ datePreset: null, dateRange: undefined })}
           className="w-auto"
         >
           <div className="min-w-[300px] sm:min-w-[580px]">
@@ -266,9 +267,14 @@ export function EventFilterBar({ filters, onChange }: Props) {
                   active={filters.datePreset === p.value}
                   onClick={() => {
                     if (filters.datePreset === p.value) {
-                      update({ datePreset: null });
+                      update({ datePreset: null, dateRange: undefined });
                     } else {
-                      update({ datePreset: p.value, dateRange: null });
+                      // Set preset and also set dateRange for calendar visual
+                      const range = getDateRangeFromPreset(p.value);
+                      update({
+                        datePreset: p.value,
+                        dateRange: range ? { from: range.start, to: range.end } : undefined,
+                      });
                     }
                   }}
                 />
@@ -277,10 +283,10 @@ export function EventFilterBar({ filters, onChange }: Props) {
 
             {/* Calendar */}
             <Calendar
-              mode="multiple"
-              selected={filters.dateRange || undefined}
-              onSelect={(dates) =>
-                update({ dateRange: dates && dates.length > 0 ? dates : null, datePreset: null })
+              mode="range"
+              selected={filters.dateRange}
+              onSelect={(range) =>
+                update({ dateRange: range, datePreset: null })
               }
               numberOfMonths={2}
               locale={ptBR}
@@ -293,7 +299,7 @@ export function EventFilterBar({ filters, onChange }: Props) {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => update({ datePreset: null, dateRange: null })}
+                onClick={() => update({ datePreset: null, dateRange: undefined })}
               >
                 Limpar
               </Button>
