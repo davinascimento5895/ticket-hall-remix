@@ -64,7 +64,7 @@ export default function MeusIngressos() {
     enabled: !!user?.id,
   });
 
-  const now = new Date();
+  const now = useMemo(() => new Date(), []);
   const [archivedIds, setArchivedIds] = useState<string[]>(() => {
     try {
       return JSON.parse(localStorage.getItem("archived_tickets") || "[]");

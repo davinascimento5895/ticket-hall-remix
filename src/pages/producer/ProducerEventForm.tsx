@@ -301,6 +301,19 @@ export default function ProducerEventForm() {
         eventId = created.id;
       }
 
+      // Delete tiers that were removed in the UI
+      if (isEdit && eventId) {
+        const { data: existingTiers } = await supabase
+          .from("ticket_tiers")
+          .select("id")
+          .eq("event_id", eventId);
+        const currentTierIds = tiers.filter((t) => t.id).map((t) => t.id);
+        const toDelete = (existingTiers || []).filter((t) => !currentTierIds.includes(t.id));
+        for (const t of toDelete) {
+          await supabase.from("ticket_tiers").delete().eq("id", t.id);
+        }
+      }
+
       for (let i = 0; i < tiers.length; i++) {
         const tier = tiers[i];
         const tierData = {
