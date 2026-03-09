@@ -19,14 +19,14 @@ export async function getResaleListings(filters?: {
   category?: string;
   limit?: number;
 }) {
-  let query = supabase
-    .from("resale_listings" as any)
+  let query: any = supabase
+    .from("resale_listings")
     .select(`
       *,
       events!inner(id, title, slug, cover_image_url, start_date, end_date, venue_name, venue_city, venue_state, category),
       ticket_tiers!inner(id, name, price)
     `)
-    .eq("status", "active" as any)
+    .eq("status", "active")
     .gt("expires_at", new Date().toISOString())
     .order("created_at", { ascending: false });
 
