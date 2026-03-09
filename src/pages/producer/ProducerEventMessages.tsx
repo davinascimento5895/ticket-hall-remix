@@ -56,6 +56,7 @@ export default function ProducerEventMessages() {
     queryKey: ["recipient-count", id, tierFilter],
     queryFn: () => getEventMessageRecipientCount(id!, tierFilter),
     enabled: !!id,
+    staleTime: 30_000,
   });
 
   const saveDraftMutation = useMutation({
