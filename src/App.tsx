@@ -124,6 +124,7 @@ const App = () => {
               {/* Standalone pages (no shared Navbar/Footer) */}
               <Route path="/checkin/:accessCode" element={<PublicCheckin />} />
               <Route path="/embed" element={<EmbedWidget />} />
+              <Route path="/lista/:slug" element={<InterestListPublic />} />
 
               {/* Producer Panel */}
               <Route
