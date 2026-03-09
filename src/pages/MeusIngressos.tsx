@@ -1,18 +1,21 @@
-import { useQuery } from "@tanstack/react-query";
-import { Ticket, Calendar, MapPin, QrCode, Send, Clock, Search, Archive, Download } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Ticket, Calendar, MapPin, QrCode, Send, Clock, Search, Archive, Download, Repeat, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { QRCodeModal } from "@/components/QRCodeModal";
 import { TransferTicketModal } from "@/components/TransferTicketModal";
+import { ResaleListingModal } from "@/components/ResaleListingModal";
 import { EmptyState } from "@/components/EmptyState";
 import { useAuth } from "@/contexts/AuthContext";
 import { getMyTickets } from "@/lib/api";
+import { cancelResaleListing, getMyResaleListings } from "@/lib/api-resale";
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { normalizeText } from "@/lib/search";
+import { useToast } from "@/hooks/use-toast";
 
 type TabId = "active" | "pending" | "cancelled" | "past" | "archived";
 
