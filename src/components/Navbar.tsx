@@ -23,13 +23,17 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [authTab, setAuthTab] = useState<"login" | "register">("login");
+  const [navSearch, setNavSearch] = useState("");
   const { user, profile, role, signOut } = useAuth();
   const { itemCount } = useCart();
   const [searchParams] = useSearchParams();
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Check if we're in admin/producer area (they use sidebar navigation)
   const isAdminOrProducer = location.pathname.startsWith("/admin") || location.pathname.startsWith("/producer");
+  // Check if we're on the landing page (hero has its own search bar)
+  const isLandingPage = location.pathname === "/";
 
   useEffect(() => {
     if (searchParams.get("login") === "true") {
