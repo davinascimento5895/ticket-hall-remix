@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Plus, MoreHorizontal, Eye, BarChart3, Users, Edit, Trash2 } from "lucide-react";
+import { Plus, MoreHorizontal, Eye, BarChart3, Users, Edit, Trash2, ShoppingCart, ScanLine, UserPlus, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
@@ -100,10 +100,10 @@ export default function ProducerEvents() {
                     <DropdownMenuItem asChild><Link to={`/eventos/${event.slug}`}><Eye className="h-4 w-4 mr-2" />Ver página</Link></DropdownMenuItem>
                     <DropdownMenuItem asChild><Link to={`/producer/events/${event.id}/edit`}><Edit className="h-4 w-4 mr-2" />Editar</Link></DropdownMenuItem>
                     <DropdownMenuItem asChild><Link to={`/producer/events/${event.id}/reports`}><BarChart3 className="h-4 w-4 mr-2" />Relatórios</Link></DropdownMenuItem>
-                    <DropdownMenuItem asChild><Link to={`/producer/events/${event.id}/orders`}><Users className="h-4 w-4 mr-2" />Pedidos</Link></DropdownMenuItem>
-                    <DropdownMenuItem asChild><Link to={`/producer/events/${event.id}/checkin`}><Users className="h-4 w-4 mr-2" />Check-in</Link></DropdownMenuItem>
-                    <DropdownMenuItem asChild><Link to={`/producer/events/${event.id}/guestlist`}><Users className="h-4 w-4 mr-2" />Convidados</Link></DropdownMenuItem>
-                    <DropdownMenuItem asChild><Link to={`/producer/events/${event.id}/coupons`}><Users className="h-4 w-4 mr-2" />Cupons</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to={`/producer/events/${event.id}/orders`}><ShoppingCart className="h-4 w-4 mr-2" />Pedidos</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to={`/producer/events/${event.id}/checkin`}><ScanLine className="h-4 w-4 mr-2" />Check-in</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to={`/producer/events/${event.id}/guestlist`}><UserPlus className="h-4 w-4 mr-2" />Convidados</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to={`/producer/events/${event.id}/coupons`}><Tag className="h-4 w-4 mr-2" />Cupons</Link></DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

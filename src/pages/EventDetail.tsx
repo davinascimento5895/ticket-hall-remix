@@ -106,6 +106,7 @@ export default function EventDetail() {
       price: tier.price ?? 0, quantity,
       coverImageUrl: event.cover_image_url ?? undefined,
       platformFeePercent: event.platform_fee_percent ?? 7,
+      maxPerOrder: tier.max_per_order ?? 10,
     });
     toast({ title: "Adicionado ao carrinho", description: `${quantity}x ${tier.name}` });
   };

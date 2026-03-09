@@ -32,6 +32,7 @@ interface SearchResultEvent {
 
 function getTimeOfDay(dateStr: string): string {
   const h = getHours(new Date(dateStr));
+  if (h < 6) return "dawn";
   if (h < 13) return "morning";
   if (h < 18) return "afternoon";
   return "evening";
