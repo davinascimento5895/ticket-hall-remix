@@ -116,14 +116,19 @@ export async function createResaleListing(params: {
 
 /** Cancel a resale listing */
 export async function cancelResaleListing(listingId: string, ticketId: string) {
-  const { error } = await supabase
+  // Update listing - RLS ensures only seller can update their own
+  const { error, data } = await supabase
     .from("resale_listings" as any)
     .update({ status: "cancelled", updated_at: new Date().toISOString() })
-    .eq("id", listingId);
+    .eq("id", listingId)
+    .eq("status", "active")
+    .select()
+    .single();
 
   if (error) throw error;
+  if (!data) throw new Error("Anúncio não encontrado ou já foi processado");
 
-  // Mark ticket as no longer for resale
+  // Only revert ticket if listing was successfully cancelled
   await supabase
     .from("tickets")
     .update({ is_for_resale: false, resale_price: null } as any)
