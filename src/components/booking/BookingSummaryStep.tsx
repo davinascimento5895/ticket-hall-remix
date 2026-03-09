@@ -30,6 +30,7 @@ interface Props {
   onPaymentMethodChange: (v: string) => void;
   onConfirm: (cardData?: CreditCardData, installments?: number) => void;
   isProcessing: boolean;
+  isFree?: boolean;
 }
 
 const fmt = (v: number) => `R$ ${Number(v).toFixed(2).replace(".", ",")}`;
