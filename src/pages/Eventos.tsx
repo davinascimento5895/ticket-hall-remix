@@ -213,7 +213,7 @@ export default function Eventos() {
         {/* Header with view toggle */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <h1 className="font-display text-xl md:text-2xl font-bold">
+            <h1 className="font-display text-xl lg:text-2xl font-bold">
               {selectedDate
                 ? format(selectedDate, "dd 'de' MMMM", { locale: ptBR })
                 : "Todos os eventos"}
