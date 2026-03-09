@@ -225,8 +225,8 @@ export default function Eventos() {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <RandomDiscoveryButton className="hidden md:flex" />
-            <div className="hidden md:flex items-center gap-1 border border-border rounded-lg p-0.5">
+            <RandomDiscoveryButton className="hidden lg:flex" />
+            <div className="hidden lg:flex items-center gap-1 border border-border rounded-lg p-0.5">
               <button
                 onClick={() => setGridView(false)}
                 className={cn("p-1.5 rounded-md transition-colors", !gridView ? "bg-secondary text-foreground" : "text-muted-foreground")}
