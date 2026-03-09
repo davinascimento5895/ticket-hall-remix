@@ -71,7 +71,8 @@ export default function ProducerEventCheckin() {
           // Prevent duplicate scans of the same code in quick succession
           if (lastScannedRef.current === decodedText) return;
           lastScannedRef.current = decodedText;
-          checkinMutation.mutate(decodedText);
+          // QR codes contain JWT or raw data — use validateCheckin directly
+          scanCheckinMutation.mutate(decodedText);
           // Reset after 3 seconds to allow re-scanning
           setTimeout(() => { lastScannedRef.current = ""; }, 3000);
         },
