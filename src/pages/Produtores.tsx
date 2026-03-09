@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { CalculadoraComparador } from "@/components/CalculadoraComparador";
 import { TabelaComparativo } from "@/components/TabelaComparativo";
-import { AuthModal } from "@/components/AuthModal";
+
 import { BecomeProducerModal } from "@/components/BecomeProducerModal";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -153,23 +153,13 @@ const steps = [
 export default function Produtores() {
   const { user, role } = useAuth();
   const navigate = useNavigate();
-  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [producerModalOpen, setProducerModalOpen] = useState(false);
 
   const handleCTA = () => {
-    // Already a producer — go to dashboard
     if (role === "producer") {
       navigate("/producer/dashboard");
       return;
     }
-
-    // Not logged in — open auth modal
-    if (!user) {
-      setAuthModalOpen(true);
-      return;
-    }
-
-    // Logged in but not producer — open become producer modal
     setProducerModalOpen(true);
   };
 
@@ -185,20 +175,6 @@ export default function Produtores() {
 
   return (
     <>
-      {/* Auth Modal */}
-      <AuthModal
-        open={authModalOpen}
-        onOpenChange={(open) => {
-          setAuthModalOpen(open);
-          // After successful auth, open producer modal
-          if (!open && user && role !== "producer") {
-            setTimeout(() => setProducerModalOpen(true), 300);
-          }
-        }}
-        defaultTab="register"
-      />
-
-      {/* Become Producer Modal */}
       <BecomeProducerModal
         open={producerModalOpen}
         onOpenChange={setProducerModalOpen}

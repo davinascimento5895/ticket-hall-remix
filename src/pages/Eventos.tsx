@@ -9,7 +9,6 @@ import { EventCard } from "@/components/EventCard";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { SEOHead } from "@/components/SEOHead";
-import { AuthModal } from "@/components/AuthModal";
 import { BecomeProducerModal } from "@/components/BecomeProducerModal";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -32,21 +31,13 @@ export default function Eventos() {
   const [gridView, setGridView] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const { city, loading: cityLoading, requestLocation } = useCityDetection();
-  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [producerModalOpen, setProducerModalOpen] = useState(false);
 
   const handleCreateEvent = () => {
-    // Already a producer — go to create event
     if (role === "producer") {
       navigate("/producer/events/new");
       return;
     }
-    // Not logged in — open auth modal
-    if (!user) {
-      setAuthModalOpen(true);
-      return;
-    }
-    // Logged in but not producer — open become producer modal
     setProducerModalOpen(true);
   };
 
@@ -137,20 +128,6 @@ export default function Eventos() {
         description="Encontre os melhores eventos, shows, festivais e experiências perto de você. Compre ingressos com segurança no TicketHall."
       />
 
-      {/* Auth Modal */}
-      <AuthModal
-        open={authModalOpen}
-        onOpenChange={(open) => {
-          setAuthModalOpen(open);
-          // After successful auth, open producer modal
-          if (!open && user && role !== "producer") {
-            setTimeout(() => setProducerModalOpen(true), 300);
-          }
-        }}
-        defaultTab="register"
-      />
-
-      {/* Become Producer Modal */}
       <BecomeProducerModal
         open={producerModalOpen}
         onOpenChange={setProducerModalOpen}
