@@ -17,7 +17,7 @@ import { getEvents } from "@/lib/api";
 import { RandomDiscoveryButton } from "@/components/RandomDiscoveryButton";
 import { useCityDetection } from "@/hooks/useCityDetection";
 import { cn } from "@/lib/utils";
-import { isSameDay, isWithinInterval, format } from "date-fns";
+import { isSameDay, isWithinInterval, format, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CATEGORY_OPTIONS } from "@/lib/categories";
 
