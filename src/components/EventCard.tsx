@@ -36,7 +36,7 @@ export function EventCard({ title, date, city, imageUrl, priceFrom, category, sl
         <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
         {category && (
           <span className="absolute top-3 left-3 px-2 py-1 text-xs font-medium rounded-full bg-primary/90 text-primary-foreground">
-            {categoryLabels[category] || category}
+            {getCategoryLabel(category)}
           </span>
         )}
       </div>
