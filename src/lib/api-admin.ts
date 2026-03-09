@@ -113,11 +113,20 @@ export async function adminUpdateEvent(eventId: string, updates: Record<string, 
 // ============================================================
 
 export async function getAllUsers(search?: string) {
-  let query = supabase.from("profiles").select("id, full_name, cpf, phone, created_at, user_roles(role)").order("created_at", { ascending: false });
+  let query = supabase.from("profiles").select("id, full_name, cpf, phone, created_at").order("created_at", { ascending: false });
   if (search) query = query.ilike("full_name", `%${search}%`);
-  const { data, error } = await query;
+  const { data: profiles, error } = await query;
   if (error) throw error;
-  return data;
+  if (!profiles || profiles.length === 0) return [];
+
+  // Fetch roles separately (user_roles has no FK to profiles)
+  const userIds = profiles.map((p) => p.id);
+  const { data: roles } = await supabase.from("user_roles").select("user_id, role").in("user_id", userIds);
+
+  const roleMap = new Map<string, string>();
+  (roles || []).forEach((r: any) => roleMap.set(r.user_id, r.role));
+
+  return profiles.map((p) => ({ ...p, role: roleMap.get(p.id) || "buyer" }));
 }
 
 // ============================================================
