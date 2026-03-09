@@ -156,13 +156,15 @@ export default function ProducerEventFinancial() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border text-left text-muted-foreground">
-                    <th className="p-3 font-medium">Nº Pedido</th>
-                    <th className="p-3 font-medium">Comprador</th>
-                    <th className="p-3 font-medium">Data</th>
-                    <th className="p-3 font-medium">Valor</th>
-                    <th className="p-3 font-medium">Taxa</th>
-                    <th className="p-3 font-medium">Líquido</th>
-                    <th className="p-3 font-medium">Status</th>
+                     <th className="p-3 font-medium">Nº Pedido</th>
+                     <th className="p-3 font-medium">Comprador</th>
+                     <th className="p-3 font-medium">Data</th>
+                     <th className="p-3 font-medium">Subtotal</th>
+                     <th className="p-3 font-medium">Desconto</th>
+                     <th className="p-3 font-medium">Valor</th>
+                     <th className="p-3 font-medium">Taxa</th>
+                     <th className="p-3 font-medium">Líquido</th>
+                     <th className="p-3 font-medium">Status</th>
                   </tr>
                 </thead>
                 <tbody>
