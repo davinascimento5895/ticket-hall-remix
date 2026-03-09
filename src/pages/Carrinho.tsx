@@ -12,6 +12,7 @@ import { toast } from "@/hooks/use-toast";
 
 export default function Carrinho() {
   const { items, removeItem, updateQuantity, clearCart, subtotal, platformFee, total, expiresAt, couponCode, setCouponCode, discount, setDiscount, setAppliedCouponId, finalTotal } = useCart();
+  const { user } = useAuth();
   const [validatingCoupon, setValidatingCoupon] = useState(false);
   const navigate = useNavigate();
 
