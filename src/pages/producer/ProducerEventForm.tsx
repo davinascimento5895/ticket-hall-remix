@@ -276,7 +276,7 @@ export default function ProducerEventForm() {
       if (form.venue_neighborhood) fullAddress += `, ${form.venue_neighborhood}`;
 
       const eventData: any = {
-        title: form.title, slug: form.slug, description: form.description,
+        title: form.title, slug: finalSlug, description: form.description,
         category: form.category, venue_name: form.venue_name,
         venue_address: fullAddress, venue_city: form.venue_city,
         venue_state: form.venue_state, venue_zip: form.venue_zip,
