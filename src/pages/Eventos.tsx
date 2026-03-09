@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams, useNavigate } from "react-router-dom";
@@ -62,6 +62,10 @@ export default function Eventos() {
     setTimer(t);
   };
 
+  const PAGE_SIZE = 24;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
   const { data: rawEvents, isLoading } = useQuery({
     queryKey: ["events", debouncedSearch, filters.category, cityFilter],
     queryFn: async () => {
@@ -69,7 +73,7 @@ export default function Eventos() {
         search: debouncedSearch || undefined,
         category: filters.category || undefined,
         city: cityFilter || undefined,
-        limit: 50,
+        limit: 200,
       });
       if (!evts || evts.length === 0) return [];
       const eventIds = evts.map((e: any) => e.id);
@@ -88,6 +92,11 @@ export default function Eventos() {
       return evts.map((e: any) => ({ ...e, _minPrice: minPriceMap[e.id] ?? 0 }));
     },
   });
+
+  // Reset visible count when filters change
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [debouncedSearch, filters, cityFilter]);
 
   // Apply all client-side filters
   const filteredEvents = useMemo(() => {
@@ -320,7 +329,7 @@ export default function Eventos() {
                 ? "grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
                 : "sm:grid-cols-2 lg:grid-cols-3"
             )}>
-              {(gridView ? filteredEvents : restEvents).map((event: any) => (
+              {(gridView ? filteredEvents : restEvents).slice(0, visibleCount).map((event: any) => (
                 <EventCard
                   key={event.id}
                   title={event.title}
@@ -334,9 +343,22 @@ export default function Eventos() {
                   priceFrom={event._minPrice ?? 0}
                   category={event.category}
                   slug={event.slug}
+                  eventId={event.id}
                 />
               ))}
             </div>
+
+            {/* Load more */}
+            {(gridView ? filteredEvents : restEvents).length > visibleCount && (
+              <div className="flex justify-center pt-8" ref={loadMoreRef}>
+                <Button
+                  variant="outline"
+                  onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                >
+                  Carregar mais eventos
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>
