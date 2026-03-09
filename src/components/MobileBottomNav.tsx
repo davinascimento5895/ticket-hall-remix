@@ -30,6 +30,11 @@ export function MobileBottomNav() {
     return null;
   }
 
+  // Hide on checkout flow for focused experience
+  if (location.pathname.startsWith("/checkout")) {
+    return null;
+  }
+
   // Determine profile destination based on role
   const profileHref = !user 
     ? "/?login=true" 
