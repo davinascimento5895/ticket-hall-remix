@@ -125,9 +125,10 @@ export default function MeusIngressos() {
     { id: "pending", label: "Pendentes", count: categorizedTickets.pending.length },
     { id: "cancelled", label: "Cancelados", count: categorizedTickets.cancelled.length },
     { id: "past", label: "Encerrados", count: categorizedTickets.past.length },
+    { id: "archived", label: "Arquivados", count: categorizedTickets.archived.length },
   ];
 
-  const isPast = activeTab === "past" || activeTab === "cancelled";
+  const isPast = activeTab === "past" || activeTab === "cancelled" || activeTab === "archived";
 
   const renderTicket = (ticket: any) => {
     const isTransferable = ticket.status === "active" && ticket.ticket_tiers?.is_transferable !== false;
