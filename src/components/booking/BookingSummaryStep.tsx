@@ -108,7 +108,7 @@ export function BookingSummaryStep({
             </div>
           )}
           {discount > 0 && (
-            <div className="flex justify-between text-xs text-green-600">
+            <div className="flex justify-between text-xs text-primary">
               <span>Desconto</span>
               <span>-{fmt(discount)}</span>
             </div>
