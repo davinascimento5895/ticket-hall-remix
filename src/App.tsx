@@ -163,6 +163,7 @@ const App = () => {
                   <Route path="financial" element={<ProducerEventFinancial />} />
                   <Route path="messages" element={<ProducerEventMessages />} />
                   <Route path="coupons" element={<ProducerEventCoupons />} />
+                  <Route path="promoters" element={<ProducerEventPromoters />} />
                 </Route>
                 {/* Legacy direct routes (still work) */}
                 <Route path="events/:id/reports" element={<ProducerEventReports />} />
