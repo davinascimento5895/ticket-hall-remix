@@ -2,16 +2,19 @@ import { useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { BookingSeatMap } from "./BookingSeatMap";
 
 interface Props {
   tiers: any[];
   selectedDate: Date;
   onSelectTier: (tier: any, quantity: number) => void;
+  seatMapConfig?: { imageUrl?: string; tierColors?: Record<string, string> } | null;
+  hasSeatMap?: boolean;
 }
 
 const fmt = (v: number) => v === 0 ? "Grátis" : `R$ ${Number(v).toFixed(2).replace(".", ",")}`;
 
-export function BookingTicketStep({ tiers, selectedDate, onSelectTier }: Props) {
+export function BookingTicketStep({ tiers, selectedDate, onSelectTier, seatMapConfig, hasSeatMap }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
 
@@ -32,8 +35,17 @@ export function BookingTicketStep({ tiers, selectedDate, onSelectTier }: Props) 
     if (tier) onSelectTier(tier, getQty(selectedId));
   };
 
+  const tierColors = seatMapConfig?.tierColors || {};
+
   return (
     <div className="space-y-4">
+      {/* Show seat map image if available */}
+      {hasSeatMap && seatMapConfig?.imageUrl && (
+        <div className="mb-4">
+          <BookingSeatMap seatMapConfig={seatMapConfig} tiers={tiers} />
+        </div>
+      )}
+
       <p className="text-sm text-muted-foreground text-center">Escolha seu ingresso</p>
 
       {availableTiers.length === 0 ? (
@@ -46,6 +58,7 @@ export function BookingTicketStep({ tiers, selectedDate, onSelectTier }: Props) 
             const max = Math.min(tier.max_per_order ?? 10, available);
             const isSelected = selectedId === tier.id;
             const qty = getQty(tier.id);
+            const sectorColor = tierColors[tier.name];
 
             return (
               <button
@@ -61,12 +74,22 @@ export function BookingTicketStep({ tiers, selectedDate, onSelectTier }: Props) 
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-foreground">{tier.name}</p>
+                    <div className="flex items-center gap-2">
+                      {/* Color dot when seat map is active */}
+                      {sectorColor && (
+                        <span
+                          className="w-3 h-3 rounded-full shrink-0"
+                          style={{ backgroundColor: sectorColor }}
+                          title={`Setor: ${tier.name}`}
+                        />
+                      )}
+                      <p className="font-semibold text-foreground">{tier.name}</p>
+                    </div>
                     {tier.description && (
                       <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{tier.description}</p>
                     )}
                     <p className="text-xs text-muted-foreground mt-1">
-                      {available} disponível{available !== 1 ? "is" : ""}
+                      {available} disponíve{available !== 1 ? "is" : "l"}
                     </p>
                   </div>
                   <div className="text-right shrink-0 ml-3">
