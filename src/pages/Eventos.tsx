@@ -300,7 +300,7 @@ export default function Eventos() {
                   })}
                   city={event.venue_city || "Online"}
                   imageUrl={event.cover_image_url || "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=600&q=80"}
-                  priceFrom={0}
+                  priceFrom={event._minPrice ?? 0}
                   category={event.category}
                   slug={event.slug}
                 />
