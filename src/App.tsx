@@ -35,6 +35,13 @@ import Changelog from "./pages/Changelog";
 import NotificacoesConfig from "./pages/NotificacoesConfig";
 import Cidades from "./pages/Cidades";
 import Busca from "./pages/Busca";
+import MeuPerfil from "./pages/MeuPerfil";
+import EditarPerfil from "./pages/EditarPerfil";
+import AlterarSenha from "./pages/AlterarSenha";
+import PerfilCidade from "./pages/PerfilCidade";
+import MetodosPagamento from "./pages/MetodosPagamento";
+import PerfilNotificacoes from "./pages/PerfilNotificacoes";
+import PerfilSuporte from "./pages/PerfilSuporte";
 import NotFound from "./pages/NotFound";
 
 // Producer pages — lazy loaded
