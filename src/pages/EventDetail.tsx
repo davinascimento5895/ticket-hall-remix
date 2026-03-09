@@ -187,6 +187,7 @@ export default function EventDetail() {
           <div className="w-full h-full bg-secondary" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+        <FavoriteButton eventId={event.id} size="md" className="absolute top-4 right-4" />
       </div>
 
       <div className="container relative -mt-28 pb-16">
