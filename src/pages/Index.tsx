@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/EventCard";
 import { CategoryCarousel } from "@/components/CategoryCarousel";
 import { CityCarousel } from "@/components/CityCarousel";
+import { SearchBar } from "@/components/SearchBar";
 import { Spotlight } from "@/components/core/spotlight";
 import { WordRotate } from "@/components/ui/word-rotate";
 import { motion } from "framer-motion";
