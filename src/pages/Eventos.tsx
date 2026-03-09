@@ -95,14 +95,12 @@ export default function Eventos() {
       />
 
       <div className="container pt-24 pb-16">
-        {/* Search bar */}
-        <div className="relative mb-6">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar eventos, artistas, locais..."
-            className="pl-10 bg-secondary border-border-strong"
-            value={search}
-            onChange={(e) => handleSearch(e.target.value)}
+        {/* Global Search bar */}
+        <div className="mb-6">
+          <SearchBar 
+            variant="page" 
+            placeholder="Buscar eventos, artistas, locais..." 
+            className="max-w-2xl"
           />
         </div>
 
