@@ -128,20 +128,6 @@ export default function Eventos() {
         description="Encontre os melhores eventos, shows, festivais e experiências perto de você. Compre ingressos com segurança no TicketHall."
       />
 
-      {/* Auth Modal */}
-      <AuthModal
-        open={authModalOpen}
-        onOpenChange={(open) => {
-          setAuthModalOpen(open);
-          // After successful auth, open producer modal
-          if (!open && user && role !== "producer") {
-            setTimeout(() => setProducerModalOpen(true), 300);
-          }
-        }}
-        defaultTab="register"
-      />
-
-      {/* Become Producer Modal */}
       <BecomeProducerModal
         open={producerModalOpen}
         onOpenChange={setProducerModalOpen}

@@ -175,20 +175,6 @@ export default function Produtores() {
 
   return (
     <>
-      {/* Auth Modal */}
-      <AuthModal
-        open={authModalOpen}
-        onOpenChange={(open) => {
-          setAuthModalOpen(open);
-          // After successful auth, open producer modal
-          if (!open && user && role !== "producer") {
-            setTimeout(() => setProducerModalOpen(true), 300);
-          }
-        }}
-        defaultTab="register"
-      />
-
-      {/* Become Producer Modal */}
       <BecomeProducerModal
         open={producerModalOpen}
         onOpenChange={setProducerModalOpen}
