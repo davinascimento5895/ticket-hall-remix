@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, MapPin, Clock, Share2, Users, ArrowLeft, Lock, Package } from "lucide-react";
+import { Calendar, MapPin, Clock, Share2, Users, ArrowLeft, Lock, Package, ExternalLink } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { getCategoryLabel } from "@/lib/categories";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -65,6 +67,20 @@ export default function EventDetail() {
     queryKey: ["event-products", event?.id],
     queryFn: () => getEventProducts(event!.id),
     enabled: !!event?.id,
+  });
+
+  // Fetch producer profile
+  const { data: producer } = useQuery({
+    queryKey: ["producer-profile", event?.producer_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, full_name, organizer_slug, organizer_logo_url, organizer_bio")
+        .eq("id", event!.producer_id)
+        .single();
+      return data;
+    },
+    enabled: !!event?.producer_id,
   });
 
   const { addItem } = useCart();
@@ -212,16 +228,20 @@ export default function EventDetail() {
             <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
               <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                 <Calendar className="h-4 w-4 text-primary" />
-                {format(startDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-              </span>
-              <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-                <Clock className="h-4 w-4 text-primary" />
-                {format(startDate, "HH:mm")} – {format(endDate, "HH:mm")}
+                {format(startDate, "dd 'de' MMMM 'de' yyyy, HH:mm", { locale: ptBR })}
+                {" › "}
+                {format(endDate, "dd 'de' MMMM 'de' yyyy, HH:mm", { locale: ptBR })}
               </span>
               {event.venue_name && (
-                <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-                  <MapPin className="h-4 w-4 text-primary" />
-                  {event.venue_name}{event.venue_city ? `, ${event.venue_city}` : ""}
+                <span className="inline-flex items-start gap-1.5 text-muted-foreground">
+                  <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                  <span>
+                    {event.venue_name}
+                    {event.venue_address ? ` - ${event.venue_address}` : ""}
+                    {event.venue_city ? `, ${event.venue_city}` : ""}
+                    {event.venue_state ? `, ${event.venue_state}` : ""}
+                    {event.venue_zip ? ` - ${event.venue_zip}` : ""}
+                  </span>
                 </span>
               )}
               {event.max_capacity && (
@@ -265,6 +285,34 @@ export default function EventDetail() {
 
                 {/* Reviews section */}
                 <EventReviews eventId={event.id} isPastEvent={isPastEvent} />
+
+                {/* Produzido por */}
+                {producer && (
+                  <div className="border-t border-border pt-6 space-y-3">
+                    <h3 className="font-display font-semibold text-foreground">Produzido por:</h3>
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-12 w-12">
+                        {producer.organizer_logo_url ? (
+                          <AvatarImage src={producer.organizer_logo_url} alt={producer.full_name || "Produtor"} />
+                        ) : null}
+                        <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                          {(producer.full_name || "P").charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-semibold text-foreground">{producer.full_name || "Produtor"}</p>
+                        {producer.organizer_slug && (
+                          <Link
+                            to={`/organizador/${producer.organizer_slug}`}
+                            className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-0.5"
+                          >
+                            Mais eventos do produtor <ExternalLink className="h-3 w-3" />
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -361,6 +409,14 @@ export default function EventDetail() {
                     <div className="w-full h-48 bg-secondary rounded-lg flex items-center justify-center text-sm text-muted-foreground border border-border mt-4">
                       Mapa em breve
                     </div>
+                    {event.venue_name && (
+                      <Link
+                        to={`/eventos?local=${encodeURIComponent(event.venue_name)}`}
+                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-2"
+                      >
+                        Mais eventos neste local <ExternalLink className="h-3 w-3" />
+                      </Link>
+                    )}
                   </div>
                 ) : event.is_online ? (
                   <p className="text-sm text-muted-foreground">Este é um evento online.</p>
