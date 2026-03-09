@@ -9,6 +9,7 @@ export default function AdminFinance() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-finance"],
     queryFn: getFinanceData,
+    staleTime: 60_000,
   });
 
   const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
