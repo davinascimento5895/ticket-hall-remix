@@ -9,8 +9,7 @@ import { EventCard } from "@/components/EventCard";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { SEOHead } from "@/components/SEOHead";
-
-import { BecomeProducerModal } from "@/components/BecomeProducerModal";
+BecomeProducerModal";
 import { useAuth } from "@/contexts/AuthContext";
 
 import { getEvents } from "@/lib/api";
@@ -32,8 +31,7 @@ export default function Eventos() {
   const [gridView, setGridView] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const { city, loading: cityLoading, requestLocation } = useCityDetection();
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [producerModalOpen, setProducerModalOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(= useState(false);
 
   const handleCreateEvent = () => {
     // Already a producer — go to create event
