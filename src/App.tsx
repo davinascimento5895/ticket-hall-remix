@@ -174,6 +174,8 @@ const App = () => {
                 <Route path="interest-lists" element={<ProducerInterestLists />} />
                 <Route path="interest-lists/new" element={<ProducerInterestListForm />} />
                 <Route path="interest-lists/:id/edit" element={<ProducerInterestListForm />} />
+                <Route path="financial" element={<ProducerFinancialPage />} />
+                <Route path="promoters" element={<ProducerPromoters />} />
                 <Route path="settings" element={<ProducerSettings />} />
               </Route>
 
