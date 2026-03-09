@@ -83,6 +83,11 @@ export default function Checkout() {
       toast({ title: "Faça login", description: "Você precisa estar logado para finalizar a compra.", variant: "destructive" });
       return;
     }
+    // If order already created (user went back and forward), skip re-creation
+    if (orderId) {
+      setStep(1);
+      return;
+    }
     setIsCreatingOrder(true);
     try {
       const eventId = items[0]?.eventId;
@@ -214,7 +219,7 @@ export default function Checkout() {
     } finally {
       setIsCreatingOrder(false);
     }
-  }, [user, items, subtotal, platformFee, total, finalTotal, discount, appliedCouponId, attendeeData, questionAnswers, clearCart]);
+  }, [user, items, subtotal, platformFee, total, finalTotal, discount, appliedCouponId, attendeeData, questionAnswers, clearCart, orderId]);
 
   // Process payment
   const handleConfirmPayment = useCallback(async (method: string, cardData?: CreditCardData, installments?: number) => {
