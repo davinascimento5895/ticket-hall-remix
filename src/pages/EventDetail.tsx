@@ -285,6 +285,34 @@ export default function EventDetail() {
 
                 {/* Reviews section */}
                 <EventReviews eventId={event.id} isPastEvent={isPastEvent} />
+
+                {/* Produzido por */}
+                {producer && (
+                  <div className="border-t border-border pt-6 space-y-3">
+                    <h3 className="font-display font-semibold text-foreground">Produzido por:</h3>
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-12 w-12">
+                        {producer.organizer_logo_url ? (
+                          <AvatarImage src={producer.organizer_logo_url} alt={producer.full_name || "Produtor"} />
+                        ) : null}
+                        <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                          {(producer.full_name || "P").charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-semibold text-foreground">{producer.full_name || "Produtor"}</p>
+                        {producer.organizer_slug && (
+                          <Link
+                            to={`/organizador/${producer.organizer_slug}`}
+                            className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-0.5"
+                          >
+                            Mais eventos do produtor <ExternalLink className="h-3 w-3" />
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
