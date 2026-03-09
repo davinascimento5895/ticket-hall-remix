@@ -1,6 +1,7 @@
 import { Calendar, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { FavoriteButton } from "@/components/FavoriteButton";
 import { cn } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/categories";
 
@@ -12,10 +13,11 @@ interface EventCardProps {
   priceFrom: number;
   category?: string;
   slug?: string;
+  eventId?: string;
   className?: string;
 }
 
-export function EventCard({ title, date, city, imageUrl, priceFrom, category, slug, className }: EventCardProps) {
+export function EventCard({ title, date, city, imageUrl, priceFrom, category, slug, eventId, className }: EventCardProps) {
   const Wrapper = slug ? Link : "div";
   const wrapperProps = slug ? { to: `/eventos/${slug}` } : {};
   return (
@@ -38,6 +40,9 @@ export function EventCard({ title, date, city, imageUrl, priceFrom, category, sl
           <span className="absolute top-3 left-3 px-2 py-1 text-xs font-medium rounded-full bg-primary/90 text-primary-foreground">
             {getCategoryLabel(category)}
           </span>
+        )}
+        {eventId && (
+          <FavoriteButton eventId={eventId} className="absolute top-3 right-3" />
         )}
       </div>
       <div className="p-4 space-y-2">

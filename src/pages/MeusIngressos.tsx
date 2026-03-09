@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Ticket, Calendar, MapPin, QrCode, Send, Clock, Search } from "lucide-react";
+import { Ticket, Calendar, MapPin, QrCode, Send, Clock, Search, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { normalizeText } from "@/lib/search";
 
-type TabId = "active" | "pending" | "cancelled" | "past";
+type TabId = "active" | "pending" | "cancelled" | "past" | "archived";
 
 export default function MeusIngressos() {
   const { user } = useAuth();
@@ -46,17 +46,36 @@ export default function MeusIngressos() {
   });
 
   const now = new Date();
+  const [archivedIds, setArchivedIds] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("archived_tickets") || "[]");
+    } catch { return []; }
+  });
+
+  const toggleArchive = (ticketId: string) => {
+    setArchivedIds((prev) => {
+      const next = prev.includes(ticketId) ? prev.filter((id) => id !== ticketId) : [...prev, ticketId];
+      localStorage.setItem("archived_tickets", JSON.stringify(next));
+      return next;
+    });
+  };
 
   // Categorize tickets
   const categorizedTickets = useMemo(() => {
-    if (!tickets) return { active: [], pending: [], cancelled: [], past: [] };
+    if (!tickets) return { active: [], pending: [], cancelled: [], past: [], archived: [] };
 
     const active: any[] = [];
     const pending: any[] = [];
     const cancelled: any[] = [];
     const past: any[] = [];
+    const archived: any[] = [];
 
     for (const ticket of tickets) {
+      if (archivedIds.includes(ticket.id)) {
+        archived.push(ticket);
+        continue;
+      }
+
       const eventDate = ticket.events?.start_date ? new Date(ticket.events.start_date) : null;
       const isPastEvent = eventDate && eventDate < now;
 
@@ -73,8 +92,8 @@ export default function MeusIngressos() {
       }
     }
 
-    return { active, pending, cancelled, past };
-  }, [tickets, now]);
+    return { active, pending, cancelled, past, archived };
+  }, [tickets, now, archivedIds]);
 
   // Filter by search query
   const filteredTickets = useMemo(() => {
@@ -106,9 +125,10 @@ export default function MeusIngressos() {
     { id: "pending", label: "Pendentes", count: categorizedTickets.pending.length },
     { id: "cancelled", label: "Cancelados", count: categorizedTickets.cancelled.length },
     { id: "past", label: "Encerrados", count: categorizedTickets.past.length },
+    { id: "archived", label: "Arquivados", count: categorizedTickets.archived.length },
   ];
 
-  const isPast = activeTab === "past" || activeTab === "cancelled";
+  const isPast = activeTab === "past" || activeTab === "cancelled" || activeTab === "archived";
 
   const renderTicket = (ticket: any) => {
     const isTransferable = ticket.status === "active" && ticket.ticket_tiers?.is_transferable !== false;
@@ -216,6 +236,17 @@ export default function MeusIngressos() {
               <Send className="h-4 w-4" /> Transferir
             </Button>
           )}
+          {(activeTab === "past" || activeTab === "archived") && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-muted-foreground"
+              onClick={() => toggleArchive(ticket.id)}
+            >
+              <Archive className="h-4 w-4" />
+              {archivedIds.includes(ticket.id) ? "Desarquivar" : "Arquivar"}
+            </Button>
+          )}
         </div>
       </div>
     );
@@ -231,6 +262,8 @@ export default function MeusIngressos() {
         return "Nenhum ingresso cancelado";
       case "past":
         return "Nenhum ingresso de eventos passados";
+      case "archived":
+        return "Nenhum ingresso arquivado";
     }
   };
 

@@ -42,6 +42,7 @@ import PerfilCidade from "./pages/PerfilCidade";
 import MetodosPagamento from "./pages/MetodosPagamento";
 import PerfilNotificacoes from "./pages/PerfilNotificacoes";
 import PerfilSuporte from "./pages/PerfilSuporte";
+import Favoritos from "./pages/Favoritos";
 import NotFound from "./pages/NotFound";
 
 // Producer pages — lazy loaded
@@ -125,6 +126,7 @@ const App = () => {
                 <Route path="/meu-perfil/pagamento" element={<MetodosPagamento />} />
                 <Route path="/meu-perfil/notificacoes" element={<PerfilNotificacoes />} />
                 <Route path="/meu-perfil/suporte" element={<PerfilSuporte />} />
+                <Route path="/favoritos" element={<Favoritos />} />
               </Route>
 
               {/* Standalone pages (no shared Navbar/Footer) */}
