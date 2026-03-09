@@ -13,6 +13,7 @@ interface EventCardProps {
   priceFrom: number;
   category?: string;
   slug?: string;
+  eventId?: string;
   className?: string;
 }
 
