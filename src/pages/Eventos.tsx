@@ -50,7 +50,7 @@ export default function Eventos() {
     setProducerModalOpen(true);
   };
 
-  const isPendingProducer = profile?.producer_status === "pending";
+  
 
   // Sync URL params on mount
   useEffect(() => {
