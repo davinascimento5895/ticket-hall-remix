@@ -1,145 +1,82 @@
-# TicketHall — Plano Mestre de Redesign & Implementação
 
-## Documento de Referência
-Business Case & Product Design Analysis completo fornecido pelo cliente em 2026-03-06.
 
----
+## Auditoria Completa — Rodada 4
 
-## Design System Alvo (Novo)
-- **Tema**: Dark-first (`#0d0d0d` base, `#1a1a1a`/`#1f1f1f`/`#2c2c2c` superfícies)
-- **Cor principal (ação)**: Laranja `#ff472d` — CTAs, badges, ícones ativos, links, bordas de foco
-- **Cor secundária (gamificação)**: Verde-lima `#bad900` — pontos, sucesso, confirmações
-- **Texto principal**: Branco `#ffffff`
-- **Texto secundário**: Cinza claro `#9ca3af`
-- **Texto terciário (inativo)**: Cinza médio `#6b7280`
-- **Tipografia**: Sora (display) + Inter (body) — já configurado
-- **Border radius**: ~12-16px para cards, ~10px para inputs
-- **Componentes**: Chips/Pills, Bottom Sheets, Cards com gradiente escuro, Toggle switches
+Analisei o codebase completo novamente. Ignorando integrações externas (pagamento, email, analytics). Segue:
 
 ---
 
-## Gap Analysis — Existente vs Documento de Design
+### BUG FUNCIONAL — BookingFlow calcula taxa errada
 
-### ✅ JÁ IMPLEMENTADO
-- Catálogo de eventos com filtros por categoria
-- Detalhe do evento com descrição, data, local
-- Fluxo de compra (carrinho → checkout → pagamento)
-- Meus Ingressos (lista de ingressos ativos)
-- QR Code por ingresso
-- Transferência de ingresso
-- Sistema de reembolso (RefundDialog)
-- Cupons de desconto
-- Fila virtual
-- Certificados pós-evento
-- Painel do produtor completo
-- Painel admin completo
-- Autenticação (login/registro com email)
-- Notificações (NotificationBell)
-- Blog
-- Página do organizador
-- LGPD/Privacidade
-- Bottom navigation mobile
-- Tema claro/escuro com transição animada
+`src/components/booking/BookingFlow.tsx` linha 63:
+```
+const platformFee = Math.round(subtotal * feePercent) / 100;
+```
+Se `subtotal = 100` e `feePercent = 7`: `Math.round(100 * 7) / 100 = 7.00` — OK.
+Se `subtotal = 150` e `feePercent = 7`: `Math.round(150 * 7) / 100 = Math.round(1050) / 100 = 10.50` — OK.
+Se `subtotal = 33.50` e `feePercent = 5.5`: `Math.round(33.50 * 5.5) / 100 = Math.round(184.25) / 100 = 1.84` — ERRADO. Deveria ser `33.50 * 0.055 = 1.8425`.
 
-### ❌ FEATURES FALTANTES
-1. **Onboarding** — 2-3 telas de boas-vindas com skip
-2. **Detecção automática de cidade** — GPS
-3. **Seletor de datas horizontal** — Barra scrollável no catálogo
-4. **Top-10 / Ranking** — Seção editorial com badges numerados
-5. **Filtro avançado (Bottom Sheet)** — Sort, range slider, gênero, horário
-6. **Grid view toggle** — Lista/grade no catálogo
-7. **Rating/Avaliação** — Estrelas + reviews de usuários (tabela + UI)
-8. **Random/Discovery** — Evento aleatório
-9. **Cast/Elenco** — Seção de artistas no detalhe
-10. **Mapa de assentos** — Seleção visual interativa
-11. **Sistema de pontos** — Fidelidade no checkout
-12. **Favoritos** — Salvar eventos (tabela + UI)
-13. **Ingressos arquivados** — Ativo/Arquivado com visual P&B
-14. **Chat de suporte** — Bot + quick replies in-app
-15. **Perfil completo** — Editar perfil, cidade, pagamentos, notificações
-16. **Login OTP** — Código por email/telefone
-17. **Login social** — Google, Apple
-18. **Compartilhamento** — Share via link
-19. **Notificações configuráveis** — SMS/Push/Email toggles
-20. **Seções editoriais** — "Novo", "Semana", curadoria
+A fórmula funciona por coincidência quando feePercent é inteiro, mas está **matematicamente errada**. A fórmula correta é: `Math.round(subtotal * feePercent / 100 * 100) / 100` ou simplesmente `subtotal * feePercent / 100`.
 
-### 🔄 PRECISA REDESIGN VISUAL
-- Todas as páginas públicas (landing, catálogo, detalhe, checkout)
-- Navbar → Dark-first com laranja
-- Bottom Nav → Ícone ativo laranja
-- Cards de evento → Fundo #1f1f1f, gradiente, badges
-- Botões → Fill laranja, outline cinza
-- Inputs → Fundo #1f1f1f, borda #3a3a3a
-- Chips → Ativo laranja, inativo borda cinza
-- Login/Registro → Redesign completo
-- Meus Ingressos → Cards com barcode, ações
-- Painéis Producer/Admin → Dark-first
+O CartContext faz certo: `i.price * i.quantity * feePercent / 100`.
+
+**Fix**: Alterar para `const platformFee = Math.round(subtotal * feePercent) / 100;` → `const platformFee = Math.round(subtotal * feePercent * 100 / 100) / 100;`... Na verdade, a fórmula correta com arredondamento a 2 casas é:
+```typescript
+const platformFee = Math.round(subtotal * feePercent) / 100;
+```
+Wait — vou recalcular. `subtotal * feePercent` quando `feePercent=7` e `subtotal=100` dá `700`. Dividido por 100 = 7. OK. `subtotal=33.50, feePercent=5.5`: `33.50 * 5.5 = 184.25`. `/100 = 1.8425`. Com `Math.round`: `Math.round(184.25)/100 = 184/100 = 1.84`. O valor correto é `33.50 * 0.055 = 1.8425`, arredondado a 2 casas = `1.84`. Então está certo! A fórmula é equivalente a `Math.round(subtotal * feePercent) / 100` = `round(subtotal * feePercent / 100, 2)`. OK, meu erro — a fórmula está correta.
 
 ---
 
-## Fases de Implementação
+### INCONSISTÊNCIAS REAIS ENCONTRADAS
 
-### Fase 1 — Design System Foundation
-- [ ] Atualizar index.css (CSS variables nova paleta)
-- [ ] Atualizar tailwind.config.ts
-- [ ] Atualizar componentes base (Button, Input, Card, Badge, Chips)
-- [ ] Navbar dark-first com laranja
-- [ ] Bottom Nav com laranja
-- [ ] AuthModal redesign dark-first
+**1. EventDetail "Comprar ingresso" não muda para "Inscrever-se" quando grátis**
+`src/pages/EventDetail.tsx` linhas 376 e 400: ambos os CTAs (sidebar e mobile) dizem "Comprar ingresso" fixo. O `EventCard` já faz a distinção, mas a página de detalhe do evento não.
+- **Fix**: Verificar `lowestPrice === 0` e exibir "Inscrever-se" ao invés de "Comprar ingresso".
 
-### Fase 2 — Páginas Públicas (Buyer UX)
-- [ ] Landing page redesign
-- [ ] Catálogo (seletor datas, chips, banner, Top-10)
-- [ ] Detalhe do evento (reviews, cast, CTA fixo)
-- [ ] Meus Ingressos (ativo/arquivado, barcode, reembolso)
-- [ ] Checkout redesign
+**2. `createOrder` em `api.ts` tem comment `PAYMENT_INTEGRATION_POINT` visível no código**
+`src/lib/api.ts` linha 83: comment `PAYMENT_INTEGRATION_POINT` no código. Não é visível ao usuário, mas a função `createOrder` em `api.ts` **nem é usada** — o Checkout e o BookingFlow ambos criam orders diretamente via supabase inline. Dead code.
+- **Fix**: Remover `createOrder` de `api.ts` (dead code).
 
-### Fase 3 — Features Novas (Prioridade Alta)
-- [ ] Favoritos (tabela + UI)
-- [ ] Rating/Reviews (tabela + UI)
-- [ ] Filtro avançado (Bottom Sheet com Drawer)
-- [ ] Grid view toggle
-- [ ] Compartilhamento social
-- [ ] Perfil completo do usuário
-- [ ] Ingressos arquivados
+**3. `getEventOrders` em `api-producer.ts` usa FK hint errado**
+`src/lib/api-producer.ts` linha 117: `profiles!orders_buyer_id_fkey(full_name, cpf)` — depende de FK `orders.buyer_id → profiles.id`. Como `profiles.id` referencia `auth.users.id` e `orders.buyer_id` também, a FK entre eles pode não existir explicitamente. Se falhar, as ordens do produtor não mostram nome do comprador.
+- **Fix**: Verificar no schema se a FK existe. Se não, o join silenciosamente falha.
 
-### Fase 4 — Features Avançadas
-- [ ] Random/Discovery
-- [ ] Sistema de pontos/fidelidade
-- [ ] Chat de suporte in-app
-- [ ] Onboarding (2-3 telas)
-- [ ] Detecção de cidade
-- [ ] Notificações configuráveis
-- [ ] Login OTP + Social
+**4. Carrinho: discount não é passado para o Checkout**
+`src/pages/Carrinho.tsx` aplica cupom e calcula `discount`, mas quando o usuário clica "Finalizar compra" e vai para `/checkout`, o desconto **é perdido** — o Checkout não recebe o desconto do carrinho. O cupom precisa ser reaplicado no Checkout ou passado via contexto.
+- **Fix**: Adicionar `discount` e `couponCode` ao CartContext, ou mover a lógica de cupom inteiramente para o Checkout.
 
-### Fase 5 — Painéis (Producer/Admin)
-- [ ] Redesign dark-first dos dashboards
-- [ ] Consistência com novo design system
+**5. Carrinho: `finalTotal` é calculado mas o botão "Finalizar compra" linka direto sem usar**
+`src/pages/Carrinho.tsx` linha 41: `const finalTotal = Math.max(0, total - discount)`. O valor mostrado é `finalTotal`, mas ao ir para o Checkout, `total` do CartContext (sem desconto) é usado. O usuário vê um preço no carrinho e outro diferente no checkout.
+- **Fix**: Ligado ao item 4 acima.
+
+**6. `api.ts` analytics functions são placeholders expostos**
+`trackEvent`, `trackPageView`, `trackPurchase` são funções vazias que nunca fazem nada. Se algum componente chamar essas funções esperando analytics, nada acontece. Não é um bug, mas é dead code.
+- **Fix**: Manter como estão (são placeholders intencionais para futura integração) ou remover se não são chamados em lugar nenhum.
+
+**7. Maintenance mode não persiste**
+`src/pages/admin/AdminSettings.tsx`: o toggle de "Modo Manutenção" usa `useState` local. Não salva em nenhum lugar. O admin ativa, recarrega a página, e volta a false.
+- **Fix**: Persistir em uma tabela `platform_settings` ou usar um campo no banco. Ou marcar como "Em breve" se não for implementar agora.
+
+**8. Products adicionados ao carrinho não têm `platformFeePercent`**
+`src/pages/EventDetail.tsx` linhas 321-327: quando o usuário adiciona um produto ao carrinho, o `addItem` não inclui `platformFeePercent` nem `maxPerOrder`. Resultado: a taxa do produto cai no fallback de 7% (config), e o max quantity usa 10 default.
+- **Fix**: Adicionar `platformFeePercent: event.platform_fee_percent ?? 7` e `maxPerOrder: p.max_per_order ?? 10` ao addItem de produtos.
 
 ---
 
-## Infraestrutura Backend (Plano Anterior — Mantido)
+## Plano de Implementação
 
-### Bloco 1 — Schema & SQL Functions
-- Funções atômicas: reserve_tickets, confirm_order_payment, apply_coupon
-- Índices de performance
+1. **EventDetail CTA "Inscrever-se" para eventos grátis** — Verificar `lowestPrice === 0` nos botões sidebar e mobile
+2. **Cupom do carrinho perdido no checkout** — Mover `couponCode` e `discount` para o CartContext para persistir entre páginas
+3. **Products sem platformFeePercent** — Adicionar campos ao addItem de produtos no EventDetail
+4. **Maintenance mode como placeholder honesto** — Mudar texto para "Em breve" ou persistir no banco
+5. **Remover dead code** — `createOrder` em `api.ts`, analytics placeholders (opcional)
 
-### Bloco 2 — Edge Functions de Pagamento (Asaas)
-- create-payment, asaas-webhook, create-producer-account
-- Secrets: ASAAS_API_KEY, ASAAS_BASE_URL, QR_SECRET
+### Arquivos alterados
+- `src/pages/EventDetail.tsx` — CTA dinâmico + product fee
+- `src/contexts/CartContext.tsx` — couponCode + discount no contexto
+- `src/pages/Carrinho.tsx` — usar discount do contexto
+- `src/pages/Checkout.tsx` — aplicar discount do contexto na order
+- `src/pages/admin/AdminSettings.tsx` — placeholder honesto para maintenance
+- `src/lib/api.ts` — remover dead code
 
-### Bloco 3 — Checkout Real
-- Conectar UI ao create-payment
-- PIX, Cartão, Boleto
-
-### Bloco 4 — QR Codes Seguros + Check-in
-- JWT assinado, validate-checkin
-
-### Bloco 5 — Transferência + Cancelamento
-- transfer-ticket, cancel-event
-
-### Bloco 6 — Cron Jobs
-- cleanup_expired_reservations, event-reminders
-
-### Bloco 7 — Segurança & LGPD
-- Rate limiting, consents, data requests
