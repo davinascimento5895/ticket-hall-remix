@@ -113,6 +113,14 @@ function AdminSidebar() {
 }
 
 export default function AdminLayout() {
+  useEffect(() => {
+    const savedDashTheme = localStorage.getItem("theme-dashboard");
+    if (!savedDashTheme) {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme-dashboard", "light");
+    }
+  }, []);
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
