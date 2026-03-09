@@ -47,8 +47,8 @@ export function MobileBottomNav() {
     return null;
   }
 
-  // Determine profile destination based on auth
-  const profileHref = !user ? "/?login=true" : "/meu-perfil";
+  // For profile: if not logged in, we'll intercept the click to open auth modal
+  const profileHref = !user ? "#" : "/meu-perfil";
 
   const navItems = baseNavItems.map((item) =>
     item.id === "profile" ? { ...item, href: profileHref } : item
