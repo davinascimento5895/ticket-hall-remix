@@ -240,7 +240,7 @@ export default function MeusIngressos() {
       <div className="container pt-4 lg:pt-24 pb-16">
         {/* Header with title and search */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-          <h1 className="font-display text-2xl md:text-3xl font-bold">Ingressos</h1>
+          <h1 className="font-display text-2xl lg:text-3xl font-bold">Ingressos</h1>
           
           {/* Search bar */}
           <div className="relative w-full md:w-80">
