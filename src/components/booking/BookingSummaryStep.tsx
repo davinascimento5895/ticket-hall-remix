@@ -46,7 +46,7 @@ export function BookingSummaryStep({
   subtotal, platformFee, discount, total,
   couponCode, onCouponChange, onApplyCoupon,
   paymentMethod, onPaymentMethodChange,
-  onConfirm, isProcessing,
+  onConfirm, isProcessing, isFree,
 }: Props) {
   const [cardNumber, setCardNumber] = useState("");
   const [cardName, setCardName] = useState("");
