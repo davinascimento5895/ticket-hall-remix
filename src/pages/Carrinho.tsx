@@ -45,7 +45,7 @@ export default function Carrinho() {
   if (items.length === 0) {
     return (
       <>
-        <div className="container pt-4 md:pt-24 pb-16">
+        <div className="container pt-4 lg:pt-24 pb-16">
           <EmptyState
             icon={<ShoppingCart className="h-12 w-12" />}
             title="Seu carrinho está vazio"
