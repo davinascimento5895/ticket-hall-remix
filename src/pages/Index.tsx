@@ -255,7 +255,7 @@ export default function Index() {
       </section>
 
       {/* ===== FAQ ===== */}
-      <section className="py-16 md:py-24 bg-muted/30">
+      <section className="py-16 lg:py-24 bg-muted/30">
         <div className="container max-w-2xl">
           <h2 className="font-display text-2xl md:text-3xl font-bold text-center mb-8">Perguntas frequentes</h2>
           <Accordion type="single" collapsible className="space-y-2">
