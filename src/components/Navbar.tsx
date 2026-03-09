@@ -209,12 +209,10 @@ export function Navbar() {
               </Button>
             )}
 
-            {/* Hamburger menu for logged-out users and admin/producer */}
-            {(!user || isAdminOrProducer) && (
-              <button className="text-foreground p-2" onClick={() => setMobileOpen(!mobileOpen)}>
-                {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </button>
-            )}
+            {/* Hamburger menu — always visible on mobile */}
+            <button className="lg:hidden text-foreground p-2" onClick={() => setMobileOpen(!mobileOpen)}>
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
         </div>
 
@@ -255,29 +253,26 @@ export function Navbar() {
           </div>
         )}
 
-        {/* Mobile Menu — admin/producer */}
-        {mobileOpen && isAdminOrProducer && (
+        {/* Mobile Menu — logged-in users (buyer / admin / producer) */}
+        {mobileOpen && user && (
           <div className="lg:hidden bg-background/95 backdrop-blur-xl border-b border-border animate-fade-in">
-            <div className="container py-4 space-y-3">
+            <div className="container py-4 space-y-1">
               {links.map((l) => (
-                <Link key={l.href} to={l.href} className="block text-sm font-medium text-muted-foreground py-2" onClick={() => setMobileOpen(false)}>
+                <Link key={l.href} to={l.href} className="block text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 transition-colors" onClick={() => setMobileOpen(false)}>
                   {l.label}
                 </Link>
               ))}
-              {user ? (
-                <>
-                  <Link to={dashboardLink} className="block text-sm font-medium py-2" onClick={() => setMobileOpen(false)}>Meu Painel</Link>
-                  <Link to="/meus-ingressos" className="block text-sm font-medium py-2" onClick={() => setMobileOpen(false)}>Meus Ingressos</Link>
-                  <Button variant="ghost" size="sm" className="w-full justify-start text-destructive" onClick={() => { signOut(); setMobileOpen(false); }}>
-                    <LogOut className="h-4 w-4 mr-2" /> Sair
-                  </Button>
-                </>
-              ) : (
-                <div className="flex gap-3 pt-2">
-                  <Button variant="ghost" size="sm" className="flex-1" onClick={() => { openLogin(); setMobileOpen(false); }}>Entrar</Button>
-                  <Button variant="default" size="sm" className="flex-1" onClick={() => { openRegister(); setMobileOpen(false); }}>Criar Conta</Button>
-                </div>
+              <div className="border-t border-border my-2" />
+              {isAdminOrProducer && (
+                <Link to={dashboardLink} className="block text-sm font-medium py-2.5" onClick={() => setMobileOpen(false)}>Meu Painel</Link>
               )}
+              <Link to="/meus-ingressos" className="block text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 transition-colors" onClick={() => setMobileOpen(false)}>Meus Ingressos</Link>
+              <Link to="/favoritos" className="block text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 transition-colors" onClick={() => setMobileOpen(false)}>Favoritos</Link>
+              <Link to="/meu-perfil" className="block text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 transition-colors" onClick={() => setMobileOpen(false)}>Meu Perfil</Link>
+              <div className="border-t border-border my-2" />
+              <Button variant="ghost" size="sm" className="w-full justify-start text-destructive" onClick={() => { signOut(); setMobileOpen(false); }}>
+                <LogOut className="h-4 w-4 mr-2" /> Sair
+              </Button>
             </div>
           </div>
         )}
