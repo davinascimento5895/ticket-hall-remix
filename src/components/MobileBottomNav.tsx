@@ -132,8 +132,6 @@ export function MobileBottomNav() {
           );
         })}
       </div>
-
-      <AuthModal open={authOpen} onOpenChange={setAuthOpen} defaultTab="login" />
     </nav>
   );
 }
