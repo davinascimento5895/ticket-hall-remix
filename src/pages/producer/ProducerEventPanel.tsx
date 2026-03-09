@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { EmbedSnippetGenerator } from "@/components/EmbedSnippetGenerator";
 import { useParams, useNavigate, useLocation, Link, Outlet } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, LayoutDashboard, Ticket, Users, ScanLine, DollarSign, Mail, Tag, ChevronDown, Globe, MapPin, Calendar, Megaphone, Code } from "lucide-react";
