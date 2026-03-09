@@ -4,6 +4,7 @@ import { ArrowLeft, Calendar, MapPin, Shield, AlertTriangle, CheckCircle2, Tag, 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SEOHead } from "@/components/SEOHead";
+import { AuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { getResaleListingById, purchaseResaleListing, calculateResaleFee } from "@/lib/api-resale";
