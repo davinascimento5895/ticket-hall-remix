@@ -139,6 +139,7 @@ const App = () => {
 
               {/* Standalone pages (no shared Navbar/Footer) */}
               <Route path="/checkin/:accessCode" element={<PublicCheckin />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/embed" element={<EmbedWidget />} />
               <Route path="/lista/:slug" element={<InterestListPublic />} />
               <Route path="/auth/callback" element={<AuthCallback />} />

@@ -82,7 +82,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
     e.preventDefault();
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
-      redirectTo: `${window.location.origin}/meu-perfil/alterar-senha`,
+      redirectTo: `${window.location.origin}/reset-password`,
     });
     setLoading(false);
     if (error) {

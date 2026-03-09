@@ -195,7 +195,7 @@ export async function getEventReconciliation(producerId: string) {
     .in("event_id", eventIds);
 
   return events.map(event => {
-    const eventOrders = (orders || []).filter(o => o.event_id === event.id);
+    const eventOrders = allOrders.filter(o => o.event_id === event.id);
     const paidOrders = eventOrders.filter(o => o.status === "paid");
     const refundedOrders = eventOrders.filter(o => o.status === "refunded");
     const eventAnalytics = (analytics || []).find(a => a.event_id === event.id);

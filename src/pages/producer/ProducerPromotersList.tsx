@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Trash2, Edit2, Users, Ban, CheckCircle } from "lucide-react";
@@ -18,11 +19,13 @@ export default function ProducerPromotersList({ producerId }: { producerId: stri
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", email: "", phone: "", cpf: "", pix_key: "", notes: "" });
 
   const { data: promoters = [], isLoading } = useQuery({
     queryKey: ["promoters", producerId],
     queryFn: () => getPromoters(producerId),
+    staleTime: 30_000,
   });
 
   const createMut = useMutation({
@@ -51,6 +54,7 @@ export default function ProducerPromotersList({ producerId }: { producerId: stri
     mutationFn: (id: string) => deletePromoter(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["promoters"] });
+      setDeletingId(null);
       toast({ title: "Promoter removido!" });
     },
   });
@@ -123,7 +127,7 @@ export default function ProducerPromotersList({ producerId }: { producerId: stri
                         <CheckCircle className="h-4 w-4 text-green-600" />
                       </Button>
                     )}
-                    <Button size="icon" variant="ghost" className="text-destructive" onClick={() => deleteMut.mutate(p.id)}>
+                    <Button size="icon" variant="ghost" className="text-destructive" onClick={() => setDeletingId(p.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -133,6 +137,22 @@ export default function ProducerPromotersList({ producerId }: { producerId: stri
           ))}
         </div>
       )}
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deletingId} onOpenChange={(open) => { if (!open) setDeletingId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover promoter?</AlertDialogTitle>
+            <AlertDialogDescription>Essa ação é permanente e removerá todos os vínculos deste promoter.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => deletingId && deleteMut.mutate(deletingId)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Create/Edit Dialog */}
       <Dialog open={showCreate || !!editingId} onOpenChange={(open) => { if (!open) { setShowCreate(false); setEditingId(null); resetForm(); } }}>

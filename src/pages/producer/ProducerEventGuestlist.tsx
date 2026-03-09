@@ -1,11 +1,12 @@
 import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Plus, Trash2, CheckCircle2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { getEventGuestList, addGuest, removeGuest, checkinGuest } from "@/lib/api-producer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,18 +18,21 @@ export default function ProducerEventGuestlist() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", email: "", phone: "" });
 
   const { data: event } = useQuery({
     queryKey: ["producer-event", id],
     queryFn: async () => { const { data } = await supabase.from("events").select("title").eq("id", id).single(); return data; },
     enabled: !!id,
+    staleTime: 30_000,
   });
 
   const { data: guests, isLoading } = useQuery({
     queryKey: ["event-guestlist", id],
     queryFn: () => getEventGuestList(id!),
     enabled: !!id,
+    staleTime: 30_000,
   });
 
   const addMutation = useMutation({
@@ -46,6 +50,7 @@ export default function ProducerEventGuestlist() {
     mutationFn: removeGuest,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["event-guestlist", id] });
+      setDeletingId(null);
       toast({ title: "Convidado removido." });
     },
   });
@@ -103,7 +108,7 @@ export default function ProducerEventGuestlist() {
                     ) : (
                       <Button size="sm" variant="outline" onClick={() => checkinMutation.mutate(guest.id)}>Check-in</Button>
                     )}
-                    <button onClick={() => removeMutation.mutate(guest.id)} className="p-1.5 text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
+                    <button onClick={() => setDeletingId(guest.id)} className="p-1.5 text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
                   </div>
                 </div>
               ))}
@@ -111,6 +116,22 @@ export default function ProducerEventGuestlist() {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deletingId} onOpenChange={(open) => { if (!open) setDeletingId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover convidado?</AlertDialogTitle>
+            <AlertDialogDescription>O convidado será removido da lista permanentemente.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => deletingId && removeMutation.mutate(deletingId)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
