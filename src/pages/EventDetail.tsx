@@ -390,9 +390,11 @@ export default function EventDetail() {
               ) : (
                 <p className="text-sm text-muted-foreground">Em breve</p>
               )}
-              <Button variant="outline" size="sm" className="w-full gap-2" onClick={handleShare}>
-                <Share2 className="h-4 w-4" /> Compartilhar
-              </Button>
+              <ShareSheet url={window.location.href} title={event.title}>
+                <Button variant="outline" size="sm" className="w-full gap-2">
+                  <Share2 className="h-4 w-4" /> Compartilhar
+                </Button>
+              </ShareSheet>
             </div>
           </aside>
         </div>
