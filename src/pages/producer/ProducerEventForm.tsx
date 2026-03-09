@@ -47,7 +47,7 @@ export default function ProducerEventForm() {
   const [step, setStep] = useState(0);
 
   const [form, setForm] = useState({
-    title: "", slug: "", description: "", category: "music",
+    title: "", slug: "", description: "", category: "shows",
     start_date: "", end_date: "", doors_open_time: "",
     venue_name: "", venue_address: "", venue_city: "", venue_state: "", venue_zip: "",
     is_online: false, online_url: "",
