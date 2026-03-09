@@ -1,145 +1,132 @@
-# TicketHall — Plano Mestre de Redesign & Implementação
 
-## Documento de Referência
-Business Case & Product Design Analysis completo fornecido pelo cliente em 2026-03-06.
 
----
+# Auditoria Completa — TicketHall: Plano Estrategico Pre-Lancamento
 
-## Design System Alvo (Novo)
-- **Tema**: Dark-first (`#0d0d0d` base, `#1a1a1a`/`#1f1f1f`/`#2c2c2c` superfícies)
-- **Cor principal (ação)**: Laranja `#ff472d` — CTAs, badges, ícones ativos, links, bordas de foco
-- **Cor secundária (gamificação)**: Verde-lima `#bad900` — pontos, sucesso, confirmações
-- **Texto principal**: Branco `#ffffff`
-- **Texto secundário**: Cinza claro `#9ca3af`
-- **Texto terciário (inativo)**: Cinza médio `#6b7280`
-- **Tipografia**: Sora (display) + Inter (body) — já configurado
-- **Border radius**: ~12-16px para cards, ~10px para inputs
-- **Componentes**: Chips/Pills, Bottom Sheets, Cards com gradiente escuro, Toggle switches
+Revisao sistematica de todo o codebase, organizada por area, com classificacao de severidade.
 
 ---
 
-## Gap Analysis — Existente vs Documento de Design
+## 1. AREA DO USUARIO FINAL (Buyer)
 
-### ✅ JÁ IMPLEMENTADO
-- Catálogo de eventos com filtros por categoria
-- Detalhe do evento com descrição, data, local
-- Fluxo de compra (carrinho → checkout → pagamento)
-- Meus Ingressos (lista de ingressos ativos)
-- QR Code por ingresso
-- Transferência de ingresso
-- Sistema de reembolso (RefundDialog)
-- Cupons de desconto
-- Fila virtual
-- Certificados pós-evento
-- Painel do produtor completo
-- Painel admin completo
-- Autenticação (login/registro com email)
-- Notificações (NotificationBell)
-- Blog
-- Página do organizador
-- LGPD/Privacidade
-- Bottom navigation mobile
-- Tema claro/escuro com transição animada
+### BUGS / CRITICOS
 
-### ❌ FEATURES FALTANTES
-1. **Onboarding** — 2-3 telas de boas-vindas com skip
-2. **Detecção automática de cidade** — GPS
-3. **Seletor de datas horizontal** — Barra scrollável no catálogo
-4. **Top-10 / Ranking** — Seção editorial com badges numerados
-5. **Filtro avançado (Bottom Sheet)** — Sort, range slider, gênero, horário
-6. **Grid view toggle** — Lista/grade no catálogo
-7. **Rating/Avaliação** — Estrelas + reviews de usuários (tabela + UI)
-8. **Random/Discovery** — Evento aleatório
-9. **Cast/Elenco** — Seção de artistas no detalhe
-10. **Mapa de assentos** — Seleção visual interativa
-11. **Sistema de pontos** — Fidelidade no checkout
-12. **Favoritos** — Salvar eventos (tabela + UI)
-13. **Ingressos arquivados** — Ativo/Arquivado com visual P&B
-14. **Chat de suporte** — Bot + quick replies in-app
-15. **Perfil completo** — Editar perfil, cidade, pagamentos, notificações
-16. **Login OTP** — Código por email/telefone
-17. **Login social** — Google, Apple
-18. **Compartilhamento** — Share via link
-19. **Notificações configuráveis** — SMS/Push/Email toggles
-20. **Seções editoriais** — "Novo", "Semana", curadoria
+| # | Problema | Severidade | Detalhe |
+|---|---------|-----------|---------|
+| 1.1 | **Carrinho nao protege checkout sem login** | Alta | O botao "Finalizar compra" em `Carrinho.tsx` (linha 166) e um `<Link to="/checkout">` direto. Se o usuario nao esta logado, o `ProtectedRoute` redireciona para `/?login=true`, mas apos login ele vai para a home (nao volta ao checkout). O carrinho pode expirar nesse tempo. | 
+| 1.2 | **Carrinho aceita itens de 1 evento por vez, mas nao valida no checkout** | Media | Se o usuario manipula localStorage, pode enviar itens de eventos diferentes. O `Checkout.tsx` (linha 93) usa `items[0]?.eventId` — itens de outros eventos sao ignorados silenciosamente. |
+| 1.3 | **Download de ingresso so funciona se `qr_code_image_url` existir** | Media | Em `MeusIngressos.tsx` linha 260, o botao "Baixar" so aparece se `ticket.qr_code_image_url` estiver preenchido. A edge function `generate-qr-code` precisa estar sendo chamada em algum momento. Verificar se o QR e gerado ao confirmar pagamento. |
+| 1.4 | **Pagina de Favoritos nao esta no MobileBottomNav** | Baixa | Nao ha acesso direto a favoritos no menu mobile logado. O usuario precisa ir pelo perfil. |
 
-### 🔄 PRECISA REDESIGN VISUAL
-- Todas as páginas públicas (landing, catálogo, detalhe, checkout)
-- Navbar → Dark-first com laranja
-- Bottom Nav → Ícone ativo laranja
-- Cards de evento → Fundo #1f1f1f, gradiente, badges
-- Botões → Fill laranja, outline cinza
-- Inputs → Fundo #1f1f1f, borda #3a3a3a
-- Chips → Ativo laranja, inativo borda cinza
-- Login/Registro → Redesign completo
-- Meus Ingressos → Cards com barcode, ações
-- Painéis Producer/Admin → Dark-first
+### PLACEHOLDERS / INCOMPLETOS
+
+| # | Problema | Severidade |
+|---|---------|-----------|
+| 1.5 | **Analytics placeholders vazios** | Baixa | `trackEvent`, `trackPageView`, `trackPurchase` em `api.ts` sao funcoes vazias. Nao afeta funcionalidade, mas nao ha tracking algum. |
+| 1.6 | **SupportChat e um chatbot offline com respostas hardcoded** | Baixa | Funciona como FAQ interativo, mas o usuario pode esperar suporte humano. Considerar remover ou adicionar disclaimer "Assistente automatizado". |
+| 1.7 | **Pagina de Metodos de Pagamento (`MetodosPagamento.tsx`) e placeholder** | Media | Rota existe mas precisa verificar se tem conteudo funcional ou e apenas UI. |
 
 ---
 
-## Fases de Implementação
+## 2. FLUXO DE COMPRA (Checkout)
 
-### Fase 1 — Design System Foundation
-- [ ] Atualizar index.css (CSS variables nova paleta)
-- [ ] Atualizar tailwind.config.ts
-- [ ] Atualizar componentes base (Button, Input, Card, Badge, Chips)
-- [ ] Navbar dark-first com laranja
-- [ ] Bottom Nav com laranja
-- [ ] AuthModal redesign dark-first
+### BUGS / CRITICOS
 
-### Fase 2 — Páginas Públicas (Buyer UX)
-- [ ] Landing page redesign
-- [ ] Catálogo (seletor datas, chips, banner, Top-10)
-- [ ] Detalhe do evento (reviews, cast, CTA fixo)
-- [ ] Meus Ingressos (ativo/arquivado, barcode, reembolso)
-- [ ] Checkout redesign
-
-### Fase 3 — Features Novas (Prioridade Alta)
-- [ ] Favoritos (tabela + UI)
-- [ ] Rating/Reviews (tabela + UI)
-- [ ] Filtro avançado (Bottom Sheet com Drawer)
-- [ ] Grid view toggle
-- [ ] Compartilhamento social
-- [ ] Perfil completo do usuário
-- [ ] Ingressos arquivados
-
-### Fase 4 — Features Avançadas
-- [ ] Random/Discovery
-- [ ] Sistema de pontos/fidelidade
-- [ ] Chat de suporte in-app
-- [ ] Onboarding (2-3 telas)
-- [ ] Detecção de cidade
-- [ ] Notificações configuráveis
-- [ ] Login OTP + Social
-
-### Fase 5 — Painéis (Producer/Admin)
-- [ ] Redesign dark-first dos dashboards
-- [ ] Consistência com novo design system
+| # | Problema | Severidade |
+|---|---------|-----------|
+| 2.1 | **Stub mode do pagamento confirma cartao sem gateway** | Alta | `create-payment/index.ts` linha 169-240: quando Asaas nao esta configurado, cartao de credito e confirmado automaticamente (RPC `confirm_order_payment` e chamado). Isso cria ingressos reais sem cobranca. Para lancamento, se o gateway nao estiver pronto, pelo menos bloquear pagamento por cartao no stub mode e so permitir PIX/boleto com aviso. |
+| 2.2 | **Pedido expira em 15 min mas nao ha feedback visual antes de expirar** | Baixa | O `CountdownTimer` existe no checkout, mas se o usuario sai da pagina e volta, o pedido pode ter expirado sem feedback. |
+| 2.3 | **Sem rota para recuperar pedido pendente** | Media | Se o usuario fecha o navegador durante pagamento PIX, nao ha como voltar ao pedido. Falta rota `/pedido/:id` ou similar. |
 
 ---
 
-## Infraestrutura Backend (Plano Anterior — Mantido)
+## 3. AREA DO PRODUTOR
 
-### Bloco 1 — Schema & SQL Functions
-- Funções atômicas: reserve_tickets, confirm_order_payment, apply_coupon
-- Índices de performance
+### BUGS / CRITICOS
 
-### Bloco 2 — Edge Functions de Pagamento (Asaas)
-- create-payment, asaas-webhook, create-producer-account
-- Secrets: ASAAS_API_KEY, ASAAS_BASE_URL, QR_SECRET
+| # | Problema | Severidade |
+|---|---------|-----------|
+| 3.1 | **ProducerEventForm tem 1221 linhas num unico arquivo** | Baixa | Nao e bug, mas aumenta risco de regressao. Considerar refatorar em sub-componentes menores. |
+| 3.2 | **ProducerEventReconciliation nao e acessivel como rota independente** | Media | Existe como tab dentro de `ProducerFinancial`, mas o nome do arquivo sugere que deveria ser acessivel por evento tambem. Verificar se faz sentido ter rota `/producer/events/:id/reconciliation`. |
+| 3.3 | **Triggers do banco nao existem no DB atual** | CRITICO | A nota `<db-triggers>: There are no triggers in the database` significa que: (1) `handle_new_user` nao cria perfil/role automaticamente; (2) `update_updated_at_column` nao atualiza timestamps; (3) `handle_promoter_commission` nao processa comissoes; (4) `increment_list_submissions` nao conta submissions. As FUNCOES existem mas os TRIGGERS que as chamam nao foram criados! |
 
-### Bloco 3 — Checkout Real
-- Conectar UI ao create-payment
-- PIX, Cartão, Boleto
+### PLACEHOLDERS / INCOMPLETOS
 
-### Bloco 4 — QR Codes Seguros + Check-in
-- JWT assinado, validate-checkin
+| # | Problema | Severidade |
+|---|---------|-----------|
+| 3.4 | **EmbedSnippetGenerator existe mas nao e acessivel** | Baixa | O componente existe, mas nao ha link no painel do produtor para gerar embed de venda. |
+| 3.5 | **Relatorios de evento (`ProducerEventReports`)** | Media | Rota existe como legacy `/producer/events/:id/reports` mas nao esta no EventPanel como tab. Verificar se esta completo. |
 
-### Bloco 5 — Transferência + Cancelamento
-- transfer-ticket, cancel-event
+---
 
-### Bloco 6 — Cron Jobs
-- cleanup_expired_reservations, event-reminders
+## 4. AREA ADMIN
 
-### Bloco 7 — Segurança & LGPD
-- Rate limiting, consents, data requests
+### BUGS / CRITICOS
+
+| # | Problema | Severidade |
+|---|---------|-----------|
+| 4.1 | **AdminProducerDetail nao tem botoes de aprovar/rejeitar** | Alta | A pagina mostra dados do produtor e lista de eventos, mas nao tem acoes de gestao (aprovar, rejeitar, suspender). As funcoes `approveProducer`, `rejectProducer` existem em `api-admin.ts` mas nao sao usadas na UI. |
+| 4.2 | **AdminDashboard faz queries sem filtro de date range na analytics** | Baixa | `event_analytics` e sempre buscado sem filtro de data (linha 37 de api-admin.ts). O filtro de data so se aplica a events/orders, mas analytics mostra o total acumulado sempre. |
+| 4.3 | **AdminUsers nao tem acao de promover/remover roles** | Media | A lista de usuarios mostra nome, CPF e role, mas nao permite alterar roles ou suspender usuarios. |
+
+---
+
+## 5. BANCO DE DADOS / BACKEND
+
+### CRITICOS
+
+| # | Problema | Severidade |
+|---|---------|-----------|
+| 5.1 | **TRIGGERS NAO CRIADOS** | CRITICO | Esta e a questao mais grave. As funcoes `handle_new_user`, `update_updated_at_column`, `handle_promoter_commission`, `increment_list_submissions` existem mas **nenhum trigger** esta registrado no banco. Isso significa: novos usuarios nao ganham profile/role automaticamente; timestamps de `updated_at` nao sao atualizados; comissoes de promoters nunca sao geradas; e submissions de listas de interesse nao contam. A edge function `ensure-user-profile` no AuthContext e um workaround parcial, mas nao e confiavel. |
+| 5.2 | **Google OAuth pode nao estar habilitado** | Alta | `BecomeProducerModal` tem botao "Continuar com Google" (linha 286) e `AuthModal` provavelmente tambem. Se o provider Google nao esta configurado no auth settings do Lovable Cloud, vai dar erro. Precisa confirmar se esta habilitado. |
+| 5.3 | **Tabela `resale_listings` usa `as any` em todas as queries** | Media | Toda query para `resale_listings` em `api-resale.ts` usa cast `as any` porque a tabela provavelmente nao esta nos types gerados. Funciona mas nao tem type-safety. |
+
+---
+
+## 6. LANDING PAGE E NAVEGACAO
+
+| # | Problema | Severidade |
+|---|---------|-----------|
+| 6.1 | **Redirect de buyer logado pra /eventos impede acesso a landing** | Media | Em `Index.tsx` linha 114-121, se o usuario esta logado como buyer, e redirecionado para `/eventos` automaticamente. Nao tem como ver a landing page da plataforma enquanto logado. |
+| 6.2 | **SEOHead nao esta em todas as paginas publicas** | Baixa | Algumas paginas (Produtores, Carrinho, Checkout) nao tem `SEOHead`. |
+| 6.3 | **OnboardingFlow aparece para todos os visitantes, incluindo produtores** | Baixa | O onboarding e generico e mostra "Como comprar ingressos" mesmo para produtores. |
+
+---
+
+## 7. PLANO DE IMPLEMENTACAO PRIORIZADO
+
+### Fase 1 — CRITICOS (Bloqueia lancamento)
+
+1. **Criar TODOS os triggers do banco** — migration SQL para: `handle_new_user` on `auth.users`, `update_updated_at_column` on profiles/orders/events, `handle_promoter_commission` on orders, `increment_list_submissions` on interest_list_submissions
+2. **Proteger checkout sem login** — Redirecionar do carrinho para AuthModal antes de ir ao checkout, preservando o contexto
+3. **Bloquear stub mode para cartao** — No `create-payment`, quando Asaas nao esta configurado, so permitir PIX simulado ou retornar erro claro
+
+### Fase 2 — ALTA PRIORIDADE
+
+4. **Admin: botoes aprovar/rejeitar produtor** em `AdminProducerDetail.tsx`
+5. **Admin: gestao de roles de usuario** em `AdminUsers.tsx`
+6. **Verificar se Google OAuth esta habilitado** ou remover botao
+7. **Gerar QR code image na confirmacao de pagamento** (garantir que `generate-qr-code` e chamado)
+
+### Fase 3 — MEDIA PRIORIDADE
+
+8. **Rota de recuperacao de pedido** `/pedido/:id` para PIX/boleto pendente
+9. **Types corretos para resale_listings** (regenerar types ou adicionar manualmente)
+10. **AdminUsers: adicionar acoes** (suspender, alterar role)
+11. **Embed snippet acessivel no painel do produtor**
+12. **SEOHead em todas as paginas publicas**
+
+### Fase 4 — POLISH
+
+13. **SupportChat: disclaimer de assistente automatizado**
+14. **OnboardingFlow: condicionar ao role**
+15. **Analytics: integrar tracking basico**
+16. **Landing page acessivel para usuarios logados** (botao ou rota alternativa)
+
+---
+
+**Total de itens identificados: 25**
+**Criticos (bloqueia lancamento): 4**
+**Alta prioridade: 4**
+**Media prioridade: 5**
+**Baixa prioridade/Polish: 12**
+
