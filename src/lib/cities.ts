@@ -9,17 +9,17 @@ export interface BrazilianCapital {
   uf: string;
   population: number;
   imageUrl: string;
-  featured: boolean; // shown on landing page carousel
+  featured: boolean;
 }
 
 export const BRAZILIAN_CAPITALS: BrazilianCapital[] = [
   { name: "São Paulo", state: "São Paulo", uf: "SP", population: 12_400_000, imageUrl: "https://images.unsplash.com/photo-1543059080-f9b1272213d5?w=600&q=80", featured: true },
   { name: "Rio de Janeiro", state: "Rio de Janeiro", uf: "RJ", population: 6_750_000, imageUrl: "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=600&q=80", featured: true },
   { name: "Brasília", state: "Distrito Federal", uf: "DF", population: 3_100_000, imageUrl: "https://images.unsplash.com/photo-1593547517741-8b5e53378507?w=600&q=80", featured: true },
-  { name: "Salvador", state: "Bahia", uf: "BA", population: 2_900_000, imageUrl: "https://images.unsplash.com/photo-1580974511812-1078a'; width=600&q=80", featured: true },
+  { name: "Salvador", state: "Bahia", uf: "BA", population: 2_900_000, imageUrl: "https://images.unsplash.com/photo-1551614707-0e28e0e3f2c6?w=600&q=80", featured: true },
   { name: "Fortaleza", state: "Ceará", uf: "CE", population: 2_700_000, imageUrl: "https://images.unsplash.com/photo-1611516491426-03025e6043c8?w=600&q=80", featured: false },
   { name: "Belo Horizonte", state: "Minas Gerais", uf: "MG", population: 2_530_000, imageUrl: "https://images.unsplash.com/photo-1617396900799-f4ec2b43c7ae?w=600&q=80", featured: true },
-  { name: "Manaus", state: "Amazonas", uf: "AM", population: 2_260_000, imageUrl: "https://images.unsplash.com/photo-1611468990883-db6cc tried-a0d5?w=600&q=80", featured: false },
+  { name: "Manaus", state: "Amazonas", uf: "AM", population: 2_260_000, imageUrl: "https://images.unsplash.com/photo-1619546952812-520e98064a52?w=600&q=80", featured: false },
   { name: "Curitiba", state: "Paraná", uf: "PR", population: 1_970_000, imageUrl: "https://images.unsplash.com/photo-1598301257942-e6bde1d2149b?w=600&q=80", featured: true },
   { name: "Recife", state: "Pernambuco", uf: "PE", population: 1_660_000, imageUrl: "https://images.unsplash.com/photo-1611515742835-8a53752e914d?w=600&q=80", featured: true },
   { name: "Goiânia", state: "Goiás", uf: "GO", population: 1_560_000, imageUrl: "https://images.unsplash.com/photo-1612891350573-9b5b3e484d43?w=600&q=80", featured: false },
@@ -34,18 +34,16 @@ export const BRAZILIAN_CAPITALS: BrazilianCapital[] = [
   { name: "Aracaju", state: "Sergipe", uf: "SE", population: 670_000, imageUrl: "https://images.unsplash.com/photo-1617825295690-28b2d4bd9d56?w=600&q=80", featured: false },
   { name: "Cuiabá", state: "Mato Grosso", uf: "MT", population: 620_000, imageUrl: "https://images.unsplash.com/photo-1612190675399-4264e5df57f9?w=600&q=80", featured: false },
   { name: "Florianópolis", state: "Santa Catarina", uf: "SC", population: 510_000, imageUrl: "https://images.unsplash.com/photo-1588867702719-969c8ac733d6?w=600&q=80", featured: true },
-  { name: "Porto Velho", state: "Rondônia", uf: "RO", population: 540_000, imageUrl: "https://images.unsplash.com/photo-1615627121117-e3278bc8b1db?w=600&q=80", featured: false },
-  { name: "Macapá", state: "Amapá", uf: "AP", population: 520_000, imageUrl: "https://images.unsplash.com/photo-1615625574700-3d74b7c9e40b?w=600&q=80", featured: false },
-  { name: "Vitória", state: "Espírito Santo", uf: "ES", population: 370_000, imageUrl: "https://images.unsplash.com/photo-1615818499981-c1a1be560e38?w=600&q=80", featured: false },
-  { name: "Rio Branco", state: "Acre", uf: "AC", population: 420_000, imageUrl: "https://images.unsplash.com/photo-1615627121117-e3278bc8b1db?w=600&q=80", featured: false },
-  { name: "Boa Vista", state: "Roraima", uf: "RR", population: 420_000, imageUrl: "https://images.unsplash.com/photo-1615625574700-3d74b7c9e40b?w=600&q=80", featured: false },
-  { name: "Palmas", state: "Tocantins", uf: "TO", population: 310_000, imageUrl: "https://images.unsplash.com/photo-1615627121117-e3278bc8b1db?w=600&q=80", featured: false },
+  { name: "Porto Velho", state: "Rondônia", uf: "RO", population: 540_000, imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80", featured: false },
+  { name: "Macapá", state: "Amapá", uf: "AP", population: 520_000, imageUrl: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&q=80", featured: false },
+  { name: "Vitória", state: "Espírito Santo", uf: "ES", population: 370_000, imageUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80", featured: false },
+  { name: "Rio Branco", state: "Acre", uf: "AC", population: 420_000, imageUrl: "https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=600&q=80", featured: false },
+  { name: "Boa Vista", state: "Roraima", uf: "RR", population: 420_000, imageUrl: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=600&q=80", featured: false },
+  { name: "Palmas", state: "Tocantins", uf: "TO", population: 310_000, imageUrl: "https://images.unsplash.com/photo-1433086966358-54859d0ed716?w=600&q=80", featured: false },
 ];
 
-/** Capitals featured on landing page */
 export const FEATURED_CAPITALS = BRAZILIAN_CAPITALS.filter((c) => c.featured);
 
-/** Main capitals for /cidades page hero */
 export const MAIN_CAPITALS = BRAZILIAN_CAPITALS.filter((c) =>
   ["São Paulo", "Rio de Janeiro", "Belo Horizonte", "Curitiba", "Porto Alegre", "Brasília", "Salvador", "Recife", "Florianópolis"].includes(c.name)
 );
