@@ -23,6 +23,14 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login", redirectTo
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Sync tab when defaultTab changes (e.g. switching between Login/Register buttons)
+  useEffect(() => {
+    if (open) {
+      setTab(defaultTab);
+      setForgotMode(false);
+    }
+  }, [defaultTab, open]);
+
   // Login state
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");

@@ -20,7 +20,7 @@ export async function getResaleListings(filters?: {
   limit?: number;
 }) {
   let query = supabase
-    .from("resale_listings" as any)
+    .from("resale_listings")
     .select(`
       *,
       events!inner(id, title, slug, cover_image_url, start_date, end_date, venue_name, venue_city, venue_state, category),
@@ -28,19 +28,18 @@ export async function getResaleListings(filters?: {
     `)
     .eq("status", "active")
     .gt("expires_at", new Date().toISOString())
-    .gt("events.start_date" as any, new Date().toISOString())
     .order("created_at", { ascending: false });
 
   if (filters?.eventId) query = query.eq("event_id", filters.eventId);
-  if (filters?.city) query = (query as any).eq("events.venue_city", filters.city);
-  if (filters?.category) query = (query as any).eq("events.category", filters.category);
+  if (filters?.city) query = query.eq("events.venue_city" as any, filters.city);
+  if (filters?.category) query = query.eq("events.category" as any, filters.category);
   if (filters?.limit) query = query.limit(filters.limit);
 
   const { data, error } = await query;
   if (error) throw error;
 
   // Client-side search filter (PostgREST doesn't support .or on foreign tables)
-  let results = data as any[];
+  let results = data ?? [];
   if (filters?.search) {
     const search = filters.search.toLowerCase();
     results = results.filter((l: any) =>
@@ -55,7 +54,7 @@ export async function getResaleListings(filters?: {
 /** Get a single listing by ID */
 export async function getResaleListingById(id: string) {
   const { data, error } = await supabase
-    .from("resale_listings" as any)
+    .from("resale_listings")
     .select(`
       *,
       events(id, title, slug, cover_image_url, start_date, end_date, venue_name, venue_city, venue_state, category),
@@ -66,7 +65,7 @@ export async function getResaleListingById(id: string) {
     .single();
 
   if (error) throw error;
-  return data as any;
+  return data;
 }
 
 /** Create a resale listing (atomic via RPC) */
@@ -96,10 +95,9 @@ export async function createResaleListing(params: {
 
 /** Cancel a resale listing */
 export async function cancelResaleListing(listingId: string, ticketId: string) {
-  // Update listing - RLS ensures only seller can update their own
   const { error, data } = await supabase
-    .from("resale_listings" as any)
-    .update({ status: "cancelled", updated_at: new Date().toISOString() })
+    .from("resale_listings")
+    .update({ status: "cancelled", updated_at: new Date().toISOString() } as any)
     .eq("id", listingId)
     .eq("status", "active")
     .select()
@@ -108,7 +106,6 @@ export async function cancelResaleListing(listingId: string, ticketId: string) {
   if (error) throw error;
   if (!data) throw new Error("Anúncio não encontrado ou já foi processado");
 
-  // Only revert ticket if listing was successfully cancelled
   await supabase
     .from("tickets")
     .update({ is_for_resale: false, resale_price: null } as any)
@@ -129,7 +126,7 @@ export async function purchaseResaleListing(listingId: string) {
 /** Get listings by seller */
 export async function getMyResaleListings(sellerId: string) {
   const { data, error } = await supabase
-    .from("resale_listings" as any)
+    .from("resale_listings")
     .select(`
       *,
       events(id, title, slug, start_date, cover_image_url),
@@ -139,5 +136,5 @@ export async function getMyResaleListings(sellerId: string) {
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return data as any[];
+  return data ?? [];
 }
