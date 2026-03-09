@@ -28,11 +28,18 @@ export default function RevendaCheckout() {
 
   const purchaseMutation = useMutation({
     mutationFn: () => purchaseResaleListing(listingId!),
-    onSuccess: () => {
-      toast({ title: "Ingresso adquirido!", description: "O ingresso foi transferido para sua conta." });
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["my-tickets"] });
       queryClient.invalidateQueries({ queryKey: ["resale-listings"] });
-      navigate("/meus-ingressos");
+      navigate(`/revenda/${listingId}/sucesso`, {
+        state: {
+          ticketId: data?.ticketId,
+          total: data?.total,
+          eventTitle: listing?.events?.title,
+          tierName: listing?.ticket_tiers?.name,
+          eventSlug: listing?.events?.slug,
+        },
+      });
     },
     onError: (err: any) => {
       toast({ title: "Erro na compra", description: err.message || "Tente novamente", variant: "destructive" });
