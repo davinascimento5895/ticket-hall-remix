@@ -206,7 +206,7 @@ export default function Index() {
       </section>
 
       {/* ===== FEATURES ===== */}
-      <section className="py-16 md:py-24 bg-muted/30">
+      <section className="py-16 lg:py-24 bg-muted/30">
         <div className="container">
           <div className="text-center mb-12">
             <h2 className="font-display text-2xl md:text-3xl font-bold">Por que o TicketHall?</h2>
