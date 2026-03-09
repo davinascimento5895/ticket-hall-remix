@@ -31,8 +31,8 @@ export async function getResaleListings(filters?: {
     .order("created_at", { ascending: false });
 
   if (filters?.eventId) query = query.eq("event_id", filters.eventId);
-  if (filters?.city) query = query.eq("events.venue_city" as any, filters.city);
-  if (filters?.category) query = query.eq("events.category" as any, filters.category);
+  if (filters?.city) query = query.eq("events.venue_city", filters.city);
+  if (filters?.category) query = query.eq("events.category", filters.category);
   if (filters?.limit) query = query.limit(filters.limit);
 
   const { data, error } = await query;
