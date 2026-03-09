@@ -22,14 +22,13 @@ const TABS = [
   { key: "coupons", label: "Cupons", icon: Tag, path: "/coupons" },
 ];
 
-const [showEmbed, setShowEmbed] = useState(false);
-
 export default function ProducerEventPanel() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
   const [mobileTabsOpen, setMobileTabsOpen] = useState(false);
+  const [showEmbed, setShowEmbed] = useState(false);
 
   const { data: event, isLoading } = useQuery({
     queryKey: ["producer-event-panel", id],

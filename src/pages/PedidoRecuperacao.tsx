@@ -208,10 +208,10 @@ export default function PedidoRecuperacao() {
 
         {/* Paid confirmation */}
         {isPaid && (
-          <Card className="mb-6 border-green-500/30">
+          <Card className="mb-6 border-primary/30">
             <CardContent className="p-5 text-center space-y-3">
-              <Check className="h-10 w-10 text-green-500 mx-auto" />
-              <h3 className="font-display font-semibold text-green-700 dark:text-green-400">Pagamento confirmado!</h3>
+              <Check className="h-10 w-10 text-primary mx-auto" />
+              <h3 className="font-display font-semibold text-primary">Pagamento confirmado!</h3>
               <p className="text-sm text-muted-foreground">Seus ingressos estão disponíveis.</p>
               <Button onClick={() => navigate("/meus-ingressos")}>Ver meus ingressos</Button>
             </CardContent>
