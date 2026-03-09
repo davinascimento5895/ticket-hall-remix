@@ -68,6 +68,7 @@ export default function ProducerEventCheckin() {
     },
   });
 
+  const totalTickets = tickets?.length || 0;
   const checkedIn = tickets?.filter((t: any) => t.status === "used").length || 0;
 
   // QR Scanner start/stop
