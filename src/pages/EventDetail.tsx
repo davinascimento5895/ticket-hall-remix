@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/contexts/CartContext";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
-import { getEventBySlug, getEventTiers, trackAffiliateClick } from "@/lib/api";
+import { getEventBySlug, getEventTiers } from "@/lib/api";
 import { getEventProducts } from "@/lib/api-checkout";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
