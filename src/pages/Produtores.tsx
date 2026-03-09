@@ -22,7 +22,6 @@ import {
   Lock,
   CreditCard,
   CheckCircle2,
-  Clock,
 } from "lucide-react";
 import {
   Accordion,
