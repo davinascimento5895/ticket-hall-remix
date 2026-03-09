@@ -1,145 +1,138 @@
-# TicketHall — Plano Mestre de Redesign & Implementação
 
-## Documento de Referência
-Business Case & Product Design Analysis completo fornecido pelo cliente em 2026-03-06.
 
----
+## Análise Completa — Inconsistências e Melhorias do Site
 
-## Design System Alvo (Novo)
-- **Tema**: Dark-first (`#0d0d0d` base, `#1a1a1a`/`#1f1f1f`/`#2c2c2c` superfícies)
-- **Cor principal (ação)**: Laranja `#ff472d` — CTAs, badges, ícones ativos, links, bordas de foco
-- **Cor secundária (gamificação)**: Verde-lima `#bad900` — pontos, sucesso, confirmações
-- **Texto principal**: Branco `#ffffff`
-- **Texto secundário**: Cinza claro `#9ca3af`
-- **Texto terciário (inativo)**: Cinza médio `#6b7280`
-- **Tipografia**: Sora (display) + Inter (body) — já configurado
-- **Border radius**: ~12-16px para cards, ~10px para inputs
-- **Componentes**: Chips/Pills, Bottom Sheets, Cards com gradiente escuro, Toggle switches
+Analisei o codebase completo, ignorando integrações externas (pagamento, APIs de email, analytics). Aqui está o relatório completo:
 
 ---
 
-## Gap Analysis — Existente vs Documento de Design
+### 1. PERÍODO DO DIA — Já Implementado Corretamente ✓
 
-### ✅ JÁ IMPLEMENTADO
-- Catálogo de eventos com filtros por categoria
-- Detalhe do evento com descrição, data, local
-- Fluxo de compra (carrinho → checkout → pagamento)
-- Meus Ingressos (lista de ingressos ativos)
-- QR Code por ingresso
-- Transferência de ingresso
-- Sistema de reembolso (RefundDialog)
-- Cupons de desconto
-- Fila virtual
-- Certificados pós-evento
-- Painel do produtor completo
-- Painel admin completo
-- Autenticação (login/registro com email)
-- Notificações (NotificationBell)
-- Blog
-- Página do organizador
-- LGPD/Privacidade
-- Bottom navigation mobile
-- Tema claro/escuro com transição animada
+O sistema **já calcula automaticamente** o período do dia baseado no horário de início do evento:
 
-### ❌ FEATURES FALTANTES
-1. **Onboarding** — 2-3 telas de boas-vindas com skip
-2. **Detecção automática de cidade** — GPS
-3. **Seletor de datas horizontal** — Barra scrollável no catálogo
-4. **Top-10 / Ranking** — Seção editorial com badges numerados
-5. **Filtro avançado (Bottom Sheet)** — Sort, range slider, gênero, horário
-6. **Grid view toggle** — Lista/grade no catálogo
-7. **Rating/Avaliação** — Estrelas + reviews de usuários (tabela + UI)
-8. **Random/Discovery** — Evento aleatório
-9. **Cast/Elenco** — Seção de artistas no detalhe
-10. **Mapa de assentos** — Seleção visual interativa
-11. **Sistema de pontos** — Fidelidade no checkout
-12. **Favoritos** — Salvar eventos (tabela + UI)
-13. **Ingressos arquivados** — Ativo/Arquivado com visual P&B
-14. **Chat de suporte** — Bot + quick replies in-app
-15. **Perfil completo** — Editar perfil, cidade, pagamentos, notificações
-16. **Login OTP** — Código por email/telefone
-17. **Login social** — Google, Apple
-18. **Compartilhamento** — Share via link
-19. **Notificações configuráveis** — SMS/Push/Email toggles
-20. **Seções editoriais** — "Novo", "Semana", curadoria
+```typescript
+// src/pages/Busca.tsx (linhas 33-39)
+function getTimeOfDay(dateStr: string): string {
+  const h = getHours(new Date(dateStr));
+  if (h < 6) return "dawn";      // Madrugada (antes das 6h)
+  if (h < 13) return "morning";  // Manhã (6h-13h)
+  if (h < 18) return "afternoon"; // Tarde (13h-18h)
+  return "evening";              // Noite (18h+)
+}
+```
 
-### 🔄 PRECISA REDESIGN VISUAL
-- Todas as páginas públicas (landing, catálogo, detalhe, checkout)
-- Navbar → Dark-first com laranja
-- Bottom Nav → Ícone ativo laranja
-- Cards de evento → Fundo #1f1f1f, gradiente, badges
-- Botões → Fill laranja, outline cinza
-- Inputs → Fundo #1f1f1f, borda #3a3a3a
-- Chips → Ativo laranja, inativo borda cinza
-- Login/Registro → Redesign completo
-- Meus Ingressos → Cards com barcode, ações
-- Painéis Producer/Admin → Dark-first
+Os filtros de busca (`SearchFilters.tsx`) também usam essa lógica:
+- Manhã: 6h-13h
+- Tarde: 13h-18h  
+- Noite: 18h+
+- Madrugada: antes das 6h
+
+**Status:** Funcionando corretamente. O produtor **não** precisa informar isso manualmente.
 
 ---
 
-## Fases de Implementação
+### 2. FUNCIONALIDADES PLACEHOLDER (Prometem mas não entregam)
 
-### Fase 1 — Design System Foundation
-- [ ] Atualizar index.css (CSS variables nova paleta)
-- [ ] Atualizar tailwind.config.ts
-- [ ] Atualizar componentes base (Button, Input, Card, Badge, Chips)
-- [ ] Navbar dark-first com laranja
-- [ ] Bottom Nav com laranja
-- [ ] AuthModal redesign dark-first
-
-### Fase 2 — Páginas Públicas (Buyer UX)
-- [ ] Landing page redesign
-- [ ] Catálogo (seletor datas, chips, banner, Top-10)
-- [ ] Detalhe do evento (reviews, cast, CTA fixo)
-- [ ] Meus Ingressos (ativo/arquivado, barcode, reembolso)
-- [ ] Checkout redesign
-
-### Fase 3 — Features Novas (Prioridade Alta)
-- [ ] Favoritos (tabela + UI)
-- [ ] Rating/Reviews (tabela + UI)
-- [ ] Filtro avançado (Bottom Sheet com Drawer)
-- [ ] Grid view toggle
-- [ ] Compartilhamento social
-- [ ] Perfil completo do usuário
-- [ ] Ingressos arquivados
-
-### Fase 4 — Features Avançadas
-- [ ] Random/Discovery
-- [ ] Sistema de pontos/fidelidade
-- [ ] Chat de suporte in-app
-- [ ] Onboarding (2-3 telas)
-- [ ] Detecção de cidade
-- [ ] Notificações configuráveis
-- [ ] Login OTP + Social
-
-### Fase 5 — Painéis (Producer/Admin)
-- [ ] Redesign dark-first dos dashboards
-- [ ] Consistência com novo design system
+| Feature | Localização | Problema |
+|---------|-------------|----------|
+| **Mapa de Assentos** | `ProducerEventForm.tsx` + `BookingSeatMap.tsx` | O switch "Mapa de assentos" existe mas o mapa é **100% fake** — gera assentos dummy sem integração real com o BD |
+| **Fila Virtual** | `FilaVirtual.tsx` + `manage-queue` | Funciona parcialmente, mas a lógica de **admissão automática** não está conectada a eventos reais |
+| **Certificados** | `MeusCertificados.tsx` | A página existe mas `generate-certificate` edge function depende de templates não configurados |
+| **Repasses Pendentes** | `AdminFinance.tsx:179` | Mostra "🚧 Em breve" — placeholder honesto |
 
 ---
 
-## Infraestrutura Backend (Plano Anterior — Mantido)
+### 3. INCONSISTÊNCIAS DE DADOS NO ADMIN
 
-### Bloco 1 — Schema & SQL Functions
-- Funções atômicas: reserve_tickets, confirm_order_payment, apply_coupon
-- Índices de performance
+**3.1. Problema com `getAllUsers` — roleMap guarda apenas 1 role por usuário**
 
-### Bloco 2 — Edge Functions de Pagamento (Asaas)
-- create-payment, asaas-webhook, create-producer-account
-- Secrets: ASAAS_API_KEY, ASAAS_BASE_URL, QR_SECRET
+```typescript
+// src/lib/api-admin.ts (linha 127)
+(roles || []).forEach((r: any) => roleMap.set(r.user_id, r.role));
+```
 
-### Bloco 3 — Checkout Real
-- Conectar UI ao create-payment
-- PIX, Cartão, Boleto
+Se um usuário tem múltiplos roles (ex: admin + producer + buyer), o Map **sobrescreve** e mostra apenas o último. O usuário "Davi Nascimento" aparece como "buyer" quando na verdade é admin/producer/buyer.
 
-### Bloco 4 — QR Codes Seguros + Check-in
-- JWT assinado, validate-checkin
+**Fix:** Priorizar roles (admin > producer > buyer) ao mapear:
 
-### Bloco 5 — Transferência + Cancelamento
-- transfer-ticket, cancel-event
+```typescript
+const rolePriority = { admin: 1, producer: 2, buyer: 3 };
+roles.sort((a, b) => (rolePriority[a.role] || 99) - (rolePriority[b.role] || 99));
+(roles || []).forEach((r: any) => {
+  if (!roleMap.has(r.user_id)) roleMap.set(r.user_id, r.role);
+});
+```
 
-### Bloco 6 — Cron Jobs
-- cleanup_expired_reservations, event-reminders
+---
 
-### Bloco 7 — Segurança & LGPD
-- Rate limiting, consents, data requests
+### 4. DEAD CODE E INCONSISTÊNCIAS FUNCIONAIS
+
+| Arquivo | Issue |
+|---------|-------|
+| `api-admin.ts:182` | `updateProducerStatus()` ainda existe mas a UI de aprovar/rejeitar produtores foi removida |
+| `profiles.producer_status` | Campo ainda existe no BD mas não é usado em nenhum lugar relevante |
+
+---
+
+### 5. MAPA DE ASSENTOS — PRECISA DE ATENÇÃO
+
+A feature **existe na UI** mas é um **fake completo**:
+
+1. O produtor ativa "Mapa de assentos" no formulário
+2. O `BookingSeatMap.tsx` gera um grid genérico de 8x12 assentos
+3. **Nenhum assento é salvo no BD** — é gerado dinamicamente toda vez
+4. A seleção de assento **não afeta nada** — não é vinculado ao ticket
+
+**Opções:**
+- A) Remover o toggle e esconder a feature até implementação real
+- B) Marcar como "Em breve" igual ao repasse
+
+---
+
+### 6. FILA VIRTUAL — PARCIALMENTE FUNCIONAL
+
+O sistema de fila existe (`virtual_queue` table + `manage-queue` edge function), mas:
+
+1. A página `/fila/:slug` funciona
+2. A admissão automática (`action: "process"`) só roda quando chamada manualmente
+3. Não há trigger/cron que processe a fila automaticamente quando alguém sai
+
+**Funciona para:** Evento manual onde o produtor processa a fila
+**Não funciona para:** Fluxo automatizado tipo shows grandes
+
+---
+
+### 7. EVENTO SEM INGRESSOS CADASTRADOS
+
+Se um produtor cria um evento mas não adiciona tiers de ingresso:
+- A página do evento aparece sem preço
+- O botão "Comprar ingresso" não faz nada útil
+
+**Sugestão:** Validar no formulário que pelo menos 1 tier existe antes de publicar.
+
+---
+
+## Plano de Correções
+
+### Correções Rápidas (implementar agora):
+
+1. **Fix roleMap no Admin** — Priorizar admin > producer > buyer
+2. **Remover dead code** — `updateProducerStatus()` e funções não usadas
+3. **Mapa de assentos como placeholder** — Desabilitar toggle e mostrar "Em breve"
+4. **Validação de tiers antes de publicar** — Exigir pelo menos 1 ingresso
+
+### Melhorias Futuras (não implementar agora):
+
+- Mapa de assentos real com persistência
+- Certificados funcionais
+- Fila virtual com processamento automático
+
+---
+
+### Arquivos a modificar:
+
+- `src/lib/api-admin.ts` — Fix roleMap priority
+- `src/pages/admin/AdminUsers.tsx` — Mostrar badge com role prioritário
+- `src/pages/producer/ProducerEventForm.tsx` — Desabilitar mapa de assentos
+- `src/lib/api-admin.ts` — Remover `updateProducerStatus`
+
