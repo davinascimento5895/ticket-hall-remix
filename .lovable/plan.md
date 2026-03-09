@@ -1,166 +1,145 @@
+# TicketHall — Plano Mestre de Redesign & Implementação
 
-
-# Marketplace de Revenda de Ingressos — Plano Completo
-
-## Visão Geral
-
-Criar um marketplace interno de revenda onde usuários podem anunciar ingressos para venda e outros usuários podem comprá-los. A plataforma cobra **10% de taxa** sobre o valor de revenda. Na venda, o QR code antigo é invalidado e um novo é gerado para o comprador.
-
-## Dados Existentes
-
-O banco já tem:
-- `tickets.is_for_resale` (boolean) e `tickets.resale_price` (numeric)
-- `ticket_tiers.is_resellable` (boolean)
-- Edge function `transfer-ticket` com lógica de invalidação de QR + geração de novo JWT
-
-## Arquitetura
-
-```text
-┌──────────────────┐     ┌───────────────────┐     ┌──────────────────────┐
-│  /revenda (público)│────▶│  resale_listings   │◀────│ MeusIngressos        │
-│  Marketplace page │     │  (nova tabela)     │     │ "Anunciar Revenda"   │
-└──────────────────┘     └───────────────────┘     └──────────────────────┘
-         │                        │
-         ▼                        ▼
-┌──────────────────┐     ┌───────────────────┐
-│  /revenda/:id     │────▶│  purchase-resale   │
-│  Checkout revenda │     │  (edge function)   │
-└──────────────────┘     └───────────────────┘
-```
+## Documento de Referência
+Business Case & Product Design Analysis completo fornecido pelo cliente em 2026-03-06.
 
 ---
 
-## Batch 1 — Database: tabela `resale_listings`
-
-Nova tabela para controlar anúncios de revenda (separada dos tickets para queries performáticas e histórico):
-
-```sql
-CREATE TABLE public.resale_listings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  ticket_id UUID NOT NULL REFERENCES tickets(id),
-  seller_id UUID NOT NULL,
-  event_id UUID NOT NULL REFERENCES events(id),
-  tier_id UUID NOT NULL REFERENCES ticket_tiers(id),
-  asking_price NUMERIC NOT NULL,
-  platform_fee_amount NUMERIC NOT NULL DEFAULT 0,
-  seller_receives NUMERIC NOT NULL DEFAULT 0,
-  status TEXT NOT NULL DEFAULT 'active', -- active, sold, cancelled, expired
-  buyer_id UUID,
-  sold_at TIMESTAMPTZ,
-  expires_at TIMESTAMPTZ NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-
-ALTER TABLE public.resale_listings ENABLE ROW LEVEL SECURITY;
-```
-
-**RLS Policies:**
-- SELECT: qualquer pessoa autenticada pode ver listings `active`
-- INSERT: seller pode criar se `auth.uid() = seller_id`
-- UPDATE: seller pode cancelar seus próprios listings
-- Admin gerencia tudo
-
-**Indexes:** `(event_id, status)` e `(seller_id)` para queries rápidas.
+## Design System Alvo (Novo)
+- **Tema**: Dark-first (`#0d0d0d` base, `#1a1a1a`/`#1f1f1f`/`#2c2c2c` superfícies)
+- **Cor principal (ação)**: Laranja `#ff472d` — CTAs, badges, ícones ativos, links, bordas de foco
+- **Cor secundária (gamificação)**: Verde-lima `#bad900` — pontos, sucesso, confirmações
+- **Texto principal**: Branco `#ffffff`
+- **Texto secundário**: Cinza claro `#9ca3af`
+- **Texto terciário (inativo)**: Cinza médio `#6b7280`
+- **Tipografia**: Sora (display) + Inter (body) — já configurado
+- **Border radius**: ~12-16px para cards, ~10px para inputs
+- **Componentes**: Chips/Pills, Bottom Sheets, Cards com gradiente escuro, Toggle switches
 
 ---
 
-## Batch 2 — Edge Function `purchase-resale`
+## Gap Analysis — Existente vs Documento de Design
 
-Operação atômica server-side que:
+### ✅ JÁ IMPLEMENTADO
+- Catálogo de eventos com filtros por categoria
+- Detalhe do evento com descrição, data, local
+- Fluxo de compra (carrinho → checkout → pagamento)
+- Meus Ingressos (lista de ingressos ativos)
+- QR Code por ingresso
+- Transferência de ingresso
+- Sistema de reembolso (RefundDialog)
+- Cupons de desconto
+- Fila virtual
+- Certificados pós-evento
+- Painel do produtor completo
+- Painel admin completo
+- Autenticação (login/registro com email)
+- Notificações (NotificationBell)
+- Blog
+- Página do organizador
+- LGPD/Privacidade
+- Bottom navigation mobile
+- Tema claro/escuro com transição animada
 
-1. Verifica se o listing está `active` e não expirado
-2. Verifica se o evento ainda não aconteceu
-3. Calcula taxa de 10%: `platform_fee = asking_price * 0.10`, `seller_receives = asking_price * 0.90`
-4. Cria um order no modelo existente com `payment_method` e status `pending`
-5. Após pagamento confirmado (via webhook ou credit card imediato):
-   - Marca listing como `sold`, seta `buyer_id` e `sold_at`
-   - Invalida o QR code antigo do ticket
-   - Gera novo QR code JWT para o comprador (mesma lógica do `transfer-ticket`)
-   - Atualiza `owner_id` do ticket para o comprador
-   - Limpa dados do titular antigo (`attendee_name`, `attendee_cpf`)
-   - Marca `is_for_resale = false` no ticket
-   - Cria notificações para vendedor e comprador
-6. Se pagamento falha/expira, cancela o listing de volta para `active`
+### ❌ FEATURES FALTANTES
+1. **Onboarding** — 2-3 telas de boas-vindas com skip
+2. **Detecção automática de cidade** — GPS
+3. **Seletor de datas horizontal** — Barra scrollável no catálogo
+4. **Top-10 / Ranking** — Seção editorial com badges numerados
+5. **Filtro avançado (Bottom Sheet)** — Sort, range slider, gênero, horário
+6. **Grid view toggle** — Lista/grade no catálogo
+7. **Rating/Avaliação** — Estrelas + reviews de usuários (tabela + UI)
+8. **Random/Discovery** — Evento aleatório
+9. **Cast/Elenco** — Seção de artistas no detalhe
+10. **Mapa de assentos** — Seleção visual interativa
+11. **Sistema de pontos** — Fidelidade no checkout
+12. **Favoritos** — Salvar eventos (tabela + UI)
+13. **Ingressos arquivados** — Ativo/Arquivado com visual P&B
+14. **Chat de suporte** — Bot + quick replies in-app
+15. **Perfil completo** — Editar perfil, cidade, pagamentos, notificações
+16. **Login OTP** — Código por email/telefone
+17. **Login social** — Google, Apple
+18. **Compartilhamento** — Share via link
+19. **Notificações configuráveis** — SMS/Push/Email toggles
+20. **Seções editoriais** — "Novo", "Semana", curadoria
 
----
-
-## Batch 3 — UI: Anunciar Ingresso para Revenda
-
-Em `MeusIngressos.tsx`, adicionar botão **"Revender"** nos tickets ativos cujo tier tem `is_resellable = true`:
-
-- Abre modal `ResaleListingModal` com:
-  - Preço de venda (input numérico)
-  - Cálculo em tempo real: "Você receberá R$ X (taxa de 10%)"
-  - Data limite para venda (máx: início do evento)
-  - Botão "Anunciar"
-- Ao anunciar: insere na `resale_listings` e marca `tickets.is_for_resale = true`
-
----
-
-## Batch 4 — UI: Página `/revenda` (Marketplace)
-
-Página pública com:
-
-- Lista de ingressos à venda agrupados por evento
-- Filtros: busca por nome de evento, cidade, categoria
-- Card de cada listing mostrando: nome do evento, data, local, tipo de ingresso, preço original vs preço de revenda, taxa da plataforma
-- Botão "Comprar" que leva para checkout de revenda
-
----
-
-## Batch 5 — UI: Checkout de Revenda `/revenda/:listingId`
-
-Página protegida (ProtectedRoute) com:
-
-- Resumo do ingresso sendo comprado
-- Breakdown claro: preço + taxa plataforma = total
-- Métodos de pagamento (PIX, cartão, boleto) — reutiliza `CheckoutStepPayment`
-- Ao confirmar, chama edge function `purchase-resale`
-- Aguarda confirmação de pagamento via realtime (mesmo padrão do checkout normal)
-
----
-
-## Batch 6 — Cancelamento e Expiração
-
-- Vendedor pode cancelar a qualquer momento via MeusIngressos (botão "Cancelar Revenda")
-- Ao cancelar: atualiza listing para `cancelled`, marca `tickets.is_for_resale = false`
-- Listings expirados (passa da `expires_at`): cron job ou check no fetch para ignorar
-- Após data do evento: todos os listings ativos são automaticamente expirados
+### 🔄 PRECISA REDESIGN VISUAL
+- Todas as páginas públicas (landing, catálogo, detalhe, checkout)
+- Navbar → Dark-first com laranja
+- Bottom Nav → Ícone ativo laranja
+- Cards de evento → Fundo #1f1f1f, gradiente, badges
+- Botões → Fill laranja, outline cinza
+- Inputs → Fundo #1f1f1f, borda #3a3a3a
+- Chips → Ativo laranja, inativo borda cinza
+- Login/Registro → Redesign completo
+- Meus Ingressos → Cards com barcode, ações
+- Painéis Producer/Admin → Dark-first
 
 ---
 
-## Batch 7 — Termos de Uso e Política de Privacidade
+## Fases de Implementação
 
-Adicionar seção "Revenda de Ingressos" nos Termos de Uso (`TermosDeUso.tsx`) cobrindo:
-- Taxa de 10% sobre valor de revenda cobrada do vendedor
-- Invalidação do QR code antigo para prevenir fraudes
-- Vendedor perde acesso ao ingresso após venda confirmada
-- Prazo máximo de venda: até horário definido pelo vendedor (máx: início do evento)
-- Plataforma não garante reembolso em revendas — é responsabilidade entre as partes
-- Proibida revenda por valor superior ao valor original (anti-cambismo) — opcional, verificar regra
+### Fase 1 — Design System Foundation
+- [ ] Atualizar index.css (CSS variables nova paleta)
+- [ ] Atualizar tailwind.config.ts
+- [ ] Atualizar componentes base (Button, Input, Card, Badge, Chips)
+- [ ] Navbar dark-first com laranja
+- [ ] Bottom Nav com laranja
+- [ ] AuthModal redesign dark-first
+
+### Fase 2 — Páginas Públicas (Buyer UX)
+- [ ] Landing page redesign
+- [ ] Catálogo (seletor datas, chips, banner, Top-10)
+- [ ] Detalhe do evento (reviews, cast, CTA fixo)
+- [ ] Meus Ingressos (ativo/arquivado, barcode, reembolso)
+- [ ] Checkout redesign
+
+### Fase 3 — Features Novas (Prioridade Alta)
+- [ ] Favoritos (tabela + UI)
+- [ ] Rating/Reviews (tabela + UI)
+- [ ] Filtro avançado (Bottom Sheet com Drawer)
+- [ ] Grid view toggle
+- [ ] Compartilhamento social
+- [ ] Perfil completo do usuário
+- [ ] Ingressos arquivados
+
+### Fase 4 — Features Avançadas
+- [ ] Random/Discovery
+- [ ] Sistema de pontos/fidelidade
+- [ ] Chat de suporte in-app
+- [ ] Onboarding (2-3 telas)
+- [ ] Detecção de cidade
+- [ ] Notificações configuráveis
+- [ ] Login OTP + Social
+
+### Fase 5 — Painéis (Producer/Admin)
+- [ ] Redesign dark-first dos dashboards
+- [ ] Consistência com novo design system
 
 ---
 
-## Batch 8 — Navegação
+## Infraestrutura Backend (Plano Anterior — Mantido)
 
-- Adicionar link "Revenda" no `Navbar` e no `MobileBottomNav` (ou dentro do menu)
-- Registrar rota `/revenda` e `/revenda/:listingId` no `App.tsx`
+### Bloco 1 — Schema & SQL Functions
+- Funções atômicas: reserve_tickets, confirm_order_payment, apply_coupon
+- Índices de performance
 
----
+### Bloco 2 — Edge Functions de Pagamento (Asaas)
+- create-payment, asaas-webhook, create-producer-account
+- Secrets: ASAAS_API_KEY, ASAAS_BASE_URL, QR_SECRET
 
-## Arquivos Novos
-- `src/pages/Revenda.tsx` — marketplace page
-- `src/pages/RevendaCheckout.tsx` — checkout de revenda
-- `src/components/ResaleListingModal.tsx` — modal para anunciar
-- `src/lib/api-resale.ts` — funções de API para resale
-- `supabase/functions/purchase-resale/index.ts` — edge function
-- Migration SQL para `resale_listings`
+### Bloco 3 — Checkout Real
+- Conectar UI ao create-payment
+- PIX, Cartão, Boleto
 
-## Arquivos Modificados
-- `src/pages/MeusIngressos.tsx` — botão Revender + Cancelar Revenda
-- `src/App.tsx` — novas rotas
-- `src/components/Navbar.tsx` — link Revenda
-- `src/pages/TermosDeUso.tsx` — seção revenda
-- `supabase/config.toml` — config para nova edge function
+### Bloco 4 — QR Codes Seguros + Check-in
+- JWT assinado, validate-checkin
 
+### Bloco 5 — Transferência + Cancelamento
+- transfer-ticket, cancel-event
+
+### Bloco 6 — Cron Jobs
+- cleanup_expired_reservations, event-reminders
+
+### Bloco 7 — Segurança & LGPD
+- Rate limiting, consents, data requests

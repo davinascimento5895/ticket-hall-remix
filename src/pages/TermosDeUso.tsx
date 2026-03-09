@@ -15,6 +15,7 @@ const sections = [
   { id: "ingressos", label: "Entrega e Utilização de Ingressos" },
   { id: "cancelamento", label: "Cancelamento e Reembolso" },
   { id: "transferencia", label: "Transferência de Ingressos" },
+  { id: "revenda", label: "Revenda de Ingressos" },
   { id: "responsabilidades", label: "Responsabilidades" },
   { id: "propriedade", label: "Propriedade Intelectual" },
   { id: "seguranca", label: "Segurança da Plataforma" },
@@ -428,6 +429,38 @@ export default function TermosDeUso() {
                   </p>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     11.3. A TicketHall se responsabiliza apenas pela devolução ao Comprador, não assumindo qualquer responsabilidade por repasses de valores ao Participante, nem por compras efetuadas fora da Plataforma ou em pontos não oficiais de vendas.
+                  </p>
+                </section>
+
+                {/* 11.5 Revenda de Ingressos */}
+                <section id="revenda">
+                  <h2 className="text-xl font-semibold text-foreground mb-4">11.5. Revenda de Ingressos</h2>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                    11.5.1. A TicketHall disponibiliza um marketplace interno de revenda de ingressos, permitindo que Compradores anunciem ingressos para venda a outros usuários da plataforma. A revenda é restrita a ingressos cujo tipo (lote/tier) permita revenda, conforme configurado pelo Produtor do evento.
+                  </p>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                    11.5.2. <strong className="text-foreground">Taxa de revenda:</strong> A TicketHall cobra uma taxa de serviço de 10% (dez por cento) sobre o valor de revenda definido pelo vendedor. Esta taxa é descontada automaticamente do valor que o vendedor receberá. O comprador paga exclusivamente o valor anunciado pelo vendedor.
+                  </p>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                    11.5.3. <strong className="text-foreground">Proibição de cambismo:</strong> É expressamente proibido anunciar ingressos por valor superior ao preço original de compra. A plataforma bloqueará automaticamente tentativas de revenda com sobrepreço, em conformidade com a legislação brasileira vigente (Lei nº 14.597/2023).
+                  </p>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                    11.5.4. <strong className="text-foreground">Invalidação de QR Code:</strong> Ao ser concretizada a venda, o QR Code do ingresso original é imediatamente invalidado e um novo QR Code exclusivo é gerado para o comprador. Esta medida visa prevenir fraudes e garantir que apenas o novo titular tenha acesso ao evento.
+                  </p>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                    11.5.5. <strong className="text-foreground">Perda de acesso:</strong> Após a confirmação da venda, o vendedor perde total e irrevogavelmente o acesso ao ingresso vendido. O uso do QR Code antigo em tentativas de acesso ao evento será considerado fraude e poderá resultar em sanções legais.
+                  </p>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                    11.5.6. <strong className="text-foreground">Prazo de venda:</strong> O vendedor define a data limite para a venda do ingresso, que não pode ultrapassar o horário de início do evento. Após esse prazo, o anúncio é automaticamente cancelado e o ingresso retorna ao vendedor original.
+                  </p>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                    11.5.7. <strong className="text-foreground">Cancelamento do anúncio:</strong> O vendedor pode cancelar o anúncio de revenda a qualquer momento, desde que o ingresso ainda não tenha sido vendido. Ao cancelar, o ingresso volta a ficar ativo na conta do vendedor com seu QR Code original.
+                  </p>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                    11.5.8. <strong className="text-foreground">Reembolso em revendas:</strong> A TicketHall não garante reembolso em transações de revenda entre usuários. A responsabilidade pela decisão de compra e venda é exclusiva das partes envolvidas. A plataforma atua apenas como intermediária tecnológica.
+                  </p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    11.5.9. A TicketHall reserva-se o direito de suspender ou bloquear usuários que utilizem o marketplace de revenda de forma abusiva, fraudulenta ou em desacordo com estes Termos de Uso.
                   </p>
                 </section>
 

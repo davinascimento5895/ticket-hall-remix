@@ -1857,6 +1857,82 @@ export type Database = {
           },
         ]
       }
+      resale_listings: {
+        Row: {
+          asking_price: number
+          buyer_id: string | null
+          created_at: string | null
+          event_id: string
+          expires_at: string
+          id: string
+          original_price: number
+          platform_fee_amount: number
+          seller_id: string
+          seller_receives: number
+          sold_at: string | null
+          status: string
+          ticket_id: string
+          tier_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          asking_price: number
+          buyer_id?: string | null
+          created_at?: string | null
+          event_id: string
+          expires_at: string
+          id?: string
+          original_price?: number
+          platform_fee_amount?: number
+          seller_id: string
+          seller_receives?: number
+          sold_at?: string | null
+          status?: string
+          ticket_id: string
+          tier_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          asking_price?: number
+          buyer_id?: string | null
+          created_at?: string | null
+          event_id?: string
+          expires_at?: string
+          id?: string
+          original_price?: number
+          platform_fee_amount?: number
+          seller_id?: string
+          seller_receives?: number
+          sold_at?: string | null
+          status?: string
+          ticket_id?: string
+          tier_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resale_listings_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resale_listings_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resale_listings_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "ticket_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ticket_taxes_fees: {
         Row: {
           amount: number

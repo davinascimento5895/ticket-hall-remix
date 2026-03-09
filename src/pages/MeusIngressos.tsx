@@ -1,18 +1,21 @@
-import { useQuery } from "@tanstack/react-query";
-import { Ticket, Calendar, MapPin, QrCode, Send, Clock, Search, Archive, Download } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Ticket, Calendar, MapPin, QrCode, Send, Clock, Search, Archive, Download, Repeat, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { QRCodeModal } from "@/components/QRCodeModal";
 import { TransferTicketModal } from "@/components/TransferTicketModal";
+import { ResaleListingModal } from "@/components/ResaleListingModal";
 import { EmptyState } from "@/components/EmptyState";
 import { useAuth } from "@/contexts/AuthContext";
 import { getMyTickets } from "@/lib/api";
+import { cancelResaleListing, getMyResaleListings } from "@/lib/api-resale";
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { normalizeText } from "@/lib/search";
+import { useToast } from "@/hooks/use-toast";
 
 type TabId = "active" | "pending" | "cancelled" | "past" | "archived";
 
@@ -38,6 +41,20 @@ export default function MeusIngressos() {
     eventTitle: string;
     tierName: string;
   }>({ open: false, ticketId: "", eventTitle: "", tierName: "" });
+
+  const [resaleModal, setResaleModal] = useState<{
+    open: boolean;
+    ticket: any;
+  }>({ open: false, ticket: null });
+
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: myResaleListings } = useQuery({
+    queryKey: ["my-resale-listings", user?.id],
+    queryFn: () => getMyResaleListings(user!.id),
+    enabled: !!user?.id,
+  });
 
   const { data: tickets, isLoading } = useQuery({
     queryKey: ["my-tickets", user?.id],
@@ -130,8 +147,23 @@ export default function MeusIngressos() {
 
   const isPast = activeTab === "past" || activeTab === "cancelled" || activeTab === "archived";
 
+  const handleCancelResale = async (listingId: string, ticketId: string) => {
+    try {
+      await cancelResaleListing(listingId, ticketId);
+      toast({ title: "Revenda cancelada", description: "O ingresso voltou para sua conta." });
+      queryClient.invalidateQueries({ queryKey: ["my-tickets"] });
+      queryClient.invalidateQueries({ queryKey: ["my-resale-listings"] });
+      queryClient.invalidateQueries({ queryKey: ["resale-listings"] });
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    }
+  };
+
   const renderTicket = (ticket: any) => {
     const isTransferable = ticket.status === "active" && ticket.ticket_tiers?.is_transferable !== false;
+    const isResellable = ticket.status === "active" && ticket.ticket_tiers?.is_resellable !== false;
+    const isForResale = ticket.is_for_resale === true;
+    const activeListing = (myResaleListings || []).find((l: any) => l.ticket_id === ticket.id && l.status === "active");
     const eventDate = ticket.events?.start_date ? new Date(ticket.events.start_date) : null;
     const isToday = eventDate && eventDate.toDateString() === now.toDateString();
 
@@ -235,7 +267,7 @@ export default function MeusIngressos() {
               <Download className="h-4 w-4" /> Baixar
             </Button>
           )}
-          {isTransferable && (
+          {isTransferable && !isForResale && (
             <Button
               variant="ghost"
               size="sm"
@@ -250,6 +282,26 @@ export default function MeusIngressos() {
               }
             >
               <Send className="h-4 w-4" /> Transferir
+            </Button>
+          )}
+          {isResellable && !isForResale && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-muted-foreground"
+              onClick={() => setResaleModal({ open: true, ticket })}
+            >
+              <Repeat className="h-4 w-4" /> Revender
+            </Button>
+          )}
+          {isForResale && activeListing && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-destructive"
+              onClick={() => handleCancelResale(activeListing.id, ticket.id)}
+            >
+              <XCircle className="h-4 w-4" /> Cancelar Revenda
             </Button>
           )}
           {(activeTab === "past" || activeTab === "archived") && (
@@ -374,6 +426,14 @@ export default function MeusIngressos() {
         eventTitle={transferModal.eventTitle}
         tierName={transferModal.tierName}
       />
+
+      {resaleModal.ticket && (
+        <ResaleListingModal
+          open={resaleModal.open}
+          onOpenChange={(open) => setResaleModal((p) => ({ ...p, open }))}
+          ticket={resaleModal.ticket}
+        />
+      )}
     </>
   );
 }
