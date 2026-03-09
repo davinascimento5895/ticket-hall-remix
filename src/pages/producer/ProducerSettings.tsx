@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,17 +9,32 @@ import { WebhooksManager } from "@/components/producer/WebhooksManager";
 import { TeamMembersManager } from "@/components/producer/TeamMembersManager";
 import { useAuth } from "@/contexts/AuthContext";
 import { updateProfile } from "@/lib/api";
+import { getBankAccounts, createBankAccount, updateBankAccount, deleteBankAccount } from "@/lib/api-financial";
 import { toast } from "@/hooks/use-toast";
+import { Trash2 } from "lucide-react";
 
 export default function ProducerSettings() {
   const { user, profile } = useAuth();
+  const queryClient = useQueryClient();
   const [form, setForm] = useState({
     full_name: profile?.full_name || "",
     phone: profile?.phone || "",
     cpf: profile?.cpf || "",
   });
 
-  const [bank, setBank] = useState({ pix_key: "", bank_name: "", agency: "", account: "" });
+  const [bankForm, setBankForm] = useState({
+    account_name: "",
+    pix_key: "",
+    bank_name: "",
+    agency: "",
+    account_number: "",
+  });
+
+  const { data: bankAccounts = [] } = useQuery({
+    queryKey: ["bank-accounts", user?.id],
+    queryFn: () => getBankAccounts(user!.id),
+    enabled: !!user,
+  });
 
   const saveMutation = useMutation({
     mutationFn: () => updateProfile(user!.id, { full_name: form.full_name, phone: form.phone, cpf: form.cpf }),
@@ -28,14 +43,30 @@ export default function ProducerSettings() {
   });
 
   const saveBankMutation = useMutation({
-    mutationFn: () => updateProfile(user!.id, {
-      bank_pix_key: bank.pix_key,
-      bank_name: bank.bank_name,
-      bank_agency: bank.agency,
-      bank_account: bank.account,
-    } as any),
-    onSuccess: () => toast({ title: "Dados bancários salvos!" }),
+    mutationFn: () =>
+      createBankAccount({
+        producer_id: user!.id,
+        account_name: bankForm.account_name || "Conta principal",
+        pix_key: bankForm.pix_key || undefined,
+        bank_name: bankForm.bank_name || undefined,
+        agency: bankForm.agency || undefined,
+        account_number: bankForm.account_number || undefined,
+        is_default: bankAccounts.length === 0,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bank-accounts", user?.id] });
+      setBankForm({ account_name: "", pix_key: "", bank_name: "", agency: "", account_number: "" });
+      toast({ title: "Conta bancária adicionada!" });
+    },
     onError: (err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
+  });
+
+  const deleteBankMutation = useMutation({
+    mutationFn: deleteBankAccount,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bank-accounts", user?.id] });
+      toast({ title: "Conta removida." });
+    },
   });
 
   // Debounced auto-save for organizer page fields
@@ -95,18 +126,38 @@ export default function ProducerSettings() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="bank" className="pt-4 max-w-2xl">
+        <TabsContent value="bank" className="pt-4 max-w-2xl space-y-4">
+          {/* Existing accounts */}
+          {bankAccounts.map((acc: any) => (
+            <Card key={acc.id}>
+              <CardContent className="pt-4">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-1">
+                    <p className="font-medium text-sm">{acc.account_name} {acc.is_default && <span className="text-xs text-primary">(padrão)</span>}</p>
+                    {acc.pix_key && <p className="text-xs text-muted-foreground">PIX: {acc.pix_key}</p>}
+                    {acc.bank_name && <p className="text-xs text-muted-foreground">{acc.bank_name} · Ag {acc.agency} · Cc {acc.account_number}</p>}
+                  </div>
+                  <button onClick={() => deleteBankMutation.mutate(acc.id)} className="text-muted-foreground hover:text-destructive">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+
+          {/* Add new */}
           <Card>
-            <CardHeader><CardTitle className="text-base">Dados Bancários</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">Adicionar Conta Bancária</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <div><Label>Chave PIX</Label><Input value={bank.pix_key} onChange={(e) => setBank((p) => ({ ...p, pix_key: e.target.value }))} placeholder="CPF, e-mail ou telefone" /></div>
+              <div><Label>Nome da conta</Label><Input value={bankForm.account_name} onChange={(e) => setBankForm((p) => ({ ...p, account_name: e.target.value }))} placeholder="Ex: Conta PJ Itaú" /></div>
+              <div><Label>Chave PIX</Label><Input value={bankForm.pix_key} onChange={(e) => setBankForm((p) => ({ ...p, pix_key: e.target.value }))} placeholder="CPF, e-mail ou telefone" /></div>
               <div className="grid grid-cols-2 gap-4">
-                <div><Label>Banco</Label><Input value={bank.bank_name} onChange={(e) => setBank((p) => ({ ...p, bank_name: e.target.value }))} /></div>
-                <div><Label>Agência</Label><Input value={bank.agency} onChange={(e) => setBank((p) => ({ ...p, agency: e.target.value }))} /></div>
+                <div><Label>Banco</Label><Input value={bankForm.bank_name} onChange={(e) => setBankForm((p) => ({ ...p, bank_name: e.target.value }))} /></div>
+                <div><Label>Agência</Label><Input value={bankForm.agency} onChange={(e) => setBankForm((p) => ({ ...p, agency: e.target.value }))} /></div>
               </div>
-              <div><Label>Conta</Label><Input value={bank.account} onChange={(e) => setBank((p) => ({ ...p, account: e.target.value }))} /></div>
-              <Button onClick={() => saveBankMutation.mutate()} disabled={saveBankMutation.isPending || !bank.pix_key}>
-                Salvar dados bancários
+              <div><Label>Conta</Label><Input value={bankForm.account_number} onChange={(e) => setBankForm((p) => ({ ...p, account_number: e.target.value }))} /></div>
+              <Button onClick={() => saveBankMutation.mutate()} disabled={saveBankMutation.isPending || !bankForm.account_name}>
+                Adicionar conta
               </Button>
             </CardContent>
           </Card>

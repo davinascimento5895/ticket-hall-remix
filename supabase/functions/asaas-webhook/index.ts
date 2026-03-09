@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
     // Verify the order exists
     const { data: order, error: orderErr } = await supabase
       .from("orders")
-      .select("id, status, event_id")
+      .select("id, status, event_id, promoter_event_id")
       .eq("id", orderId)
       .single();
 

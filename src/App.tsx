@@ -159,7 +159,9 @@ const App = () => {
                 <Route path="events/:id/panel" element={<ProducerEventPanel />}>
                   <Route index element={<ProducerEventDashboardTab />} />
                   <Route path="tickets" element={<ProducerEventTicketsTab />} />
+                  <Route path="orders" element={<ProducerEventOrders />} />
                   <Route path="participants" element={<ProducerEventParticipants />} />
+                  <Route path="guestlist" element={<ProducerEventGuestlist />} />
                   <Route path="checkin" element={<ProducerEventCheckin />} />
                   <Route path="financial" element={<ProducerEventFinancial />} />
                   <Route path="messages" element={<ProducerEventMessages />} />
