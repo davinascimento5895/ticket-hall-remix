@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,14 +12,16 @@ interface AuthModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultTab?: "login" | "register";
+  redirectTo?: string;
 }
 
-export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModalProps) {
+export function AuthModal({ open, onOpenChange, defaultTab = "login", redirectTo }: AuthModalProps) {
   const [tab, setTab] = useState(defaultTab);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Login state
   const [loginEmail, setLoginEmail] = useState("");
@@ -47,6 +49,11 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
     } else {
       toast({ title: "Bem-vindo de volta!" });
       onOpenChange(false);
+      // Redirect to the page the user was trying to access
+      const from = redirectTo || (location.state as any)?.from?.pathname;
+      if (from && from !== "/" && from !== location.pathname) {
+        navigate(from, { replace: true });
+      }
     }
   };
 
@@ -75,6 +82,10 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
     } else {
       toast({ title: "Conta criada com sucesso!" });
       onOpenChange(false);
+      const from = redirectTo || (location.state as any)?.from?.pathname;
+      if (from && from !== "/" && from !== location.pathname) {
+        navigate(from, { replace: true });
+      }
     }
   };
 
