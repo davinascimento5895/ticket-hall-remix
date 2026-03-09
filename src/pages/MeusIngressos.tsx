@@ -262,6 +262,8 @@ export default function MeusIngressos() {
         return "Nenhum ingresso cancelado";
       case "past":
         return "Nenhum ingresso de eventos passados";
+      case "archived":
+        return "Nenhum ingresso arquivado";
     }
   };
 
