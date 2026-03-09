@@ -55,6 +55,10 @@ export function BookingSummaryStep({
   const [installments, setInstallments] = useState(1);
 
   const handleConfirm = () => {
+    if (isFree) {
+      onConfirm();
+      return;
+    }
     if (paymentMethod === "credit_card") {
       onConfirm({
         holderName: cardName,
