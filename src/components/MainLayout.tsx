@@ -6,7 +6,10 @@ export function MainLayout() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <Outlet />
+      {/* Main content with bottom padding for mobile nav bar */}
+      <div className="pb-20 md:pb-0">
+        <Outlet />
+      </div>
       <Footer />
     </div>
   );
