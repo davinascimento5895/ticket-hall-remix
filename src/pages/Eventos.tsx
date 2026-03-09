@@ -1,8 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
-import { Search, X, LayoutGrid, List, Ticket, MapPin } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { X, LayoutGrid, List, Ticket, MapPin, ChevronDown, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/EventCard";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
@@ -16,6 +15,9 @@ import { cn } from "@/lib/utils";
 import { addDays, format, isSameDay, startOfToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { EVENT_CATEGORIES, CATEGORY_OPTIONS } from "@/lib/categories";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
 export default function Eventos() {
   const [searchParams] = useSearchParams();
