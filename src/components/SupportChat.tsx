@@ -106,7 +106,7 @@ function getBotResponse(text: string): string {
   }
   
   if (bestMatch && bestMatch.score >= 2) {
-    return bestMatch.response;
+    return bestMatch.item.response;
   }
   
   return "Entendi! Para suporte personalizado, envie um e-mail para suporte@tickethall.com.br ou aguarde — em breve teremos atendimento ao vivo por aqui. Você também pode tentar perguntar de outra forma.";
