@@ -620,6 +620,41 @@ export type Database = {
           },
         ]
       }
+      event_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          event_id: string
+          id: string
+          rating: number
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          event_id: string
+          id?: string
+          rating: number
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          event_id?: string
+          id?: string
+          rating?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_reviews_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           banner_image_url: string | null
@@ -744,6 +779,35 @@ export type Database = {
             columns: ["producer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      favorites: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
         ]
@@ -1295,6 +1359,8 @@ export type Database = {
           asaas_account_key: string | null
           asaas_wallet_id: string | null
           avatar_url: string | null
+          birth_date: string | null
+          city: string | null
           cpf: string | null
           created_at: string | null
           full_name: string | null
@@ -1307,7 +1373,9 @@ export type Database = {
           organizer_slug: string | null
           organizer_website: string | null
           phone: string | null
+          preferred_categories: string[] | null
           producer_status: Database["public"]["Enums"]["producer_status"] | null
+          state: string | null
           updated_at: string | null
         }
         Insert: {
@@ -1315,6 +1383,8 @@ export type Database = {
           asaas_account_key?: string | null
           asaas_wallet_id?: string | null
           avatar_url?: string | null
+          birth_date?: string | null
+          city?: string | null
           cpf?: string | null
           created_at?: string | null
           full_name?: string | null
@@ -1327,9 +1397,11 @@ export type Database = {
           organizer_slug?: string | null
           organizer_website?: string | null
           phone?: string | null
+          preferred_categories?: string[] | null
           producer_status?:
             | Database["public"]["Enums"]["producer_status"]
             | null
+          state?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -1337,6 +1409,8 @@ export type Database = {
           asaas_account_key?: string | null
           asaas_wallet_id?: string | null
           avatar_url?: string | null
+          birth_date?: string | null
+          city?: string | null
           cpf?: string | null
           created_at?: string | null
           full_name?: string | null
@@ -1349,9 +1423,11 @@ export type Database = {
           organizer_slug?: string | null
           organizer_website?: string | null
           phone?: string | null
+          preferred_categories?: string[] | null
           producer_status?:
             | Database["public"]["Enums"]["producer_status"]
             | null
+          state?: string | null
           updated_at?: string | null
         }
         Relationships: []
