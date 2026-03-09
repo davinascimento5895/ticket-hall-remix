@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { getAllEvents, adminUpdateEvent } from "@/lib/api-admin";
 import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const statusMap: Record<string, string> = { draft: "pending", published: "active", cancelled: "cancelled", ended: "used" };
 
@@ -53,11 +54,13 @@ function FeeEditor({ eventId, currentFee, onSave }: { eventId: string; currentFe
 export default function AdminEvents() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 400);
   const [statusFilter, setStatusFilter] = useState("all");
 
   const { data: events, isLoading } = useQuery({
-    queryKey: ["admin-events", statusFilter, search],
-    queryFn: () => getAllEvents({ status: statusFilter, search }),
+    queryKey: ["admin-events", statusFilter, debouncedSearch],
+    queryFn: () => getAllEvents({ status: statusFilter, search: debouncedSearch }),
+    staleTime: 30_000,
   });
 
   const updateMutation = useMutation({

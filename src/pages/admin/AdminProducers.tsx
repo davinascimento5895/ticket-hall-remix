@@ -21,6 +21,7 @@ export default function AdminProducers() {
   const { data: producers, isLoading } = useQuery({
     queryKey: ["admin-producers", statusFilter],
     queryFn: () => getProducers(statusFilter !== "all" ? statusFilter : undefined),
+    staleTime: 30_000,
   });
 
   const mutation = useMutation({
