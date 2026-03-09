@@ -25,6 +25,7 @@ interface AuthContextType {
   role: AppRole | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  refetchRole: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -34,6 +35,7 @@ const AuthContext = createContext<AuthContextType>({
   role: null,
   loading: true,
   signOut: async () => {},
+  refetchRole: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
