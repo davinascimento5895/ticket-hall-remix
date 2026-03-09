@@ -55,7 +55,7 @@ export function MobileBottomNav() {
 
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border"
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       role="navigation"
       aria-label="Navegação principal"
