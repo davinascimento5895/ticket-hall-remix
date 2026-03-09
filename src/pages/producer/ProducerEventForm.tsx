@@ -25,6 +25,7 @@ import { getCapacityGroups } from "@/lib/api-checkout";
 import { EVENT_CATEGORIES } from "@/lib/categories";
 import { useIBGEStates, useIBGECities } from "@/hooks/useIBGELocations";
 import { fetchAddress } from "@/lib/cep";
+import { generateUniqueSlug } from "@/lib/slug";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
