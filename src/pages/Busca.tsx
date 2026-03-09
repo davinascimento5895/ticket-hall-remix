@@ -203,10 +203,10 @@ export default function Busca() {
         </section>
 
         {/* Results + Desktop Sidebar */}
-        <section className="container py-6 md:py-8">
+        <section className="container py-6 lg:py-8">
           <div className="flex gap-8">
             {/* Desktop Filters Sidebar */}
-            <div className="hidden md:block">
+            <div className="hidden lg:block">
               <SearchFilters
                 filters={filters}
                 onChange={setFilters}
