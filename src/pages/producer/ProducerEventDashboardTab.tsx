@@ -339,6 +339,33 @@ export default function ProducerEventDashboardTab() {
         </CardContent>
       </Card>
 
+      {/* No-show by tier */}
+      {Object.keys(noShowByTier).length > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">No-show por lote</CardTitle></CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border text-left text-muted-foreground">
+                    <th className="p-3 font-medium">Lote</th>
+                    <th className="p-3 font-medium">No-shows</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.values(noShowByTier).map((tier) => (
+                    <tr key={tier.name} className="border-b border-border/50">
+                      <td className="p-3 font-medium text-foreground">{tier.name}</td>
+                      <td className="p-3 text-muted-foreground">{tier.count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Tier table */}
       {tiers && tiers.length > 0 && (
         <Card>
