@@ -156,18 +156,8 @@
     font-family: var(--font-display);
   }
 
-  /* Minimum touch target size for accessibility (44x44 recommended) */
-  button, a, [role="button"] {
-    min-height: 44px;
-  }
-
-  /* Exception for inline text links and small UI elements */
-  a:not([class*="button"]):not([class*="nav"]):not([role="button"]) {
-    min-height: auto;
-  }
-
   /* Ensure readable line height on mobile */
-  p, li, span {
+  p, li {
     line-height: 1.6;
   }
 
