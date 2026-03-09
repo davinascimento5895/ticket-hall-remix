@@ -54,7 +54,20 @@ export default function ProducerEventCheckin() {
     },
   });
 
-  const totalTickets = tickets?.length || 0;
+  // Mutation for QR scanner — passes raw QR code string
+  const scanCheckinMutation = useMutation({
+    mutationFn: (qrCode: string) => validateCheckin({ qrCode, scannedBy: user?.id }),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["event-tickets-checkin", id] });
+      setLastResult(result);
+      toast({ title: "Check-in realizado!", description: result.attendeeName });
+    },
+    onError: (err: any) => {
+      setLastResult({ success: false, result: "error", message: err.message });
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    },
+  });
+
   const checkedIn = tickets?.filter((t: any) => t.status === "used").length || 0;
 
   // QR Scanner start/stop
