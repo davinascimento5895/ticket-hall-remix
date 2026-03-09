@@ -1327,6 +1327,7 @@ export type Database = {
           pix_qr_code_image: string | null
           platform_fee: number
           platform_fee_amount: number | null
+          promoter_event_id: string | null
           refund_reason: string | null
           refunded_amount: number | null
           refunded_at: string | null
@@ -1370,6 +1371,7 @@ export type Database = {
           pix_qr_code_image?: string | null
           platform_fee: number
           platform_fee_amount?: number | null
+          promoter_event_id?: string | null
           refund_reason?: string | null
           refunded_amount?: number | null
           refunded_at?: string | null
@@ -1413,6 +1415,7 @@ export type Database = {
           pix_qr_code_image?: string | null
           platform_fee?: number
           platform_fee_amount?: number | null
+          promoter_event_id?: string | null
           refund_reason?: string | null
           refunded_amount?: number | null
           refunded_at?: string | null
@@ -1434,6 +1437,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_promoter_event_id_fkey"
+            columns: ["promoter_event_id"]
+            isOneToOne: false
+            referencedRelation: "promoter_events"
             referencedColumns: ["id"]
           },
         ]
