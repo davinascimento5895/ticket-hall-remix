@@ -126,6 +126,7 @@ const App = () => {
                 <Route path="/meu-perfil/pagamento" element={<MetodosPagamento />} />
                 <Route path="/meu-perfil/notificacoes" element={<PerfilNotificacoes />} />
                 <Route path="/meu-perfil/suporte" element={<PerfilSuporte />} />
+                <Route path="/favoritos" element={<Favoritos />} />
               </Route>
 
               {/* Standalone pages (no shared Navbar/Footer) */}
