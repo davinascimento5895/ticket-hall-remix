@@ -63,7 +63,6 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
   const platformFee = Math.round(subtotal * feePercent) / 100;
   const total = Math.max(0, subtotal + platformFee - discount);
 
-  const isMultiDay = event.is_multi_day || new Date(event.start_date).toDateString() !== new Date(event.end_date).toDateString();
   const stepOrder: Step[] = [...(isMultiDay ? ["date" as Step] : []), "tickets", ...(event.has_seat_map ? ["seats" as Step] : []), "summary", "confirmation"];
   const currentStepIndex = stepOrder.indexOf(step);
 
