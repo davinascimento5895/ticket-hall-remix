@@ -384,7 +384,7 @@ export default function ProducerEventForm() {
           <CardContent className="space-y-3 text-sm">
             <div className="grid grid-cols-2 gap-2">
               <span className="text-muted-foreground">Título:</span><span className="text-foreground font-medium">{form.title}</span>
-              <span className="text-muted-foreground">Categoria:</span><span className="text-foreground">{categories.find((c) => c.value === form.category)?.label}</span>
+              <span className="text-muted-foreground">Categoria:</span><span className="text-foreground">{EVENT_CATEGORIES.find((c) => c.value === form.category)?.label}</span>
               <span className="text-muted-foreground">Início:</span><span className="text-foreground">{form.start_date ? new Date(form.start_date).toLocaleString("pt-BR") : "—"}</span>
               <span className="text-muted-foreground">Término:</span><span className="text-foreground">{form.end_date ? new Date(form.end_date).toLocaleString("pt-BR") : "—"}</span>
               <span className="text-muted-foreground">Local:</span><span className="text-foreground">{form.is_online ? "Online" : form.venue_name || "—"}</span>
