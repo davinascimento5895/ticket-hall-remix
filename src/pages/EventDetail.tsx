@@ -24,6 +24,7 @@ export default function EventDetail() {
   const [revealedCodes, setRevealedCodes] = useState<string[]>([]);
   const [showUnlockInput, setShowUnlockInput] = useState(false);
   const [activeSection, setActiveSection] = useState<"description" | "tickets" | "venue">("description");
+  const [bookingOpen, setBookingOpen] = useState(false);
 
   const { data: event, isLoading: loadingEvent } = useQuery({
     queryKey: ["event", slug],
