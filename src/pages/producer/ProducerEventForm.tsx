@@ -902,12 +902,12 @@ function VenueStep({ form, updateField }: { form: any; updateField: (f: string, 
     if (cep?.length === 8) {
       setCepLoading(true);
       try {
-        const addr = await fetchAddressFromCEP(cep);
+        const addr = await fetchAddress(cep);
         if (addr) {
-          updateField("venue_address", addr.logradouro || "");
-          updateField("venue_neighborhood", addr.bairro || "");
-          updateField("venue_city", addr.localidade || "");
-          updateField("venue_state", addr.uf || "");
+          updateField("venue_address", addr.street || "");
+          updateField("venue_neighborhood", addr.neighborhood || "");
+          updateField("venue_city", addr.city || "");
+          updateField("venue_state", addr.state || "");
         }
       } catch {}
       setCepLoading(false);
