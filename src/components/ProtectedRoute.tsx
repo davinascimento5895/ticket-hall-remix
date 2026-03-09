@@ -20,14 +20,19 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/?login=true" state={{ from: location }} replace />;
   }
 
-  if (allowedRoles && role && !allowedRoles.includes(role)) {
-    // Redirect to correct dashboard based on role
-    const redirectMap = {
-      admin: "/admin/dashboard",
-      producer: "/producer/dashboard",
-      buyer: "/eventos",
-    };
-    return <Navigate to={redirectMap[role] || "/"} replace />;
+  if (allowedRoles) {
+    if (!role) {
+      // Role is null after loading finished — user has no valid role, block access
+      return <Navigate to="/" replace />;
+    }
+    if (!allowedRoles.includes(role)) {
+      const redirectMap = {
+        admin: "/admin/dashboard",
+        producer: "/producer/dashboard",
+        buyer: "/eventos",
+      };
+      return <Navigate to={redirectMap[role] || "/"} replace />;
+    }
   }
 
   return <>{children}</>;

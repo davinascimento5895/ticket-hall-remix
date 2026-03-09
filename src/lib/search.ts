@@ -173,6 +173,21 @@ export function fuzzySearch<T extends Record<string, any>>(
 /**
  * Highlight matching parts of text
  */
+/**
+ * Sanitize a user query for safe use in PostgREST ilike filters.
+ * Escapes %, _, and backslashes that have special meaning.
+ */
+export function sanitizePostgrestFilter(query: string): string {
+  return query
+    .replace(/\\/g, "\\\\")
+    .replace(/%/g, "\\%")
+    .replace(/_/g, "\\_")
+    .replace(/,/g, "")
+    .replace(/\(/g, "")
+    .replace(/\)/g, "")
+    .replace(/\./g, "");
+}
+
 export function highlightMatch(text: string, query: string): string {
   if (!query.trim()) return text;
 

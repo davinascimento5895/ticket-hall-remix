@@ -26,7 +26,10 @@ export async function getEvents(filters?: {
 
   if (filters?.category) query = query.eq("category", filters.category);
   if (filters?.city) query = query.eq("venue_city", filters.city);
-  if (filters?.search) query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%,venue_name.ilike.%${filters.search}%`);
+  if (filters?.search) {
+    const safeSearch = sanitizePostgrestFilter(filters.search);
+    query = query.or(`title.ilike.%${safeSearch}%,description.ilike.%${safeSearch}%,venue_name.ilike.%${safeSearch}%`);
+  }
   if (filters?.limit) query = query.limit(filters.limit);
   if (filters?.offset) query = query.range(filters.offset, filters.offset + (filters.limit || 20) - 1);
 

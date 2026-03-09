@@ -82,6 +82,7 @@ export default function EditarPerfil() {
     if (error) {
       toast.error("Erro ao salvar perfil");
     } else {
+      await refetchRole();
       toast.success("Perfil atualizado!");
       navigate("/meu-perfil");
     }

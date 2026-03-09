@@ -345,6 +345,7 @@ export default function EventDetail() {
                     <TicketTierCard key={tier.id} id={tier.id} name={tier.name} description={tier.description}
                       price={tier.price ?? 0} originalPrice={tier.original_price}
                       quantityTotal={tier.quantity_total} quantitySold={tier.quantity_sold ?? 0}
+                      quantityReserved={tier.quantity_reserved ?? 0}
                       minPerOrder={tier.min_per_order ?? 1} maxPerOrder={tier.max_per_order ?? 10}
                       tierType={tier.tier_type ?? "paid"} onAdd={handleAddToCart} />
                   ))
