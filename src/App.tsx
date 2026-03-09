@@ -35,6 +35,13 @@ import Changelog from "./pages/Changelog";
 import NotificacoesConfig from "./pages/NotificacoesConfig";
 import Cidades from "./pages/Cidades";
 import Busca from "./pages/Busca";
+import MeuPerfil from "./pages/MeuPerfil";
+import EditarPerfil from "./pages/EditarPerfil";
+import AlterarSenha from "./pages/AlterarSenha";
+import PerfilCidade from "./pages/PerfilCidade";
+import MetodosPagamento from "./pages/MetodosPagamento";
+import PerfilNotificacoes from "./pages/PerfilNotificacoes";
+import PerfilSuporte from "./pages/PerfilSuporte";
 import NotFound from "./pages/NotFound";
 
 // Producer pages — lazy loaded
@@ -102,6 +109,13 @@ const App = () => {
                 <Route path="/cidades" element={<Cidades />} />
                 <Route path="/busca" element={<Busca />} />
                 <Route path="/notificacoes" element={<NotificacoesConfig />} />
+                <Route path="/meu-perfil" element={<MeuPerfil />} />
+                <Route path="/meu-perfil/editar" element={<EditarPerfil />} />
+                <Route path="/meu-perfil/alterar-senha" element={<AlterarSenha />} />
+                <Route path="/meu-perfil/cidade" element={<PerfilCidade />} />
+                <Route path="/meu-perfil/pagamento" element={<MetodosPagamento />} />
+                <Route path="/meu-perfil/notificacoes" element={<PerfilNotificacoes />} />
+                <Route path="/meu-perfil/suporte" element={<PerfilSuporte />} />
               </Route>
 
               {/* Standalone pages (no shared Navbar/Footer) */}
