@@ -1,145 +1,110 @@
-# TicketHall — Plano Mestre de Redesign & Implementação
 
-## Documento de Referência
-Business Case & Product Design Analysis completo fornecido pelo cliente em 2026-03-06.
 
----
+## Auditoria Geral — Inconsistências e Problemas Encontrados
 
-## Design System Alvo (Novo)
-- **Tema**: Dark-first (`#0d0d0d` base, `#1a1a1a`/`#1f1f1f`/`#2c2c2c` superfícies)
-- **Cor principal (ação)**: Laranja `#ff472d` — CTAs, badges, ícones ativos, links, bordas de foco
-- **Cor secundária (gamificação)**: Verde-lima `#bad900` — pontos, sucesso, confirmações
-- **Texto principal**: Branco `#ffffff`
-- **Texto secundário**: Cinza claro `#9ca3af`
-- **Texto terciário (inativo)**: Cinza médio `#6b7280`
-- **Tipografia**: Sora (display) + Inter (body) — já configurado
-- **Border radius**: ~12-16px para cards, ~10px para inputs
-- **Componentes**: Chips/Pills, Bottom Sheets, Cards com gradiente escuro, Toggle switches
+### Problemas Críticos (Funcionalidade Quebrada)
 
----
+**1. Filtro de preço na Busca é placeholder**
+`Busca.tsx` linha 107-108: comentário explícito "Price filtering would need ticket_tiers join — skip for now, presets are UX placeholders". Os filtros de preço (até R$100, até R$200, a partir de R$200) aparecem na UI mas não fazem nada.
+- **Fix**: Join `ticket_tiers` na query da busca para obter `min_price` por evento e filtrar client-side.
 
-## Gap Analysis — Existente vs Documento de Design
+**2. Filtro "Maior avaliação" é placeholder**
+`SearchFilters.tsx` tem opção "rating" no sort, mas não existe tabela de reviews/ratings no banco. Selecionar "Maior avaliação" não faz nada.
+- **Fix**: Remover opção até implementar sistema de avaliações, ou implementar tabela `event_reviews`.
 
-### ✅ JÁ IMPLEMENTADO
-- Catálogo de eventos com filtros por categoria
-- Detalhe do evento com descrição, data, local
-- Fluxo de compra (carrinho → checkout → pagamento)
-- Meus Ingressos (lista de ingressos ativos)
-- QR Code por ingresso
-- Transferência de ingresso
-- Sistema de reembolso (RefundDialog)
-- Cupons de desconto
-- Fila virtual
-- Certificados pós-evento
-- Painel do produtor completo
-- Painel admin completo
-- Autenticação (login/registro com email)
-- Notificações (NotificationBell)
-- Blog
-- Página do organizador
-- LGPD/Privacidade
-- Bottom navigation mobile
-- Tema claro/escuro com transição animada
+**3. Filtro "Ofertas" é frágil**
+`Busca.tsx` linha 120-124: sort por "deals" apenas verifica se `category === "deals"`. Não há conceito real de "oferta" (ex: `original_price > price` nos tiers).
+- **Fix**: Calcular ofertas reais baseado em `ticket_tiers.original_price` vs `price`.
 
-### ❌ FEATURES FALTANTES
-1. **Onboarding** — 2-3 telas de boas-vindas com skip
-2. **Detecção automática de cidade** — GPS
-3. **Seletor de datas horizontal** — Barra scrollável no catálogo
-4. **Top-10 / Ranking** — Seção editorial com badges numerados
-5. **Filtro avançado (Bottom Sheet)** — Sort, range slider, gênero, horário
-6. **Grid view toggle** — Lista/grade no catálogo
-7. **Rating/Avaliação** — Estrelas + reviews de usuários (tabela + UI)
-8. **Random/Discovery** — Evento aleatório
-9. **Cast/Elenco** — Seção de artistas no detalhe
-10. **Mapa de assentos** — Seleção visual interativa
-11. **Sistema de pontos** — Fidelidade no checkout
-12. **Favoritos** — Salvar eventos (tabela + UI)
-13. **Ingressos arquivados** — Ativo/Arquivado com visual P&B
-14. **Chat de suporte** — Bot + quick replies in-app
-15. **Perfil completo** — Editar perfil, cidade, pagamentos, notificações
-16. **Login OTP** — Código por email/telefone
-17. **Login social** — Google, Apple
-18. **Compartilhamento** — Share via link
-19. **Notificações configuráveis** — SMS/Push/Email toggles
-20. **Seções editoriais** — "Novo", "Semana", curadoria
+**4. Cupom no BookingFlow é TODO**
+`BookingFlow.tsx` linha 241: `onApplyCoupon={() => {/* TODO: validate coupon */}}`. O botão "Aplicar" cupom no novo fluxo de booking não faz absolutamente nada.
+- **Fix**: Chamar `validateCoupon()` da API e atualizar o `discount` state.
 
-### 🔄 PRECISA REDESIGN VISUAL
-- Todas as páginas públicas (landing, catálogo, detalhe, checkout)
-- Navbar → Dark-first com laranja
-- Bottom Nav → Ícone ativo laranja
-- Cards de evento → Fundo #1f1f1f, gradiente, badges
-- Botões → Fill laranja, outline cinza
-- Inputs → Fundo #1f1f1f, borda #3a3a3a
-- Chips → Ativo laranja, inativo borda cinza
-- Login/Registro → Redesign completo
-- Meus Ingressos → Cards com barcode, ações
-- Painéis Producer/Admin → Dark-first
+**5. Parcelas no BookingSummaryStep sem juros corretos**
+`BookingSummaryStep.tsx` linha 227-229: mostra `{n}x de {fmt(total / n)}` — divisão simples sem usar a função `getInstallmentOptions()` que já existe em `api-payment.ts` com cálculo de juros compostos após 3x.
+- **Fix**: Usar `getInstallmentOptions(total)` para exibir parcelas corretas.
 
----
+**6. Dois fluxos de checkout coexistem sem clareza**
+Existe o `/checkout` (via carrinho) E o `BookingFlow` (via página do evento). O carrinho ainda aponta para `/checkout` (`Carrinho.tsx` linha 144), mas o `BookingFlow` cria orders diretamente. Se o usuário adiciona ao carrinho e vai pelo checkout antigo, funciona. Se clica "Comprar ingresso" no evento, usa o novo flow. Inconsistência de experiência.
+- **Fix**: Decidir se mantém ambos ou migra tudo para o BookingFlow.
 
-## Fases de Implementação
+**7. `priceFrom` sempre 0 no EventCard**
+`Eventos.tsx` linha 284 e `Busca.tsx` linha 264: `priceFrom={0}` está hardcoded. O card nunca mostra o preço real do evento.
+- **Fix**: Fazer join com `ticket_tiers` para pegar `MIN(price)` por evento.
 
-### Fase 1 — Design System Foundation
-- [ ] Atualizar index.css (CSS variables nova paleta)
-- [ ] Atualizar tailwind.config.ts
-- [ ] Atualizar componentes base (Button, Input, Card, Badge, Chips)
-- [ ] Navbar dark-first com laranja
-- [ ] Bottom Nav com laranja
-- [ ] AuthModal redesign dark-first
+### Problemas Médios (UX/Lógica)
 
-### Fase 2 — Páginas Públicas (Buyer UX)
-- [ ] Landing page redesign
-- [ ] Catálogo (seletor datas, chips, banner, Top-10)
-- [ ] Detalhe do evento (reviews, cast, CTA fixo)
-- [ ] Meus Ingressos (ativo/arquivado, barcode, reembolso)
-- [ ] Checkout redesign
+**8. Horário do evento calculado corretamente, mas edge case com UTC**
+`Busca.tsx` `getTimeOfDay()` usa `getHours(new Date(dateStr))` — isso converte para horário local do browser, o que é correto. Porém, se o `start_date` no banco for UTC (e.g., `2026-03-10T23:00:00Z` = 20h BRT), o cálculo funciona. Apenas documentar que os timestamps no banco devem ser UTC.
 
-### Fase 3 — Features Novas (Prioridade Alta)
-- [ ] Favoritos (tabela + UI)
-- [ ] Rating/Reviews (tabela + UI)
-- [ ] Filtro avançado (Bottom Sheet com Drawer)
-- [ ] Grid view toggle
-- [ ] Compartilhamento social
-- [ ] Perfil completo do usuário
-- [ ] Ingressos arquivados
+**9. `MainLayout` esconde navbar para /evento/ mas rota é /eventos/:slug**
+`MainLayout.tsx` linha 16: `"/evento/"` está na lista de paths escondidos, mas a rota real é `/eventos/:slug` (com "s"). O path `/evento/` nunca é usado.
+- **Fix**: Corrigir para `/eventos/` (já coberto pelo `/eventos` na linha anterior, mas o `/evento/` é dead code).
 
-### Fase 4 — Features Avançadas
-- [ ] Random/Discovery
-- [ ] Sistema de pontos/fidelidade
-- [ ] Chat de suporte in-app
-- [ ] Onboarding (2-3 telas)
-- [ ] Detecção de cidade
-- [ ] Notificações configuráveis
-- [ ] Login OTP + Social
+**10. Admin `getAllEvents` usa foreign key que pode não existir**
+`api-admin.ts` linha 60: `profiles!events_producer_id_fkey(full_name)`. Isso assume que existe uma foreign key nomeada `events_producer_id_fkey`, mas pelo schema mostrado, `events.producer_id` não tem FK declarada para profiles. Se a FK não existe no DB, essa query pode falhar silenciosamente.
+- **Fix**: Verificar se a FK existe; se não, criar via migration.
 
-### Fase 5 — Painéis (Producer/Admin)
-- [ ] Redesign dark-first dos dashboards
-- [ ] Consistência com novo design system
+**11. `ProtectedRoute` redireciona buyer para `/meus-ingressos`**
+`ProtectedRoute.tsx` linha 34: quando buyer tenta acessar rota protegida (producer/admin), redireciona para `/meus-ingressos` — deveria ser `/eventos` para consistência com a nova navegação.
+- **Fix**: Mudar redirectMap buyer para `/eventos`.
+
+**12. Checkout antigo (`/checkout`) não protege contra produto com tierId "product-"**
+Quando chama `reserve_tickets` com um tierId como `"product-abc123"`, o RPC vai falhar porque esse UUID não existe na tabela `ticket_tiers`. `Checkout.tsx` linha 100 itera sobre todos os items incluindo products.
+- **Fix**: Filtrar items de produto antes de chamar `reserve_tickets`.
+
+**13. Mapa "Em breve" no detalhe do evento**
+`EventDetail.tsx` linha 347-349: seção de local mostra "Mapa em breve" como placeholder estático.
+- **Fix**: Integrar Google Maps embed ou pelo menos um link para Google Maps.
+
+### Problemas Menores (Polish)
+
+**14. `Eventos.tsx` mostra `pt-24` padding top mesmo quando navbar está escondida**
+Quando logado no mobile, a navbar é escondida mas a página ainda tem `pt-24`, criando espaço vazio excessivo no topo.
+- **Fix**: Usar padding condicional ou reduzir para `pt-4` quando navbar está escondida.
+
+**15. `MeusIngressos.tsx` também tem `pt-24`**
+Mesmo problema — padding excessivo quando sem navbar.
+- **Fix**: Mesma solução.
+
+**16. `Carrinho.tsx` tem `pt-24` quando navbar pode estar escondida**
+Repetição do mesmo problema.
+
+**17. Cart `expiresAt` vem do CartContext mas não é persistido no banco**
+O countdown timer do carrinho é local — se o usuário recarrega a página, perde o timer. Ingressos não são reservados até criar a order.
+- Não é bug, mas é inconsistência com o conceito de "reserva de 15 min".
 
 ---
 
-## Infraestrutura Backend (Plano Anterior — Mantido)
+## Plano de Ação (Priorizado)
 
-### Bloco 1 — Schema & SQL Functions
-- Funções atômicas: reserve_tickets, confirm_order_payment, apply_coupon
-- Índices de performance
+### Prioridade 1 — Funcionalidade quebrada
+1. **Implementar filtro de preço real** — join ticket_tiers na busca, filtrar por min_price
+2. **Corrigir cupom no BookingFlow** — chamar validateCoupon() real
+3. **Corrigir parcelas no BookingSummaryStep** — usar getInstallmentOptions()
+4. **Corrigir priceFrom nos EventCards** — buscar preço mínimo real dos tiers
+5. **Remover ou desabilitar filtro "Maior avaliação"** até ter reviews
 
-### Bloco 2 — Edge Functions de Pagamento (Asaas)
-- create-payment, asaas-webhook, create-producer-account
-- Secrets: ASAAS_API_KEY, ASAAS_BASE_URL, QR_SECRET
+### Prioridade 2 — Consistência de navegação
+6. **Corrigir ProtectedRoute** — buyer redirect para `/eventos`
+7. **Remover dead code `/evento/`** do MainLayout
+8. **Corrigir padding `pt-24`** em Eventos, MeusIngressos, Carrinho — usar condicional baseado em isMobile + user logado
 
-### Bloco 3 — Checkout Real
-- Conectar UI ao create-payment
-- PIX, Cartão, Boleto
+### Prioridade 3 — Robustez
+9. **Filtrar products antes de reserve_tickets** no Checkout antigo
+10. **Verificar/criar FK events.producer_id → profiles.id** para queries admin
+11. **Corrigir filtro "Ofertas"** para usar original_price vs price dos tiers
 
-### Bloco 4 — QR Codes Seguros + Check-in
-- JWT assinado, validate-checkin
+### Arquivos a alterar
+- `src/pages/Busca.tsx` — filtro de preço real, remover/fix rating sort
+- `src/pages/Eventos.tsx` — priceFrom real, padding condicional
+- `src/components/booking/BookingFlow.tsx` — cupom funcional
+- `src/components/booking/BookingSummaryStep.tsx` — parcelas com juros
+- `src/components/SearchFilters.tsx` — remover opção rating ou renomear
+- `src/components/ProtectedRoute.tsx` — redirect buyer → /eventos
+- `src/components/MainLayout.tsx` — remover `/evento/` morto
+- `src/pages/MeusIngressos.tsx` — padding condicional
+- `src/pages/Carrinho.tsx` — padding condicional
+- `src/pages/Checkout.tsx` — filtrar products do reserve_tickets
+- Migration SQL — FK events.producer_id se necessário
 
-### Bloco 5 — Transferência + Cancelamento
-- transfer-ticket, cancel-event
-
-### Bloco 6 — Cron Jobs
-- cleanup_expired_reservations, event-reminders
-
-### Bloco 7 — Segurança & LGPD
-- Rate limiting, consents, data requests
