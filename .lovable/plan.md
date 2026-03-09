@@ -1,69 +1,145 @@
+# TicketHall — Plano Mestre de Redesign & Implementação
 
-
-# Auditoria Geral — Estado Atual do TicketHall
-
-## O que está funcionando
-
-A base da bilheteria está sólida:
-- **Criação de eventos** com formulário multi-step completo (tipo, informações, local, ingressos, formulário, produtos, configurações, revisão)
-- **Tiers de ingressos** com tipos pagos/gratuitos/doação, códigos de desbloqueio, meia-entrada, visibilidade
-- **Carrinho e Checkout** com timer de expiração, cupons de desconto, reserva atômica via RPC
-- **Pedidos gratuitos** confirmados automaticamente via `confirm_order_payment`
-- **Meus Ingressos** com tabs (ativos, pendentes, cancelados, encerrados, arquivados), QR Code, transferência
-- **Favoritos** funcionando com tabela e RLS corretos
-- **Reviews** funcionando com tabela `event_reviews` e RLS
-- **Check-in** público via QR com listas de check-in
-- **Painel do produtor** com dashboard, ingressos, participantes, financeiro, mensagens, cupons, afiliados
-- **Painel admin** com dashboard, eventos, usuários, produtores, pedidos, financeiro
-- **Rotas protegidas** para checkout, perfil, favoritos, certificados, ingressos
-- **Slug único** com `generateUniqueSlug` para novos eventos
-- **Limpeza de reservas** via cron `cleanup_expired_reservations`
-- **FAQ** dedicada em `/faq`
-- **Auth callback** em `/auth/callback`
-- **Bloqueio de publicação** para produtores não aprovados
-
-## Problemas Remanescentes
-
-### 1. Console Warning: SupportChat forwardRef (ativo agora)
-O `SupportChat` usa `motion.div` dentro de `AnimatePresence` sem `forwardRef`, gerando warning em toda página. Precisa converter o componente filho do `AnimatePresence` para usar `motion.div` com key, ou envolver em `forwardRef`.
-
-### 2. Carrinho não protege contra multi-evento de forma clara
-O `CartContext.addItem` silenciosamente descarta itens do evento anterior quando um novo evento é adicionado. O usuário perde itens sem feedback. Deveria mostrar um aviso/confirmação.
-
-### 3. Checkout não redireciona para login proativamente
-O `/checkout` está protegido via `ProtectedRoute`, mas o `/carrinho` não está. Um usuário não logado pode navegar no carrinho e clicar "Finalizar compra" — aí é redirecionado para login e perde o contexto. Melhor: mostrar aviso no carrinho.
-
-### 4. Falta unique constraint em event_reviews
-O `upsert` em `EventReviews` usa `onConflict: "user_id,event_id"`, mas não há unique constraint visível no schema para essa combinação. O upsert pode falhar.
-
-### 5. Ticket `attendee_name/email/cpf` — campos não visíveis no types.ts
-O checkout salva `attendee_name`, `attendee_email`, `attendee_cpf` nos tickets, mas esses campos podem não existir na tabela (truncado no schema). Se não existirem, o update silenciosamente falha.
-
-### 6. `event-images` bucket existe mas código referencia `event-covers`
-O storage bucket chama-se `event-images` (confirmado). O código usa `event-images` — OK, isso está correto.
-
-### 7. Realtime no `orders` para checkout
-O checkout escuta `postgres_changes` na tabela `orders`, mas a tabela não está adicionada ao `supabase_realtime` publication. O listener pode não receber atualizações de pagamento.
+## Documento de Referência
+Business Case & Product Design Analysis completo fornecido pelo cliente em 2026-03-06.
 
 ---
 
-## Plano de Correções
+## Design System Alvo (Novo)
+- **Tema**: Dark-first (`#0d0d0d` base, `#1a1a1a`/`#1f1f1f`/`#2c2c2c` superfícies)
+- **Cor principal (ação)**: Laranja `#ff472d` — CTAs, badges, ícones ativos, links, bordas de foco
+- **Cor secundária (gamificação)**: Verde-lima `#bad900` — pontos, sucesso, confirmações
+- **Texto principal**: Branco `#ffffff`
+- **Texto secundário**: Cinza claro `#9ca3af`
+- **Texto terciário (inativo)**: Cinza médio `#6b7280`
+- **Tipografia**: Sora (display) + Inter (body) — já configurado
+- **Border radius**: ~12-16px para cards, ~10px para inputs
+- **Componentes**: Chips/Pills, Bottom Sheets, Cards com gradiente escuro, Toggle switches
 
-### Correção 1 — Fix SupportChat forwardRef warning
-Envolver o componente `motion.div` do chat em um wrapper com `forwardRef` para eliminar o warning.
+---
 
-### Correção 2 — Carrinho: feedback ao trocar de evento
-No `CartContext.addItem`, quando `prev[0].eventId !== item.eventId`, mostrar toast avisando que o carrinho anterior foi limpo.
+## Gap Analysis — Existente vs Documento de Design
 
-### Correção 3 — Carrinho: aviso de login antes do checkout
-No `Carrinho.tsx`, se o usuário não está logado, mostrar mensagem junto ao botão "Finalizar compra" indicando que precisará fazer login.
+### ✅ JÁ IMPLEMENTADO
+- Catálogo de eventos com filtros por categoria
+- Detalhe do evento com descrição, data, local
+- Fluxo de compra (carrinho → checkout → pagamento)
+- Meus Ingressos (lista de ingressos ativos)
+- QR Code por ingresso
+- Transferência de ingresso
+- Sistema de reembolso (RefundDialog)
+- Cupons de desconto
+- Fila virtual
+- Certificados pós-evento
+- Painel do produtor completo
+- Painel admin completo
+- Autenticação (login/registro com email)
+- Notificações (NotificationBell)
+- Blog
+- Página do organizador
+- LGPD/Privacidade
+- Bottom navigation mobile
+- Tema claro/escuro com transição animada
 
-### Correção 4 — Unique constraint para reviews
-Criar migration adicionando `UNIQUE(user_id, event_id)` na tabela `event_reviews`.
+### ❌ FEATURES FALTANTES
+1. **Onboarding** — 2-3 telas de boas-vindas com skip
+2. **Detecção automática de cidade** — GPS
+3. **Seletor de datas horizontal** — Barra scrollável no catálogo
+4. **Top-10 / Ranking** — Seção editorial com badges numerados
+5. **Filtro avançado (Bottom Sheet)** — Sort, range slider, gênero, horário
+6. **Grid view toggle** — Lista/grade no catálogo
+7. **Rating/Avaliação** — Estrelas + reviews de usuários (tabela + UI)
+8. **Random/Discovery** — Evento aleatório
+9. **Cast/Elenco** — Seção de artistas no detalhe
+10. **Mapa de assentos** — Seleção visual interativa
+11. **Sistema de pontos** — Fidelidade no checkout
+12. **Favoritos** — Salvar eventos (tabela + UI)
+13. **Ingressos arquivados** — Ativo/Arquivado com visual P&B
+14. **Chat de suporte** — Bot + quick replies in-app
+15. **Perfil completo** — Editar perfil, cidade, pagamentos, notificações
+16. **Login OTP** — Código por email/telefone
+17. **Login social** — Google, Apple
+18. **Compartilhamento** — Share via link
+19. **Notificações configuráveis** — SMS/Push/Email toggles
+20. **Seções editoriais** — "Novo", "Semana", curadoria
 
-### Correção 5 — Verificar/criar campos attendee em tickets
-Criar migration para adicionar `attendee_name`, `attendee_email`, `attendee_cpf` na tabela `tickets` se não existirem.
+### 🔄 PRECISA REDESIGN VISUAL
+- Todas as páginas públicas (landing, catálogo, detalhe, checkout)
+- Navbar → Dark-first com laranja
+- Bottom Nav → Ícone ativo laranja
+- Cards de evento → Fundo #1f1f1f, gradiente, badges
+- Botões → Fill laranja, outline cinza
+- Inputs → Fundo #1f1f1f, borda #3a3a3a
+- Chips → Ativo laranja, inativo borda cinza
+- Login/Registro → Redesign completo
+- Meus Ingressos → Cards com barcode, ações
+- Painéis Producer/Admin → Dark-first
 
-### Correção 6 — Habilitar realtime para orders
-Criar migration: `ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;`
+---
 
+## Fases de Implementação
+
+### Fase 1 — Design System Foundation
+- [ ] Atualizar index.css (CSS variables nova paleta)
+- [ ] Atualizar tailwind.config.ts
+- [ ] Atualizar componentes base (Button, Input, Card, Badge, Chips)
+- [ ] Navbar dark-first com laranja
+- [ ] Bottom Nav com laranja
+- [ ] AuthModal redesign dark-first
+
+### Fase 2 — Páginas Públicas (Buyer UX)
+- [ ] Landing page redesign
+- [ ] Catálogo (seletor datas, chips, banner, Top-10)
+- [ ] Detalhe do evento (reviews, cast, CTA fixo)
+- [ ] Meus Ingressos (ativo/arquivado, barcode, reembolso)
+- [ ] Checkout redesign
+
+### Fase 3 — Features Novas (Prioridade Alta)
+- [ ] Favoritos (tabela + UI)
+- [ ] Rating/Reviews (tabela + UI)
+- [ ] Filtro avançado (Bottom Sheet com Drawer)
+- [ ] Grid view toggle
+- [ ] Compartilhamento social
+- [ ] Perfil completo do usuário
+- [ ] Ingressos arquivados
+
+### Fase 4 — Features Avançadas
+- [ ] Random/Discovery
+- [ ] Sistema de pontos/fidelidade
+- [ ] Chat de suporte in-app
+- [ ] Onboarding (2-3 telas)
+- [ ] Detecção de cidade
+- [ ] Notificações configuráveis
+- [ ] Login OTP + Social
+
+### Fase 5 — Painéis (Producer/Admin)
+- [ ] Redesign dark-first dos dashboards
+- [ ] Consistência com novo design system
+
+---
+
+## Infraestrutura Backend (Plano Anterior — Mantido)
+
+### Bloco 1 — Schema & SQL Functions
+- Funções atômicas: reserve_tickets, confirm_order_payment, apply_coupon
+- Índices de performance
+
+### Bloco 2 — Edge Functions de Pagamento (Asaas)
+- create-payment, asaas-webhook, create-producer-account
+- Secrets: ASAAS_API_KEY, ASAAS_BASE_URL, QR_SECRET
+
+### Bloco 3 — Checkout Real
+- Conectar UI ao create-payment
+- PIX, Cartão, Boleto
+
+### Bloco 4 — QR Codes Seguros + Check-in
+- JWT assinado, validate-checkin
+
+### Bloco 5 — Transferência + Cancelamento
+- transfer-ticket, cancel-event
+
+### Bloco 6 — Cron Jobs
+- cleanup_expired_reservations, event-reminders
+
+### Bloco 7 — Segurança & LGPD
+- Rate limiting, consents, data requests

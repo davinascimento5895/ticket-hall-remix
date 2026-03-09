@@ -1,16 +1,18 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Trash2, ShoppingCart, ArrowLeft } from "lucide-react";
+import { Trash2, ShoppingCart, ArrowLeft, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { EmptyState } from "@/components/EmptyState";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { validateCoupon } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 
 export default function Carrinho() {
   const { items, removeItem, updateQuantity, clearCart, subtotal, platformFee, total, expiresAt, couponCode, setCouponCode, discount, setDiscount, setAppliedCouponId, finalTotal } = useCart();
+  const { user } = useAuth();
   const [validatingCoupon, setValidatingCoupon] = useState(false);
   const navigate = useNavigate();
 
@@ -137,6 +139,13 @@ export default function Carrinho() {
                   <span>{fmt(finalTotal)}</span>
                 </div>
               </div>
+
+              {!user && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground bg-secondary rounded-lg px-3 py-2">
+                  <LogIn className="h-3.5 w-3.5 shrink-0" />
+                  <span>Você precisará fazer login para finalizar a compra.</span>
+                </div>
+              )}
 
               <Button className="w-full" asChild>
                 <Link to="/checkout">Finalizar compra</Link>
