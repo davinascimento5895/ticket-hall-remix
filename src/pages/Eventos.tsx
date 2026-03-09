@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Search, X, LayoutGrid, List, Ticket, MapPin, Plus, Clock } from "lucide-react";
+import { Search, X, LayoutGrid, List, Ticket, MapPin, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/EventCard";
@@ -24,7 +24,7 @@ import { EVENT_CATEGORIES, CATEGORY_OPTIONS } from "@/lib/categories";
 export default function Eventos() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user, role, profile } = useAuth();
+  const { user, role } = useAuth();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>(searchParams.get("categoria") || "");
   const [cityFilter, setCityFilter] = useState<string>(searchParams.get("cidade") || "");
@@ -50,7 +50,7 @@ export default function Eventos() {
     setProducerModalOpen(true);
   };
 
-  const isPendingProducer = profile?.producer_status === "pending";
+  
 
   // Sync URL params on mount
   useEffect(() => {
@@ -278,23 +278,13 @@ export default function Eventos() {
           <div className="flex items-center gap-2">
             {/* Create Event CTA */}
             <Button
-              variant={isPendingProducer ? "outline" : "default"}
+              variant="default"
               size="sm"
               onClick={handleCreateEvent}
-              disabled={isPendingProducer}
               className="gap-1.5"
             >
-              {isPendingProducer ? (
-                <>
-                  <Clock className="h-4 w-4" />
-                  <span className="hidden sm:inline">Aguardando aprovação</span>
-                </>
-              ) : (
-                <>
-                  <Plus className="h-4 w-4" />
-                  <span className="hidden sm:inline">Criar evento</span>
-                </>
-              )}
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Criar evento</span>
             </Button>
             <RandomDiscoveryButton className="hidden lg:flex" />
             <div className="hidden lg:flex items-center gap-1 border border-border rounded-lg p-0.5">
