@@ -49,6 +49,11 @@ const ProducerLayout = lazy(() => import("./pages/producer/ProducerLayout"));
 const ProducerDashboard = lazy(() => import("./pages/producer/ProducerDashboard"));
 const ProducerEvents = lazy(() => import("./pages/producer/ProducerEvents"));
 const ProducerEventForm = lazy(() => import("./pages/producer/ProducerEventForm"));
+const ProducerEventPanel = lazy(() => import("./pages/producer/ProducerEventPanel"));
+const ProducerEventDashboardTab = lazy(() => import("./pages/producer/ProducerEventDashboardTab"));
+const ProducerEventTicketsTab = lazy(() => import("./pages/producer/ProducerEventTicketsTab"));
+const ProducerEventParticipants = lazy(() => import("./pages/producer/ProducerEventParticipants"));
+const ProducerEventFinancial = lazy(() => import("./pages/producer/ProducerEventFinancial"));
 const ProducerEventReports = lazy(() => import("./pages/producer/ProducerEventReports"));
 const ProducerEventOrders = lazy(() => import("./pages/producer/ProducerEventOrders"));
 const ProducerEventCheckin = lazy(() => import("./pages/producer/ProducerEventCheckin"));
@@ -140,6 +145,17 @@ const App = () => {
                 <Route path="events" element={<ProducerEvents />} />
                 <Route path="events/new" element={<ProducerEventForm />} />
                 <Route path="events/:id/edit" element={<ProducerEventForm />} />
+                {/* Unified Event Panel */}
+                <Route path="events/:id/panel" element={<ProducerEventPanel />}>
+                  <Route index element={<ProducerEventDashboardTab />} />
+                  <Route path="tickets" element={<ProducerEventTicketsTab />} />
+                  <Route path="participants" element={<ProducerEventParticipants />} />
+                  <Route path="checkin" element={<ProducerEventCheckin />} />
+                  <Route path="financial" element={<ProducerEventFinancial />} />
+                  <Route path="messages" element={<ProducerEventMessages />} />
+                  <Route path="coupons" element={<ProducerEventCoupons />} />
+                </Route>
+                {/* Legacy direct routes (still work) */}
                 <Route path="events/:id/reports" element={<ProducerEventReports />} />
                 <Route path="events/:id/orders" element={<ProducerEventOrders />} />
                 <Route path="events/:id/checkin" element={<ProducerEventCheckin />} />
