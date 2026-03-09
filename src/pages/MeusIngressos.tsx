@@ -46,6 +46,19 @@ export default function MeusIngressos() {
   });
 
   const now = new Date();
+  const [archivedIds, setArchivedIds] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("archived_tickets") || "[]");
+    } catch { return []; }
+  });
+
+  const toggleArchive = (ticketId: string) => {
+    setArchivedIds((prev) => {
+      const next = prev.includes(ticketId) ? prev.filter((id) => id !== ticketId) : [...prev, ticketId];
+      localStorage.setItem("archived_tickets", JSON.stringify(next));
+      return next;
+    });
+  };
 
   // Categorize tickets
   const categorizedTickets = useMemo(() => {
