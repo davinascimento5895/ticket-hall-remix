@@ -35,6 +35,23 @@ export default function ProducerEventDashboardTab() {
     queryKey: ["event-analytics", id],
     queryFn: () => getEventAnalytics(id!),
     enabled: !!id,
+    staleTime: 30_000,
+  });
+
+  // Tickets for attendance/no-show calculation
+  const { data: ticketsData } = useQuery({
+    queryKey: ["event-tickets-attendance", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tickets")
+        .select("id, status, checked_in_at, tier_id, ticket_tiers(name)")
+        .eq("event_id", id!)
+        .in("status", ["active", "used"]);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+    staleTime: 30_000,
   });
 
   const { data: tiers } = useQuery({
