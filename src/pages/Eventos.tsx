@@ -145,7 +145,7 @@ export default function Eventos() {
           })}
         </div>
 
-        {/* Category chips */}
+        {/* Category chips - contained */}
         <div className="flex gap-2 overflow-x-auto pb-4 mb-2 scrollbar-hide">
           {CATEGORY_OPTIONS.map((cat) => (
             <button

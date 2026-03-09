@@ -58,10 +58,10 @@ export function CategoryCarousel({ className }: CategoryCarouselProps) {
             <ChevronRight className="h-5 w-5" />
           </Button>
 
-          {/* Scrollable categories */}
+          {/* Scrollable categories - contained within parent */}
           <div
             ref={scrollRef}
-            className="flex gap-3 md:gap-4 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4 md:mx-0 md:px-0"
+            className="flex gap-3 md:gap-4 overflow-x-auto scrollbar-hide pb-2"
             style={{ scrollSnapType: "x mandatory" }}
           >
             {EVENT_CATEGORIES.map((category) => {
