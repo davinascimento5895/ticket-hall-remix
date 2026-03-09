@@ -90,51 +90,51 @@ const securityItems = [
 const faqItems = [
   {
     id: "faq-1",
-    question: "Quanto custa usar a plataforma para vender ingressos?",
+    question: "Como comprar ingressos na plataforma?",
     answer:
-      "A cobrança é percentual sobre as vendas realizadas. Não há mensalidade obrigatória para começar, e você acompanha os valores com transparência no painel do produtor.",
+      "Basta acessar a página do evento, escolher os ingressos desejados, preencher seus dados e finalizar o pagamento. Você recebe o ingresso por email em poucos minutos.",
   },
   {
     id: "faq-2",
-    question: "Como funciona o repasse dos valores das vendas?",
+    question: "Quais formas de pagamento são aceitas?",
     answer:
-      "Os repasses seguem o fluxo configurado para o seu evento e ficam visíveis no financeiro. Você acompanha o status de cada venda e tem previsibilidade para planejar caixa e fornecedores.",
+      "Aceitamos cartões de crédito, débito e PIX. O pagamento é processado de forma segura e você recebe confirmação imediata após a aprovação.",
   },
   {
     id: "faq-3",
-    question: "Posso criar eventos gratuitos e pagos na mesma conta?",
+    question: "Posso cancelar ou trocar meu ingresso?",
     answer:
-      "Sim. Você pode publicar eventos gratuitos, pagos ou mistos, criar diferentes tipos de ingressos e organizar lotes com regras específicas conforme a estratégia do seu evento.",
+      "As políticas de cancelamento variam por evento. Consulte os termos na página do evento antes da compra. Alguns eventos permitem transferência entre pessoas.",
   },
   {
     id: "faq-4",
-    question: "Consigo personalizar lotes, viradas e cupons de desconto?",
+    question: "Como funciona a entrada no evento?",
     answer:
-      "Sim. É possível configurar lotes com quantidades e preços diferentes, controlar viradas por data e horário e aplicar cupons por valor fixo ou percentual com limite e validade.",
+      "Apresente o QR Code do seu ingresso na entrada. Pode ser impresso ou direto no celular. A validação é rápida e você entra sem complicações.",
   },
   {
     id: "faq-5",
-    question: "Como funciona o check-in no dia do evento?",
+    question: "E se eu não receber o ingresso por email?",
     answer:
-      "O check-in é feito por leitura de QR Code, com validação rápida para evitar filas. Você também pode acompanhar entradas em tempo real para ter visão clara da operação na porta.",
+      "Verifique sua caixa de spam primeiro. Se não encontrar, entre em contato pelo suporte ou consulte 'Meus Ingressos' no site usando seus dados de compra.",
   },
   {
     id: "faq-6",
-    question: "Dá para ter equipe com acessos diferentes para operar o evento?",
+    question: "Posso comprar ingressos para outras pessoas?",
     answer:
-      "Sim. Você pode organizar a operação com membros de equipe e permissões por função, separando responsabilidades como check-in, atendimento e gestão do evento.",
+      "Sim. Durante a compra você pode informar os dados de cada participante ou transferir o ingresso depois. Cada ingresso tem um QR Code individual.",
   },
   {
     id: "faq-7",
-    question: "Consigo vender itens extras além do ingresso?",
+    question: "Os dados do meu cartão ficam seguros?",
     answer:
-      "Sim. Você pode adicionar produtos e serviços complementares para aumentar o ticket médio, como experiências, itens promocionais e outros adicionais do evento.",
+      "Sim. Não armazenamos dados de cartão e usamos criptografia em todas as transações. O ambiente é monitorado para garantir máxima segurança.",
   },
   {
     id: "faq-8",
-    question: "A plataforma oferece suporte para quem está começando?",
+    question: "Tem desconto para estudante ou idoso?",
     answer:
-      "Sim. O fluxo de criação é guiado, com recursos pensados para facilitar publicação, gestão e acompanhamento das vendas mesmo para quem está organizando o primeiro evento.",
+      "Isso depende do evento. Alguns organizadores oferecem meia-entrada conforme a lei. Verifique os tipos de ingresso disponíveis na página do evento.",
   },
 ];
 
@@ -343,9 +343,9 @@ export default function Produtores() {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="font-display text-2xl md:text-3xl font-bold mb-3">Perguntas frequentes para produtores</h2>
+            <h2 className="font-display text-2xl md:text-3xl font-bold mb-3">Perguntas frequentes de compradores</h2>
             <p className="text-muted-foreground">
-              Tudo o que você precisa saber para começar a vender, operar seu evento e acompanhar seus resultados.
+              Tudo o que você precisa saber sobre comprar ingressos, formas de pagamento e como usar seus ingressos.
             </p>
           </motion.div>
 
