@@ -21,10 +21,19 @@ export default function Eventos() {
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>(searchParams.get("categoria") || "");
+  const [cityFilter, setCityFilter] = useState<string>(searchParams.get("cidade") || "");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [gridView, setGridView] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const { city, loading: cityLoading, requestLocation } = useCityDetection();
+
+  // Sync URL params on mount
+  useEffect(() => {
+    const cat = searchParams.get("categoria");
+    const cid = searchParams.get("cidade");
+    if (cat) setCategory(cat);
+    if (cid) setCityFilter(cid);
+  }, [searchParams]);
 
   const [timer, setTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const handleSearch = (value: string) => {
@@ -35,11 +44,12 @@ export default function Eventos() {
   };
 
   const { data: events, isLoading } = useQuery({
-    queryKey: ["events", debouncedSearch, category],
+    queryKey: ["events", debouncedSearch, category, cityFilter],
     queryFn: () =>
       getEvents({
         search: debouncedSearch || undefined,
         category: category || undefined,
+        city: cityFilter || undefined,
         limit: 30,
       }),
   });
