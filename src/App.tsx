@@ -167,7 +167,7 @@ const App = () => {
                 <Route path="producers" element={<AdminProducers />} />
                 <Route path="orders" element={<AdminOrders />} />
                 <Route path="finance" element={<AdminFinance />} />
-                <Route path="settings" element={<AdminSettings />} />
+                
               </Route>
 
               <Route path="*" element={<NotFound />} />

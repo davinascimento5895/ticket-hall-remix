@@ -30,7 +30,6 @@ const navItems = [
   { title: "Produtores", url: "/admin/producers", icon: UserCheck },
   { title: "Pedidos", url: "/admin/orders", icon: ShoppingCart },
   { title: "Financeiro", url: "/admin/finance", icon: DollarSign },
-  { title: "Configurações", url: "/admin/settings", icon: Settings },
 ];
 
 function AdminSidebar() {

@@ -1,16 +1,55 @@
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { DollarSign, TrendingUp, CreditCard, Percent, Download } from "lucide-react";
+import { DollarSign, TrendingUp, CreditCard, Percent, Download, CalendarIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { getFinanceData } from "@/lib/api-admin";
+import { format, subDays, startOfMonth, startOfYear } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+
+const presets = [
+  { label: "Últimos 30 dias", days: 30 },
+  { label: "Últimos 90 dias", days: 90 },
+  { label: "Este mês", getRange: () => ({ from: startOfMonth(new Date()), to: new Date() }) },
+  { label: "Este ano", getRange: () => ({ from: startOfYear(new Date()), to: new Date() }) },
+  { label: "Todo o período", days: 0 },
+];
 
 export default function AdminFinance() {
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+    from: undefined,
+    to: undefined,
+  });
+  const [activePreset, setActivePreset] = useState("Todo o período");
+
+  const queryDateRange = useMemo(() => {
+    if (!dateRange.from) return undefined;
+    return {
+      from: dateRange.from.toISOString(),
+      to: dateRange.to ? dateRange.to.toISOString() : new Date().toISOString(),
+    };
+  }, [dateRange]);
+
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-finance"],
-    queryFn: getFinanceData,
+    queryKey: ["admin-finance", queryDateRange],
+    queryFn: () => getFinanceData(queryDateRange),
     staleTime: 60_000,
   });
+
+  const handlePreset = (preset: typeof presets[number]) => {
+    setActivePreset(preset.label);
+    if (preset.days === 0) {
+      setDateRange({ from: undefined, to: undefined });
+    } else if (preset.getRange) {
+      const range = preset.getRange();
+      setDateRange({ from: range.from, to: range.to });
+    } else {
+      setDateRange({ from: subDays(new Date(), preset.days), to: new Date() });
+    }
+  };
 
   const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
 
@@ -19,6 +58,7 @@ export default function AdminFinance() {
     credit_card: "Cartão de Crédito",
     debit_card: "Cartão de Débito",
     boleto: "Boleto",
+    free: "Gratuito",
     outro: "Outro",
   };
 
@@ -31,8 +71,50 @@ export default function AdminFinance() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="font-display text-2xl font-bold">Financeiro</h1>
+        <div className="flex items-center gap-2 flex-wrap">
+          {presets.map((p) => (
+            <button
+              key={p.label}
+              onClick={() => handlePreset(p)}
+              className={cn(
+                "px-3 py-1.5 text-xs rounded-full transition-colors font-medium",
+                activePreset === p.label
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {p.label}
+            </button>
+          ))}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs h-7">
+                <CalendarIcon className="h-3.5 w-3.5" />
+                {dateRange.from
+                  ? `${format(dateRange.from, "dd/MM/yy")} — ${dateRange.to ? format(dateRange.to, "dd/MM/yy") : "hoje"}`
+                  : "Personalizado"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="range"
+                selected={dateRange.from ? { from: dateRange.from, to: dateRange.to } : undefined}
+                onSelect={(range) => {
+                  setDateRange({ from: range?.from, to: range?.to });
+                  setActivePreset("");
+                }}
+                numberOfMonths={2}
+                locale={ptBR}
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+
+      <div className="flex justify-end">
         <Button variant="outline" size="sm" onClick={() => {
           if (!data?.byMethod) return;
           const rows = Object.entries(data.byMethod).map(([method, info]: any) => ({ method: methodLabels[method] || method, count: info.count, total: info.total }));
@@ -52,7 +134,7 @@ export default function AdminFinance() {
               <m.icon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              {isLoading ? <Skeleton className="h-7 w-24" /> : <p className="text-2xl font-display font-bold">{m.value}</p>}
+              <p className={cn("text-2xl font-display font-bold", isLoading && "animate-pulse text-muted-foreground")}>{m.value}</p>
             </CardContent>
           </Card>
         ))}
@@ -61,9 +143,7 @@ export default function AdminFinance() {
       <Card>
         <CardHeader><CardTitle className="text-base">Receita por Método de Pagamento</CardTitle></CardHeader>
         <CardContent>
-          {isLoading ? (
-            <Skeleton className="h-32 w-full" />
-          ) : data?.byMethod && Object.keys(data.byMethod).length > 0 ? (
+          {data?.byMethod && Object.keys(data.byMethod).length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -87,7 +167,9 @@ export default function AdminFinance() {
               </table>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-8">Sem dados financeiros.</p>
+            <p className="text-sm text-muted-foreground text-center py-8">
+              {isLoading ? "Carregando..." : "Sem dados financeiros para o período selecionado."}
+            </p>
           )}
         </CardContent>
       </Card>
