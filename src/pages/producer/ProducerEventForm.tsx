@@ -115,7 +115,7 @@ export default function ProducerEventForm() {
       const { data, error } = await supabase.from("ticket_tiers").select("*").eq("event_id", id).order("sort_order");
       if (error) throw error;
       if (data) {
-        setTiers(data.map((t) => ({
+        setTiers(data.map((t, idx) => ({
           id: t.id, name: t.name, tier_type: t.tier_type || "paid",
           price: t.price || 0, quantity_total: t.quantity_total,
           description: t.description || "",
@@ -124,6 +124,7 @@ export default function ProducerEventForm() {
           capacity_group_id: (t as any).capacity_group_id || null,
           is_hidden_by_default: (t as any).is_hidden_by_default ?? false,
           unlock_code: (t as any).unlock_code || "",
+          sector_color: SECTOR_COLORS[idx % SECTOR_COLORS.length],
         })));
       }
       return data;
