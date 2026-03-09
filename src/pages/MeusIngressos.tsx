@@ -219,6 +219,22 @@ export default function MeusIngressos() {
               <QrCode className="h-4 w-4" /> QR Code
             </Button>
           )}
+          {ticket.status === "active" && ticket.qr_code_image_url && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-muted-foreground"
+              onClick={() => {
+                const link = document.createElement("a");
+                link.href = ticket.qr_code_image_url;
+                link.download = `ingresso-${ticket.id.slice(0, 8)}.png`;
+                link.target = "_blank";
+                link.click();
+              }}
+            >
+              <Download className="h-4 w-4" /> Baixar
+            </Button>
+          )}
           {isTransferable && (
             <Button
               variant="ghost"
