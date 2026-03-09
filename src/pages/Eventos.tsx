@@ -62,6 +62,10 @@ export default function Eventos() {
     setTimer(t);
   };
 
+  const PAGE_SIZE = 24;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
   const { data: rawEvents, isLoading } = useQuery({
     queryKey: ["events", debouncedSearch, filters.category, cityFilter],
     queryFn: async () => {
@@ -69,7 +73,7 @@ export default function Eventos() {
         search: debouncedSearch || undefined,
         category: filters.category || undefined,
         city: cityFilter || undefined,
-        limit: 50,
+        limit: 200,
       });
       if (!evts || evts.length === 0) return [];
       const eventIds = evts.map((e: any) => e.id);
@@ -88,6 +92,11 @@ export default function Eventos() {
       return evts.map((e: any) => ({ ...e, _minPrice: minPriceMap[e.id] ?? 0 }));
     },
   });
+
+  // Reset visible count when filters change
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [debouncedSearch, filters, cityFilter]);
 
   // Apply all client-side filters
   const filteredEvents = useMemo(() => {
