@@ -26,7 +26,7 @@ export async function getResaleListings(filters?: {
       events!inner(id, title, slug, cover_image_url, start_date, end_date, venue_name, venue_city, venue_state, category),
       ticket_tiers!inner(id, name, price)
     `)
-    .eq("status", "active")
+    .eq("status", "active" as any)
     .gt("expires_at", new Date().toISOString())
     .order("created_at", { ascending: false });
 
