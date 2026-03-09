@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { normalizeText, fuzzyMatch } from "@/lib/search";
+import { normalizeText, fuzzyMatch, sanitizePostgrestFilter } from "@/lib/search";
 import { getCategoryLabel, EVENT_CATEGORIES } from "@/lib/categories";
 import { BRAZILIAN_CAPITALS } from "@/lib/cities";
 import { useDebounce } from "@/hooks/useDebounce";
