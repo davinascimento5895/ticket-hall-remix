@@ -5,6 +5,7 @@ import { Calendar, MapPin, Clock, Share2, Users, ArrowLeft, Lock, Package, Star 
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { TicketTierCard } from "@/components/TicketTierCard";
+import { BookingFlow } from "@/components/booking/BookingFlow";
 import { SEOHead } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ export default function EventDetail() {
   const [revealedCodes, setRevealedCodes] = useState<string[]>([]);
   const [showUnlockInput, setShowUnlockInput] = useState(false);
   const [activeSection, setActiveSection] = useState<"description" | "tickets" | "venue">("description");
+  const [bookingOpen, setBookingOpen] = useState(false);
 
   const { data: event, isLoading: loadingEvent } = useQuery({
     queryKey: ["event", slug],
@@ -367,8 +369,8 @@ export default function EventDetail() {
                       {lowestPrice === 0 ? "Grátis" : fmt(lowestPrice)}
                     </span>
                   </p>
-                  <Button className="w-full" onClick={() => setActiveSection("tickets")}>
-                    Ver ingressos
+                  <Button className="w-full" onClick={() => setBookingOpen(true)}>
+                    Comprar ingresso
                   </Button>
                 </>
               ) : (
@@ -391,12 +393,21 @@ export default function EventDetail() {
               {lowestPrice !== null ? (lowestPrice === 0 ? "Grátis" : fmt(lowestPrice)) : "—"}
             </p>
           </div>
-          <Button onClick={() => setActiveSection("tickets")}>
+          <Button onClick={() => setBookingOpen(true)}>
             Comprar ingresso
           </Button>
         </div>
       </div>
 
+      {/* Booking Flow */}
+      {event && allTiers && (
+        <BookingFlow
+          open={bookingOpen}
+          onOpenChange={setBookingOpen}
+          event={event}
+          tiers={tiers}
+        />
+      )}
     </div>
   );
 }
