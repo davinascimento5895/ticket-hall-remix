@@ -1,0 +1,210 @@
+import { supabase } from "@/integrations/supabase/client";
+
+// ============================================================
+// BANK ACCOUNTS
+// ============================================================
+
+export async function getBankAccounts(producerId: string) {
+  const { data, error } = await supabase
+    .from("bank_accounts")
+    .select("*")
+    .eq("producer_id", producerId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function createBankAccount(account: {
+  producer_id: string;
+  account_name: string;
+  bank_name?: string;
+  agency?: string;
+  account_number?: string;
+  pix_key?: string;
+  pix_key_type?: string;
+  is_default?: boolean;
+}) {
+  // If setting as default, unset other defaults first
+  if (account.is_default) {
+    await supabase
+      .from("bank_accounts")
+      .update({ is_default: false })
+      .eq("producer_id", account.producer_id);
+  }
+  const { data, error } = await supabase
+    .from("bank_accounts")
+    .insert(account)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateBankAccount(id: string, updates: Record<string, any>) {
+  const { data, error } = await supabase
+    .from("bank_accounts")
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteBankAccount(id: string) {
+  const { error } = await supabase.from("bank_accounts").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// ============================================================
+// FINANCIAL TRANSACTIONS
+// ============================================================
+
+export async function getFinancialTransactions(producerId: string, filters?: {
+  type?: string;
+  status?: string;
+  event_id?: string;
+  category?: string;
+  from_date?: string;
+  to_date?: string;
+}) {
+  let query = supabase
+    .from("financial_transactions")
+    .select("*, events(title), bank_accounts(account_name)")
+    .eq("producer_id", producerId)
+    .order("created_at", { ascending: false });
+
+  if (filters?.type) query = query.eq("type", filters.type);
+  if (filters?.status) query = query.eq("status", filters.status);
+  if (filters?.event_id) query = query.eq("event_id", filters.event_id);
+  if (filters?.category) query = query.eq("category", filters.category);
+  if (filters?.from_date) query = query.gte("due_date", filters.from_date);
+  if (filters?.to_date) query = query.lte("due_date", filters.to_date);
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || [];
+}
+
+export async function createFinancialTransaction(tx: {
+  producer_id: string;
+  event_id?: string;
+  order_id?: string;
+  type: string;
+  category: string;
+  description: string;
+  amount: number;
+  status?: string;
+  due_date?: string;
+  bank_account_id?: string;
+  notes?: string;
+}) {
+  const { data, error } = await supabase
+    .from("financial_transactions")
+    .insert(tx)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateFinancialTransaction(id: string, updates: Record<string, any>) {
+  const { data, error } = await supabase
+    .from("financial_transactions")
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteFinancialTransaction(id: string) {
+  const { error } = await supabase.from("financial_transactions").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// ============================================================
+// CASH FLOW SUMMARY
+// ============================================================
+
+export async function getCashFlowSummary(producerId: string) {
+  const { data, error } = await supabase
+    .from("financial_transactions")
+    .select("type, status, amount, category, due_date")
+    .eq("producer_id", producerId);
+  if (error) throw error;
+
+  const items = data || [];
+  const receivable = items.filter(i => i.type === "receivable");
+  const payable = items.filter(i => i.type === "payable");
+
+  const totalReceivable = receivable.reduce((s, i) => s + Number(i.amount), 0);
+  const totalPayable = payable.reduce((s, i) => s + Number(i.amount), 0);
+  const confirmedReceivable = receivable.filter(i => i.status === "confirmed" || i.status === "paid").reduce((s, i) => s + Number(i.amount), 0);
+  const confirmedPayable = payable.filter(i => i.status === "confirmed" || i.status === "paid").reduce((s, i) => s + Number(i.amount), 0);
+  const pendingReceivable = receivable.filter(i => i.status === "pending").reduce((s, i) => s + Number(i.amount), 0);
+  const pendingPayable = payable.filter(i => i.status === "pending").reduce((s, i) => s + Number(i.amount), 0);
+
+  return {
+    totalReceivable,
+    totalPayable,
+    confirmedReceivable,
+    confirmedPayable,
+    pendingReceivable,
+    pendingPayable,
+    balance: totalReceivable - totalPayable,
+    items,
+  };
+}
+
+// ============================================================
+// EVENT RECONCILIATION
+// ============================================================
+
+export async function getEventReconciliation(producerId: string) {
+  const { data: events, error: evtErr } = await supabase
+    .from("events")
+    .select("id, title, status, start_date, end_date, platform_fee_percent")
+    .eq("producer_id", producerId)
+    .order("start_date", { ascending: false });
+  if (evtErr) throw evtErr;
+  if (!events || events.length === 0) return [];
+
+  const eventIds = events.map(e => e.id);
+
+  const { data: orders } = await supabase
+    .from("orders")
+    .select("event_id, status, total, platform_fee, payment_gateway_fee, refunded_amount")
+    .in("event_id", eventIds);
+
+  const { data: analytics } = await supabase
+    .from("event_analytics")
+    .select("event_id, tickets_sold, tickets_checked_in, total_revenue, platform_revenue, producer_revenue")
+    .in("event_id", eventIds);
+
+  return events.map(event => {
+    const eventOrders = (orders || []).filter(o => o.event_id === event.id);
+    const paidOrders = eventOrders.filter(o => o.status === "paid");
+    const refundedOrders = eventOrders.filter(o => o.status === "refunded");
+    const eventAnalytics = (analytics || []).find(a => a.event_id === event.id);
+
+    const grossRevenue = paidOrders.reduce((s, o) => s + Number(o.total), 0);
+    const platformFees = paidOrders.reduce((s, o) => s + Number(o.platform_fee || 0), 0);
+    const gatewayFees = paidOrders.reduce((s, o) => s + Number(o.payment_gateway_fee || 0), 0);
+    const refunds = refundedOrders.reduce((s, o) => s + Number(o.refunded_amount || 0), 0);
+    const netRevenue = grossRevenue - platformFees - gatewayFees - refunds;
+
+    return {
+      ...event,
+      ordersCount: paidOrders.length,
+      ticketsSold: eventAnalytics?.tickets_sold || 0,
+      ticketsCheckedIn: eventAnalytics?.tickets_checked_in || 0,
+      grossRevenue,
+      platformFees,
+      gatewayFees,
+      refunds,
+      netRevenue,
+    };
+  });
+}
