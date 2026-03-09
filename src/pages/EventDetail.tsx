@@ -5,6 +5,7 @@ import { Calendar, MapPin, Clock, Share2, Users, ArrowLeft, Lock, Package, Star 
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { TicketTierCard } from "@/components/TicketTierCard";
+import { BookingFlow } from "@/components/booking/BookingFlow";
 import { SEOHead } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
