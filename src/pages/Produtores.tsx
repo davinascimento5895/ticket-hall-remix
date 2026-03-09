@@ -225,7 +225,6 @@ export default function Produtores() {
                 variant="hero"
                 size="xl"
                 onClick={handleCTA}
-                disabled={buttonContent.disabled}
               >
                 {buttonContent.label}
                 {buttonContent.icon && <buttonContent.icon className="h-5 w-5 ml-2" />}
