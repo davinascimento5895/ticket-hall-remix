@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Plus, MoreHorizontal, Eye, BarChart3, Users, Edit, Trash2 } from "lucide-react";
+import { Plus, MoreHorizontal, Eye, BarChart3, Users, Edit, Trash2, ShoppingCart, ScanLine, UserPlus, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
