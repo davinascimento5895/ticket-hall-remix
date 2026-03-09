@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { SEOHead } from "@/components/SEOHead";
-import { Ticket, Calendar, MapPin, QrCode, Send, Clock, Search, Archive, Download, Repeat, XCircle } from "lucide-react";
+import { Ticket, Calendar, MapPin, QrCode, Send, Clock, Search, Archive, Download, Repeat, XCircle, CalendarPlus, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
