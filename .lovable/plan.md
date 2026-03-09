@@ -1,63 +1,145 @@
+# TicketHall — Plano Mestre de Redesign & Implementação
 
-
-# Analise Critica do Fluxo de Revenda
-
-Após revisar todo o fluxo (listagem, criação de anuncio, checkout de compra, edge function atomica, e gestao em MeusIngressos), aqui estao os pontos criticos e melhorias identificados:
-
----
-
-## Problemas Criticos
-
-### 1. Compra sem pagamento real
-O `RevendaCheckout` chama `purchaseResaleListing` que invoca a edge function `purchase-resale` — mas **nao ha integração com gateway de pagamento**. O ingresso e transferido imediatamente sem o comprador pagar. Isso significa que qualquer usuario logado pode "comprar" um ingresso de revenda sem pagar nada.
-
-**Status**: Esperado, ja que voce mencionou que vai configurar as APIs de pagamento depois. Mas e o ponto mais critico — sem isso, a revenda nao pode ir ao ar.
-
-### 2. Sem validacao de duplicidade de listagem
-Em `createResaleListing` (api-resale.ts), nao ha verificacao se o ticket ja tem um listing ativo. Um usuario poderia criar multiplos anuncios para o mesmo ingresso. O campo `is_for_resale` no ticket ajuda, mas a verificacao e feita client-side e nao e atomica.
-
-**Sugestao**: Adicionar uma constraint UNIQUE ou verificacao no banco (ex: um check no insert que valida que nao existe listing ativo para aquele ticket_id).
-
-### 3. Race condition na criação do listing
-`createResaleListing` faz dois passos separados (update ticket + insert listing) sem transacao. Se o insert falhar, tenta reverter, mas ha uma janela de inconsistencia. Diferente da compra (que usa RPC atomico), a criacao nao e atomica.
-
-**Sugestao**: Criar uma RPC `create_resale_listing_atomic` similar à `purchase_resale_atomic`.
-
-### 4. Login redirect na revenda
-Em `RevendaCheckout` linha 157, o botao de login redireciona para `/?login=true` em vez de usar o AuthModal ou redirecionar de volta apos login. O usuario perde o contexto da compra.
+## Documento de Referência
+Business Case & Product Design Analysis completo fornecido pelo cliente em 2026-03-06.
 
 ---
 
-## Melhorias Importantes
-
-### 5. Sem expiração automatica de listings
-Listings expirados sao tratados apenas quando alguem tenta comprar (na edge function). Nao ha processo em background para limpar listings expirados e reverter o `is_for_resale` do ticket. O usuario vendedor fica com o ingresso "preso" como `is_for_resale = true`.
-
-**Sugestao**: Adicionar ao `cleanup_expired_reservations` ou criar um job separado para expirar listings e reverter tickets.
-
-### 6. Sem historico de vendas para o vendedor
-Apos vender, o vendedor recebe uma notificacao mas nao tem uma tela dedicada para ver historico de vendas/recebimentos da revenda.
-
-### 7. Sem confirmacao visual apos compra
-Apos comprar via revenda, o usuario e redirecionado para `/meus-ingressos` com um toast. Seria melhor ter uma tela de confirmacao mostrando o novo QR code gerado.
-
-### 8. Falta feedback de "em revenda" no card do ingresso
-No `MeusIngressos`, tickets em revenda mostram o botão "Cancelar revenda" mas nao ha um badge visual claro tipo "Em revenda — R$ XX" no card.
+## Design System Alvo (Novo)
+- **Tema**: Dark-first (`#0d0d0d` base, `#1a1a1a`/`#1f1f1f`/`#2c2c2c` superfícies)
+- **Cor principal (ação)**: Laranja `#ff472d` — CTAs, badges, ícones ativos, links, bordas de foco
+- **Cor secundária (gamificação)**: Verde-lima `#bad900` — pontos, sucesso, confirmações
+- **Texto principal**: Branco `#ffffff`
+- **Texto secundário**: Cinza claro `#9ca3af`
+- **Texto terciário (inativo)**: Cinza médio `#6b7280`
+- **Tipografia**: Sora (display) + Inter (body) — já configurado
+- **Border radius**: ~12-16px para cards, ~10px para inputs
+- **Componentes**: Chips/Pills, Bottom Sheets, Cards com gradiente escuro, Toggle switches
 
 ---
 
-## Resumo de Prioridades
+## Gap Analysis — Existente vs Documento de Design
 
-| Prioridade | Item | Acao |
-|---|---|---|
-| **Critica** | Compra sem pagamento | Aguardando config de APIs — nao implementar agora |
-| **Alta** | Duplicidade de listings | Adicionar constraint unica no banco |
-| **Alta** | Race condition na criacao | Criar RPC atomica |
-| **Alta** | Expiracao automatica de listings | Adicionar job de limpeza |
-| **Alta** | Login redirect perdendo contexto | Usar AuthModal com redirect de volta |
-| **Media** | Badge visual "em revenda" | Melhorar UI no MeusIngressos |
-| **Media** | Tela de confirmacao pos-compra | Criar pagina de sucesso |
-| **Baixa** | Historico de vendas do vendedor | Nova aba/pagina |
+### ✅ JÁ IMPLEMENTADO
+- Catálogo de eventos com filtros por categoria
+- Detalhe do evento com descrição, data, local
+- Fluxo de compra (carrinho → checkout → pagamento)
+- Meus Ingressos (lista de ingressos ativos)
+- QR Code por ingresso
+- Transferência de ingresso
+- Sistema de reembolso (RefundDialog)
+- Cupons de desconto
+- Fila virtual
+- Certificados pós-evento
+- Painel do produtor completo
+- Painel admin completo
+- Autenticação (login/registro com email)
+- Notificações (NotificationBell)
+- Blog
+- Página do organizador
+- LGPD/Privacidade
+- Bottom navigation mobile
+- Tema claro/escuro com transição animada
 
-Quer que eu implemente os itens de prioridade Alta e Media?
+### ❌ FEATURES FALTANTES
+1. **Onboarding** — 2-3 telas de boas-vindas com skip
+2. **Detecção automática de cidade** — GPS
+3. **Seletor de datas horizontal** — Barra scrollável no catálogo
+4. **Top-10 / Ranking** — Seção editorial com badges numerados
+5. **Filtro avançado (Bottom Sheet)** — Sort, range slider, gênero, horário
+6. **Grid view toggle** — Lista/grade no catálogo
+7. **Rating/Avaliação** — Estrelas + reviews de usuários (tabela + UI)
+8. **Random/Discovery** — Evento aleatório
+9. **Cast/Elenco** — Seção de artistas no detalhe
+10. **Mapa de assentos** — Seleção visual interativa
+11. **Sistema de pontos** — Fidelidade no checkout
+12. **Favoritos** — Salvar eventos (tabela + UI)
+13. **Ingressos arquivados** — Ativo/Arquivado com visual P&B
+14. **Chat de suporte** — Bot + quick replies in-app
+15. **Perfil completo** — Editar perfil, cidade, pagamentos, notificações
+16. **Login OTP** — Código por email/telefone
+17. **Login social** — Google, Apple
+18. **Compartilhamento** — Share via link
+19. **Notificações configuráveis** — SMS/Push/Email toggles
+20. **Seções editoriais** — "Novo", "Semana", curadoria
 
+### 🔄 PRECISA REDESIGN VISUAL
+- Todas as páginas públicas (landing, catálogo, detalhe, checkout)
+- Navbar → Dark-first com laranja
+- Bottom Nav → Ícone ativo laranja
+- Cards de evento → Fundo #1f1f1f, gradiente, badges
+- Botões → Fill laranja, outline cinza
+- Inputs → Fundo #1f1f1f, borda #3a3a3a
+- Chips → Ativo laranja, inativo borda cinza
+- Login/Registro → Redesign completo
+- Meus Ingressos → Cards com barcode, ações
+- Painéis Producer/Admin → Dark-first
+
+---
+
+## Fases de Implementação
+
+### Fase 1 — Design System Foundation
+- [ ] Atualizar index.css (CSS variables nova paleta)
+- [ ] Atualizar tailwind.config.ts
+- [ ] Atualizar componentes base (Button, Input, Card, Badge, Chips)
+- [ ] Navbar dark-first com laranja
+- [ ] Bottom Nav com laranja
+- [ ] AuthModal redesign dark-first
+
+### Fase 2 — Páginas Públicas (Buyer UX)
+- [ ] Landing page redesign
+- [ ] Catálogo (seletor datas, chips, banner, Top-10)
+- [ ] Detalhe do evento (reviews, cast, CTA fixo)
+- [ ] Meus Ingressos (ativo/arquivado, barcode, reembolso)
+- [ ] Checkout redesign
+
+### Fase 3 — Features Novas (Prioridade Alta)
+- [ ] Favoritos (tabela + UI)
+- [ ] Rating/Reviews (tabela + UI)
+- [ ] Filtro avançado (Bottom Sheet com Drawer)
+- [ ] Grid view toggle
+- [ ] Compartilhamento social
+- [ ] Perfil completo do usuário
+- [ ] Ingressos arquivados
+
+### Fase 4 — Features Avançadas
+- [ ] Random/Discovery
+- [ ] Sistema de pontos/fidelidade
+- [ ] Chat de suporte in-app
+- [ ] Onboarding (2-3 telas)
+- [ ] Detecção de cidade
+- [ ] Notificações configuráveis
+- [ ] Login OTP + Social
+
+### Fase 5 — Painéis (Producer/Admin)
+- [ ] Redesign dark-first dos dashboards
+- [ ] Consistência com novo design system
+
+---
+
+## Infraestrutura Backend (Plano Anterior — Mantido)
+
+### Bloco 1 — Schema & SQL Functions
+- Funções atômicas: reserve_tickets, confirm_order_payment, apply_coupon
+- Índices de performance
+
+### Bloco 2 — Edge Functions de Pagamento (Asaas)
+- create-payment, asaas-webhook, create-producer-account
+- Secrets: ASAAS_API_KEY, ASAAS_BASE_URL, QR_SECRET
+
+### Bloco 3 — Checkout Real
+- Conectar UI ao create-payment
+- PIX, Cartão, Boleto
+
+### Bloco 4 — QR Codes Seguros + Check-in
+- JWT assinado, validate-checkin
+
+### Bloco 5 — Transferência + Cancelamento
+- transfer-ticket, cancel-event
+
+### Bloco 6 — Cron Jobs
+- cleanup_expired_reservations, event-reminders
+
+### Bloco 7 — Segurança & LGPD
+- Rate limiting, consents, data requests

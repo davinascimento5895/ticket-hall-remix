@@ -199,6 +199,11 @@ export default function MeusIngressos() {
                 Hoje
               </span>
             )}
+            {isForResale && (
+              <span className="px-2 py-0.5 text-[10px] font-bold uppercase rounded-full bg-accent text-accent-foreground">
+                Em revenda — R$ {Number(ticket.resale_price || activeListing?.asking_price || 0).toFixed(2)}
+              </span>
+            )}
             <OrderStatusBadge status={ticket.status} />
           </div>
 
