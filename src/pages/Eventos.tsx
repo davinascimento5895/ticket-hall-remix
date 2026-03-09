@@ -28,6 +28,9 @@ export default function Eventos() {
   const [gridView, setGridView] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const { city, loading: cityLoading, requestLocation } = useCityDetection();
+  const isMobile = useIsMobile();
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [dateOpen, setDateOpen] = useState(false);
 
   // Sync URL params on mount
   useEffect(() => {
