@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/EventCard";
 import { CategoryCarousel } from "@/components/CategoryCarousel";
 import { CityCarousel } from "@/components/CityCarousel";
+import { SearchBar } from "@/components/SearchBar";
 import { Spotlight } from "@/components/core/spotlight";
 import { WordRotate } from "@/components/ui/word-rotate";
 import { motion } from "framer-motion";
@@ -130,10 +131,21 @@ export default function Index() {
           >
             Compre, transfira e gerencie seus ingressos com segurança. A plataforma completa para produtores e compradores.
           </motion.p>
+
+          {/* Hero Search Bar */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
+            transition={{ duration: 0.6, delay: 0.25 }}
+            className="max-w-2xl mx-auto w-full"
+          >
+            <SearchBar variant="hero" placeholder="Buscar eventos, shows, cidades..." />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.35 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <Button variant="default" size="lg" asChild>

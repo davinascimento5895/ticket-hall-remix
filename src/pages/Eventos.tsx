@@ -1,20 +1,20 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
-import { Search, X, LayoutGrid, List, Ticket } from "lucide-react";
+import { Search, X, LayoutGrid, List, Ticket, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/EventCard";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { SEOHead } from "@/components/SEOHead";
+import { SearchBar } from "@/components/SearchBar";
 import { getEvents } from "@/lib/api";
 import { RandomDiscoveryButton } from "@/components/RandomDiscoveryButton";
 import { useCityDetection } from "@/hooks/useCityDetection";
 import { cn } from "@/lib/utils";
 import { addDays, format, isSameDay, startOfToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { MapPin } from "lucide-react";
 import { EVENT_CATEGORIES, CATEGORY_OPTIONS } from "@/lib/categories";
 
 export default function Eventos() {
@@ -95,14 +95,12 @@ export default function Eventos() {
       />
 
       <div className="container pt-24 pb-16">
-        {/* Search bar */}
-        <div className="relative mb-6">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar eventos, artistas, locais..."
-            className="pl-10 bg-secondary border-border-strong"
-            value={search}
-            onChange={(e) => handleSearch(e.target.value)}
+        {/* Global Search bar */}
+        <div className="mb-6">
+          <SearchBar 
+            variant="page" 
+            placeholder="Buscar eventos, artistas, locais..." 
+            className="max-w-2xl"
           />
         </div>
 

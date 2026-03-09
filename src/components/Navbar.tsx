@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation, useSearchParams } from "react-router-dom";
-import { Menu, X, User, LogOut, ShoppingBag } from "lucide-react";
+import { Link, useLocation, useSearchParams, useNavigate } from "react-router-dom";
+import { Menu, X, User, LogOut, ShoppingBag, Search } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { TicketHallLogo } from "@/components/TicketHallLogo";
 import { AuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,13 +23,17 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [authTab, setAuthTab] = useState<"login" | "register">("login");
+  const [navSearch, setNavSearch] = useState("");
   const { user, profile, role, signOut } = useAuth();
   const { itemCount } = useCart();
   const [searchParams] = useSearchParams();
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Check if we're in admin/producer area (they use sidebar navigation)
   const isAdminOrProducer = location.pathname.startsWith("/admin") || location.pathname.startsWith("/producer");
+  // Check if we're on the landing page (hero has its own search bar)
+  const isLandingPage = location.pathname === "/";
 
   useEffect(() => {
     if (searchParams.get("login") === "true") {
@@ -51,6 +56,14 @@ export function Navbar() {
   const openLogin = () => { setAuthTab("login"); setAuthOpen(true); };
   const openRegister = () => { setAuthTab("register"); setAuthOpen(true); };
 
+  const handleNavSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (navSearch.trim()) {
+      navigate(`/busca?q=${encodeURIComponent(navSearch.trim())}`);
+      setNavSearch("");
+    }
+  };
+
   const dashboardLink = role === "admin" ? "/admin/dashboard" : role === "producer" ? "/producer/dashboard" : "/meus-ingressos";
 
   return (
@@ -68,7 +81,20 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-6">
+            {/* Compact Search - visible when scrolled or not on landing page */}
+            {(scrolled || !isLandingPage) && !isAdminOrProducer && (
+              <form onSubmit={handleNavSearch} className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  value={navSearch}
+                  onChange={(e) => setNavSearch(e.target.value)}
+                  placeholder="Buscar..."
+                  className="h-8 w-[180px] pl-8 pr-3 text-sm rounded-full bg-muted/50 border-transparent focus:border-border focus:bg-background transition-all"
+                />
+              </form>
+            )}
             {links.map((l) => (
               <Link key={l.href} to={l.href} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                 {l.label}

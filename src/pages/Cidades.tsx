@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Search, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { SEOHead } from "@/components/SEOHead";
+import { SearchBar } from "@/components/SearchBar";
 import { MAIN_CAPITALS, BRAZILIAN_CAPITALS } from "@/lib/cities";
 import { useIBGEStates, useIBGECities } from "@/hooks/useIBGELocations";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -29,6 +30,11 @@ export default function Cidades() {
       />
 
       <div className="container pt-24 pb-16">
+        {/* Search Bar */}
+        <div className="mb-8">
+          <SearchBar variant="page" placeholder="Buscar eventos em qualquer cidade..." className="max-w-2xl" />
+        </div>
+
         <h1 className="font-display text-2xl md:text-3xl font-bold mb-2">Cidades</h1>
         <p className="text-muted-foreground mb-8">Encontre eventos na sua cidade</p>
 
