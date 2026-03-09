@@ -1,18 +1,18 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Check, Plus, Trash2, ArrowLeft, ArrowRight } from "lucide-react";
+import { Check, Plus, Trash2, ArrowLeft, ArrowRight, Upload, MapPin, Globe, Video, Link2, Image as ImageIcon, Calendar, Ticket, FileText, Settings, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from "@/contexts/AuthContext";
 import { createEvent, updateEvent, createTicketTier, deleteTicketTier } from "@/lib/api-producer";
-import { getEventBySlug, getEventTiers } from "@/lib/api";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { CheckoutQuestionsBuilder } from "@/components/producer/CheckoutQuestionsBuilder";
@@ -22,12 +22,19 @@ import { EventProductsManager } from "@/components/producer/EventProductsManager
 import { getCapacityGroups } from "@/lib/api-checkout";
 import { EVENT_CATEGORIES } from "@/lib/categories";
 import { useIBGEStates, useIBGECities } from "@/hooks/useIBGELocations";
+import { fetchAddressFromCEP } from "@/lib/cep";
+import { cn } from "@/lib/utils";
 
-const stepLabels = ["Informações", "Local", "Ingressos", "Formulário", "Produtos", "Configurações", "Revisão"];
+const stepLabels = ["Tipo", "Informações", "Local", "Ingressos", "Formulário", "Produtos", "Configurações", "Revisão"];
 
 const SECTOR_COLORS = [
   "#E53E3E", "#DD6B20", "#D69E2E", "#38A169", "#3182CE",
   "#805AD5", "#D53F8C", "#2B6CB0", "#2C7A7B", "#9B2C2C",
+];
+
+const ONLINE_PLATFORMS = [
+  { id: "external", name: "Outras plataformas", description: "Youtube, Instagram, WhatsApp, Google Meet, etc.", icon: Link2 },
+  { id: "zoom", name: "Zoom", description: "Videoconferência (link externo)", icon: Video },
 ];
 
 interface TierDraft {
@@ -52,20 +59,23 @@ export default function ProducerEventForm() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(isEdit ? 1 : 0);
 
   const [form, setForm] = useState({
     title: "", slug: "", description: "", category: "shows",
     start_date: "", end_date: "", doors_open_time: "",
     venue_name: "", venue_address: "", venue_city: "", venue_state: "", venue_zip: "",
-    is_online: false, online_url: "",
+    venue_number: "", venue_complement: "", venue_neighborhood: "",
+    is_online: false, online_url: "", online_platform: "external",
     minimum_age: 0, max_capacity: 0, cover_image_url: "", status: "draft",
     has_seat_map: false, has_virtual_queue: false, queue_capacity: 0,
     has_certificates: false, has_insurance_option: false, insurance_price: 0,
+    visibility: "public",
   });
 
   const [tiers, setTiers] = useState<TierDraft[]>([]);
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string>("");
   const [seatMapFile, setSeatMapFile] = useState<File | null>(null);
   const [seatMapImageUrl, setSeatMapImageUrl] = useState<string>("");
 
@@ -84,23 +94,24 @@ export default function ProducerEventForm() {
       if (data) {
         setForm({
           title: data.title || "", slug: data.slug || "", description: data.description || "",
-          category: data.category || "music",
+          category: data.category || "shows",
           start_date: data.start_date?.slice(0, 16) || "", end_date: data.end_date?.slice(0, 16) || "",
           doors_open_time: data.doors_open_time?.slice(0, 16) || "",
           venue_name: data.venue_name || "", venue_address: data.venue_address || "",
           venue_city: data.venue_city || "", venue_state: data.venue_state || "",
-          venue_zip: data.venue_zip || "", is_online: data.is_online || false,
-          online_url: data.online_url || "", minimum_age: data.minimum_age || 0,
-          max_capacity: data.max_capacity || 0, cover_image_url: data.cover_image_url || "",
-          status: data.status || "draft",
+          venue_zip: data.venue_zip || "", venue_number: "", venue_complement: "", venue_neighborhood: "",
+          is_online: data.is_online || false, online_url: data.online_url || "", online_platform: "external",
+          minimum_age: data.minimum_age || 0, max_capacity: data.max_capacity || 0,
+          cover_image_url: data.cover_image_url || "", status: data.status || "draft",
           has_seat_map: data.has_seat_map || false,
           has_virtual_queue: data.has_virtual_queue || false,
           queue_capacity: data.queue_capacity || 0,
           has_certificates: data.has_certificates || false,
           has_insurance_option: data.has_insurance_option || false,
           insurance_price: data.insurance_price || 0,
+          visibility: "public",
         });
-        // Load seat map image URL from config
+        if (data.cover_image_url) setCoverPreview(data.cover_image_url);
         const smc = data.seat_map_config as any;
         if (smc?.imageUrl) setSeatMapImageUrl(smc.imageUrl);
       }
@@ -158,6 +169,14 @@ export default function ProducerEventForm() {
     setTiers((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleCoverSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setCoverFile(file);
+      setCoverPreview(URL.createObjectURL(file));
+    }
+  };
+
   const handleUploadCover = async () => {
     if (!coverFile || !user) return form.cover_image_url;
     const ext = coverFile.name.split(".").pop();
@@ -174,7 +193,6 @@ export default function ProducerEventForm() {
       let coverUrl = form.cover_image_url;
       if (coverFile) coverUrl = await handleUploadCover();
 
-      // Upload seat map image if provided
       let finalSeatMapUrl = seatMapImageUrl;
       if (seatMapFile && user) {
         const ext = seatMapFile.name.split(".").pop();
@@ -185,7 +203,6 @@ export default function ProducerEventForm() {
         finalSeatMapUrl = smData.publicUrl;
       }
 
-      // Build seat_map_config with image URL and tier colors
       const seatMapConfig = form.has_seat_map ? {
         imageUrl: finalSeatMapUrl || null,
         tierColors: Object.fromEntries(
@@ -193,9 +210,34 @@ export default function ProducerEventForm() {
         ),
       } : null;
 
+      // Combine address fields
+      let fullAddress = form.venue_address;
+      if (form.venue_number) fullAddress += `, ${form.venue_number}`;
+      if (form.venue_complement) fullAddress += ` - ${form.venue_complement}`;
+      if (form.venue_neighborhood) fullAddress += `, ${form.venue_neighborhood}`;
+
       const eventData: any = {
-        ...form, cover_image_url: coverUrl,
+        title: form.title,
+        slug: form.slug,
+        description: form.description,
+        category: form.category,
+        venue_name: form.venue_name,
+        venue_address: fullAddress,
+        venue_city: form.venue_city,
+        venue_state: form.venue_state,
+        venue_zip: form.venue_zip,
+        is_online: form.is_online,
+        online_url: form.online_url,
+        minimum_age: form.minimum_age,
+        max_capacity: form.max_capacity,
+        cover_image_url: coverUrl,
+        has_seat_map: form.has_seat_map,
         seat_map_config: seatMapConfig,
+        has_virtual_queue: form.has_virtual_queue,
+        queue_capacity: form.queue_capacity,
+        has_certificates: form.has_certificates,
+        has_insurance_option: form.has_insurance_option,
+        insurance_price: form.insurance_price,
         start_date: new Date(form.start_date).toISOString(),
         end_date: new Date(form.end_date).toISOString(),
         doors_open_time: form.doors_open_time ? new Date(form.doors_open_time).toISOString() : null,
@@ -237,76 +279,307 @@ export default function ProducerEventForm() {
     }
   };
 
-  // Use centralized categories from lib/categories.ts
+  const stepIcons = [Globe, FileText, MapPin, Ticket, FileText, Settings, Settings, Eye];
 
   return (
     <div className="max-w-3xl space-y-6">
-      <h1 className="font-display text-2xl font-bold">{isEdit ? "Editar Evento" : "Criar Evento"}</h1>
+      <h1 className="font-display text-2xl font-bold">
+        {isEdit ? "Editar Evento" : form.is_online ? "Criar Evento Online" : "Criar Evento Presencial"}
+      </h1>
 
       {/* Steps */}
       <div className="flex items-center gap-1 overflow-x-auto pb-2">
-        {stepLabels.map((s, i) => (
-          <button key={s} onClick={() => setStep(i)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${i === step ? "bg-primary text-primary-foreground" : i < step ? "bg-primary/15 text-primary" : "bg-secondary text-muted-foreground"}`}>
-            {i < step ? <Check className="h-3.5 w-3.5" /> : <span className="w-5 text-center">{i + 1}</span>}
-            {s}
-          </button>
-        ))}
+        {stepLabels.map((s, i) => {
+          // Skip type step for edit mode
+          if (i === 0 && isEdit) return null;
+          const Icon = stepIcons[i];
+          return (
+            <button 
+              key={s} 
+              onClick={() => setStep(i)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap",
+                i === step ? "bg-primary text-primary-foreground" : 
+                i < step ? "bg-primary/15 text-primary" : 
+                "bg-secondary text-muted-foreground"
+              )}
+            >
+              {i < step ? <Check className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
+              <span className="hidden sm:inline">{s}</span>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Step 0: Basic Info */}
-      {step === 0 && (
-        <Card>
-          <CardHeader><CardTitle>Informações Básicas</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div><Label>Título do evento *</Label><Input value={form.title} onChange={(e) => updateField("title", e.target.value)} placeholder="Nome do seu evento" /></div>
-            <div><Label>URL personalizada</Label><div className="flex items-center gap-2"><span className="text-sm text-muted-foreground">tickethall.com/eventos/</span><Input value={form.slug} onChange={(e) => updateField("slug", e.target.value)} className="flex-1" /></div></div>
-            <div><Label>Categoria</Label>
-              <Select value={form.category} onValueChange={(v) => updateField("category", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{EVENT_CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div><Label>Descrição</Label><Textarea value={form.description} onChange={(e) => updateField("description", e.target.value)} rows={5} placeholder="Descreva o evento..." /></div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div><Label>Início *</Label><Input type="datetime-local" value={form.start_date} onChange={(e) => updateField("start_date", e.target.value)} /></div>
-              <div><Label>Término *</Label><Input type="datetime-local" value={form.end_date} onChange={(e) => updateField("end_date", e.target.value)} /></div>
-            </div>
-            <div><Label>Abertura dos portões</Label><Input type="datetime-local" value={form.doors_open_time} onChange={(e) => updateField("doors_open_time", e.target.value)} /></div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Step 1: Venue */}
-      {step === 1 && (
-        <VenueStepWithIBGE form={form} updateField={updateField} />
-      )}
-
-      {/* Step 2: Tickets */}
-      {step === 2 && (
+      {/* Step 0: Event Type Selection */}
+      {step === 0 && !isEdit && (
         <div className="space-y-6">
-          {/* Capacity Groups */}
-          {isEdit && <CapacityGroupsManager eventId={id!} />}
+          <Card>
+            <CardHeader>
+              <CardTitle>Qual é o formato do seu evento?</CardTitle>
+              <CardDescription>Escolha se o evento será presencial ou online</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <RadioGroup 
+                value={form.is_online ? "online" : "presencial"} 
+                onValueChange={(v) => updateField("is_online", v === "online")}
+                className="grid gap-4"
+              >
+                {/* Presencial Option */}
+                <label 
+                  className={cn(
+                    "flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all",
+                    !form.is_online ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                  )}
+                >
+                  <RadioGroupItem value="presencial" className="mt-1" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <MapPin className="h-5 w-5 text-primary" />
+                      <span className="font-semibold text-foreground">Evento Presencial</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Evento com local físico definido. Ideal para shows, festas, palestras, conferências e encontros.
+                    </p>
+                  </div>
+                </label>
 
-          {/* Taxes & Fees */}
+                {/* Online Option */}
+                <label 
+                  className={cn(
+                    "flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all",
+                    form.is_online ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                  )}
+                >
+                  <RadioGroupItem value="online" className="mt-1" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Globe className="h-5 w-5 text-primary" />
+                      <span className="font-semibold text-foreground">Evento Online</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Evento virtual via transmissão. Ideal para webinars, cursos, lives e conferências online.
+                    </p>
+                  </div>
+                </label>
+              </RadioGroup>
+            </CardContent>
+          </Card>
+
+          {/* Platform selection for online */}
+          {form.is_online && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Plataforma de transmissão</CardTitle>
+                <CardDescription>Onde o evento online vai acontecer?</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <RadioGroup 
+                  value={form.online_platform} 
+                  onValueChange={(v) => updateField("online_platform", v)}
+                  className="grid gap-3"
+                >
+                  {ONLINE_PLATFORMS.map((p) => (
+                    <label 
+                      key={p.id}
+                      className={cn(
+                        "flex items-start gap-4 p-4 rounded-lg border cursor-pointer transition-all",
+                        form.online_platform === p.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                      )}
+                    >
+                      <RadioGroupItem value={p.id} className="mt-1" />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <p.icon className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium text-foreground">{p.name}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{p.description}</p>
+                      </div>
+                    </label>
+                  ))}
+                </RadioGroup>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* Step 1: Basic Info */}
+      {step === 1 && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Informações básicas
+              </CardTitle>
+              <CardDescription>Adicione as principais informações do evento</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div>
+                <Label>Nome do evento *</Label>
+                <Input 
+                  value={form.title} 
+                  onChange={(e) => updateField("title", e.target.value)} 
+                  placeholder="Nome do seu evento" 
+                  maxLength={100}
+                />
+                <p className="text-xs text-muted-foreground mt-1">{100 - form.title.length} caracteres restantes</p>
+              </div>
+
+              <div>
+                <Label>URL personalizada</Label>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">tickethall.com/eventos/</span>
+                  <Input value={form.slug} onChange={(e) => updateField("slug", e.target.value)} className="flex-1" />
+                </div>
+              </div>
+
+              {/* Cover Image Upload */}
+              <div>
+                <Label>Imagem de divulgação</Label>
+                <div 
+                  className={cn(
+                    "mt-2 border-2 border-dashed rounded-xl transition-colors",
+                    coverPreview ? "border-primary/50" : "border-border hover:border-primary/50"
+                  )}
+                >
+                  {coverPreview ? (
+                    <div className="relative">
+                      <img 
+                        src={coverPreview} 
+                        alt="Capa do evento" 
+                        className="w-full aspect-[1600/838] object-cover rounded-xl"
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
+                        <label className="cursor-pointer">
+                          <input type="file" accept="image/*" onChange={handleCoverSelect} className="hidden" />
+                          <Button variant="secondary" size="sm" className="gap-2" asChild>
+                            <span><Upload className="h-4 w-4" />Trocar imagem</span>
+                          </Button>
+                        </label>
+                      </div>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center py-10 cursor-pointer">
+                      <input type="file" accept="image/*" onChange={handleCoverSelect} className="hidden" />
+                      <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                        <ImageIcon className="h-6 w-6 text-primary" />
+                      </div>
+                      <p className="text-sm font-medium text-foreground">Clique ou arraste a imagem aqui</p>
+                      <p className="text-xs text-muted-foreground mt-1 text-center px-4">
+                        Dimensão recomendada: 1600 x 838 pixels (proporção 16:9).<br />
+                        Formato JPEG, PNG ou WebP de no máximo 2MB.
+                      </p>
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <Label>Categoria</Label>
+                <Select value={form.category} onValueChange={(v) => updateField("category", v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {EVENT_CATEGORIES.map((c) => (
+                      <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Descrição do evento</Label>
+                <Textarea 
+                  value={form.description} 
+                  onChange={(e) => updateField("description", e.target.value)} 
+                  rows={6} 
+                  placeholder="Conte todos os detalhes do seu evento, como a programação e os diferenciais da sua produção..."
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Date & Time */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Data e horário
+              </CardTitle>
+              <CardDescription>Informe aos participantes quando seu evento vai acontecer</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label>Data e hora de início *</Label>
+                  <Input type="datetime-local" value={form.start_date} onChange={(e) => updateField("start_date", e.target.value)} />
+                </div>
+                <div>
+                  <Label>Data e hora de término *</Label>
+                  <Input type="datetime-local" value={form.end_date} onChange={(e) => updateField("end_date", e.target.value)} />
+                </div>
+              </div>
+              {!form.is_online && (
+                <div>
+                  <Label>Abertura dos portões (opcional)</Label>
+                  <Input type="datetime-local" value={form.doors_open_time} onChange={(e) => updateField("doors_open_time", e.target.value)} />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Step 2: Venue */}
+      {step === 2 && (
+        <VenueStep form={form} updateField={updateField} />
+      )}
+
+      {/* Step 3: Tickets */}
+      {step === 3 && (
+        <div className="space-y-6">
+          {isEdit && <CapacityGroupsManager eventId={id!} />}
           {isEdit && <TaxesFeesManager eventId={id!} />}
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Ingressos</CardTitle>
-              <Button variant="outline" size="sm" onClick={addTier} className="gap-1"><Plus className="h-4 w-4" />Adicionar lote</Button>
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Ticket className="h-5 w-5" />
+                  Ingressos
+                </CardTitle>
+                <CardDescription>Configure os tipos de ingresso do seu evento</CardDescription>
+              </div>
+              <Button variant="outline" size="sm" onClick={addTier} className="gap-1">
+                <Plus className="h-4 w-4" />Adicionar lote
+              </Button>
             </CardHeader>
             <CardContent className="space-y-4">
-              {tiers.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Nenhum lote criado. Adicione um lote de ingressos.</p>}
+              {tiers.length === 0 && (
+                <div className="text-center py-8 border-2 border-dashed border-border rounded-lg">
+                  <Ticket className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">Nenhum lote criado ainda.</p>
+                  <Button variant="outline" size="sm" onClick={addTier} className="mt-3 gap-1">
+                    <Plus className="h-4 w-4" />Criar primeiro lote
+                  </Button>
+                </div>
+              )}
               {tiers.map((tier, i) => (
                 <div key={i} className="p-4 rounded-lg border border-border space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-muted-foreground">Lote {i + 1}</span>
-                    <button onClick={() => removeTier(i)} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
+                    <button onClick={() => removeTier(i)} className="text-muted-foreground hover:text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div><Label className="text-xs">Nome *</Label><Input value={tier.name} onChange={(e) => updateTier(i, "name", e.target.value)} placeholder="Ex: Pista, VIP, 1º Lote" /></div>
-                    <div><Label className="text-xs">Tipo</Label>
+                    <div>
+                      <Label className="text-xs">Nome *</Label>
+                      <Input value={tier.name} onChange={(e) => updateTier(i, "name", e.target.value)} placeholder="Ex: Pista, VIP, 1º Lote" />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Tipo</Label>
                       <Select value={tier.tier_type} onValueChange={(v) => updateTier(i, "tier_type", v)}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
@@ -316,14 +589,28 @@ export default function ProducerEventForm() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div><Label className="text-xs">Preço (R$)</Label><Input type="number" min={0} step={0.01} value={tier.price} onChange={(e) => updateTier(i, "price", parseFloat(e.target.value) || 0)} /></div>
-                    <div><Label className="text-xs">Quantidade total *</Label><Input type="number" min={1} value={tier.quantity_total} onChange={(e) => updateTier(i, "quantity_total", parseInt(e.target.value) || 1)} /></div>
-                    <div><Label className="text-xs">Mín. por pedido</Label><Input type="number" min={1} value={tier.min_per_order} onChange={(e) => updateTier(i, "min_per_order", parseInt(e.target.value) || 1)} /></div>
-                    <div><Label className="text-xs">Máx. por pedido</Label><Input type="number" min={1} value={tier.max_per_order} onChange={(e) => updateTier(i, "max_per_order", parseInt(e.target.value) || 10)} /></div>
+                    <div>
+                      <Label className="text-xs">Preço (R$)</Label>
+                      <Input type="number" min={0} step={0.01} value={tier.price} onChange={(e) => updateTier(i, "price", parseFloat(e.target.value) || 0)} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Quantidade total *</Label>
+                      <Input type="number" min={1} value={tier.quantity_total} onChange={(e) => updateTier(i, "quantity_total", parseInt(e.target.value) || 1)} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Mín. por pedido</Label>
+                      <Input type="number" min={1} value={tier.min_per_order} onChange={(e) => updateTier(i, "min_per_order", parseInt(e.target.value) || 1)} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Máx. por pedido</Label>
+                      <Input type="number" min={1} value={tier.max_per_order} onChange={(e) => updateTier(i, "max_per_order", parseInt(e.target.value) || 10)} />
+                    </div>
                   </div>
-                  <div><Label className="text-xs">Descrição</Label><Textarea value={tier.description} onChange={(e) => updateTier(i, "description", e.target.value)} rows={2} /></div>
+                  <div>
+                    <Label className="text-xs">Descrição</Label>
+                    <Textarea value={tier.description} onChange={(e) => updateTier(i, "description", e.target.value)} rows={2} />
+                  </div>
 
-                  {/* Capacity group assignment */}
                   {capacityGroups.length > 0 && (
                     <div>
                       <Label className="text-xs">Grupo de capacidade</Label>
@@ -331,7 +618,9 @@ export default function ProducerEventForm() {
                         <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">Nenhum</SelectItem>
-                          {capacityGroups.map((g: any) => <SelectItem key={g.id} value={g.id}>{g.name} ({g.sold_count}/{g.capacity})</SelectItem>)}
+                          {capacityGroups.map((g: any) => (
+                            <SelectItem key={g.id} value={g.id}>{g.name} ({g.sold_count}/{g.capacity})</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -354,7 +643,6 @@ export default function ProducerEventForm() {
                     </div>
                   )}
 
-                  {/* Sector color picker - only when seat map is active */}
                   {form.has_seat_map && (
                     <div className="flex items-center gap-3">
                       <Label className="text-xs whitespace-nowrap">Cor do setor</Label>
@@ -364,18 +652,13 @@ export default function ProducerEventForm() {
                             key={color}
                             type="button"
                             onClick={() => updateTier(i, "sector_color", color)}
-                            className={`w-6 h-6 rounded-full border-2 transition-all ${tier.sector_color === color ? "border-foreground scale-110 ring-2 ring-primary/30" : "border-transparent hover:scale-105"}`}
+                            className={cn(
+                              "w-6 h-6 rounded-full border-2 transition-all",
+                              tier.sector_color === color ? "border-foreground scale-110 ring-2 ring-primary/30" : "border-transparent hover:scale-105"
+                            )}
                             style={{ backgroundColor: color }}
-                            title={color}
                           />
                         ))}
-                        <input
-                          type="color"
-                          value={tier.sector_color || "#3182CE"}
-                          onChange={(e) => updateTier(i, "sector_color", e.target.value)}
-                          className="w-6 h-6 rounded cursor-pointer border-0 p-0"
-                          title="Cor personalizada"
-                        />
                       </div>
                     </div>
                   )}
@@ -386,8 +669,8 @@ export default function ProducerEventForm() {
         </div>
       )}
 
-      {/* Step 3: Checkout Questions */}
-      {step === 3 && (
+      {/* Step 4: Checkout Questions */}
+      {step === 4 && (
         isEdit ? (
           <CheckoutQuestionsBuilder eventId={id!} />
         ) : (
@@ -399,8 +682,8 @@ export default function ProducerEventForm() {
         )
       )}
 
-      {/* Step 4: Products */}
-      {step === 4 && (
+      {/* Step 5: Products */}
+      {step === 5 && (
         isEdit ? (
           <EventProductsManager eventId={id!} />
         ) : (
@@ -412,17 +695,23 @@ export default function ProducerEventForm() {
         )
       )}
 
-      {/* Step 5: Settings */}
-      {step === 5 && (
+      {/* Step 6: Settings */}
+      {step === 6 && (
         <Card>
-          <CardHeader><CardTitle>Configurações</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Configurações
+            </CardTitle>
+          </CardHeader>
           <CardContent className="space-y-4">
-            <div><Label>Idade mínima</Label><Input type="number" min={0} value={form.minimum_age} onChange={(e) => updateField("minimum_age", parseInt(e.target.value) || 0)} /></div>
-            <div><Label>Capacidade máxima</Label><Input type="number" min={0} value={form.max_capacity} onChange={(e) => updateField("max_capacity", parseInt(e.target.value) || 0)} /></div>
             <div>
-              <Label>Imagem de capa</Label>
-              {form.cover_image_url && <img src={form.cover_image_url} alt="Capa" className="w-full h-40 object-cover rounded-lg mb-2" />}
-              <Input type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] || null)} />
+              <Label>Idade mínima</Label>
+              <Input type="number" min={0} value={form.minimum_age} onChange={(e) => updateField("minimum_age", parseInt(e.target.value) || 0)} />
+            </div>
+            <div>
+              <Label>Capacidade máxima</Label>
+              <Input type="number" min={0} value={form.max_capacity} onChange={(e) => updateField("max_capacity", parseInt(e.target.value) || 0)} />
             </div>
 
             <Separator className="my-2" />
@@ -439,9 +728,9 @@ export default function ProducerEventForm() {
               <div className="space-y-3 pl-4 border-l-2 border-primary/20">
                 <div>
                   <Label className="text-xs">Imagem do mapa de setores</Label>
-                  <p className="text-xs text-muted-foreground mb-1">Envie uma imagem (PNG/JPG) com o layout do evento mostrando os setores.</p>
+                  <p className="text-xs text-muted-foreground mb-1">Envie uma imagem (PNG/JPG) com o layout do evento.</p>
                   {seatMapImageUrl && (
-                    <img src={seatMapImageUrl} alt="Mapa de setores" className="w-full max-h-48 object-contain rounded-lg border border-border mb-2 bg-muted/30" />
+                    <img src={seatMapImageUrl} alt="Mapa" className="w-full max-h-48 object-contain rounded-lg border border-border mb-2 bg-muted/30" />
                   )}
                   <Input type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => {
                     const file = e.target.files?.[0];
@@ -451,9 +740,6 @@ export default function ProducerEventForm() {
                     }
                   }} />
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  💡 Defina a cor de cada setor no lote correspondente (etapa "Ingressos").
-                </p>
               </div>
             )}
 
@@ -465,7 +751,10 @@ export default function ProducerEventForm() {
               <Switch checked={form.has_virtual_queue} onCheckedChange={(v) => updateField("has_virtual_queue", v)} />
             </div>
             {form.has_virtual_queue && (
-              <div><Label className="text-xs">Capacidade da fila</Label><Input type="number" min={0} value={form.queue_capacity} onChange={(e) => updateField("queue_capacity", parseInt(e.target.value) || 0)} /></div>
+              <div>
+                <Label className="text-xs">Capacidade da fila</Label>
+                <Input type="number" min={0} value={form.queue_capacity} onChange={(e) => updateField("queue_capacity", parseInt(e.target.value) || 0)} />
+              </div>
             )}
 
             <div className="flex items-center justify-between">
@@ -484,25 +773,77 @@ export default function ProducerEventForm() {
               <Switch checked={form.has_insurance_option} onCheckedChange={(v) => updateField("has_insurance_option", v)} />
             </div>
             {form.has_insurance_option && (
-              <div><Label className="text-xs">Preço do seguro (R$)</Label><Input type="number" min={0} step={0.01} value={form.insurance_price} onChange={(e) => updateField("insurance_price", parseFloat(e.target.value) || 0)} /></div>
+              <div>
+                <Label className="text-xs">Preço do seguro (R$)</Label>
+                <Input type="number" min={0} step={0.01} value={form.insurance_price} onChange={(e) => updateField("insurance_price", parseFloat(e.target.value) || 0)} />
+              </div>
             )}
+
+            <Separator className="my-2" />
+
+            <div>
+              <Label className="text-sm">Visibilidade do evento</Label>
+              <RadioGroup 
+                value={form.visibility} 
+                onValueChange={(v) => updateField("visibility", v)}
+                className="flex gap-4 mt-2"
+              >
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <RadioGroupItem value="public" />
+                  <span className="text-sm">Público</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <RadioGroupItem value="private" />
+                  <span className="text-sm">Privado</span>
+                </label>
+              </RadioGroup>
+              <p className="text-xs text-muted-foreground mt-1">
+                {form.visibility === "public" 
+                  ? "Evento visível para todos na plataforma" 
+                  : "Evento acessível apenas com link direto"}
+              </p>
+            </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Step 6: Review */}
-      {step === 6 && (
+      {/* Step 7: Review */}
+      {step === 7 && (
         <Card>
-          <CardHeader><CardTitle>Revisão</CardTitle></CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <div className="grid grid-cols-2 gap-2">
-              <span className="text-muted-foreground">Título:</span><span className="text-foreground font-medium">{form.title}</span>
-              <span className="text-muted-foreground">Categoria:</span><span className="text-foreground">{EVENT_CATEGORIES.find((c) => c.value === form.category)?.label}</span>
-              <span className="text-muted-foreground">Início:</span><span className="text-foreground">{form.start_date ? new Date(form.start_date).toLocaleString("pt-BR") : "—"}</span>
-              <span className="text-muted-foreground">Término:</span><span className="text-foreground">{form.end_date ? new Date(form.end_date).toLocaleString("pt-BR") : "—"}</span>
-              <span className="text-muted-foreground">Local:</span><span className="text-foreground">{form.is_online ? "Online" : form.venue_name || "—"}</span>
-              <span className="text-muted-foreground">Lotes:</span><span className="text-foreground">{tiers.length} lote(s)</span>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5" />
+              Revisão
+            </CardTitle>
+            <CardDescription>Confira os dados antes de publicar</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {coverPreview && (
+              <img src={coverPreview} alt="Capa" className="w-full aspect-[16/9] object-cover rounded-lg" />
+            )}
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <span className="text-muted-foreground">Título:</span>
+              <span className="text-foreground font-medium">{form.title}</span>
+              
+              <span className="text-muted-foreground">Tipo:</span>
+              <span className="text-foreground">{form.is_online ? "Online" : "Presencial"}</span>
+              
+              <span className="text-muted-foreground">Categoria:</span>
+              <span className="text-foreground">{EVENT_CATEGORIES.find((c) => c.value === form.category)?.label}</span>
+              
+              <span className="text-muted-foreground">Início:</span>
+              <span className="text-foreground">{form.start_date ? new Date(form.start_date).toLocaleString("pt-BR") : "—"}</span>
+              
+              <span className="text-muted-foreground">Término:</span>
+              <span className="text-foreground">{form.end_date ? new Date(form.end_date).toLocaleString("pt-BR") : "—"}</span>
+              
+              <span className="text-muted-foreground">Local:</span>
+              <span className="text-foreground">{form.is_online ? (form.online_url || "URL não informada") : (form.venue_name || "—")}</span>
+              
+              <span className="text-muted-foreground">Lotes:</span>
+              <span className="text-foreground">{tiers.length} lote(s)</span>
             </div>
+
             {tiers.length > 0 && (
               <div className="mt-4 space-y-2">
                 <p className="font-medium text-foreground">Ingressos:</p>
@@ -514,13 +855,18 @@ export default function ProducerEventForm() {
                 ))}
               </div>
             )}
+
+            <Separator />
+            <p className="text-xs text-muted-foreground">
+              Ao publicar este evento, declaro estar de acordo com os Termos de Uso e Política de Privacidade da plataforma.
+            </p>
           </CardContent>
         </Card>
       )}
 
       {/* Navigation */}
       <div className="flex items-center justify-between pt-2">
-        <Button variant="outline" disabled={step === 0} onClick={() => setStep((s) => s - 1)} className="gap-1">
+        <Button variant="outline" disabled={step === 0 || (step === 1 && isEdit)} onClick={() => setStep((s) => s - 1)} className="gap-1">
           <ArrowLeft className="h-4 w-4" /> Anterior
         </Button>
         <div className="flex gap-2">
@@ -540,75 +886,182 @@ export default function ProducerEventForm() {
   );
 }
 
-/** Venue step with IBGE API for state/city autocomplete */
-function VenueStepWithIBGE({ form, updateField }: { form: any; updateField: (f: string, v: any) => void }) {
+/** Venue step with address fields and CEP autocomplete */
+function VenueStep({ form, updateField }: { form: any; updateField: (f: string, v: any) => void }) {
   const { states } = useIBGEStates();
   const { cities, loading: citiesLoading } = useIBGECities(form.venue_state);
   const [citySearch, setCitySearch] = useState("");
+  const [cepLoading, setCepLoading] = useState(false);
 
   const filteredCities = citySearch
     ? cities.filter((c) => c.nome.toLowerCase().includes(citySearch.toLowerCase()))
     : cities;
 
+  const handleCEPBlur = async () => {
+    const cep = form.venue_zip?.replace(/\D/g, "");
+    if (cep?.length === 8) {
+      setCepLoading(true);
+      try {
+        const addr = await fetchAddressFromCEP(cep);
+        if (addr) {
+          updateField("venue_address", addr.logradouro || "");
+          updateField("venue_neighborhood", addr.bairro || "");
+          updateField("venue_city", addr.localidade || "");
+          updateField("venue_state", addr.uf || "");
+        }
+      } catch {}
+      setCepLoading(false);
+    }
+  };
+
+  if (form.is_online) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="h-5 w-5" />
+            Link do evento online
+          </CardTitle>
+          <CardDescription>Informe o link de acesso para os participantes</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label>URL da transmissão *</Label>
+            <Input 
+              value={form.online_url} 
+              onChange={(e) => updateField("online_url", e.target.value)} 
+              placeholder="https://meet.google.com/... ou https://zoom.us/..."
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Cole o link do Google Meet, Zoom, YouTube Live, ou qualquer outra plataforma.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
-      <CardHeader><CardTitle>Local</CardTitle></CardHeader>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <MapPin className="h-5 w-5" />
+          Onde o evento vai acontecer?
+        </CardTitle>
+        <CardDescription>Informe o endereço completo do local</CardDescription>
+      </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center gap-3">
-          <Switch checked={form.is_online} onCheckedChange={(v) => updateField("is_online", v)} />
-          <Label>Evento online</Label>
+        <div>
+          <Label>Nome do local *</Label>
+          <Input 
+            value={form.venue_name} 
+            onChange={(e) => updateField("venue_name", e.target.value)} 
+            placeholder="Ex: Allianz Parque, Teatro Municipal, Centro de Convenções"
+            maxLength={100}
+          />
+          <p className="text-xs text-muted-foreground mt-1">{100 - (form.venue_name?.length || 0)} caracteres restantes</p>
         </div>
-        {form.is_online ? (
-          <div><Label>URL da transmissão</Label><Input value={form.online_url} onChange={(e) => updateField("online_url", e.target.value)} placeholder="https://..." /></div>
-        ) : (
-          <>
-            <div><Label>Nome do local</Label><Input value={form.venue_name} onChange={(e) => updateField("venue_name", e.target.value)} placeholder="Ex: Allianz Parque" /></div>
-            <div><Label>Endereço</Label><Input value={form.venue_address} onChange={(e) => updateField("venue_address", e.target.value)} /></div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Estado</Label>
-                <Select value={form.venue_state} onValueChange={(v) => { updateField("venue_state", v); updateField("venue_city", ""); setCitySearch(""); }}>
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>
-                    {states.map((s) => (
-                      <SelectItem key={s.sigla} value={s.sigla}>{s.nome} ({s.sigla})</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Cidade</Label>
-                {citiesLoading ? (
-                  <Input disabled placeholder="Carregando..." />
-                ) : form.venue_state ? (
-                  <Select value={form.venue_city} onValueChange={(v) => updateField("venue_city", v)}>
-                    <SelectTrigger><SelectValue placeholder="Selecione a cidade" /></SelectTrigger>
-                    <SelectContent>
-                      <div className="px-2 pb-2">
-                        <Input
-                          placeholder="Buscar cidade..."
-                          value={citySearch}
-                          onChange={(e) => setCitySearch(e.target.value)}
-                          className="h-8 text-sm"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </div>
-                      {filteredCities.slice(0, 100).map((c) => (
-                        <SelectItem key={c.id} value={c.nome}>{c.nome}</SelectItem>
-                      ))}
-                      {filteredCities.length > 100 && (
-                        <p className="text-xs text-muted-foreground px-2 py-1">Digite para filtrar mais cidades...</p>
-                      )}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input disabled placeholder="Selecione o estado primeiro" />
-                )}
-              </div>
-            </div>
-            <div><Label>CEP</Label><Input value={form.venue_zip} onChange={(e) => updateField("venue_zip", e.target.value)} placeholder="00000-000" /></div>
-          </>
-        )}
+
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <Label>CEP</Label>
+            <Input 
+              value={form.venue_zip} 
+              onChange={(e) => updateField("venue_zip", e.target.value)} 
+              onBlur={handleCEPBlur}
+              placeholder="00000-000"
+              maxLength={9}
+            />
+            {cepLoading && <p className="text-xs text-muted-foreground mt-1">Buscando...</p>}
+          </div>
+          <div className="col-span-2">
+            <Label>Rua / Avenida</Label>
+            <Input 
+              value={form.venue_address} 
+              onChange={(e) => updateField("venue_address", e.target.value)}
+              placeholder="Nome da rua"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label>Número</Label>
+            <Input 
+              value={form.venue_number} 
+              onChange={(e) => updateField("venue_number", e.target.value)}
+              placeholder="123"
+            />
+          </div>
+          <div>
+            <Label>Complemento</Label>
+            <Input 
+              value={form.venue_complement} 
+              onChange={(e) => updateField("venue_complement", e.target.value)}
+              placeholder="Sala, Bloco, etc."
+              maxLength={250}
+            />
+          </div>
+        </div>
+
+        <div>
+          <Label>Bairro</Label>
+          <Input 
+            value={form.venue_neighborhood} 
+            onChange={(e) => updateField("venue_neighborhood", e.target.value)}
+            placeholder="Nome do bairro"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label>Estado</Label>
+            <Select 
+              value={form.venue_state} 
+              onValueChange={(v) => { 
+                updateField("venue_state", v); 
+                updateField("venue_city", ""); 
+                setCitySearch(""); 
+              }}
+            >
+              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+              <SelectContent>
+                {states.map((s) => (
+                  <SelectItem key={s.sigla} value={s.sigla}>{s.nome} ({s.sigla})</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Cidade</Label>
+            {citiesLoading ? (
+              <Input disabled placeholder="Carregando..." />
+            ) : form.venue_state ? (
+              <Select value={form.venue_city} onValueChange={(v) => updateField("venue_city", v)}>
+                <SelectTrigger><SelectValue placeholder="Selecione a cidade" /></SelectTrigger>
+                <SelectContent>
+                  <div className="px-2 pb-2">
+                    <Input
+                      placeholder="Buscar cidade..."
+                      value={citySearch}
+                      onChange={(e) => setCitySearch(e.target.value)}
+                      className="h-8 text-sm"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                  {filteredCities.slice(0, 100).map((c) => (
+                    <SelectItem key={c.id} value={c.nome}>{c.nome}</SelectItem>
+                  ))}
+                  {filteredCities.length > 100 && (
+                    <p className="text-xs text-muted-foreground px-2 py-1">Digite para filtrar...</p>
+                  )}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input disabled placeholder="Selecione o estado primeiro" />
+            )}
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
