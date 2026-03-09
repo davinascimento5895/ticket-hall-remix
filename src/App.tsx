@@ -133,6 +133,8 @@ const App = () => {
               <Route path="/checkin/:accessCode" element={<PublicCheckin />} />
               <Route path="/embed" element={<EmbedWidget />} />
               <Route path="/lista/:slug" element={<InterestListPublic />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/faq" element={<FAQ />} />
 
               {/* Producer Panel */}
               <Route
