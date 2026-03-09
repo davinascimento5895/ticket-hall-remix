@@ -109,6 +109,13 @@ const App = () => {
                 <Route path="/cidades" element={<Cidades />} />
                 <Route path="/busca" element={<Busca />} />
                 <Route path="/notificacoes" element={<NotificacoesConfig />} />
+                <Route path="/meu-perfil" element={<MeuPerfil />} />
+                <Route path="/meu-perfil/editar" element={<EditarPerfil />} />
+                <Route path="/meu-perfil/alterar-senha" element={<AlterarSenha />} />
+                <Route path="/meu-perfil/cidade" element={<PerfilCidade />} />
+                <Route path="/meu-perfil/pagamento" element={<MetodosPagamento />} />
+                <Route path="/meu-perfil/notificacoes" element={<PerfilNotificacoes />} />
+                <Route path="/meu-perfil/suporte" element={<PerfilSuporte />} />
               </Route>
 
               {/* Standalone pages (no shared Navbar/Footer) */}

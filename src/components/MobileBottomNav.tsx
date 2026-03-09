@@ -48,11 +48,7 @@ export function MobileBottomNav() {
   // Determine profile destination based on role
   const profileHref = !user
     ? "/?login=true"
-    : role === "admin"
-      ? "/admin/dashboard"
-      : role === "producer"
-        ? "/producer/dashboard"
-        : "/notificacoes-config";
+    : "/meu-perfil";
 
   const navItems = baseNavItems.map((item) =>
     item.id === "profile" ? { ...item, href: profileHref } : item
