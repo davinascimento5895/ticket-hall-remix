@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { normalizeText } from "@/lib/search";
 
-type TabId = "active" | "pending" | "cancelled" | "past";
+type TabId = "active" | "pending" | "cancelled" | "past" | "archived";
 
 export default function MeusIngressos() {
   const { user } = useAuth();
