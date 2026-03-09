@@ -352,7 +352,6 @@ const changelog: ChangelogEntry[] = [
     ],
   },
 ];
-];
 
 export default function Changelog() {
   return (
