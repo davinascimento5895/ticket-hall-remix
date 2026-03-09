@@ -88,10 +88,12 @@ export default function Checkout() {
       const eventId = items[0]?.eventId;
       if (!eventId) throw new Error("No event in cart");
 
-      const isFreeOrder = total === 0;
+      const isFreeOrder = finalTotal === 0;
 
       const { data: order, error: orderErr } = await supabase.from("orders").insert({
-        buyer_id: user.id, event_id: eventId, subtotal, platform_fee: isFreeOrder ? 0 : platformFee, total: isFreeOrder ? 0 : total,
+        buyer_id: user.id, event_id: eventId, subtotal, platform_fee: isFreeOrder ? 0 : platformFee, total: isFreeOrder ? 0 : finalTotal,
+        discount_amount: discount > 0 ? discount : 0,
+        coupon_id: appliedCouponId || null,
         status: isFreeOrder ? "paid" : "pending",
         payment_status: isFreeOrder ? "paid" : "pending",
         payment_method: isFreeOrder ? "free" : null,
