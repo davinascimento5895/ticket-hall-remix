@@ -74,6 +74,56 @@ export type Database = {
           },
         ]
       }
+      bank_accounts: {
+        Row: {
+          account_name: string
+          account_number: string | null
+          agency: string | null
+          bank_name: string | null
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          pix_key: string | null
+          pix_key_type: string | null
+          producer_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          account_name: string
+          account_number?: string | null
+          agency?: string | null
+          bank_name?: string | null
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          pix_key?: string | null
+          pix_key_type?: string | null
+          producer_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          account_name?: string
+          account_number?: string | null
+          agency?: string | null
+          bank_name?: string | null
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          pix_key?: string | null
+          pix_key_type?: string | null
+          producer_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_accounts_producer_id_fkey"
+            columns: ["producer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bulk_messages: {
         Row: {
           body: string
@@ -812,6 +862,92 @@ export type Database = {
           },
         ]
       }
+      financial_transactions: {
+        Row: {
+          amount: number
+          bank_account_id: string | null
+          category: string
+          created_at: string | null
+          description: string
+          due_date: string | null
+          event_id: string | null
+          id: string
+          notes: string | null
+          order_id: string | null
+          paid_at: string | null
+          producer_id: string
+          reference_id: string | null
+          status: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount?: number
+          bank_account_id?: string | null
+          category: string
+          created_at?: string | null
+          description: string
+          due_date?: string | null
+          event_id?: string | null
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          paid_at?: string | null
+          producer_id: string
+          reference_id?: string | null
+          status?: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          bank_account_id?: string | null
+          category?: string
+          created_at?: string | null
+          description?: string
+          due_date?: string | null
+          event_id?: string | null
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          paid_at?: string | null
+          producer_id?: string
+          reference_id?: string | null
+          status?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_transactions_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_transactions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_transactions_producer_id_fkey"
+            columns: ["producer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       guest_lists: {
         Row: {
           added_by: string
@@ -1431,6 +1567,213 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      promoter_commissions: {
+        Row: {
+          commission_amount: number
+          created_at: string | null
+          event_id: string
+          id: string
+          order_amount: number
+          order_id: string | null
+          paid_at: string | null
+          producer_id: string
+          promoter_event_id: string
+          promoter_id: string
+          status: string
+        }
+        Insert: {
+          commission_amount?: number
+          created_at?: string | null
+          event_id: string
+          id?: string
+          order_amount?: number
+          order_id?: string | null
+          paid_at?: string | null
+          producer_id: string
+          promoter_event_id: string
+          promoter_id: string
+          status?: string
+        }
+        Update: {
+          commission_amount?: number
+          created_at?: string | null
+          event_id?: string
+          id?: string
+          order_amount?: number
+          order_id?: string | null
+          paid_at?: string | null
+          producer_id?: string
+          promoter_event_id?: string
+          promoter_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promoter_commissions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promoter_commissions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promoter_commissions_producer_id_fkey"
+            columns: ["producer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promoter_commissions_promoter_event_id_fkey"
+            columns: ["promoter_event_id"]
+            isOneToOne: false
+            referencedRelation: "promoter_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promoter_commissions_promoter_id_fkey"
+            columns: ["promoter_id"]
+            isOneToOne: false
+            referencedRelation: "promoters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promoter_events: {
+        Row: {
+          clicks: number | null
+          commission_total: number | null
+          commission_type: string
+          commission_value: number
+          conversions: number | null
+          created_at: string | null
+          event_id: string
+          id: string
+          is_active: boolean | null
+          producer_id: string
+          promoter_id: string
+          revenue_generated: number | null
+          tracking_code: string
+        }
+        Insert: {
+          clicks?: number | null
+          commission_total?: number | null
+          commission_type?: string
+          commission_value?: number
+          conversions?: number | null
+          created_at?: string | null
+          event_id: string
+          id?: string
+          is_active?: boolean | null
+          producer_id: string
+          promoter_id: string
+          revenue_generated?: number | null
+          tracking_code: string
+        }
+        Update: {
+          clicks?: number | null
+          commission_total?: number | null
+          commission_type?: string
+          commission_value?: number
+          conversions?: number | null
+          created_at?: string | null
+          event_id?: string
+          id?: string
+          is_active?: boolean | null
+          producer_id?: string
+          promoter_id?: string
+          revenue_generated?: number | null
+          tracking_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promoter_events_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promoter_events_producer_id_fkey"
+            columns: ["producer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promoter_events_promoter_id_fkey"
+            columns: ["promoter_id"]
+            isOneToOne: false
+            referencedRelation: "promoters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promoters: {
+        Row: {
+          cpf: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          pix_key: string | null
+          producer_id: string
+          status: string
+          total_commission_earned: number | null
+          total_commission_paid: number | null
+          total_sales: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          cpf?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          pix_key?: string | null
+          producer_id: string
+          status?: string
+          total_commission_earned?: number | null
+          total_commission_paid?: number | null
+          total_sales?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          cpf?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          pix_key?: string | null
+          producer_id?: string
+          status?: string
+          total_commission_earned?: number | null
+          total_commission_paid?: number | null
+          total_sales?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promoters_producer_id_fkey"
+            columns: ["producer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rate_limits: {
         Row: {
