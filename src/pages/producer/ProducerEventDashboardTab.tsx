@@ -21,13 +21,14 @@ export default function ProducerEventDashboardTab() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
-        .select("title, start_date, platform_fee_percent")
+        .select("title, start_date, platform_fee_percent, max_capacity")
         .eq("id", id)
         .single();
       if (error) throw error;
       return data;
     },
     enabled: !!id,
+    staleTime: 30_000,
   });
 
   const { data: analytics, isLoading } = useQuery({
