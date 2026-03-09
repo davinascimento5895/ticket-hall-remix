@@ -222,6 +222,13 @@ export function Navbar() {
         {mobileOpen && !user && !isAdminOrProducer && (
           <div className="lg:hidden bg-background/95 backdrop-blur-xl border-b border-border animate-fade-in">
             <div className="container py-4 space-y-1">
+              <Link
+                to="/"
+                className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 transition-colors"
+                onClick={() => setMobileOpen(false)}
+              >
+                Início
+              </Link>
               {links.map((l) => (
                 <Link
                   key={l.href}
