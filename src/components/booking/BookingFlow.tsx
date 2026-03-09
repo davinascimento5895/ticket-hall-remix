@@ -170,7 +170,6 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
   const stepLabels: Record<Step, string> = {
     date: "Data",
     tickets: "Ingressos",
-    seats: "Assentos",
     summary: "Resumo",
     confirmation: "Confirmação",
   };
