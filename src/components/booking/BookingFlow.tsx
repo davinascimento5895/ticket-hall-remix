@@ -38,7 +38,7 @@ interface BookingFlowProps {
   tiers: any[];
 }
 
-type Step = "date" | "tickets" | "seats" | "summary" | "confirmation";
+type Step = "date" | "tickets" | "summary" | "confirmation";
 
 export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowProps) {
   const isMobile = useIsMobile();
