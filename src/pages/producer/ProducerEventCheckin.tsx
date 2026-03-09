@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckinListsManager } from "@/components/producer/CheckinListsManager";
 import { getEventTickets, getProducerEventBasic } from "@/lib/api-producer";
-import { validateCheckinByTicketId, type CheckinResult } from "@/lib/api-checkin";
+import { validateCheckin, validateCheckinByTicketId, type CheckinResult } from "@/lib/api-checkin";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { useState, useEffect, useRef, useCallback } from "react";
