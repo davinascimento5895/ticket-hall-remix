@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Trash2, ShoppingCart, ArrowLeft, LogIn } from "lucide-react";
+import { Trash2, ShoppingCart, ArrowLeft, LogIn, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CountdownTimer } from "@/components/CountdownTimer";
@@ -7,16 +7,54 @@ import { EmptyState } from "@/components/EmptyState";
 import { AuthModal } from "@/components/AuthModal";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { validateCoupon } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Carrinho() {
   const { items, removeItem, updateQuantity, clearCart, subtotal, platformFee, total, expiresAt, couponCode, setCouponCode, discount, setDiscount, setAppliedCouponId, finalTotal } = useCart();
   const { user } = useAuth();
   const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
+  const [unavailableItems, setUnavailableItems] = useState<string[]>([]);
   const navigate = useNavigate();
+
+  // Validate availability on mount
+  useEffect(() => {
+    if (items.length === 0) return;
+    const tierIds = items.map(i => i.tierId).filter(id => !id.startsWith("product-"));
+    if (tierIds.length === 0) return;
+
+    supabase
+      .from("ticket_tiers")
+      .select("id, quantity_total, quantity_sold, quantity_reserved")
+      .in("id", tierIds)
+      .then(({ data }) => {
+        if (!data) return;
+        const unavailable: string[] = [];
+        for (const item of items) {
+          if (item.tierId.startsWith("product-")) continue;
+          const tier = data.find(t => t.id === item.tierId);
+          if (!tier) {
+            unavailable.push(item.tierId);
+            continue;
+          }
+          const available = tier.quantity_total - (tier.quantity_sold ?? 0) - (tier.quantity_reserved ?? 0);
+          if (available < item.quantity) {
+            unavailable.push(item.tierId);
+          }
+        }
+        setUnavailableItems(unavailable);
+        if (unavailable.length > 0) {
+          toast({
+            title: "Disponibilidade alterada",
+            description: "Alguns ingressos no carrinho podem não estar mais disponíveis.",
+            variant: "destructive",
+          });
+        }
+      });
+  }, []); // Only on mount
 
   const handleCheckout = () => {
     if (!user) {
@@ -100,14 +138,20 @@ export default function Carrinho() {
           {/* Items */}
           <div className="flex-1 space-y-3">
             {items.map((item) => (
-              <div key={item.tierId} className="flex items-center gap-4 p-4 rounded-lg border border-border bg-card">
-                {item.coverImageUrl && (
+              <div key={item.tierId} className={`flex items-center gap-4 p-4 rounded-lg border bg-card ${unavailableItems.includes(item.tierId) ? "border-destructive/50" : "border-border"}`}>
+                {unavailableItems.includes(item.tierId) && (
+                  <AlertTriangle className="h-5 w-5 text-destructive shrink-0" />
+                )}
+                {item.coverImageUrl && !unavailableItems.includes(item.tierId) && (
                   <img src={item.coverImageUrl} alt="" className="w-16 h-16 rounded object-cover hidden sm:block" />
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="font-display font-semibold text-foreground truncate">{item.eventTitle}</p>
                   <p className="text-sm text-muted-foreground">{item.tierName}</p>
                   <p className="text-sm font-medium text-foreground">{fmt(item.price)} × {item.quantity}</p>
+                  {unavailableItems.includes(item.tierId) && (
+                    <p className="text-xs text-destructive mt-1">Disponibilidade insuficiente — remova ou reduza a quantidade</p>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <select

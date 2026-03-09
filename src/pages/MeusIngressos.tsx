@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { SEOHead } from "@/components/SEOHead";
-import { Ticket, Calendar, MapPin, QrCode, Send, Clock, Search, Archive, Download, Repeat, XCircle } from "lucide-react";
+import { Ticket, Calendar, MapPin, QrCode, Send, Clock, Search, Archive, Download, Repeat, XCircle, CalendarPlus, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,12 +11,14 @@ import { ResaleListingModal } from "@/components/ResaleListingModal";
 import { EmptyState } from "@/components/EmptyState";
 import { useAuth } from "@/contexts/AuthContext";
 import { getMyTickets } from "@/lib/api";
+import { supabase } from "@/integrations/supabase/client";
 import { cancelResaleListing, getMyResaleListings } from "@/lib/api-resale";
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { normalizeText } from "@/lib/search";
 import { useToast } from "@/hooks/use-toast";
+import { generateGoogleCalendarUrl } from "@/lib/calendar";
 
 type TabId = "active" | "pending" | "cancelled" | "past" | "archived";
 
@@ -274,6 +276,52 @@ export default function MeusIngressos() {
               }}
             >
               <Download className="h-4 w-4" /> Baixar
+            </Button>
+          )}
+          {ticket.status === "active" && ticket.events?.start_date && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-muted-foreground"
+              onClick={() => {
+                const ev = ticket.events;
+                if (!ev) return;
+                const location = [ev.venue_name, ev.venue_city].filter(Boolean).join(", ");
+                const url = generateGoogleCalendarUrl({
+                  title: ev.title,
+                  startDate: ev.start_date,
+                  endDate: ev.start_date, // fallback
+                  location,
+                });
+                window.open(url, "_blank");
+              }}
+            >
+              <CalendarPlus className="h-4 w-4" /> Calendário
+            </Button>
+          )}
+          {ticket.status === "active" && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-muted-foreground"
+              onClick={async () => {
+                try {
+                  await supabase.functions.invoke("send-ticket-email", {
+                    body: {
+                      ticketId: ticket.id,
+                      recipientEmail: ticket.attendee_email || user?.email,
+                      eventTitle: ticket.events?.title,
+                      tierName: ticket.ticket_tiers?.name,
+                      qrCode: ticket.qr_code,
+                    },
+                  });
+                  toast({ title: "E-mail enviado!", description: "Verifique sua caixa de entrada." });
+                } catch {
+                  toast({ title: "Erro ao enviar", variant: "destructive" });
+                }
+              }}
+            >
+              <Mail className="h-4 w-4" /> Reenviar
             </Button>
           )}
           {isTransferable && !isForResale && (

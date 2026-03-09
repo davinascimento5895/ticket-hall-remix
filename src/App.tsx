@@ -21,6 +21,7 @@ import EventDetail from "./pages/EventDetail";
 import Carrinho from "./pages/Carrinho";
 import Checkout from "./pages/Checkout";
 import MeusIngressos from "./pages/MeusIngressos";
+import MeusPedidos from "./pages/MeusPedidos";
 import PublicCheckin from "./pages/PublicCheckin";
 import OrganizerProfile from "./pages/OrganizerProfile";
 import EmbedWidget from "./pages/EmbedWidget";
@@ -119,6 +120,7 @@ const App = () => {
                 <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
                 <Route path="/pedido/:orderId" element={<ProtectedRoute><PedidoRecuperacao /></ProtectedRoute>} />
                 <Route path="/meus-ingressos" element={<ProtectedRoute><MeusIngressos /></ProtectedRoute>} />
+                <Route path="/meus-pedidos" element={<ProtectedRoute><MeusPedidos /></ProtectedRoute>} />
                 <Route path="/organizador/:slug" element={<OrganizerProfile />} />
                 <Route path="/minha-conta/privacidade" element={<ProtectedRoute><Privacidade /></ProtectedRoute>} />
                 <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
