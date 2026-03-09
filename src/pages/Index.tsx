@@ -240,7 +240,7 @@ export default function Index() {
       <CityCarousel className="bg-secondary/30" />
 
       {/* ===== CTA PRODUTOR ===== */}
-      <section className="py-16 md:py-24">
+      <section className="py-16 lg:py-24">
         <div className="container text-center space-y-6">
           <h2 className="font-display text-2xl md:text-3xl font-bold">É produtor de eventos?</h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
