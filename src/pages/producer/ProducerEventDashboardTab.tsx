@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { DollarSign, Ticket, Clock, TrendingUp, CreditCard, Download, Users } from "lucide-react";
+import { DollarSign, Ticket, Clock, TrendingUp, CreditCard, Download, Users, UserCheck, UserX, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
