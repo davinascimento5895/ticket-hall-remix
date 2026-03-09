@@ -202,7 +202,7 @@ export default function Index() {
                   date={format(new Date(event.start_date), "dd MMM yyyy · HH'h'mm", { locale: ptBR })}
                   city={event.venue_city || "Online"}
                   imageUrl={event.cover_image_url || "/placeholder.svg"}
-                  priceFrom={0}
+                  priceFrom={event.min_price ?? 0}
                   category={event.category}
                   slug={event.slug}
                 />
