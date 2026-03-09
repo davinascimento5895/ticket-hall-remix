@@ -178,9 +178,6 @@ export default function Produtores() {
     if (role === "producer") {
       return { label: "Acessar painel", icon: ArrowRight };
     }
-    if (profile?.producer_status === "pending") {
-      return { label: "Aguardando aprovação", icon: Clock, disabled: true };
-    }
     return { label: "Criar minha conta de produtor", icon: null };
   };
 
