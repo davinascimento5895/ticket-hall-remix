@@ -29,6 +29,7 @@ export default function ProducerInterestLists() {
     queryKey: ["interest-lists", user?.id],
     queryFn: () => getProducerLists(user!.id),
     enabled: !!user?.id,
+    staleTime: 30_000,
   });
 
   const deleteMut = useMutation({

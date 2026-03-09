@@ -10,6 +10,7 @@ export default function ProducerCashFlow({ producerId }: { producerId: string })
   const { data, isLoading } = useQuery({
     queryKey: ["cash-flow", producerId],
     queryFn: () => getCashFlowSummary(producerId),
+    staleTime: 30_000,
   });
 
   if (isLoading) {

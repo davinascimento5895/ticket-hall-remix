@@ -40,6 +40,7 @@ export default function ProducerEventPanel() {
       return data;
     },
     enabled: !!id,
+    staleTime: 30_000,
   });
 
   // Determine active tab from URL

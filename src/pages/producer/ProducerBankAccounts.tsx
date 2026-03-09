@@ -28,6 +28,7 @@ export default function ProducerBankAccounts({ producerId }: { producerId: strin
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ["bank-accounts", producerId],
     queryFn: () => getBankAccounts(producerId),
+    staleTime: 30_000,
   });
 
   const createMut = useMutation({
