@@ -1,12 +1,23 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Star, StarOff, Ban, Percent } from "lucide-react";
+import { Search, Star, StarOff, Percent, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { getAllEvents, adminUpdateEvent } from "@/lib/api-admin";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { getAllEvents, adminUpdateEvent, adminDeleteEvent } from "@/lib/api-admin";
 import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -29,15 +40,7 @@ function FeeEditor({ eventId, currentFee, onSave }: { eventId: string; currentFe
         <div className="space-y-3">
           <p className="text-xs font-medium text-foreground">Taxa da plataforma</p>
           <div className="flex items-center gap-2">
-            <Input
-              type="number"
-              min={0}
-              max={30}
-              step={0.5}
-              value={fee}
-              onChange={(e) => setFee(parseFloat(e.target.value) || 0)}
-              className="h-8 text-sm"
-            />
+            <Input type="number" min={0} max={30} step={0.5} value={fee} onChange={(e) => setFee(parseFloat(e.target.value) || 0)} className="h-8 text-sm" />
             <span className="text-sm text-muted-foreground">%</span>
           </div>
           <p className="text-[10px] text-muted-foreground">Eventos gratuitos ignoram esta taxa.</p>
@@ -66,6 +69,15 @@ export default function AdminEvents() {
   const updateMutation = useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: Record<string, any> }) => adminUpdateEvent(id, updates),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["admin-events"] }); toast({ title: "Evento atualizado!" }); },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => adminDeleteEvent(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-events"] });
+      toast({ title: "Evento removido com sucesso." });
+    },
+    onError: (err: any) => toast({ title: "Erro ao remover", description: err.message, variant: "destructive" }),
   });
 
   const handleFeeUpdate = (id: string, fee: number) => {
@@ -134,11 +146,30 @@ export default function AdminEvents() {
                         </button>
                       </td>
                       <td className="p-3">
-                        {event.status !== "cancelled" && (
-                          <Button variant="ghost" size="sm" className="text-destructive" onClick={() => updateMutation.mutate({ id: event.id, updates: { status: "cancelled" } })}>
-                            <Ban className="h-4 w-4 mr-1" />Cancelar
-                          </Button>
-                        )}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                              <Trash2 className="h-4 w-4 mr-1" />Remover
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Remover evento?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Tem certeza que deseja remover <strong>"{event.title}"</strong>? Esta ação não pode ser desfeita e todos os dados relacionados serão perdidos.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => deleteMutation.mutate(event.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Remover
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </td>
                     </tr>
                   ))}
