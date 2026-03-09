@@ -147,6 +147,9 @@ export default function Index() {
         </div>
       </section>
 
+      {/* ===== CATEGORY CAROUSEL ===== */}
+      <CategoryCarousel className="bg-secondary/30" />
+
       {/* ===== FEATURED EVENTS ===== */}
       <section className="py-16 md:py-24">
         <div className="container">

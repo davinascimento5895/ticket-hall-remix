@@ -19,6 +19,7 @@ import { TaxesFeesManager } from "@/components/producer/TaxesFeesManager";
 import { CapacityGroupsManager } from "@/components/producer/CapacityGroupsManager";
 import { EventProductsManager } from "@/components/producer/EventProductsManager";
 import { getCapacityGroups } from "@/lib/api-checkout";
+import { EVENT_CATEGORIES } from "@/lib/categories";
 
 const stepLabels = ["Informações", "Local", "Ingressos", "Formulário", "Produtos", "Configurações", "Revisão"];
 
