@@ -9,7 +9,7 @@ import { EventCard } from "@/components/EventCard";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { SEOHead } from "@/components/SEOHead";
-import { SearchBar } from "@/components/SearchBar";
+
 import { getEvents } from "@/lib/api";
 import { RandomDiscoveryButton } from "@/components/RandomDiscoveryButton";
 import { useCityDetection } from "@/hooks/useCityDetection";
