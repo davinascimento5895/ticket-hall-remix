@@ -146,6 +146,7 @@ export default function ProducerEventForm() {
       name: "", tier_type: "paid", price: 0, quantity_total: 100, description: "",
       min_per_order: 1, max_per_order: 10, is_transferable: true,
       capacity_group_id: null, is_hidden_by_default: false, unlock_code: "",
+      sector_color: SECTOR_COLORS[prev.length % SECTOR_COLORS.length],
     }]);
   };
 
