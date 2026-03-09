@@ -210,7 +210,7 @@ export function CalculadoraComparador() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5">
       {/* Inputs - more compact */}
       <div className="rounded-xl border border-border bg-card p-4 md:p-6 space-y-4">
         <div className="grid md:grid-cols-2 gap-4">
