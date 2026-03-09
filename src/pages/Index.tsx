@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/EventCard";
 import { CategoryCarousel } from "@/components/CategoryCarousel";
+import { CityCarousel } from "@/components/CityCarousel";
 import { Spotlight } from "@/components/core/spotlight";
 import { WordRotate } from "@/components/ui/word-rotate";
 import { motion } from "framer-motion";
@@ -222,6 +223,9 @@ export default function Index() {
           </div>
         </div>
       </section>
+
+      {/* ===== CITY CAROUSEL ===== */}
+      <CityCarousel className="bg-secondary/30" />
 
       {/* ===== CTA PRODUTOR ===== */}
       <section className="py-16 md:py-24">

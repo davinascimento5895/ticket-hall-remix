@@ -21,10 +21,19 @@ export default function Eventos() {
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>(searchParams.get("categoria") || "");
+  const [cityFilter, setCityFilter] = useState<string>(searchParams.get("cidade") || "");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [gridView, setGridView] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const { city, loading: cityLoading, requestLocation } = useCityDetection();
+
+  // Sync URL params on mount
+  useEffect(() => {
+    const cat = searchParams.get("categoria");
+    const cid = searchParams.get("cidade");
+    if (cat) setCategory(cat);
+    if (cid) setCityFilter(cid);
+  }, [searchParams]);
 
   const [timer, setTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const handleSearch = (value: string) => {
@@ -35,11 +44,12 @@ export default function Eventos() {
   };
 
   const { data: events, isLoading } = useQuery({
-    queryKey: ["events", debouncedSearch, category],
+    queryKey: ["events", debouncedSearch, category, cityFilter],
     queryFn: () =>
       getEvents({
         search: debouncedSearch || undefined,
         category: category || undefined,
+        city: cityFilter || undefined,
         limit: 30,
       }),
   });
@@ -69,11 +79,12 @@ export default function Eventos() {
     return filteredEvents.filter((e: any) => e.id !== featuredEvent.id);
   }, [filteredEvents, featuredEvent]);
 
-  const hasActiveFilters = category || selectedDate;
+  const hasActiveFilters = category || selectedDate || cityFilter;
 
   const clearFilters = () => {
     setCategory("");
     setSelectedDate(null);
+    setCityFilter("");
   };
 
   return (
@@ -154,8 +165,17 @@ export default function Eventos() {
           ))}
         </div>
 
+        {/* City filter indicator */}
+        {cityFilter && (
+          <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
+            <MapPin className="h-3.5 w-3.5 text-primary" />
+            <span>Eventos em <span className="text-foreground font-medium">{cityFilter}</span></span>
+            <button onClick={() => setCityFilter("")} className="text-xs underline ml-1">Limpar</button>
+          </div>
+        )}
+
         {/* City detection bar */}
-        {!city && (
+        {!city && !cityFilter && (
           <button
             onClick={requestLocation}
             disabled={cityLoading}
@@ -165,7 +185,7 @@ export default function Eventos() {
             {cityLoading ? "Detectando..." : "Usar minha localização para filtrar eventos"}
           </button>
         )}
-        {city && (
+        {city && !cityFilter && (
           <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
             <MapPin className="h-3.5 w-3.5 text-primary" />
             <span>Eventos em <span className="text-foreground font-medium">{city}</span></span>

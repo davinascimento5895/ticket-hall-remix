@@ -33,6 +33,7 @@ import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Changelog from "./pages/Changelog";
 import NotificacoesConfig from "./pages/NotificacoesConfig";
+import Cidades from "./pages/Cidades";
 import NotFound from "./pages/NotFound";
 
 // Producer pages — lazy loaded
@@ -97,6 +98,7 @@ const App = () => {
                 <Route path="/changelog" element={<Changelog />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/blog/:slug" element={<BlogPost />} />
+                <Route path="/cidades" element={<Cidades />} />
                 <Route path="/notificacoes" element={<NotificacoesConfig />} />
               </Route>
 
