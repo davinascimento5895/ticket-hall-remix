@@ -26,6 +26,8 @@ interface SearchResultEvent {
   cover_image_url: string | null;
   is_featured: boolean | null;
   views_count: number | null;
+  min_price: number | null;
+  has_discount: boolean;
 }
 
 function getTimeOfDay(dateStr: string): string {
