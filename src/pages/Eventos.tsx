@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
 import { Search, X, LayoutGrid, List, Ticket, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -43,16 +44,34 @@ export default function Eventos() {
     setTimer(t);
   };
 
-  const { data: events, isLoading } = useQuery({
+  const { data: rawEvents, isLoading } = useQuery({
     queryKey: ["events", debouncedSearch, category, cityFilter],
-    queryFn: () =>
-      getEvents({
+    queryFn: async () => {
+      const evts = await getEvents({
         search: debouncedSearch || undefined,
         category: category || undefined,
         city: cityFilter || undefined,
         limit: 30,
-      }),
+      });
+      // Fetch min prices for all events
+      if (!evts || evts.length === 0) return [];
+      const eventIds = evts.map((e: any) => e.id);
+      const { data: tiers } = await supabase
+        .from("ticket_tiers")
+        .select("event_id, price")
+        .in("event_id", eventIds)
+        .eq("is_visible", true);
+      const minPriceMap: Record<string, number> = {};
+      (tiers || []).forEach((t: any) => {
+        const p = t.price ?? 0;
+        if (!(t.event_id in minPriceMap) || p < minPriceMap[t.event_id]) {
+          minPriceMap[t.event_id] = p;
+        }
+      });
+      return evts.map((e: any) => ({ ...e, _minPrice: minPriceMap[e.id] ?? 0 }));
+    },
   });
+  const events = rawEvents;
 
   // Generate 14 days for date selector
   const today = startOfToday();
@@ -94,7 +113,7 @@ export default function Eventos() {
         description="Encontre os melhores eventos, shows, festivais e experiências perto de você. Compre ingressos com segurança no TicketHall."
       />
 
-      <div className="container pt-24 pb-16">
+      <div className="container pt-4 md:pt-24 pb-16">
         {/* Global Search bar */}
         <div className="mb-6">
           <SearchBar 
@@ -281,7 +300,7 @@ export default function Eventos() {
                   })}
                   city={event.venue_city || "Online"}
                   imageUrl={event.cover_image_url || "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=600&q=80"}
-                  priceFrom={0}
+                  priceFrom={event._minPrice ?? 0}
                   category={event.category}
                   slug={event.slug}
                 />

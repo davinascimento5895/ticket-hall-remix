@@ -26,6 +26,8 @@ interface SearchResultEvent {
   cover_image_url: string | null;
   is_featured: boolean | null;
   views_count: number | null;
+  min_price: number | null;
+  has_discount: boolean;
 }
 
 function getTimeOfDay(dateStr: string): string {
@@ -51,7 +53,7 @@ export default function Busca() {
       try {
         let q = supabase
           .from("events")
-          .select("id, title, slug, venue_city, category, start_date, cover_image_url, is_featured, views_count")
+          .select("id, title, slug, venue_city, category, start_date, cover_image_url, is_featured, views_count, ticket_tiers(price, original_price)")
           .eq("status", "published")
           .gte("end_date", new Date().toISOString())
           .order("start_date", { ascending: true })
@@ -66,7 +68,17 @@ export default function Busca() {
         const { data, error } = await q;
         if (error) throw error;
 
-        let results = data || [];
+        let rawResults = data || [];
+
+        // Compute min_price and has_discount from tiers
+        let results: SearchResultEvent[] = rawResults.map((e: any) => {
+          const tiers = e.ticket_tiers || [];
+          const prices = tiers.map((t: any) => t.price ?? 0);
+          const minPrice = prices.length > 0 ? Math.min(...prices) : null;
+          const hasDiscount = tiers.some((t: any) => t.original_price != null && t.original_price > (t.price ?? 0));
+          const { ticket_tiers, ...rest } = e;
+          return { ...rest, min_price: minPrice, has_discount: hasDiscount };
+        });
 
         // Fuzzy filter only when there's a query
         if (query.trim()) {
@@ -104,8 +116,15 @@ export default function Busca() {
       result = result.filter((e) => e.venue_city === filters.city);
     }
 
-    // Price (we don't have price in the query, but we filter what we can)
-    // Price filtering would need ticket_tiers join — skip for now, presets are UX placeholders
+    // Price filter (using min_price from tiers)
+    if (filters.priceMax) {
+      const max = Number(filters.priceMax);
+      result = result.filter((e) => e.min_price !== null && e.min_price <= max);
+    }
+    if (filters.priceMin) {
+      const min = Number(filters.priceMin);
+      result = result.filter((e) => e.min_price !== null && e.min_price >= min);
+    }
 
     // Time of day
     if (filters.timeOfDay && filters.timeOfDay !== "all") {
@@ -116,10 +135,10 @@ export default function Busca() {
     if (filters.sort === "popular") {
       result.sort((a, b) => (b.views_count || 0) - (a.views_count || 0));
     } else if (filters.sort === "deals") {
-      // Prioritize "deals" category
+      // Prioritize events with real discounts (original_price > price)
       result.sort((a, b) => {
-        const aDeals = a.category === "deals" ? 1 : 0;
-        const bDeals = b.category === "deals" ? 1 : 0;
+        const aDeals = a.has_discount ? 1 : 0;
+        const bDeals = b.has_discount ? 1 : 0;
         return bDeals - aDeals;
       });
     }
@@ -261,7 +280,7 @@ export default function Busca() {
                         })}
                         city={event.venue_city || "Online"}
                         imageUrl={event.cover_image_url || "/placeholder.svg"}
-                        priceFrom={0}
+                        priceFrom={event.min_price ?? 0}
                         category={event.category || undefined}
                         slug={event.slug}
                       />

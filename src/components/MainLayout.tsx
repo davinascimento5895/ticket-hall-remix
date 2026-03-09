@@ -13,7 +13,6 @@ const loggedInPaths = [
   "/eventos",
   "/busca",
   "/cidades",
-  "/evento/",
 ];
 
 export function MainLayout() {

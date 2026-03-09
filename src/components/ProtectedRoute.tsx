@@ -31,7 +31,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     const redirectMap = {
       admin: "/admin/dashboard",
       producer: "/producer/dashboard",
-      buyer: "/meus-ingressos",
+      buyer: "/eventos",
     };
     return <Navigate to={redirectMap[role] || "/"} replace />;
   }
