@@ -353,6 +353,32 @@ export default function ProducerEventForm() {
                       <Input value={tier.unlock_code} onChange={(e) => updateTier(i, "unlock_code", e.target.value)} placeholder="Ex: VIP2025" maxLength={50} />
                     </div>
                   )}
+
+                  {/* Sector color picker - only when seat map is active */}
+                  {form.has_seat_map && (
+                    <div className="flex items-center gap-3">
+                      <Label className="text-xs whitespace-nowrap">Cor do setor</Label>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {SECTOR_COLORS.map((color) => (
+                          <button
+                            key={color}
+                            type="button"
+                            onClick={() => updateTier(i, "sector_color", color)}
+                            className={`w-6 h-6 rounded-full border-2 transition-all ${tier.sector_color === color ? "border-foreground scale-110 ring-2 ring-primary/30" : "border-transparent hover:scale-105"}`}
+                            style={{ backgroundColor: color }}
+                            title={color}
+                          />
+                        ))}
+                        <input
+                          type="color"
+                          value={tier.sector_color || "#3182CE"}
+                          onChange={(e) => updateTier(i, "sector_color", e.target.value)}
+                          className="w-6 h-6 rounded cursor-pointer border-0 p-0"
+                          title="Cor personalizada"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </CardContent>
