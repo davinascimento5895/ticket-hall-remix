@@ -170,7 +170,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const platformFee = subtotal === 0 ? 0 : items.reduce((sum, i) => {
+  const platformFee = (subtotal === 0 || discount >= subtotal) ? 0 : items.reduce((sum, i) => {
     const feePercent = i.platformFeePercent ?? config.platformFeePercent;
     return sum + (i.price * i.quantity * feePercent / 100);
   }, 0);

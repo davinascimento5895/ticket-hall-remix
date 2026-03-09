@@ -113,9 +113,14 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login", redirectTo
   };
 
   const handleSocialLogin = async (provider: "google" | "apple" | "facebook") => {
+    // Save redirect destination before OAuth flow
+    const dest = redirectTo || (location.state as any)?.from?.pathname;
+    if (dest) {
+      sessionStorage.setItem("auth_redirect_to", dest);
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
     if (error) {
       toast({ title: "Erro ao entrar", description: error.message, variant: "destructive" });

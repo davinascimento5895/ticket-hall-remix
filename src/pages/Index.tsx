@@ -203,6 +203,7 @@ export default function Index() {
                   priceFrom={event.min_price ?? 0}
                   category={event.category}
                   slug={event.slug}
+                  eventId={event.id}
                 />
               ))}
             </div>
