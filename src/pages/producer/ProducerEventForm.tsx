@@ -404,11 +404,32 @@ export default function ProducerEventForm() {
 
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-sm">Mapa de assentos</Label>
-                <p className="text-xs text-muted-foreground">Permite selecionar assentos numerados</p>
+                <Label className="text-sm">Mapa de setores</Label>
+                <p className="text-xs text-muted-foreground">Upload de imagem do mapa com setores coloridos</p>
               </div>
               <Switch checked={form.has_seat_map} onCheckedChange={(v) => updateField("has_seat_map", v)} />
             </div>
+            {form.has_seat_map && (
+              <div className="space-y-3 pl-4 border-l-2 border-primary/20">
+                <div>
+                  <Label className="text-xs">Imagem do mapa de setores</Label>
+                  <p className="text-xs text-muted-foreground mb-1">Envie uma imagem (PNG/JPG) com o layout do evento mostrando os setores.</p>
+                  {seatMapImageUrl && (
+                    <img src={seatMapImageUrl} alt="Mapa de setores" className="w-full max-h-48 object-contain rounded-lg border border-border mb-2 bg-muted/30" />
+                  )}
+                  <Input type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setSeatMapFile(file);
+                      setSeatMapImageUrl(URL.createObjectURL(file));
+                    }
+                  }} />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  💡 Defina a cor de cada setor no lote correspondente (etapa "Ingressos").
+                </p>
+              </div>
+            )}
 
             <div className="flex items-center justify-between">
               <div>
