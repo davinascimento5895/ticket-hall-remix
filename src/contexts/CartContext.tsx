@@ -34,6 +34,8 @@ interface CartContextType {
   appliedCouponId: string | null;
   setAppliedCouponId: (id: string | null) => void;
   finalTotal: number;
+  trackingCode: string | null;
+  setTrackingCode: (code: string | null) => void;
 }
 
 const CART_KEY = "tickethall_cart";
