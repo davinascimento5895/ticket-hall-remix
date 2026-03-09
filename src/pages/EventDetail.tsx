@@ -322,6 +322,8 @@ export default function EventDetail() {
                                 tierId: `product-${p.id}`, eventId: event.id,
                                 tierName: p.name, eventTitle: event.title,
                                 eventSlug: event.slug, price: p.price, quantity: 1,
+                                platformFeePercent: event.platform_fee_percent ?? 7,
+                                maxPerOrder: p.max_per_order ?? 10,
                               });
                               toast({ title: "Produto adicionado ao carrinho" });
                             }}>
@@ -373,7 +375,7 @@ export default function EventDetail() {
                     </span>
                   </p>
                   <Button className="w-full" onClick={() => setBookingOpen(true)}>
-                    Comprar ingresso
+                    {lowestPrice === 0 ? "Inscrever-se" : "Comprar ingresso"}
                   </Button>
                 </>
               ) : (
@@ -397,7 +399,7 @@ export default function EventDetail() {
             </p>
           </div>
           <Button onClick={() => setBookingOpen(true)}>
-            Comprar ingresso
+            {lowestPrice === 0 ? "Inscrever-se" : "Comprar ingresso"}
           </Button>
         </div>
       </div>

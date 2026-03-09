@@ -68,27 +68,6 @@ export async function getEventTiers(eventId: string) {
 }
 
 // ============================================================
-// ORDERS
-// ============================================================
-
-/** Create an order */
-export async function createOrder(order: {
-  buyer_id: string;
-  event_id: string;
-  subtotal: number;
-  platform_fee: number;
-  total: number;
-  expires_at?: string;
-}) {
-  // PAYMENT_INTEGRATION_POINT — integrate with Pagar.me / Mercado Pago / Stripe
-  const { data, error } = await supabase
-    .from("orders")
-    .insert(order)
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
-}
 
 /** Get user's orders */
 export async function getMyOrders(userId: string) {
