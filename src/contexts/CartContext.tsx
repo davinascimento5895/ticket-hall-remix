@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { config } from "@/lib/config";
+import { toast } from "@/hooks/use-toast";
 
 export interface CartItem {
   tierId: string;
