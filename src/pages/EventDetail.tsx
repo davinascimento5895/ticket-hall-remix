@@ -399,7 +399,7 @@ export default function EventDetail() {
             </p>
           </div>
           <Button onClick={() => setBookingOpen(true)}>
-            Comprar ingresso
+            {lowestPrice === 0 ? "Inscrever-se" : "Comprar ingresso"}
           </Button>
         </div>
       </div>
