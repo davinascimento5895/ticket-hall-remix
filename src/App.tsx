@@ -38,6 +38,7 @@ import Busca from "./pages/Busca";
 import MeuPerfil from "./pages/MeuPerfil";
 import EditarPerfil from "./pages/EditarPerfil";
 import AlterarSenha from "./pages/AlterarSenha";
+import ResetPassword from "./pages/ResetPassword";
 import PerfilCidade from "./pages/PerfilCidade";
 import MetodosPagamento from "./pages/MetodosPagamento";
 import PerfilNotificacoes from "./pages/PerfilNotificacoes";
@@ -138,6 +139,7 @@ const App = () => {
 
               {/* Standalone pages (no shared Navbar/Footer) */}
               <Route path="/checkin/:accessCode" element={<PublicCheckin />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/embed" element={<EmbedWidget />} />
               <Route path="/lista/:slug" element={<InterestListPublic />} />
               <Route path="/auth/callback" element={<AuthCallback />} />

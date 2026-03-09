@@ -253,23 +253,3 @@ export async function manageQueue(action: string, eventId: string, userId: strin
   return data;
 }
 
-// ============================================================
-// AFFILIATE TRACKING
-// ============================================================
-
-/** Track an affiliate click by incrementing the click counter */
-export async function trackAffiliateClick(eventId: string, code: string) {
-  const { data } = await supabase
-    .from("affiliates")
-    .select("id, clicks")
-    .eq("event_id", eventId)
-    .eq("code", code)
-    .eq("is_active", true)
-    .single();
-  if (data) {
-    await supabase
-      .from("affiliates")
-      .update({ clicks: (data.clicks || 0) + 1 })
-      .eq("id", data.id);
-  }
-}
