@@ -27,7 +27,6 @@ export default function EventDetail() {
   const { slug } = useParams<{ slug: string }>();
   const [searchParams] = useSearchParams();
   const [unlockCode, setUnlockCode] = useState("");
-  const [revealedCodes, setRevealedCodes] = useState<string[]>([]);
   const [showUnlockInput, setShowUnlockInput] = useState(false);
   const [activeSection, setActiveSection] = useState<"description" | "tickets" | "venue">("description");
   const [bookingOpen, setBookingOpen] = useState(false);
