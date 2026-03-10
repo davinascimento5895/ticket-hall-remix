@@ -2471,6 +2471,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_event_views: {
+        Args: { p_event_id: string }
+        Returns: undefined
+      }
+      increment_promoter_clicks: {
+        Args: { p_promoter_event_id: string }
+        Returns: undefined
+      }
       purchase_resale_atomic: {
         Args: {
           p_buyer_email: string
@@ -2484,6 +2492,10 @@ export type Database = {
       reserve_tickets: {
         Args: { p_order_id: string; p_quantity: number; p_tier_id: string }
         Returns: boolean
+      }
+      validate_unlock_code: {
+        Args: { p_code: string; p_event_id: string }
+        Returns: string[]
       }
     }
     Enums: {
