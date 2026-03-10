@@ -34,7 +34,6 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "order_id required" }), { status: 400, headers: corsHeaders });
     }
 
-    // Fetch order with relations
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -42,12 +41,21 @@ Deno.serve(async (req) => {
 
     const { data: order, error: orderErr } = await adminClient
       .from("orders")
-      .select("*, events(title, venue_name, venue_city, start_date), profiles!orders_buyer_id_fkey(full_name, cpf)")
+      .select("*, events(title, venue_name, venue_city, start_date, producer_id), profiles!orders_buyer_id_fkey(full_name, cpf)")
       .eq("id", order_id)
       .single();
 
     if (orderErr || !order) {
       return new Response(JSON.stringify({ error: "Order not found" }), { status: 404, headers: corsHeaders });
+    }
+
+    // C10: Verify ownership — caller must be the buyer, event producer, or admin
+    const isAdmin = await adminClient.from("user_roles").select("id").eq("user_id", callerId).eq("role", "admin").maybeSingle();
+    const isBuyer = order.buyer_id === callerId;
+    const isProducer = (order.events as any)?.producer_id === callerId;
+
+    if (!isBuyer && !isProducer && !isAdmin.data) {
+      return new Response(JSON.stringify({ error: "Not authorized to generate invoice for this order" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Fetch tickets for this order
@@ -56,10 +64,8 @@ Deno.serve(async (req) => {
       .select("id, attendee_name, ticket_tiers(name, price)")
       .eq("order_id", order_id);
 
-    // Generate invoice number
     const invoiceNumber = `TH-${new Date().getFullYear()}-${order_id.slice(0, 8).toUpperCase()}`;
 
-    // Build HTML invoice
     const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
     const ticketRows = (tickets || [])
       .map(
@@ -99,9 +105,9 @@ Deno.serve(async (req) => {
     </div>
     <div style="text-align:right;">
       <h3 style="margin:0 0 8px;font-size:14px;color:#666;text-transform:uppercase;">Evento</h3>
-      <p style="margin:0;font-weight:bold;">${order.events?.title || "—"}</p>
-      <p style="margin:2px 0;color:#666;font-size:14px;">${order.events?.venue_name || ""}${order.events?.venue_city ? ` — ${order.events.venue_city}` : ""}</p>
-      <p style="margin:2px 0;color:#666;font-size:14px;">${order.events?.start_date ? new Date(order.events.start_date).toLocaleDateString("pt-BR") : ""}</p>
+      <p style="margin:0;font-weight:bold;">${(order.events as any)?.title || "—"}</p>
+      <p style="margin:2px 0;color:#666;font-size:14px;">${(order.events as any)?.venue_name || ""}${(order.events as any)?.venue_city ? ` — ${(order.events as any).venue_city}` : ""}</p>
+      <p style="margin:2px 0;color:#666;font-size:14px;">${(order.events as any)?.start_date ? new Date((order.events as any).start_date).toLocaleDateString("pt-BR") : ""}</p>
     </div>
   </div>
 
@@ -144,13 +150,9 @@ Deno.serve(async (req) => {
 </body>
 </html>`;
 
-    // Update order with invoice info
     await adminClient
       .from("orders")
-      .update({
-        invoice_number: invoiceNumber,
-        invoice_issued_at: new Date().toISOString(),
-      })
+      .update({ invoice_number: invoiceNumber, invoice_issued_at: new Date().toISOString() })
       .eq("id", order_id);
 
     return new Response(

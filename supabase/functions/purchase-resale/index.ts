@@ -7,10 +7,7 @@ const corsHeaders = {
 };
 
 function jsonResponse(body: Record<string, unknown>, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+  return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 }
 
 async function createJWT(payload: Record<string, unknown>, secret: string): Promise<string> {
@@ -37,29 +34,30 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const qrSecret = Deno.env.get("QR_SECRET") || "tickethall-dev-secret-change-me";
+    // C05: No fallback
+    const qrSecret = Deno.env.get("QR_SECRET");
+    if (!qrSecret) {
+      throw new Error("QR_SECRET environment variable is not configured");
+    }
 
-    // Validate caller
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return jsonResponse({ error: "Unauthorized" }, 401);
     }
 
+    // M06: Use getUser instead of getClaims
     const supabaseAuth = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claims, error: claimsErr } = await supabaseAuth.auth.getClaims(token);
-    if (claimsErr || !claims?.claims) {
+    const { data: { user }, error: userErr } = await supabaseAuth.auth.getUser();
+    if (userErr || !user) {
       return jsonResponse({ error: "Unauthorized" }, 401);
     }
-    const buyerId = claims.claims.sub as string;
-    const buyerEmail = (claims.claims.email as string) || "";
+    const buyerId = user.id;
+    const buyerEmail = user.email || "";
 
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // Get listing to build QR code before atomic call
     const { data: listing, error: listingErr } = await supabase
       .from("resale_listings")
       .select("ticket_id, event_id")
@@ -71,26 +69,12 @@ serve(async (req) => {
       return jsonResponse({ error: "Anúncio não encontrado ou já vendido" }, 404);
     }
 
-    // Get ticket to build QR payload
-    const { data: ticket } = await supabase
-      .from("tickets")
-      .select("order_id")
-      .eq("id", listing.ticket_id)
-      .single();
+    const { data: ticket } = await supabase.from("tickets").select("order_id").eq("id", listing.ticket_id).single();
 
-    // Generate new QR code
-    const newPayload = {
-      tid: listing.ticket_id,
-      eid: listing.event_id,
-      oid: ticket?.order_id,
-      uid: buyerId,
-      v: 2, // version 2 = resale
-      iat: Math.floor(Date.now() / 1000),
-    };
+    const newPayload = { tid: listing.ticket_id, eid: listing.event_id, oid: ticket?.order_id, uid: buyerId, v: 2, iat: Math.floor(Date.now() / 1000) };
     const newJwt = await createJWT(newPayload, qrSecret);
     const newQrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(newJwt)}`;
 
-    // Call atomic database function (prevents race conditions)
     const { data: result, error: rpcError } = await supabase.rpc("purchase_resale_atomic", {
       p_listing_id: listingId,
       p_buyer_id: buyerId,
@@ -104,25 +88,17 @@ serve(async (req) => {
       return jsonResponse({ error: "Erro ao processar a revenda" }, 500);
     }
 
-    if (result?.error) {
-      return jsonResponse({ error: result.error }, 400);
-    }
+    if (result?.error) return jsonResponse({ error: result.error }, 400);
 
     console.log(`Resale completed: listing ${listingId}, buyer ${buyerId}`);
 
     return jsonResponse({
-      success: true,
-      message: "Ingresso adquirido com sucesso!",
-      ticketId: result.ticketId,
-      total: result.total,
-      platformFee: result.platformFee,
-      sellerReceives: result.sellerReceives,
+      success: true, message: "Ingresso adquirido com sucesso!",
+      ticketId: result.ticketId, total: result.total,
+      platformFee: result.platformFee, sellerReceives: result.sellerReceives,
     });
   } catch (error) {
     console.error("purchase-resale error:", error);
-    return new Response(
-      JSON.stringify({ error: (error as Error).message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ error: (error as Error).message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
