@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { CartItem } from "@/contexts/CartContext";
 import { validateCPF, formatCPF } from "@/lib/validators";
 import { toast } from "@/hooks/use-toast";
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface AttendeeEntry {
   name: string;
@@ -73,18 +74,8 @@ export function CheckoutStepData({
         return (
           <div className="space-y-1">
             {(q.options || []).map((opt: string) => (
-              <label
-                key={opt}
-                className="flex items-center gap-2 text-sm cursor-pointer"
-              >
-                <input
-                  type="radio"
-                  name={key}
-                  value={opt}
-                  checked={value === opt}
-                  onChange={() => onChange(opt)}
-                  className="accent-primary"
-                />
+              <label key={opt} className="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="radio" name={key} value={opt} checked={value === opt} onChange={() => onChange(opt)} className="accent-primary" />
                 <span className="text-foreground">{opt}</span>
               </label>
             ))}
@@ -97,16 +88,11 @@ export function CheckoutStepData({
               const selected = value ? value.split(",") : [];
               const checked = selected.includes(opt);
               return (
-                <label
-                  key={opt}
-                  className="flex items-center gap-2 text-sm cursor-pointer"
-                >
+                <label key={opt} className="flex items-center gap-2 text-sm cursor-pointer">
                   <Checkbox
                     checked={checked}
                     onCheckedChange={(c) => {
-                      const newSel = c
-                        ? [...selected, opt]
-                        : selected.filter((s) => s !== opt);
+                      const newSel = c ? [...selected, opt] : selected.filter((s) => s !== opt);
                       onChange(newSel.join(","));
                     }}
                   />
@@ -117,31 +103,21 @@ export function CheckoutStepData({
           </div>
         );
       case "date":
-        return (
-          <Input
-            type="date"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-          />
-        );
+        return <Input type="date" value={value} onChange={(e) => onChange(e.target.value)} />;
       default:
-        return (
-          <Input
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder="Sua resposta..."
-            maxLength={500}
-          />
-        );
+        return <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder="Sua resposta..." maxLength={500} />;
     }
   };
 
+  // M07: Filter out product items from attendee form
+  const ticketItems = items.filter((item) => !item.tierId.startsWith("product-"));
+
   const handleValidateAndNext = () => {
-    // Validate attendee data
-    for (const item of items) {
+    // Validate attendee data for ticket items only
+    for (const item of ticketItems) {
       for (let qi = 0; qi < item.quantity; qi++) {
         const key = `${item.tierId}-${qi}`;
-        const data = attendeeData[key];
+        const data = attendeeData[key] || { name: "", email: "", cpf: "" };
         if (!data?.name?.trim()) {
           toast({
             title: "Dados incompletos",
@@ -150,7 +126,8 @@ export function CheckoutStepData({
           });
           return;
         }
-        if (!data?.email?.trim() || !data.email.includes("@")) {
+        // M02: Proper email validation
+        if (!data?.email?.trim() || !EMAIL_REGEX.test(data.email)) {
           toast({
             title: "Dados incompletos",
             description: `Preencha um e-mail válido para ${item.tierName} (Ingresso ${qi + 1})`,
@@ -169,20 +146,35 @@ export function CheckoutStepData({
       }
     }
 
-    // Validate required questions
-    const allQuestions = [...orderQuestions, ...attendeeQuestions];
-    for (const q of allQuestions) {
+    // Validate required order-level questions
+    for (const q of orderQuestions) {
       if (q.is_required) {
-        const isOrder = q.applies_to === "order";
-        if (isOrder) {
-          const key = `order-${q.id}`;
-          if (!questionAnswers[key]?.trim()) {
-            toast({
-              title: "Pergunta obrigatória",
-              description: `Responda: "${q.question}"`,
-              variant: "destructive",
-            });
-            return;
+        const key = `order-${q.id}`;
+        if (!questionAnswers[key]?.trim()) {
+          toast({
+            title: "Pergunta obrigatória",
+            description: `Responda: "${q.question}"`,
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+    }
+
+    // A02: Validate required attendee-level questions
+    for (const item of ticketItems) {
+      for (let qi = 0; qi < item.quantity; qi++) {
+        for (const q of attendeeQuestions) {
+          if (q.is_required) {
+            const key = `attendee-${item.tierId}-${qi}-${q.id}`;
+            if (!questionAnswers[key]?.trim()) {
+              toast({
+                title: "Pergunta obrigatória",
+                description: `Responda "${q.question}" para ${item.tierName} (Ingresso ${qi + 1})`,
+                variant: "destructive",
+              });
+              return;
+            }
           }
         }
       }
@@ -193,36 +185,27 @@ export function CheckoutStepData({
 
   return (
     <div className="space-y-6">
-      <h2 className="font-display text-xl font-bold">
-        Dados dos participantes
-      </h2>
+      <h2 className="font-display text-xl font-bold">Dados dos participantes</h2>
 
       {orderQuestions.length > 0 && (
         <div className="p-4 rounded-lg border border-border bg-card space-y-3">
-          <p className="text-sm font-medium text-muted-foreground">
-            Informações do pedido
-          </p>
+          <p className="text-sm font-medium text-muted-foreground">Informações do pedido</p>
           {orderQuestions.map((q: any) => (
             <div key={q.id}>
-              <Label className="text-xs">
-                {q.question}
-                {q.is_required ? " *" : ""}
-              </Label>
+              <Label className="text-xs">{q.question}{q.is_required ? " *" : ""}</Label>
               {renderQuestionField(q, `order-${q.id}`)}
             </div>
           ))}
         </div>
       )}
 
-      {items.map((item) =>
+      {/* Only render attendee forms for ticket items (not products) */}
+      {ticketItems.map((item) =>
         Array.from({ length: item.quantity }).map((_, qi) => {
           const key = `${item.tierId}-${qi}`;
           const data = attendeeData[key] || { name: "", email: "", cpf: "" };
           return (
-            <div
-              key={key}
-              className="p-4 rounded-lg border border-border bg-card space-y-3"
-            >
+            <div key={key} className="p-4 rounded-lg border border-border bg-card space-y-3">
               <p className="text-sm font-medium text-muted-foreground">
                 {item.eventTitle} — {item.tierName} (Ingresso {qi + 1})
               </p>
@@ -231,12 +214,7 @@ export function CheckoutStepData({
                   <Label className="text-xs">Nome completo *</Label>
                   <Input
                     value={data.name}
-                    onChange={(e) =>
-                      setAttendeeData((p) => ({
-                        ...p,
-                        [key]: { ...data, name: e.target.value },
-                      }))
-                    }
+                    onChange={(e) => setAttendeeData((p) => ({ ...p, [key]: { ...data, name: e.target.value } }))}
                     placeholder="Nome do participante"
                   />
                 </div>
@@ -245,12 +223,7 @@ export function CheckoutStepData({
                   <Input
                     type="email"
                     value={data.email}
-                    onChange={(e) =>
-                      setAttendeeData((p) => ({
-                        ...p,
-                        [key]: { ...data, email: e.target.value },
-                      }))
-                    }
+                    onChange={(e) => setAttendeeData((p) => ({ ...p, [key]: { ...data, email: e.target.value } }))}
                     placeholder="email@exemplo.com"
                   />
                 </div>
@@ -258,12 +231,7 @@ export function CheckoutStepData({
                   <Label className="text-xs">CPF (opcional)</Label>
                   <Input
                     value={data.cpf}
-                    onChange={(e) =>
-                      setAttendeeData((p) => ({
-                        ...p,
-                        [key]: { ...data, cpf: formatCPF(e.target.value) },
-                      }))
-                    }
+                    onChange={(e) => setAttendeeData((p) => ({ ...p, [key]: { ...data, cpf: formatCPF(e.target.value) } }))}
                     placeholder="000.000.000-00"
                     maxLength={14}
                   />
@@ -274,10 +242,7 @@ export function CheckoutStepData({
                 <div className="space-y-3 pt-2 border-t border-border">
                   {attendeeQuestions.map((q: any) => (
                     <div key={q.id}>
-                      <Label className="text-xs">
-                        {q.question}
-                        {q.is_required ? " *" : ""}
-                      </Label>
+                      <Label className="text-xs">{q.question}{q.is_required ? " *" : ""}</Label>
                       {renderQuestionField(q, `attendee-${key}-${q.id}`)}
                     </div>
                   ))}

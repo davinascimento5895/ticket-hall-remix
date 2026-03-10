@@ -27,7 +27,6 @@ export default function EventDetail() {
   const { slug } = useParams<{ slug: string }>();
   const [searchParams] = useSearchParams();
   const [unlockCode, setUnlockCode] = useState("");
-  const [revealedCodes, setRevealedCodes] = useState<string[]>([]);
   const [showUnlockInput, setShowUnlockInput] = useState(false);
   const [activeSection, setActiveSection] = useState<"description" | "tickets" | "venue">("description");
   const [bookingOpen, setBookingOpen] = useState(false);
@@ -40,30 +39,24 @@ export default function EventDetail() {
 
   const { setTrackingCode } = useCart();
 
-  // Track promoter click from ?ref=CODE
+  // Track promoter click from ?ref=CODE (M03: atomic increment)
   useEffect(() => {
     const ref = searchParams.get("ref");
     if (!ref || !event?.id) return;
     const trackedKey = `promoter_tracked_${event.id}_${ref}`;
     if (sessionStorage.getItem(trackedKey)) return;
     sessionStorage.setItem(trackedKey, "1");
-    // Save tracking code for the promoter system
     setTrackingCode(ref);
-    // Increment clicks on promoter_events
     supabase
       .from("promoter_events")
-      .select("id, clicks")
+      .select("id")
       .eq("tracking_code", ref)
       .eq("event_id", event.id)
       .eq("is_active", true)
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
-          supabase
-            .from("promoter_events")
-            .update({ clicks: (data.clicks || 0) + 1 })
-            .eq("id", data.id)
-            .then(() => {});
+          supabase.rpc("increment_promoter_clicks", { p_promoter_event_id: data.id }).then(() => {});
         }
       });
   }, [event?.id, searchParams, setTrackingCode]);
@@ -111,40 +104,43 @@ export default function EventDetail() {
     enabled: !!event?.id,
   });
 
-  // Increment views_count once per session per event
+  // M03: Atomic increment views_count once per session per event
   useEffect(() => {
     if (!event?.id) return;
     const viewedKey = `event_viewed_${event.id}`;
     if (sessionStorage.getItem(viewedKey)) return;
     sessionStorage.setItem(viewedKey, "1");
-    supabase
-      .from("events")
-      .update({ views_count: (event.views_count ?? 0) + 1 })
-      .eq("id", event.id)
-      .then(() => {});
+    supabase.rpc("increment_event_views", { p_event_id: event.id }).then(() => {});
   }, [event?.id]);
+
+  // A08: Filter tiers - hidden ones only shown if their ID is in revealedTierIds
+  const [revealedTierIds, setRevealedTierIds] = useState<string[]>([]);
 
   const tiers = allTiers?.filter((t: any) => {
     if (!t.is_visible) return false;
-    if (t.is_hidden_by_default && t.unlock_code) {
-      return revealedCodes.includes(t.unlock_code);
+    if (t.is_hidden_by_default) {
+      return revealedTierIds.includes(t.id);
     }
-    return !t.is_hidden_by_default;
+    return true;
   }) || [];
 
   const hasHiddenTiers = allTiers?.some((t: any) => t.is_hidden_by_default && t.is_visible) || false;
 
-  const handleUnlock = () => {
+  // A08: Validate unlock code server-side
+  const handleUnlock = async () => {
     const code = unlockCode.trim();
-    if (!code) return;
-    const matched = allTiers?.some((t: any) => t.is_hidden_by_default && t.unlock_code === code);
-    if (matched) {
-      setRevealedCodes((prev) => [...prev, code]);
+    if (!code || !event?.id) return;
+    const { data: tierIds, error } = await supabase.rpc("validate_unlock_code", {
+      p_event_id: event.id,
+      p_code: code,
+    });
+    if (error || !tierIds || (tierIds as string[]).length === 0) {
+      toast({ title: "Código inválido", description: "Verifique o código e tente novamente.", variant: "destructive" });
+    } else {
+      setRevealedTierIds((prev) => [...prev, ...(tierIds as string[])]);
       setUnlockCode("");
       setShowUnlockInput(false);
       toast({ title: "Código válido!", description: "Ingressos exclusivos revelados." });
-    } else {
-      toast({ title: "Código inválido", description: "Verifique o código e tente novamente.", variant: "destructive" });
     }
   };
 
