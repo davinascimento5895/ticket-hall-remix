@@ -20,7 +20,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Identify caller from JWT
     const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
@@ -57,9 +56,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Update profile with CPF, phone and approved status
+    // C09: Set status to "pending" — requires admin approval
     const updates: Record<string, string> = {
-      producer_status: "approved",
+      producer_status: "pending",
     };
     if (cpf) updates.cpf = cpf.replace(/\D/g, "");
     if (phone) updates.phone = phone.replace(/\D/g, "");
@@ -69,13 +68,34 @@ Deno.serve(async (req) => {
       .update(updates)
       .eq("id", user.id);
 
-    // Grant producer role
-    await supabaseAdmin
+    // Do NOT grant producer role yet — admin must approve first
+
+    // Notify admins about new producer request
+    const { data: admins } = await supabaseAdmin
       .from("user_roles")
-      .insert({ user_id: user.id, role: "producer" });
+      .select("user_id")
+      .eq("role", "admin");
+
+    if (admins?.length) {
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .single();
+
+      await supabaseAdmin.from("notifications").insert(
+        admins.map((a) => ({
+          user_id: a.user_id,
+          type: "producer_request",
+          title: "Nova solicitação de produtor",
+          body: `${profile?.full_name || user.email} solicitou acesso como produtor.`,
+          data: { userId: user.id, email: user.email },
+        }))
+      );
+    }
 
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ success: true, status: "pending" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {

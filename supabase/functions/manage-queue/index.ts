@@ -12,15 +12,37 @@ serve(async (req) => {
   }
 
   try {
-    const { action, eventId, userId } = await req.json();
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    // C03: Authenticate caller
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return jsonResponse({ error: "Unauthorized" }, 401);
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    let callerId: string | null = null;
+    const isServiceCall = token === serviceKey;
+
+    if (!isServiceCall) {
+      const supabaseAuth = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user }, error: userErr } = await supabaseAuth.auth.getUser();
+      if (userErr || !user) {
+        return jsonResponse({ error: "Unauthorized" }, 401);
+      }
+      callerId = user.id;
+    }
+
+    const { action, eventId } = await req.json();
     const supabase = createClient(supabaseUrl, serviceKey);
 
     if (action === "join") {
-      if (!eventId || !userId) throw new Error("eventId and userId required");
+      if (!eventId || !callerId) throw new Error("eventId required and must be authenticated user");
+      const userId = callerId; // Use authenticated user, not body param
 
-      // Check if event has virtual queue enabled
       const { data: event } = await supabase
         .from("events")
         .select("has_virtual_queue, queue_capacity, status")
@@ -31,7 +53,6 @@ serve(async (req) => {
         return jsonResponse({ error: "Este evento não possui fila virtual" }, 400);
       }
 
-      // Check if already in queue
       const { data: existing } = await supabase
         .from("virtual_queue")
         .select("id, position, status")
@@ -44,7 +65,6 @@ serve(async (req) => {
         return jsonResponse({ success: true, ...existing, alreadyInQueue: true });
       }
 
-      // Get next position (only count waiting/admitted, not expired)
       const { count } = await supabase
         .from("virtual_queue")
         .select("id", { count: "exact", head: true })
@@ -55,26 +75,27 @@ serve(async (req) => {
 
       const { data: entry, error } = await supabase
         .from("virtual_queue")
-        .insert({
-          event_id: eventId,
-          user_id: userId,
-          position,
-          status: "waiting",
-        })
+        .insert({ event_id: eventId, user_id: userId, position, status: "waiting" })
         .select()
         .single();
 
       if (error) throw error;
-
       return jsonResponse({ success: true, ...entry });
     }
 
     if (action === "admit") {
-      // Admit next batch — called by cron or producer
       if (!eventId) throw new Error("eventId required");
+      // Only producer or admin can admit
+      if (callerId) {
+        const { data: event } = await supabase.from("events").select("producer_id").eq("id", eventId).single();
+        const { data: isAdmin } = await supabase.from("user_roles").select("id").eq("user_id", callerId).eq("role", "admin").maybeSingle();
+        if ((!event || event.producer_id !== callerId) && !isAdmin) {
+          return jsonResponse({ error: "Not authorized" }, 403);
+        }
+      }
 
       const batchSize = 10;
-      const admissionWindow = 10 * 60 * 1000; // 10 minutes to complete purchase
+      const admissionWindow = 10 * 60 * 1000;
 
       const { data: waiting } = await supabase
         .from("virtual_queue")
@@ -92,20 +113,12 @@ serve(async (req) => {
       const expiresAt = new Date(now.getTime() + admissionWindow).toISOString();
 
       for (const entry of waiting) {
-        await supabase
-          .from("virtual_queue")
-          .update({
-            status: "admitted",
-            admitted_at: now.toISOString(),
-            expires_at: expiresAt,
-          })
-          .eq("id", entry.id);
+        await supabase.from("virtual_queue").update({
+          status: "admitted", admitted_at: now.toISOString(), expires_at: expiresAt,
+        }).eq("id", entry.id);
 
-        // Notify user
         await supabase.from("notifications").insert({
-          user_id: entry.user_id,
-          type: "queue_admitted",
-          title: "É sua vez!",
+          user_id: entry.user_id, type: "queue_admitted", title: "É sua vez!",
           body: "Você foi admitido na fila. Você tem 10 minutos para completar sua compra.",
           data: { eventId },
         });
@@ -115,7 +128,8 @@ serve(async (req) => {
     }
 
     if (action === "status") {
-      if (!eventId || !userId) throw new Error("eventId and userId required");
+      if (!eventId || !callerId) throw new Error("eventId required and must be authenticated");
+      const userId = callerId;
 
       const { data: entry } = await supabase
         .from("virtual_queue")
@@ -125,11 +139,8 @@ serve(async (req) => {
         .in("status", ["waiting", "admitted"])
         .single();
 
-      if (!entry) {
-        return jsonResponse({ inQueue: false });
-      }
+      if (!entry) return jsonResponse({ inQueue: false });
 
-      // Count people ahead
       const { count: ahead } = await supabase
         .from("virtual_queue")
         .select("id", { count: "exact", head: true })
@@ -138,14 +149,19 @@ serve(async (req) => {
         .lt("position", entry.position);
 
       return jsonResponse({
-        inQueue: true,
-        ...entry,
+        inQueue: true, ...entry,
         peopleAhead: entry.status === "waiting" ? (ahead || 0) : 0,
       });
     }
 
     if (action === "expire") {
-      // Expire admitted entries past their window
+      // Only service calls or producer/admin
+      if (callerId) {
+        // Could be called by a cron, but if user-initiated, check admin
+        const { data: isAdmin } = await supabase.from("user_roles").select("id").eq("user_id", callerId).eq("role", "admin").maybeSingle();
+        if (!isAdmin) return jsonResponse({ error: "Not authorized" }, 403);
+      }
+
       const now = new Date().toISOString();
       const { data: expired } = await supabase
         .from("virtual_queue")

@@ -12,14 +12,18 @@ serve(async (req) => {
   }
 
   try {
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    // C03: Only accept service role key (internal/cron calls)
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader || authHeader !== `Bearer ${serviceKey}`) {
+      return new Response(JSON.stringify({ error: "Unauthorized — internal use only" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     const { eventId, tierId } = await req.json();
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey);
 
-    // Get next waitlist entries
     const { data: entries, error } = await supabase
       .from("waitlist")
       .select("*")
@@ -31,7 +35,7 @@ serve(async (req) => {
     if (error) throw error;
 
     // NOTIFICATION_INTEGRATION_POINT — notify users about availability
-    console.log("process-waitlist stub:", { eventId, tierId, entriesCount: entries?.length });
+    console.log("process-waitlist:", { eventId, tierId, entriesCount: entries?.length });
 
     return new Response(
       JSON.stringify({ success: true, processed: entries?.length || 0 }),
