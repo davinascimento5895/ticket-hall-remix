@@ -105,17 +105,13 @@ export default function EventDetail() {
     enabled: !!event?.id,
   });
 
-  // Increment views_count once per session per event
+  // M03: Atomic increment views_count once per session per event
   useEffect(() => {
     if (!event?.id) return;
     const viewedKey = `event_viewed_${event.id}`;
     if (sessionStorage.getItem(viewedKey)) return;
     sessionStorage.setItem(viewedKey, "1");
-    supabase
-      .from("events")
-      .update({ views_count: (event.views_count ?? 0) + 1 })
-      .eq("id", event.id)
-      .then(() => {});
+    supabase.rpc("increment_event_views", { p_event_id: event.id }).then(() => {});
   }, [event?.id]);
 
   const tiers = allTiers?.filter((t: any) => {
