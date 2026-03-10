@@ -40,30 +40,24 @@ export default function EventDetail() {
 
   const { setTrackingCode } = useCart();
 
-  // Track promoter click from ?ref=CODE
+  // Track promoter click from ?ref=CODE (M03: atomic increment)
   useEffect(() => {
     const ref = searchParams.get("ref");
     if (!ref || !event?.id) return;
     const trackedKey = `promoter_tracked_${event.id}_${ref}`;
     if (sessionStorage.getItem(trackedKey)) return;
     sessionStorage.setItem(trackedKey, "1");
-    // Save tracking code for the promoter system
     setTrackingCode(ref);
-    // Increment clicks on promoter_events
     supabase
       .from("promoter_events")
-      .select("id, clicks")
+      .select("id")
       .eq("tracking_code", ref)
       .eq("event_id", event.id)
       .eq("is_active", true)
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
-          supabase
-            .from("promoter_events")
-            .update({ clicks: (data.clicks || 0) + 1 })
-            .eq("id", data.id)
-            .then(() => {});
+          supabase.rpc("increment_promoter_clicks", { p_promoter_event_id: data.id }).then(() => {});
         }
       });
   }, [event?.id, searchParams, setTrackingCode]);
