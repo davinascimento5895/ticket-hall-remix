@@ -11,18 +11,21 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  // Only accept POST
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405, headers: corsHeaders });
   }
 
   try {
-    // Validate webhook authentication
+    // C07: Mandatory webhook token validation
     const webhookToken = req.headers.get("asaas-access-token");
     const expectedToken = Deno.env.get("ASAAS_API_KEY");
 
-    // If Asaas is configured, validate the token
-    if (expectedToken && webhookToken !== expectedToken) {
+    if (!expectedToken) {
+      console.error("ASAAS_API_KEY not configured — rejecting webhook");
+      return new Response("Server misconfigured", { status: 500, headers: corsHeaders });
+    }
+
+    if (webhookToken !== expectedToken) {
       console.error("Invalid webhook token");
       return new Response("Unauthorized", { status: 401, headers: corsHeaders });
     }
@@ -47,7 +50,6 @@ Deno.serve(async (req) => {
       return new Response("OK", { status: 200, headers: corsHeaders });
     }
 
-    // Verify the order exists
     const { data: order, error: orderErr } = await supabase
       .from("orders")
       .select("id, status, event_id, promoter_event_id")
@@ -62,13 +64,11 @@ Deno.serve(async (req) => {
     switch (event) {
       case "PAYMENT_RECEIVED":
       case "PAYMENT_CONFIRMED": {
-        // Only process if not already paid
         if (order.status === "paid") {
           console.log("Order already paid, skipping:", orderId);
           break;
         }
 
-        // Atomic payment confirmation
         const { data: confirmed } = await supabase.rpc("confirm_order_payment", {
           p_order_id: orderId,
           p_asaas_payment: payment.id,
@@ -78,7 +78,6 @@ Deno.serve(async (req) => {
         if (confirmed) {
           console.log("Payment confirmed for order:", orderId);
 
-          // Trigger async: generate QR codes for tickets
           try {
             const { data: tickets } = await supabase
               .from("tickets")
@@ -105,7 +104,6 @@ Deno.serve(async (req) => {
             console.error("Error triggering QR generation:", err);
           }
 
-          // Trigger async: send ticket email
           try {
             await fetch(
               `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-ticket-email`,
@@ -125,28 +123,41 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "PAYMENT_OVERDUE": {
+        // Mark as expired if still pending
+        if (order.status === "pending") {
+          await supabase
+            .from("orders")
+            .update({ status: "expired", payment_status: "expired", updated_at: new Date().toISOString() })
+            .eq("id", orderId)
+            .eq("status", "pending");
+
+          // Release reserved tickets
+          await supabase.from("tickets").update({ status: "cancelled" }).eq("order_id", orderId).eq("status", "reserved");
+        }
+        console.log("Payment overdue for order:", orderId);
+        break;
+      }
+
       case "PAYMENT_REFUNDED": {
+        // A12: Idempotency — skip if already refunded
+        if (order.status === "refunded") {
+          console.log("Order already refunded, skipping:", orderId);
+          break;
+        }
+
         await supabase
           .from("orders")
           .update({
-            status: "refunded",
-            payment_status: "refunded",
-            refunded_at: new Date().toISOString(),
-            refunded_amount: payment.value,
+            status: "refunded", payment_status: "refunded",
+            refunded_at: new Date().toISOString(), refunded_amount: payment.value,
             updated_at: new Date().toISOString(),
           })
           .eq("id", orderId);
 
-        // Cancel associated tickets
-        await supabase
-          .from("tickets")
-          .update({ status: "cancelled" })
-          .eq("order_id", orderId)
-          .in("status", ["active", "reserved"]);
+        await supabase.from("tickets").update({ status: "cancelled" }).eq("order_id", orderId).in("status", ["active", "reserved"]);
 
-        // Reverse promoter commissions if applicable
         if (order.promoter_event_id) {
-          // Get commission for this order
           const { data: commission } = await supabase
             .from("promoter_commissions")
             .select("id, commission_amount, promoter_event_id, promoter_id")
@@ -155,45 +166,29 @@ Deno.serve(async (req) => {
             .maybeSingle();
 
           if (commission) {
-            // Cancel the commission
-            await supabase
-              .from("promoter_commissions")
-              .update({ status: "cancelled" })
-              .eq("id", commission.id);
+            await supabase.from("promoter_commissions").update({ status: "cancelled" }).eq("id", commission.id);
 
-            // Decrement promoter_events stats
-            const { data: pe } = await supabase
-              .from("promoter_events")
+            const { data: pe } = await supabase.from("promoter_events")
               .select("revenue_generated, conversions, commission_total")
-              .eq("id", commission.promoter_event_id)
-              .single();
+              .eq("id", commission.promoter_event_id).single();
 
             if (pe) {
-              await supabase
-                .from("promoter_events")
-                .update({
-                  revenue_generated: Math.max(0, (pe.revenue_generated || 0) - payment.value),
-                  conversions: Math.max(0, (pe.conversions || 0) - 1),
-                  commission_total: Math.max(0, (pe.commission_total || 0) - commission.commission_amount),
-                })
-                .eq("id", commission.promoter_event_id);
+              await supabase.from("promoter_events").update({
+                revenue_generated: Math.max(0, (pe.revenue_generated || 0) - payment.value),
+                conversions: Math.max(0, (pe.conversions || 0) - 1),
+                commission_total: Math.max(0, (pe.commission_total || 0) - commission.commission_amount),
+              }).eq("id", commission.promoter_event_id);
             }
 
-            // Decrement promoter totals
-            const { data: promoter } = await supabase
-              .from("promoters")
+            const { data: promoter } = await supabase.from("promoters")
               .select("total_sales, total_commission_earned")
-              .eq("id", commission.promoter_id)
-              .single();
+              .eq("id", commission.promoter_id).single();
 
             if (promoter) {
-              await supabase
-                .from("promoters")
-                .update({
-                  total_sales: Math.max(0, (promoter.total_sales || 0) - payment.value),
-                  total_commission_earned: Math.max(0, (promoter.total_commission_earned || 0) - commission.commission_amount),
-                })
-                .eq("id", commission.promoter_id);
+              await supabase.from("promoters").update({
+                total_sales: Math.max(0, (promoter.total_sales || 0) - payment.value),
+                total_commission_earned: Math.max(0, (promoter.total_commission_earned || 0) - commission.commission_amount),
+              }).eq("id", commission.promoter_id);
             }
           }
         }
@@ -202,106 +197,82 @@ Deno.serve(async (req) => {
         break;
       }
 
-      case "CHARGEBACK_REQUESTED": {
-        await supabase
-          .from("orders")
-          .update({
-            status: "chargeback",
-            chargeback_status: "notified",
-            chargeback_reason: payment.chargeback?.reason || "chargeback_requested",
-            chargeback_notified_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", orderId);
+      case "PAYMENT_DELETED":
+      case "PAYMENT_RESTORED": {
+        // A09: Handle additional Asaas statuses
+        console.log(`Payment ${event} for order:`, orderId);
+        if (event === "PAYMENT_DELETED" && order.status === "pending") {
+          await supabase.from("orders").update({ status: "cancelled", payment_status: "cancelled", updated_at: new Date().toISOString() }).eq("id", orderId);
+          await supabase.from("tickets").update({ status: "cancelled" }).eq("order_id", orderId).eq("status", "reserved");
+        }
+        break;
+      }
 
-        // Suspend all tickets for this order
-        await supabase
-          .from("tickets")
-          .update({ status: "suspended" })
-          .eq("order_id", orderId)
-          .eq("status", "active");
+      case "PAYMENT_REFUND_IN_PROGRESS": {
+        console.log("Refund in progress for order:", orderId);
+        await supabase.from("orders").update({ payment_status: "refund_in_progress", updated_at: new Date().toISOString() }).eq("id", orderId);
+        break;
+      }
 
-        // Create notification for admin
-        // (Find admin users)
-        const { data: admins } = await supabase
-          .from("user_roles")
-          .select("user_id")
-          .eq("role", "admin");
+      case "CHARGEBACK_REQUESTED":
+      case "PAYMENT_CHARGEBACK_REQUESTED": {
+        await supabase.from("orders").update({
+          status: "chargeback", chargeback_status: "notified",
+          chargeback_reason: payment.chargeback?.reason || "chargeback_requested",
+          chargeback_notified_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+        }).eq("id", orderId);
 
+        await supabase.from("tickets").update({ status: "suspended" }).eq("order_id", orderId).eq("status", "active");
+
+        const { data: admins } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
         if (admins) {
-          const notifications = admins.map((a) => ({
-            user_id: a.user_id,
-            type: "chargeback",
-            title: "Chargeback recebido",
+          await supabase.from("notifications").insert(admins.map((a: any) => ({
+            user_id: a.user_id, type: "chargeback", title: "Chargeback recebido",
             body: `Pedido ${orderId.slice(0, 8)} recebeu um chargeback. Tickets suspensos.`,
             data: { orderId, eventId: order.event_id },
-          }));
-          await supabase.from("notifications").insert(notifications);
+          })));
         }
 
         console.log("Chargeback processed for order:", orderId);
         break;
       }
 
+      case "PAYMENT_CHARGEBACK_DISPUTE":
+      case "PAYMENT_AWAITING_CHARGEBACK_REVERSAL": {
+        console.log(`Chargeback ${event} for order:`, orderId);
+        await supabase.from("orders").update({
+          chargeback_status: event === "PAYMENT_CHARGEBACK_DISPUTE" ? "dispute" : "awaiting_reversal",
+          updated_at: new Date().toISOString(),
+        }).eq("id", orderId);
+        break;
+      }
+
       case "PAYMENT_REPROVED_BY_RISK_ANALYSIS": {
-        await supabase
-          .from("orders")
-          .update({
-            status: "cancelled",
-            payment_status: "failed",
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", orderId);
+        await supabase.from("orders").update({ status: "cancelled", payment_status: "failed", updated_at: new Date().toISOString() }).eq("id", orderId);
 
-        // Release reserved tickets
-        const { data: cancelledTickets } = await supabase
-          .from("tickets")
-          .select("tier_id")
-          .eq("order_id", orderId)
-          .eq("status", "reserved");
-
-        if (cancelledTickets && cancelledTickets.length > 0) {
-          await supabase
-            .from("tickets")
-            .update({ status: "cancelled" })
-            .eq("order_id", orderId)
-            .eq("status", "reserved");
-
-          // Decrement reserved counts
+        const { data: cancelledTickets } = await supabase.from("tickets").select("tier_id").eq("order_id", orderId).eq("status", "reserved");
+        if (cancelledTickets?.length) {
+          await supabase.from("tickets").update({ status: "cancelled" }).eq("order_id", orderId).eq("status", "reserved");
           const tierCounts: Record<string, number> = {};
-          for (const t of cancelledTickets) {
-            tierCounts[t.tier_id] = (tierCounts[t.tier_id] || 0) + 1;
-          }
+          for (const t of cancelledTickets) { tierCounts[t.tier_id] = (tierCounts[t.tier_id] || 0) + 1; }
           for (const [tierId, cnt] of Object.entries(tierCounts)) {
-            const { data: tier } = await supabase
-              .from("ticket_tiers")
-              .select("quantity_reserved")
-              .eq("id", tierId)
-              .single();
+            const { data: tier } = await supabase.from("ticket_tiers").select("quantity_reserved").eq("id", tierId).single();
             if (tier) {
-              await supabase
-                .from("ticket_tiers")
-                .update({
-                  quantity_reserved: Math.max(0, (tier.quantity_reserved || 0) - cnt),
-                })
-                .eq("id", tierId);
+              await supabase.from("ticket_tiers").update({ quantity_reserved: Math.max(0, (tier.quantity_reserved || 0) - cnt) }).eq("id", tierId);
             }
           }
         }
-
         console.log("Payment reproved by risk analysis for order:", orderId);
         break;
       }
 
       default:
-        console.log("Unhandled webhook event:", event);
+        console.warn("Unhandled webhook event:", event, "for order:", orderId);
     }
 
-    // Always return 200 quickly to avoid Asaas retries
     return new Response("OK", { status: 200, headers: corsHeaders });
   } catch (error) {
     console.error("asaas-webhook error:", error);
-    // Still return 200 to prevent infinite retries
     return new Response("OK", { status: 200, headers: corsHeaders });
   }
 });

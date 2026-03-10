@@ -12,20 +12,58 @@ serve(async (req) => {
   }
 
   try {
-    const { ticketId, eventId } = await req.json();
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    // C03: Authenticate caller
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return jsonResponse({ error: "Unauthorized" }, 401);
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    let callerId: string | null = null;
+    const isServiceCall = token === serviceKey;
+
+    if (!isServiceCall) {
+      const supabaseAuth = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user }, error: userErr } = await supabaseAuth.auth.getUser();
+      if (userErr || !user) {
+        return jsonResponse({ error: "Unauthorized" }, 401);
+      }
+      callerId = user.id;
+    }
+
+    const { ticketId, eventId } = await req.json();
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // If ticketId provided, generate for single ticket
     if (ticketId) {
+      // Verify ownership: caller must own the ticket or be the event's producer
+      if (callerId) {
+        const { data: ticket } = await supabase.from("tickets").select("owner_id, event_id").eq("id", ticketId).single();
+        if (!ticket) return jsonResponse({ error: "Ticket not found" }, 404);
+        if (ticket.owner_id !== callerId) {
+          const { data: event } = await supabase.from("events").select("producer_id").eq("id", ticket.event_id).single();
+          if (!event || event.producer_id !== callerId) {
+            return jsonResponse({ error: "Not authorized" }, 403);
+          }
+        }
+      }
       const cert = await generateCertificate(supabase, ticketId);
       return jsonResponse({ success: true, certificate: cert });
     }
 
-    // If eventId provided, batch generate for all checked-in tickets
     if (eventId) {
+      // Verify caller is the event producer
+      if (callerId) {
+        const { data: event } = await supabase.from("events").select("producer_id").eq("id", eventId).single();
+        if (!event || event.producer_id !== callerId) {
+          return jsonResponse({ error: "Not authorized" }, 403);
+        }
+      }
+
       const { data: event } = await supabase
         .from("events")
         .select("has_certificates, title")
@@ -40,13 +78,12 @@ serve(async (req) => {
         .from("tickets")
         .select("id")
         .eq("event_id", eventId)
-        .eq("status", "used"); // Only checked-in tickets
+        .eq("status", "used");
 
       if (!tickets || tickets.length === 0) {
         return jsonResponse({ success: true, generated: 0 });
       }
 
-      // Skip tickets that already have certificates
       const { data: existingCerts } = await supabase
         .from("certificates")
         .select("ticket_id")
@@ -79,7 +116,6 @@ serve(async (req) => {
 });
 
 async function generateCertificate(supabase: any, ticketId: string) {
-  // Get ticket with event and attendee details
   const { data: ticket, error } = await supabase
     .from("tickets")
     .select("id, event_id, owner_id, attendee_name, status, checked_in_at, events(title, start_date, end_date, has_certificates, venue_name), profiles!tickets_owner_id_fkey(full_name)")
@@ -90,7 +126,6 @@ async function generateCertificate(supabase: any, ticketId: string) {
   if (ticket.status !== "used") throw new Error("Ticket must be checked in to receive certificate");
   if (!ticket.events?.has_certificates) throw new Error("Event does not issue certificates");
 
-  // Check if certificate already exists
   const { data: existing } = await supabase
     .from("certificates")
     .select("id")
@@ -98,11 +133,7 @@ async function generateCertificate(supabase: any, ticketId: string) {
     .single();
 
   if (existing) {
-    const { data: cert } = await supabase
-      .from("certificates")
-      .select("*")
-      .eq("id", existing.id)
-      .single();
+    const { data: cert } = await supabase.from("certificates").select("*").eq("id", existing.id).single();
     return cert;
   }
 
@@ -123,7 +154,6 @@ async function generateCertificate(supabase: any, ticketId: string) {
 
   if (insertErr) throw insertErr;
 
-  // Notify user
   await supabase.from("notifications").insert({
     user_id: ticket.owner_id,
     type: "certificate_issued",
