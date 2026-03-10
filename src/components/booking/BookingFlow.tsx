@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, ArrowLeft, Check } from "lucide-react";
+import { X, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,12 +9,10 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { BookingDateStep } from "./BookingDateStep";
 import { BookingTicketStep } from "./BookingTicketStep";
-import { BookingSeatMap } from "./BookingSeatMap";
 import { BookingSummaryStep } from "./BookingSummaryStep";
 import { BookingConfirmation } from "./BookingConfirmation";
 import { supabase } from "@/integrations/supabase/client";
 import { createPayment, type CreditCardData } from "@/lib/api-payment";
-import { validateCoupon } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -84,9 +82,8 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
     setStep("summary");
   };
 
-
+  // C08: Use create_order_validated RPC for server-side price validation & coupon increment
   const handleConfirmPayment = useCallback(async (method: string, cardData?: CreditCardData, installments?: number) => {
-    const isFree = total === 0;
     if (!user) {
       toast({ title: "Faça login", description: "Você precisa estar logado para comprar.", variant: "destructive" });
       return;
@@ -95,42 +92,50 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
 
     setIsProcessing(true);
     try {
-      // Create order
-      const { data: order, error: orderErr } = await supabase.from("orders").insert({
-        buyer_id: user.id,
-        event_id: event.id,
-        subtotal,
-        platform_fee: isFree ? 0 : platformFee,
-        total: isFree ? 0 : total,
-        discount_amount: discount,
-        status: isFree ? "paid" : "pending",
-        payment_status: isFree ? "paid" : "pending",
-        payment_method: isFree ? "free" : method,
-        expires_at: isFree ? null : new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-      }).select().single();
+      // Create order via RPC (validates prices server-side, applies coupon atomically)
+      const { data: rpcResult, error: rpcErr } = await supabase.rpc("create_order_validated", {
+        p_tier_ids: [selectedTier.id],
+        p_quantities: [quantity],
+        p_buyer_id: user.id,
+        p_coupon_code: couponCode?.trim() || null,
+      });
 
-      if (orderErr) throw orderErr;
+      if (rpcErr) throw rpcErr;
+      const result = rpcResult as any;
+      if (result?.error) {
+        toast({ title: "Erro ao criar pedido", description: result.error, variant: "destructive" });
+        setIsProcessing(false);
+        return;
+      }
+
+      const newOrderId = result.order_id;
+      const isFree = result.is_free;
+
+      // Update payment method on order
+      if (!isFree) {
+        await supabase.from("orders").update({ payment_method: method }).eq("id", newOrderId);
+      }
 
       // Reserve tickets
       const { data: reserved, error: reserveErr } = await supabase.rpc("reserve_tickets", {
         p_tier_id: selectedTier.id,
         p_quantity: quantity,
-        p_order_id: order.id,
+        p_order_id: newOrderId,
       });
       if (reserveErr) throw reserveErr;
       if (!reserved) {
-        await supabase.from("orders").update({ status: "cancelled" }).eq("id", order.id);
+        await supabase.from("orders").update({ status: "cancelled" }).eq("id", newOrderId);
         toast({ title: "Ingressos esgotados", description: "Não há ingressos suficientes.", variant: "destructive" });
         setIsProcessing(false);
         return;
       }
 
-      setOrderId(order.id);
+      setOrderId(newOrderId);
 
       // Free order: confirm immediately via RPC
       if (isFree) {
         const { data: confirmed, error: confirmErr } = await supabase.rpc("confirm_order_payment", {
-          p_order_id: order.id,
+          p_order_id: newOrderId,
           p_asaas_payment: "free",
           p_net_value: 0,
         });
@@ -142,11 +147,10 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
           return;
         }
 
-        // Generate signed JWT QR codes for free tickets
         const { data: activeTickets } = await supabase
           .from("tickets")
           .select("id")
-          .eq("order_id", order.id)
+          .eq("order_id", newOrderId)
           .eq("status", "active");
         if (activeTickets?.length) {
           await Promise.all(
@@ -160,15 +164,15 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
         setStep("confirmation");
       } else {
         // Process payment
-        const result = await createPayment(order.id, method as "pix" | "credit_card" | "boleto", cardData, installments);
+        const payResult = await createPayment(newOrderId, method as "pix" | "credit_card" | "boleto", cardData, installments);
 
-        if (!result.success) {
-          toast({ title: "Erro no pagamento", description: result.error || "Tente novamente.", variant: "destructive" });
+        if (!payResult.success) {
+          toast({ title: "Erro no pagamento", description: payResult.error || "Tente novamente.", variant: "destructive" });
           setIsProcessing(false);
           return;
         }
 
-        if (result.immediateConfirmation || result.stub) {
+        if (payResult.immediateConfirmation || payResult.stub) {
           toast({ title: "Pagamento confirmado!", description: "Seus ingressos foram gerados." });
           setStep("confirmation");
         } else {
@@ -182,12 +186,11 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
     } finally {
       setIsProcessing(false);
     }
-  }, [user, selectedTier, quantity, event, subtotal, platformFee, total, discount]);
+  }, [user, selectedTier, quantity, event, couponCode]);
 
   // Realtime subscription for PIX/boleto payment confirmation
   useEffect(() => {
     if (!orderId || step !== "confirmation") return;
-    // Don't listen for free orders (already confirmed)
     if (total === 0) return;
 
     const channel = supabase
@@ -224,7 +227,6 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
 
   const content = (
     <div className="flex flex-col h-full max-h-[85vh] md:max-h-[90vh]">
-      {/* Header */}
       {step !== "confirmation" && (
         <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
           <Button variant="ghost" size="icon" onClick={handleBack} className="h-8 w-8">
@@ -237,7 +239,6 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
         </div>
       )}
 
-      {/* Progress dots */}
       {step !== "confirmation" && (
         <div className="flex justify-center gap-1.5 py-2 shrink-0">
           {stepOrder.filter(s => s !== "confirmation").map((s, i) => (
@@ -252,7 +253,6 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
         </div>
       )}
 
-      {/* Step content */}
       <ScrollArea className="flex-1">
         <div className="px-4 py-4">
           {step === "date" && (
@@ -286,8 +286,11 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
               couponCode={couponCode}
               onCouponChange={setCouponCode}
               onApplyCoupon={async () => {
+                // Coupon will be validated server-side by create_order_validated
+                // Here we just show a preview discount
                 if (!couponCode.trim()) return;
                 try {
+                  const { validateCoupon } = await import("@/lib/api");
                   const coupon = await validateCoupon(event.id, couponCode);
                   if (coupon) {
                     const discountAmount =

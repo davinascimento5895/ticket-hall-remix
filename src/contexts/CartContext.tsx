@@ -40,29 +40,14 @@ interface CartContextType {
 
 const CART_KEY = "tickethall_cart";
 const CART_EXPIRY_KEY = "tickethall_cart_expiry";
-const CART_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+const CART_DURATION_MS = 15 * 60 * 1000;
 
 const CartContext = createContext<CartContextType>({
-  items: [],
-  addItem: () => {},
-  removeItem: () => {},
-  updateQuantity: () => {},
-  clearCart: () => {},
-  subtotal: 0,
-  platformFee: 0,
-  total: 0,
-  itemCount: 0,
-  expiresAt: null,
-  startCheckout: () => {},
-  couponCode: "",
-  setCouponCode: () => {},
-  discount: 0,
-  setDiscount: () => {},
-  appliedCouponId: null,
-  setAppliedCouponId: () => {},
-  finalTotal: 0,
-  trackingCode: null,
-  setTrackingCode: () => {},
+  items: [], addItem: () => {}, removeItem: () => {}, updateQuantity: () => {},
+  clearCart: () => {}, subtotal: 0, platformFee: 0, total: 0, itemCount: 0,
+  expiresAt: null, startCheckout: () => {}, couponCode: "", setCouponCode: () => {},
+  discount: 0, setDiscount: () => {}, appliedCouponId: null, setAppliedCouponId: () => {},
+  finalTotal: 0, trackingCode: null, setTrackingCode: () => {},
 });
 
 export const useCart = () => useContext(CartContext);
@@ -71,9 +56,7 @@ function loadCart(): CartItem[] {
   try {
     const stored = localStorage.getItem(CART_KEY);
     return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
+  } catch { return []; }
 }
 
 function loadExpiry(): Date | null {
@@ -82,9 +65,7 @@ function loadExpiry(): Date | null {
     if (!stored) return null;
     const date = new Date(stored);
     return date.getTime() > Date.now() ? date : null;
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -108,7 +89,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [items]);
 
-  // Check expiry
   useEffect(() => {
     if (!expiresAt) return;
     const timeout = setTimeout(() => {
@@ -122,6 +102,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(timeout);
   }, [expiresAt]);
 
+  // A10: Validate maxPerOrder before adding
   const addItem = useCallback((item: CartItem) => {
     setItems((prev) => {
       if (prev.length > 0 && prev[0].eventId !== item.eventId) {
@@ -134,8 +115,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       const existing = prev.find((i) => i.tierId === item.tierId);
       if (existing) {
+        const maxAllowed = item.maxPerOrder ?? 10;
+        const newQty = Math.min(existing.quantity + item.quantity, maxAllowed);
+        if (newQty === existing.quantity) {
+          toast({ title: "Limite atingido", description: `Máximo de ${maxAllowed} ingressos deste tipo por pedido.` });
+          return prev;
+        }
         return prev.map((i) =>
-          i.tierId === item.tierId ? { ...i, quantity: i.quantity + item.quantity } : i
+          i.tierId === item.tierId ? { ...i, quantity: newQty } : i
         );
       }
       return [...prev, item];
@@ -152,10 +139,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateQuantity = useCallback((tierId: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeItem(tierId);
-      return;
-    }
+    if (quantity <= 0) { removeItem(tierId); return; }
     setItems((prev) => prev.map((i) => (i.tierId === tierId ? { ...i, quantity } : i)));
   }, [removeItem]);
 
@@ -188,7 +172,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, updateQuantity, clearCart, subtotal, platformFee, total, itemCount, expiresAt, startCheckout, couponCode, setCouponCode, discount, setDiscount, appliedCouponId, setAppliedCouponId, finalTotal, trackingCode, setTrackingCode: (code: string | null) => { setTrackingCode(code); try { if (code) sessionStorage.setItem("promoter_tracking_code", code); else sessionStorage.removeItem("promoter_tracking_code"); } catch {} } }}
+      value={{
+        items, addItem, removeItem, updateQuantity, clearCart, subtotal, platformFee,
+        total, itemCount, expiresAt, startCheckout, couponCode, setCouponCode,
+        discount, setDiscount, appliedCouponId, setAppliedCouponId, finalTotal,
+        trackingCode,
+        setTrackingCode: (code: string | null) => {
+          setTrackingCode(code);
+          try {
+            if (code) sessionStorage.setItem("promoter_tracking_code", code);
+            else sessionStorage.removeItem("promoter_tracking_code");
+          } catch {}
+        },
+      }}
     >
       {children}
     </CartContext.Provider>

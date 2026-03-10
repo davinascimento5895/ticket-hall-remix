@@ -21,6 +21,7 @@ export default function Checkout() {
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [orderExpiresAt, setOrderExpiresAt] = useState<string | null>(null);
   const [paymentCreated, setPaymentCreated] = useState(false);
   const [awaitingPayment, setAwaitingPayment] = useState(false);
   const [pixQrCode, setPixQrCode] = useState<string | null>(null);
@@ -28,7 +29,7 @@ export default function Checkout() {
   const [boletoUrl, setBoletoUrl] = useState<string | null>(null);
   const [boletoBarcode, setBoletoBarcode] = useState<string | null>(null);
 
-  const { items, subtotal, platformFee, total, expiresAt, clearCart, discount, appliedCouponId, finalTotal, trackingCode } = useCart();
+  const { items, subtotal, platformFee, total, expiresAt, clearCart, discount, appliedCouponId, finalTotal, trackingCode, couponCode } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -78,13 +79,12 @@ export default function Checkout() {
     return () => { supabase.removeChannel(channel); };
   }, [orderId, awaitingPayment, clearCart]);
 
-  // Create order when advancing from Step 0 to Step 1 (or directly to confirmation if free)
+  // C02: Create order using server-side RPC for price validation
   const handleCreateOrder = useCallback(async () => {
     if (!user) {
       toast({ title: "Faça login", description: "Você precisa estar logado para finalizar a compra.", variant: "destructive" });
       return;
     }
-    // If order already created (user went back and forward), skip re-creation
     if (orderId) {
       setStep(1);
       return;
@@ -107,47 +107,41 @@ export default function Checkout() {
         if (pe) promoterEventId = pe.id;
       }
 
-      const isFreeOrder = finalTotal === 0;
+      // Get ticket tier IDs and quantities (exclude products)
+      const ticketItems = items.filter((i) => !i.tierId.startsWith("product-"));
+      const tierIds = ticketItems.map((i) => i.tierId);
+      const quantities = ticketItems.map((i) => i.quantity);
 
-      const { data: order, error: orderErr } = await supabase.from("orders").insert({
-        buyer_id: user.id, event_id: eventId, subtotal, platform_fee: isFreeOrder ? 0 : platformFee, total: isFreeOrder ? 0 : finalTotal,
-        discount_amount: discount > 0 ? discount : 0,
-        coupon_id: appliedCouponId || null,
-        promoter_event_id: promoterEventId,
-        status: isFreeOrder ? "paid" : "pending",
-        payment_status: isFreeOrder ? "paid" : "pending",
-        payment_method: isFreeOrder ? "free" : null,
-        expires_at: isFreeOrder ? null : new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-      }).select().single();
-      if (orderErr) throw orderErr;
-      setOrderId(order.id);
+      // Create order via server-side RPC (validates prices, applies coupon atomically)
+      const { data: rpcResult, error: rpcErr } = await supabase.rpc("create_order_validated", {
+        p_tier_ids: tierIds,
+        p_quantities: quantities,
+        p_buyer_id: user.id,
+        p_coupon_code: couponCode?.trim() || null,
+        p_promoter_event_id: promoterEventId,
+      });
 
-      // Apply coupon: increment uses_count and enforce max_uses
-      if (appliedCouponId) {
-        const { data: couponApplied, error: couponErr } = await supabase.rpc("apply_coupon", {
-          p_coupon_id: appliedCouponId,
-          p_order_id: order.id,
-        });
-        if (couponErr) {
-          console.error("apply_coupon error:", couponErr);
-        } else if (!couponApplied) {
-          // Coupon has exceeded max_uses or is invalid — cancel and warn
-          toast({ title: "Cupom expirado", description: "O cupom atingiu o limite de usos.", variant: "destructive" });
-          await supabase.from("orders").update({ status: "cancelled" }).eq("id", order.id);
-          setIsCreatingOrder(false);
-          return;
-        }
+      if (rpcErr) throw rpcErr;
+      const result = rpcResult as any;
+      if (result?.error) {
+        toast({ title: "Erro ao criar pedido", description: result.error, variant: "destructive" });
+        setIsCreatingOrder(false);
+        return;
       }
 
-      // Reserve tickets (only for actual ticket tiers, not products)
-      const ticketItems = items.filter((i) => !i.tierId.startsWith("product-"));
+      const newOrderId = result.order_id;
+      const isFreeOrder = result.is_free;
+      setOrderId(newOrderId);
+      setOrderExpiresAt(isFreeOrder ? null : new Date(Date.now() + 15 * 60 * 1000).toISOString());
+
+      // Reserve tickets
       for (const item of ticketItems) {
         const { data: reserved, error: reserveErr } = await supabase.rpc("reserve_tickets", {
-          p_tier_id: item.tierId, p_quantity: item.quantity, p_order_id: order.id,
+          p_tier_id: item.tierId, p_quantity: item.quantity, p_order_id: newOrderId,
         });
         if (reserveErr) throw reserveErr;
         if (!reserved) {
-          await supabase.from("orders").update({ status: "cancelled" }).eq("id", order.id);
+          await supabase.from("orders").update({ status: "cancelled" }).eq("id", newOrderId);
           toast({ title: "Ingressos esgotados", description: `Não há ingressos suficientes para "${item.tierName}".`, variant: "destructive" });
           setIsCreatingOrder(false);
           return;
@@ -155,7 +149,7 @@ export default function Checkout() {
       }
 
       // Save attendee data on tickets
-      const { data: tickets } = await supabase.from("tickets").select("id, tier_id").eq("order_id", order.id).order("created_at");
+      const { data: tickets } = await supabase.from("tickets").select("id, tier_id").eq("order_id", newOrderId).order("created_at");
       if (tickets) {
         const tierIdx: Record<string, number> = {};
         for (const ticket of tickets) {
@@ -171,12 +165,12 @@ export default function Checkout() {
         }
       }
 
-      // Save order products (items with tierId starting with "product-")
+      // Save order products
       const productItems = items.filter((i) => i.tierId.startsWith("product-"));
       if (productItems.length > 0) {
         await saveOrderProducts(
           productItems.map((i) => ({
-            order_id: order.id,
+            order_id: newOrderId,
             product_id: i.tierId.replace("product-", ""),
             quantity: i.quantity,
             unit_price: i.price,
@@ -184,39 +178,56 @@ export default function Checkout() {
         );
       }
 
-      // Save checkout answers
-      const answersToSave: { order_id: string; question_id: string; answer: string }[] = [];
+      // A01: Save checkout answers (both order-level AND attendee-level)
+      const answersToSave: { order_id: string; question_id: string; answer: string; ticket_id?: string }[] = [];
       for (const [key, answer] of Object.entries(questionAnswers)) {
         if (!answer?.trim()) continue;
         if (key.startsWith("order-")) {
-          answersToSave.push({ order_id: order.id, question_id: key.replace("order-", ""), answer });
+          answersToSave.push({ order_id: newOrderId, question_id: key.replace("order-", ""), answer });
         }
       }
+
+      // Save attendee-level answers with ticket_id
+      if (tickets && tickets.length > 0) {
+        const tierIdx2: Record<string, number> = {};
+        for (const ticket of tickets) {
+          const idx = tierIdx2[ticket.tier_id] || 0;
+          tierIdx2[ticket.tier_id] = idx + 1;
+          const keyPrefix = `attendee-${ticket.tier_id}-${idx}`;
+          for (const [key, answer] of Object.entries(questionAnswers)) {
+            if (!answer?.trim()) continue;
+            if (key.startsWith(keyPrefix + "-")) {
+              const questionId = key.replace(keyPrefix + "-", "");
+              answersToSave.push({ order_id: newOrderId, question_id: questionId, answer, ticket_id: ticket.id });
+            }
+          }
+        }
+      }
+
       if (answersToSave.length > 0) {
         await supabase.from("checkout_answers").insert(answersToSave);
       }
 
-      // Free order: use confirm_order_payment RPC to properly handle sold counts
+      // Free order: confirm immediately
       if (isFreeOrder) {
         const { data: confirmed, error: confirmErr } = await supabase.rpc("confirm_order_payment", {
-          p_order_id: order.id,
+          p_order_id: newOrderId,
           p_asaas_payment: "free",
           p_net_value: 0,
         });
         if (confirmErr) {
           console.error("confirm_order_payment error:", confirmErr);
-          await supabase.from("tickets").update({ status: "active" }).eq("order_id", order.id).eq("status", "reserved");
+          await supabase.from("tickets").update({ status: "active" }).eq("order_id", newOrderId).eq("status", "reserved");
         } else if (confirmed === false) {
           toast({ title: "Erro", description: "Pedido já foi processado anteriormente.", variant: "destructive" });
           setIsCreatingOrder(false);
           return;
         }
 
-        // Generate signed JWT QR codes for free tickets
         const { data: activeTickets } = await supabase
           .from("tickets")
           .select("id")
-          .eq("order_id", order.id)
+          .eq("order_id", newOrderId)
           .eq("status", "active");
         if (activeTickets?.length) {
           await Promise.all(
@@ -238,7 +249,7 @@ export default function Checkout() {
     } finally {
       setIsCreatingOrder(false);
     }
-  }, [user, items, subtotal, platformFee, total, finalTotal, discount, appliedCouponId, attendeeData, questionAnswers, clearCart, orderId]);
+  }, [user, items, attendeeData, questionAnswers, clearCart, orderId, couponCode, trackingCode]);
 
   // Process payment
   const handleConfirmPayment = useCallback(async (method: string, cardData?: CreditCardData, installments?: number) => {
@@ -275,7 +286,6 @@ export default function Checkout() {
     }
   }, [orderId, clearCart]);
 
-  // Redirect if cart empty (after all hooks)
   if (items.length === 0 && step < 2) {
     return <Navigate to="/carrinho" replace />;
   }
@@ -288,7 +298,6 @@ export default function Checkout() {
           <ArrowLeft className="h-4 w-4" /> Voltar ao carrinho
         </Link>
 
-        {/* Progress */}
         <div className="flex items-center gap-2 mb-8">
           {steps.map((s, i) => (
             <div key={s} className="flex items-center gap-2">
@@ -322,6 +331,7 @@ export default function Checkout() {
             pixQrCode={pixQrCode} pixQrCodeImage={pixQrCodeImage}
             boletoUrl={boletoUrl} boletoBarcode={boletoBarcode}
             paymentCreated={paymentCreated} awaitingPayment={awaitingPayment}
+            expiresAt={orderExpiresAt}
           />
         )}
 
