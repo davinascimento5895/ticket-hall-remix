@@ -11,10 +11,18 @@ serve(async (req) => {
   }
 
   try {
-    const { ticketId, recipientEmail, eventTitle, tierName, qrCode } = await req.json();
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    // C03: Only accept service role key (internal calls from other functions)
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader || authHeader !== `Bearer ${serviceKey}`) {
+      return new Response(JSON.stringify({ error: "Unauthorized — internal use only" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    const { ticketId, recipientEmail, eventTitle, tierName, qrCode, orderId } = await req.json();
 
     // EMAIL_INTEGRATION_POINT — integrate with Resend, SendGrid, or SES
-    console.log("send-ticket-email stub:", { ticketId, recipientEmail, eventTitle, tierName, qrCode });
+    console.log("send-ticket-email stub:", { ticketId, recipientEmail, eventTitle, tierName, qrCode, orderId });
 
     return new Response(
       JSON.stringify({ success: true, message: "Email stub called. Integration pending." }),
