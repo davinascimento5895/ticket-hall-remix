@@ -13,6 +13,9 @@ interface AuthContextType {
     avatar_url: string | null;
     phone: string | null;
     cpf: string | null;
+    birth_date: string | null;
+    city: string | null;
+    state: string | null;
     producer_status: string | null;
     organizer_slug: string | null;
     organizer_bio: string | null;
