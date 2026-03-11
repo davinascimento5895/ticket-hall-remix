@@ -36,20 +36,6 @@ export function CheckoutStepConfirmation({ orderId }: CheckoutStepConfirmationPr
     enabled: !!orderId,
   });
 
-  const { data: buyerEmail } = useQuery({
-    queryKey: ["order-buyer-email", order?.buyer_id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("id", order!.buyer_id)
-        .single();
-      // We get email from auth context, but we need the profile to confirm
-      return data;
-    },
-    enabled: !!order?.buyer_id,
-  });
-
   const event = order?.events as any;
 
   const handleAddToCalendar = (type: "google" | "ics") => {

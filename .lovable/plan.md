@@ -1,99 +1,145 @@
+# TicketHall — Plano Mestre de Redesign & Implementação
 
-
-# Auditoria End-to-End — Checkout, Perfil do Produtor e Confirmacao
-
-Revisei todos os arquivos das tres implementacoes. Abaixo os problemas encontrados e o plano de correcao.
-
----
-
-## Bugs e Problemas Encontrados
-
-### 1. CheckoutStepBuyer — `profile` do AuthContext nao tem `birth_date`
-
-O `AuthContext.fetchProfile` (linha 62) seleciona apenas `id, full_name, avatar_url, phone, cpf, producer_status, organizer_slug...` — **nao inclui `birth_date`**. O `CheckoutStepBuyer` (linha 46-50) busca o perfil separadamente via query, o que funciona, mas e redundante e poderia usar o profile do context se ele incluisse `birth_date`.
-
-**Problema real:** No `CheckoutStepBuyer`, a query separada funciona, mas o campo `birth_date` vem como `string | null` do banco. Se vier `null`, o `<Input type="date">` mostra vazio (OK). Se vier como `"1990-05-15"`, funciona. **Nenhum bug critico aqui**, mas ha uma inconsistencia: o `AuthContext.profile` nao expoe `birth_date`, `city` nem `state` que sao usados no Buyer. A query duplicada resolve, mas e ineficiente.
-
-**Correcao:** Adicionar `birth_date, city, state` ao select do `fetchProfile` no `AuthContext` e ao tipo `AuthContextType.profile`. Remover a query duplicada do `CheckoutStepBuyer`.
-
-### 2. Confirmacao — `ticket_tiers` no select de tickets pode nao funcionar
-
-No `CheckoutStepConfirmation` (linha 32), a query faz `.select("id, qr_code, qr_code_image_url, ticket_tiers(name)")`. O campo `ticket_tiers` e uma relacao via `tier_id` na tabela `tickets`. Preciso verificar se o nome da FK permite este join automatico. Na tabela `tickets`, a coluna se chama `tier_id` referenciando `ticket_tiers.id`, entao o Supabase automaticamente resolve `ticket_tiers(name)`. **Deve funcionar.**
-
-### 3. OrganizerProfile — Contador de seguidores so visivel para o proprio produtor
-
-A RLS de `producer_follows` permite SELECT apenas para:
-- `auth.uid() = user_id` (o proprio seguidor)
-- `auth.uid() = producer_id` (o proprio produtor)
-
-O `followerCount` query (linha 69) usa `.select("id", { count: "exact", head: true }).eq("producer_id", profile.id)`. Se o usuario logado NAO for o produtor e NAO for um seguidor, ele nao consegue contar os seguidores. **Resultado: visitantes veem 0 seguidores sempre.**
-
-**Correcao:** Adicionar uma policy SELECT publica para contagem, ou criar um RPC `get_follower_count(p_producer_id)` com SECURITY DEFINER.
-
-### 4. OrganizerProfile — `isFollowing` query falha silenciosamente sem login
-
-Se `user` for `null`, a query tem `enabled: !!profile?.id && !!user?.id` (correto, nao executa). Mas o botao "Seguir" aparece mesmo sem login e o `toggleFollow.mutate()` tenta executar, caindo no `onError`. **Funcional, mas UX poderia esconder o botao ou mostrar modal de login.**
-
-### 5. ContactProducerModal — `profile` no AuthContext nao tem `full_name` tipado como obrigatorio
-
-O `profile?.full_name` pode ser `null`. O modal faz `prev.name || profile?.full_name || ""` (linha 44), que funciona. **Sem bug.**
-
-### 6. Checkout — Step indicator mostra numero errado para free orders
-
-Para pedidos gratuitos, o step 2 (Pagamento) e pulado visualmente (`if (isFreeCart && i === 2) return null`), mas o step 3 (Confirmacao) ainda mostra o numero "4" no circulo. Deveria mostrar "3".
-
-**Correcao:** Ajustar a numeracao dos steps quando `isFreeCart` for true.
-
-### 7. Checkout — `items.length === 0 && step < 3` redireciona durante confirmacao
-
-Se o `clearCart()` executar antes de `setStep(3)` no fluxo free (linha 269-270), ha uma race condition: `items` fica vazio e `step` ainda e 1, causando redirect para `/carrinho`. No codigo atual, `clearCart()` e chamado antes de `setStep(3)`. Como React batches state updates, ambos devem executar na mesma renderizacao. **Provavelmente OK no React 18 com automatic batching, mas e fragil.**
-
-**Correcao:** Mover o `clearCart()` para depois do `setStep(3)`, ou usar um ref para controlar o redirect.
-
-### 8. CheckoutStepConfirmation — `buyerEmail` query nao retorna email
-
-A query `buyerEmail` (linha 39-51) busca `profiles.id` mas nunca usa o resultado para nada util. O email do comprador nao e exibido na confirmacao. **Codigo morto, pode ser removido.**
-
-### 9. ProducerInbox — Sem realtime
-
-A inbox nao atualiza automaticamente quando chega nova mensagem. O produtor precisa dar refresh. Nao e um bug, mas e uma melhoria importante.
+## Documento de Referência
+Business Case & Product Design Analysis completo fornecido pelo cliente em 2026-03-06.
 
 ---
 
-## Plano de Correcao
-
-### Bloco 1: AuthContext — Adicionar campos faltantes ao profile
-- Adicionar `birth_date`, `city`, `state` ao select do `fetchProfile`
-- Atualizar o tipo `AuthContextType.profile`
-- Simplificar `CheckoutStepBuyer` para usar o profile do context
-
-### Bloco 2: RLS de producer_follows — Corrigir contagem publica
-- Migration SQL: Adicionar policy SELECT publica em `producer_follows` para permitir contagem (ou criar RPC)
-
-### Bloco 3: Step indicator — Numeracao correta para free orders
-- Calcular indice visual dinamicamente quando `isFreeCart`
-
-### Bloco 4: Race condition clearCart/setStep
-- Inverter a ordem: `setStep(3)` antes de `clearCart()`
-
-### Bloco 5: Limpeza
-- Remover query `buyerEmail` morta do `CheckoutStepConfirmation`
-
-### Bloco 6: ProducerInbox realtime (opcional)
-- Adicionar subscription realtime para `producer_messages`
+## Design System Alvo (Novo)
+- **Tema**: Dark-first (`#0d0d0d` base, `#1a1a1a`/`#1f1f1f`/`#2c2c2c` superfícies)
+- **Cor principal (ação)**: Laranja `#ff472d` — CTAs, badges, ícones ativos, links, bordas de foco
+- **Cor secundária (gamificação)**: Verde-lima `#bad900` — pontos, sucesso, confirmações
+- **Texto principal**: Branco `#ffffff`
+- **Texto secundário**: Cinza claro `#9ca3af`
+- **Texto terciário (inativo)**: Cinza médio `#6b7280`
+- **Tipografia**: Sora (display) + Inter (body) — já configurado
+- **Border radius**: ~12-16px para cards, ~10px para inputs
+- **Componentes**: Chips/Pills, Bottom Sheets, Cards com gradiente escuro, Toggle switches
 
 ---
 
-## Resumo
+## Gap Analysis — Existente vs Documento de Design
 
-| # | Problema | Severidade | Bloco |
-|---|----------|-----------|-------|
-| 1 | Profile sem birth_date/city/state | Baixa | 1 |
-| 3 | Seguidores sempre 0 para visitantes | Alta | 2 |
-| 6 | Numeracao errada nos steps free | Media | 3 |
-| 7 | Race condition clearCart/setStep | Media | 4 |
-| 8 | Query buyerEmail morta | Baixa | 5 |
-| 9 | Inbox sem realtime | Baixa | 6 |
+### ✅ JÁ IMPLEMENTADO
+- Catálogo de eventos com filtros por categoria
+- Detalhe do evento com descrição, data, local
+- Fluxo de compra (carrinho → checkout → pagamento)
+- Meus Ingressos (lista de ingressos ativos)
+- QR Code por ingresso
+- Transferência de ingresso
+- Sistema de reembolso (RefundDialog)
+- Cupons de desconto
+- Fila virtual
+- Certificados pós-evento
+- Painel do produtor completo
+- Painel admin completo
+- Autenticação (login/registro com email)
+- Notificações (NotificationBell)
+- Blog
+- Página do organizador
+- LGPD/Privacidade
+- Bottom navigation mobile
+- Tema claro/escuro com transição animada
 
-Total: 6 correcoes, nenhuma dependencia externa.
+### ❌ FEATURES FALTANTES
+1. **Onboarding** — 2-3 telas de boas-vindas com skip
+2. **Detecção automática de cidade** — GPS
+3. **Seletor de datas horizontal** — Barra scrollável no catálogo
+4. **Top-10 / Ranking** — Seção editorial com badges numerados
+5. **Filtro avançado (Bottom Sheet)** — Sort, range slider, gênero, horário
+6. **Grid view toggle** — Lista/grade no catálogo
+7. **Rating/Avaliação** — Estrelas + reviews de usuários (tabela + UI)
+8. **Random/Discovery** — Evento aleatório
+9. **Cast/Elenco** — Seção de artistas no detalhe
+10. **Mapa de assentos** — Seleção visual interativa
+11. **Sistema de pontos** — Fidelidade no checkout
+12. **Favoritos** — Salvar eventos (tabela + UI)
+13. **Ingressos arquivados** — Ativo/Arquivado com visual P&B
+14. **Chat de suporte** — Bot + quick replies in-app
+15. **Perfil completo** — Editar perfil, cidade, pagamentos, notificações
+16. **Login OTP** — Código por email/telefone
+17. **Login social** — Google, Apple
+18. **Compartilhamento** — Share via link
+19. **Notificações configuráveis** — SMS/Push/Email toggles
+20. **Seções editoriais** — "Novo", "Semana", curadoria
 
+### 🔄 PRECISA REDESIGN VISUAL
+- Todas as páginas públicas (landing, catálogo, detalhe, checkout)
+- Navbar → Dark-first com laranja
+- Bottom Nav → Ícone ativo laranja
+- Cards de evento → Fundo #1f1f1f, gradiente, badges
+- Botões → Fill laranja, outline cinza
+- Inputs → Fundo #1f1f1f, borda #3a3a3a
+- Chips → Ativo laranja, inativo borda cinza
+- Login/Registro → Redesign completo
+- Meus Ingressos → Cards com barcode, ações
+- Painéis Producer/Admin → Dark-first
+
+---
+
+## Fases de Implementação
+
+### Fase 1 — Design System Foundation
+- [ ] Atualizar index.css (CSS variables nova paleta)
+- [ ] Atualizar tailwind.config.ts
+- [ ] Atualizar componentes base (Button, Input, Card, Badge, Chips)
+- [ ] Navbar dark-first com laranja
+- [ ] Bottom Nav com laranja
+- [ ] AuthModal redesign dark-first
+
+### Fase 2 — Páginas Públicas (Buyer UX)
+- [ ] Landing page redesign
+- [ ] Catálogo (seletor datas, chips, banner, Top-10)
+- [ ] Detalhe do evento (reviews, cast, CTA fixo)
+- [ ] Meus Ingressos (ativo/arquivado, barcode, reembolso)
+- [ ] Checkout redesign
+
+### Fase 3 — Features Novas (Prioridade Alta)
+- [ ] Favoritos (tabela + UI)
+- [ ] Rating/Reviews (tabela + UI)
+- [ ] Filtro avançado (Bottom Sheet com Drawer)
+- [ ] Grid view toggle
+- [ ] Compartilhamento social
+- [ ] Perfil completo do usuário
+- [ ] Ingressos arquivados
+
+### Fase 4 — Features Avançadas
+- [ ] Random/Discovery
+- [ ] Sistema de pontos/fidelidade
+- [ ] Chat de suporte in-app
+- [ ] Onboarding (2-3 telas)
+- [ ] Detecção de cidade
+- [ ] Notificações configuráveis
+- [ ] Login OTP + Social
+
+### Fase 5 — Painéis (Producer/Admin)
+- [ ] Redesign dark-first dos dashboards
+- [ ] Consistência com novo design system
+
+---
+
+## Infraestrutura Backend (Plano Anterior — Mantido)
+
+### Bloco 1 — Schema & SQL Functions
+- Funções atômicas: reserve_tickets, confirm_order_payment, apply_coupon
+- Índices de performance
+
+### Bloco 2 — Edge Functions de Pagamento (Asaas)
+- create-payment, asaas-webhook, create-producer-account
+- Secrets: ASAAS_API_KEY, ASAAS_BASE_URL, QR_SECRET
+
+### Bloco 3 — Checkout Real
+- Conectar UI ao create-payment
+- PIX, Cartão, Boleto
+
+### Bloco 4 — QR Codes Seguros + Check-in
+- JWT assinado, validate-checkin
+
+### Bloco 5 — Transferência + Cancelamento
+- transfer-ticket, cancel-event
+
+### Bloco 6 — Cron Jobs
+- cleanup_expired_reservations, event-reminders
+
+### Bloco 7 — Segurança & LGPD
+- Rate limiting, consents, data requests

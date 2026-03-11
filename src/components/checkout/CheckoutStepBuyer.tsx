@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { validateCPF, formatCPF, formatPhone } from "@/lib/validators";
 import { fetchAddress, formatCEP } from "@/lib/cep";
 import { useIBGEStates } from "@/hooks/useIBGELocations";
@@ -38,39 +37,29 @@ export function CheckoutStepBuyer({ buyerData, setBuyerData, onNext }: CheckoutS
   const [loadingCep, setLoadingCep] = useState(false);
   const [profileLoaded, setProfileLoaded] = useState(false);
 
-  // Auto-fill from profile on first load
+  // Auto-fill from profile on first load (using AuthContext profile)
   useEffect(() => {
     if (profileLoaded || !user) return;
 
-    const loadProfile = async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("full_name, cpf, phone, birth_date, city, state")
-        .eq("id", user.id)
-        .single();
-
-      if (data) {
-        setBuyerData((prev) => ({
-          ...prev,
-          fullName: prev.fullName || data.full_name || "",
-          email: prev.email || user.email || "",
-          cpf: prev.cpf || (data.cpf ? formatCPF(data.cpf) : ""),
-          phone: prev.phone || (data.phone ? formatPhone(data.phone) : ""),
-          birthDate: prev.birthDate || data.birth_date || "",
-          city: prev.city || data.city || "",
-          state: prev.state || data.state || "",
-        }));
-      } else {
-        setBuyerData((prev) => ({
-          ...prev,
-          email: prev.email || user.email || "",
-        }));
-      }
-      setProfileLoaded(true);
-    };
-
-    loadProfile();
-  }, [user, profileLoaded, setBuyerData]);
+    if (profile) {
+      setBuyerData((prev) => ({
+        ...prev,
+        fullName: prev.fullName || profile.full_name || "",
+        email: prev.email || user.email || "",
+        cpf: prev.cpf || (profile.cpf ? formatCPF(profile.cpf) : ""),
+        phone: prev.phone || (profile.phone ? formatPhone(profile.phone) : ""),
+        birthDate: prev.birthDate || profile.birth_date || "",
+        city: prev.city || profile.city || "",
+        state: prev.state || profile.state || "",
+      }));
+    } else {
+      setBuyerData((prev) => ({
+        ...prev,
+        email: prev.email || user.email || "",
+      }));
+    }
+    setProfileLoaded(true);
+  }, [user, profile, profileLoaded, setBuyerData]);
 
   // CEP auto-fill
   const handleCepChange = useCallback(async (rawValue: string) => {

@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Inbox, Mail, MailOpen, Clock, User } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 export default function ProducerInbox() {
   const { user } = useAuth();
@@ -27,6 +28,14 @@ export default function ProducerInbox() {
       if (error) throw error;
       return data;
     },
+    enabled: !!user?.id,
+  });
+
+  // Realtime: auto-refresh when new messages arrive
+  useRealtimeSubscription({
+    table: "producer_messages",
+    filter: `producer_id=eq.${user?.id}`,
+    queryKey: ["producer-inbox", user?.id || ""],
     enabled: !!user?.id,
   });
 
