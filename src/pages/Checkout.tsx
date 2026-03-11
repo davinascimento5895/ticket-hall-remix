@@ -266,8 +266,8 @@ export default function Checkout() {
         }
 
         toast({ title: "Inscrição confirmada!", description: "Seus ingressos foram gerados com sucesso." });
-        clearCart();
-        setStep(3); // Go to confirmation
+        setStep(3); // Go to confirmation first
+        clearCart(); // Then clear cart (React 18 batches these)
       } else {
         setStep(2); // Go to payment
       }
