@@ -4,6 +4,7 @@ import { useNavigate, Navigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Check } from "lucide-react";
 import { CountdownTimer } from "@/components/CountdownTimer";
+import { CheckoutStepBuyer, BuyerData } from "@/components/checkout/CheckoutStepBuyer";
 import { CheckoutStepData } from "@/components/checkout/CheckoutStepData";
 import { CheckoutStepPayment } from "@/components/checkout/CheckoutStepPayment";
 import { CheckoutStepConfirmation } from "@/components/checkout/CheckoutStepConfirmation";
@@ -14,7 +15,7 @@ import { getCheckoutQuestions, saveOrderProducts } from "@/lib/api-checkout";
 import { createPayment, CreditCardData } from "@/lib/api-payment";
 import { toast } from "@/hooks/use-toast";
 
-const steps = ["Dados", "Pagamento", "Confirmação"];
+const steps = ["Comprador", "Participantes", "Pagamento", "Confirmação"];
 
 export default function Checkout() {
   const [step, setStep] = useState(0);
@@ -33,6 +34,21 @@ export default function Checkout() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  const [buyerData, setBuyerData] = useState<BuyerData>({
+    fullName: "",
+    email: "",
+    birthDate: "",
+    cpf: "",
+    phone: "",
+    cep: "",
+    street: "",
+    addressNumber: "",
+    complement: "",
+    neighborhood: "",
+    city: "",
+    state: "",
+  });
+
   const [attendeeData, setAttendeeData] = useState<Record<string, { name: string; email: string; cpf: string }>>({});
   const [questionAnswers, setQuestionAnswers] = useState<Record<string, string>>({});
 
@@ -50,6 +66,9 @@ export default function Checkout() {
   const orderQuestions = allQuestions.filter((q: any) => q.applies_to === "order");
   const attendeeQuestions = allQuestions.filter((q: any) => q.applies_to === "attendee");
 
+  // Determine if this is a free order (skip payment step)
+  const isFreeCart = finalTotal === 0;
+
   // Realtime subscription for payment confirmation
   useEffect(() => {
     if (!orderId || !awaitingPayment) return;
@@ -66,7 +85,7 @@ export default function Checkout() {
         if (newStatus === "paid") {
           toast({ title: "Pagamento confirmado!", description: "Seus ingressos foram gerados com sucesso." });
           clearCart();
-          setStep(2);
+          setStep(3);
           setAwaitingPayment(false);
         } else if (newStatus === "cancelled" || newStatus === "expired") {
           toast({ title: "Pagamento não aprovado", description: "Tente novamente.", variant: "destructive" });
@@ -79,14 +98,19 @@ export default function Checkout() {
     return () => { supabase.removeChannel(channel); };
   }, [orderId, awaitingPayment, clearCart]);
 
-  // C02: Create order using server-side RPC for price validation
+  // Create order using server-side RPC for price validation
   const handleCreateOrder = useCallback(async () => {
     if (!user) {
       toast({ title: "Faça login", description: "Você precisa estar logado para finalizar a compra.", variant: "destructive" });
       return;
     }
     if (orderId) {
-      setStep(1);
+      // Already created, skip to payment or confirmation
+      if (isFreeCart) {
+        setStep(3);
+      } else {
+        setStep(2);
+      }
       return;
     }
     setIsCreatingOrder(true);
@@ -112,7 +136,7 @@ export default function Checkout() {
       const tierIds = ticketItems.map((i) => i.tierId);
       const quantities = ticketItems.map((i) => i.quantity);
 
-      // Create order via server-side RPC (validates prices, applies coupon atomically)
+      // Create order via server-side RPC
       const { data: rpcResult, error: rpcErr } = await supabase.rpc("create_order_validated", {
         p_tier_ids: tierIds,
         p_quantities: quantities,
@@ -130,9 +154,14 @@ export default function Checkout() {
       }
 
       const newOrderId = result.order_id;
-      const isFreeOrder = result.is_free;
+      const isServerFree = result.is_free;
       setOrderId(newOrderId);
-      setOrderExpiresAt(isFreeOrder ? null : new Date(Date.now() + 15 * 60 * 1000).toISOString());
+      setOrderExpiresAt(isServerFree ? null : new Date(Date.now() + 15 * 60 * 1000).toISOString());
+
+      // Save buyer address on the order
+      await supabase.from("orders").update({
+        billing_address: [buyerData.street, buyerData.addressNumber, buyerData.complement, buyerData.neighborhood, buyerData.city, buyerData.state, buyerData.cep].filter(Boolean).join(", "),
+      }).eq("id", newOrderId);
 
       // Reserve tickets
       for (const item of ticketItems) {
@@ -178,7 +207,7 @@ export default function Checkout() {
         );
       }
 
-      // A01: Save checkout answers (both order-level AND attendee-level)
+      // Save checkout answers (both order-level AND attendee-level)
       const answersToSave: { order_id: string; question_id: string; answer: string; ticket_id?: string }[] = [];
       for (const [key, answer] of Object.entries(questionAnswers)) {
         if (!answer?.trim()) continue;
@@ -187,7 +216,6 @@ export default function Checkout() {
         }
       }
 
-      // Save attendee-level answers with ticket_id
       if (tickets && tickets.length > 0) {
         const tierIdx2: Record<string, number> = {};
         for (const ticket of tickets) {
@@ -208,8 +236,8 @@ export default function Checkout() {
         await supabase.from("checkout_answers").insert(answersToSave);
       }
 
-      // Free order: confirm immediately
-      if (isFreeOrder) {
+      // Free order: confirm immediately, skip payment
+      if (isServerFree) {
         const { data: confirmed, error: confirmErr } = await supabase.rpc("confirm_order_payment", {
           p_order_id: newOrderId,
           p_asaas_payment: "free",
@@ -239,9 +267,9 @@ export default function Checkout() {
 
         toast({ title: "Inscrição confirmada!", description: "Seus ingressos foram gerados com sucesso." });
         clearCart();
-        setStep(2);
+        setStep(3); // Go to confirmation
       } else {
-        setStep(1);
+        setStep(2); // Go to payment
       }
     } catch (error: any) {
       console.error("Order creation error:", error);
@@ -249,7 +277,7 @@ export default function Checkout() {
     } finally {
       setIsCreatingOrder(false);
     }
-  }, [user, items, attendeeData, questionAnswers, clearCart, orderId, couponCode, trackingCode]);
+  }, [user, items, attendeeData, questionAnswers, clearCart, orderId, couponCode, trackingCode, buyerData, isFreeCart]);
 
   // Process payment
   const handleConfirmPayment = useCallback(async (method: string, cardData?: CreditCardData, installments?: number) => {
@@ -266,7 +294,7 @@ export default function Checkout() {
       if (result.immediateConfirmation) {
         toast({ title: "Pagamento confirmado!", description: "Seus ingressos foram gerados com sucesso." });
         clearCart();
-        setStep(2);
+        setStep(3);
       } else {
         setPixQrCode(result.pixQrCode || null);
         setPixQrCodeImage(result.pixQrCodeImage || null);
@@ -276,7 +304,7 @@ export default function Checkout() {
       }
       if (result.stub) {
         toast({ title: "Modo de teste", description: "Gateway de pagamento não configurado. Pagamento simulado." });
-        if (method === "credit_card") { clearCart(); setStep(2); }
+        if (method === "credit_card") { clearCart(); setStep(3); }
       }
     } catch (error: any) {
       console.error("Payment error:", error);
@@ -286,56 +314,162 @@ export default function Checkout() {
     }
   }, [orderId, clearCart]);
 
-  if (items.length === 0 && step < 2) {
+  if (items.length === 0 && step < 3) {
     return <Navigate to="/carrinho" replace />;
   }
+
+  // Build summary sidebar info
+  const eventTitle = items[0]?.eventTitle || "";
+  const coverImage = items[0]?.coverImageUrl;
+  const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
 
   return (
     <>
       <SEOHead title="Checkout" description="Finalize sua compra de ingressos no TicketHall." />
-      <div className="container pt-4 lg:pt-24 pb-16 max-w-2xl">
+      <div className="container pt-4 lg:pt-24 pb-16">
         <Link to="/carrinho" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
           <ArrowLeft className="h-4 w-4" /> Voltar ao carrinho
         </Link>
 
-        <div className="flex items-center gap-2 mb-8">
-          {steps.map((s, i) => (
-            <div key={s} className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium border ${i <= step ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"}`}>
-                {i < step ? <Check className="h-4 w-4" /> : i + 1}
-              </div>
-              <span className={`text-sm hidden sm:inline ${i <= step ? "text-foreground" : "text-muted-foreground"}`}>{s}</span>
-              {i < steps.length - 1 && <div className="w-8 h-px bg-border" />}
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Main content */}
+          <div className="flex-1 max-w-2xl">
+            {/* Step indicator */}
+            <div className="flex items-center gap-2 mb-8">
+              {steps.map((s, i) => {
+                // For free orders, skip the "Pagamento" step visually
+                if (isFreeCart && i === 2) return null;
+                return (
+                  <div key={s} className="flex items-center gap-2">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium border transition-colors ${
+                      i < step ? "bg-primary text-primary-foreground border-primary" :
+                      i === step ? "bg-primary text-primary-foreground border-primary" :
+                      "border-border text-muted-foreground"
+                    }`}>
+                      {i < step ? <Check className="h-4 w-4" /> : i + 1}
+                    </div>
+                    <span className={`text-sm hidden sm:inline ${i <= step ? "text-foreground font-medium" : "text-muted-foreground"}`}>{s}</span>
+                    {i < steps.length - 1 && !(isFreeCart && i === 1) && <div className="w-8 h-px bg-border" />}
+                  </div>
+                );
+              })}
+              {expiresAt && step < 3 && (
+                <div className="ml-auto">
+                  <CountdownTimer expiresAt={expiresAt} onExpire={() => { clearCart(); navigate("/carrinho"); }} />
+                </div>
+              )}
             </div>
-          ))}
-          {expiresAt && step < 2 && (
-            <div className="ml-auto">
-              <CountdownTimer expiresAt={expiresAt} onExpire={() => { clearCart(); navigate("/carrinho"); }} />
+
+            {/* Steps content */}
+            {step === 0 && (
+              <CheckoutStepBuyer
+                buyerData={buyerData}
+                setBuyerData={setBuyerData}
+                onNext={() => setStep(1)}
+              />
+            )}
+
+            {step === 1 && (
+              <CheckoutStepData
+                items={items}
+                orderQuestions={orderQuestions}
+                attendeeQuestions={attendeeQuestions}
+                attendeeData={attendeeData}
+                setAttendeeData={setAttendeeData}
+                questionAnswers={questionAnswers}
+                setQuestionAnswers={setQuestionAnswers}
+                onNext={handleCreateOrder}
+                isLoading={isCreatingOrder}
+                buyerData={buyerData}
+              />
+            )}
+
+            {step === 2 && (
+              <CheckoutStepPayment
+                subtotal={subtotal}
+                platformFee={platformFee}
+                total={finalTotal}
+                onBack={() => setStep(1)}
+                onConfirm={handleConfirmPayment}
+                isProcessing={isProcessingPayment}
+                pixQrCode={pixQrCode}
+                pixQrCodeImage={pixQrCodeImage}
+                boletoUrl={boletoUrl}
+                boletoBarcode={boletoBarcode}
+                paymentCreated={paymentCreated}
+                awaitingPayment={awaitingPayment}
+                expiresAt={orderExpiresAt}
+              />
+            )}
+
+            {step === 3 && <CheckoutStepConfirmation orderId={orderId} />}
+          </div>
+
+          {/* Order summary sidebar */}
+          {step < 3 && (
+            <div className="w-full lg:w-80 shrink-0">
+              {/* Event card */}
+              {coverImage && (
+                <div className="flex items-start gap-3 p-4 rounded-lg border border-border bg-card mb-4">
+                  <img src={coverImage} alt="" className="w-16 h-16 rounded-lg object-cover shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-display font-semibold text-sm text-foreground line-clamp-2">{eventTitle}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Summary */}
+              <div className="p-4 rounded-lg border border-border bg-card space-y-3 sticky top-24">
+                <h3 className="font-display font-semibold text-foreground">Resumo do Pedido</h3>
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Ingressos</p>
+                  {items.map((item) => (
+                    <div key={item.tierId} className="flex items-start justify-between text-sm">
+                      <span className="text-foreground flex-1 mr-2">
+                        <span className="font-medium">{item.quantity}</span> {item.tierName}
+                      </span>
+                      <span className="text-foreground font-medium shrink-0">
+                        {item.price === 0 ? "Grátis" : fmt(item.price * item.quantity)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="border-t border-border pt-3 space-y-1 text-sm">
+                  {subtotal > 0 && (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Subtotal</span>
+                        <span>{fmt(subtotal)}</span>
+                      </div>
+                      {platformFee > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Taxa</span>
+                          <span>{fmt(platformFee)}</span>
+                        </div>
+                      )}
+                      {discount > 0 && (
+                        <div className="flex justify-between text-success">
+                          <span>Desconto</span>
+                          <span>-{fmt(discount)}</span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  <div className="flex justify-between font-semibold border-t border-border pt-2">
+                    <div>
+                      <span>Total</span>
+                      <p className="text-xs text-muted-foreground font-normal">({items.reduce((s, i) => s + i.quantity, 0)} {items.reduce((s, i) => s + i.quantity, 0) === 1 ? "item" : "itens"})</p>
+                    </div>
+                    <div className="text-right">
+                      <span>{fmt(finalTotal)}</span>
+                      {finalTotal === 0 && <p className="text-xs text-muted-foreground font-normal">Evento gratuito</p>}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
-
-        {step === 0 && (
-          <CheckoutStepData
-            items={items} orderQuestions={orderQuestions} attendeeQuestions={attendeeQuestions}
-            attendeeData={attendeeData} setAttendeeData={setAttendeeData}
-            questionAnswers={questionAnswers} setQuestionAnswers={setQuestionAnswers}
-            onNext={handleCreateOrder} isLoading={isCreatingOrder}
-          />
-        )}
-
-        {step === 1 && (
-          <CheckoutStepPayment
-            subtotal={subtotal} platformFee={platformFee} total={finalTotal}
-            onBack={() => setStep(0)} onConfirm={handleConfirmPayment} isProcessing={isProcessingPayment}
-            pixQrCode={pixQrCode} pixQrCodeImage={pixQrCodeImage}
-            boletoUrl={boletoUrl} boletoBarcode={boletoBarcode}
-            paymentCreated={paymentCreated} awaitingPayment={awaitingPayment}
-            expiresAt={orderExpiresAt}
-          />
-        )}
-
-        {step === 2 && <CheckoutStepConfirmation orderId={orderId} />}
       </div>
     </>
   );
