@@ -266,8 +266,8 @@ export default function Checkout() {
         }
 
         toast({ title: "Inscrição confirmada!", description: "Seus ingressos foram gerados com sucesso." });
-        clearCart();
-        setStep(3); // Go to confirmation
+        setStep(3); // Go to confirmation first
+        clearCart(); // Then clear cart (React 18 batches these)
       } else {
         setStep(2); // Go to payment
       }
@@ -346,7 +346,7 @@ export default function Checkout() {
                       i === step ? "bg-primary text-primary-foreground border-primary" :
                       "border-border text-muted-foreground"
                     }`}>
-                      {i < step ? <Check className="h-4 w-4" /> : i + 1}
+                      {i < step ? <Check className="h-4 w-4" /> : (isFreeCart && i > 2 ? i : i + 1)}
                     </div>
                     <span className={`text-sm hidden sm:inline ${i <= step ? "text-foreground font-medium" : "text-muted-foreground"}`}>{s}</span>
                     {i < steps.length - 1 && !(isFreeCart && i === 1) && <div className="w-8 h-px bg-border" />}
