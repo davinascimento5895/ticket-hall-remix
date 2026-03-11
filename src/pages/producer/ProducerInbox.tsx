@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Inbox, Mail, MailOpen, Clock, User } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 export default function ProducerInbox() {
   const { user } = useAuth();

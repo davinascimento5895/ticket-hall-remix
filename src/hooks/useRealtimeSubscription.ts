@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-type TableName = "tickets" | "orders" | "event_analytics" | "checkin_sessions";
+type TableName = "tickets" | "orders" | "event_analytics" | "checkin_sessions" | "producer_messages";
 
 interface UseRealtimeOptions {
   table: TableName;
