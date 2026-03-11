@@ -31,6 +31,14 @@ export default function ProducerInbox() {
     enabled: !!user?.id,
   });
 
+  // Realtime: auto-refresh when new messages arrive
+  useRealtimeSubscription({
+    table: "producer_messages",
+    filter: `producer_id=eq.${user?.id}`,
+    queryKey: ["producer-inbox", user?.id || ""],
+    enabled: !!user?.id,
+  });
+
   const markAsRead = useMutation({
     mutationFn: async (messageId: string) => {
       await supabase
