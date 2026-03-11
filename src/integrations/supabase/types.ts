@@ -1448,6 +1448,79 @@ export type Database = {
           },
         ]
       }
+      producer_follows: {
+        Row: {
+          created_at: string
+          id: string
+          producer_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          producer_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          producer_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "producer_follows_producer_id_fkey"
+            columns: ["producer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      producer_messages: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          producer_id: string
+          sender_email: string
+          sender_id: string
+          sender_name: string
+          subject: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          producer_id: string
+          sender_email: string
+          sender_id: string
+          sender_name: string
+          subject: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          producer_id?: string
+          sender_email?: string
+          sender_id?: string
+          sender_name?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "producer_messages_producer_id_fkey"
+            columns: ["producer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       producer_team_members: {
         Row: {
           accepted_at: string | null
