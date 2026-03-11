@@ -71,6 +71,7 @@ const ProducerEventAffiliates = lazy(() => import("./pages/producer/ProducerEven
 const ProducerEventPromoters = lazy(() => import("./pages/producer/ProducerEventPromoters"));
 const ProducerEventMessages = lazy(() => import("./pages/producer/ProducerEventMessages"));
 const ProducerInterestLists = lazy(() => import("./pages/producer/ProducerInterestLists"));
+const ProducerInbox = lazy(() => import("./pages/producer/ProducerInbox"));
 const ProducerInterestListForm = lazy(() => import("./pages/producer/ProducerInterestListForm"));
 const ProducerFinancialPage = lazy(() => import("./pages/producer/ProducerFinancial"));
 const ProducerPromoters = lazy(() => import("./pages/producer/ProducerPromoters"));
