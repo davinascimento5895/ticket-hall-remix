@@ -18,7 +18,10 @@ import { toast } from "@/hooks/use-toast";
 const steps = ["Comprador", "Participantes", "Pagamento", "Confirmação"];
 
 export default function Checkout() {
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(() => {
+    // If we have a stored orderId, resume at confirmation
+    return sessionStorage.getItem("checkout_order_id") ? 3 : 0;
+  });
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(() => {
