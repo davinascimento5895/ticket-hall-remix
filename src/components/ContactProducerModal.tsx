@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,11 @@ interface ContactProducerModalProps {
 export function ContactProducerModal({ open, onOpenChange, producerId, producerName }: ContactProducerModalProps) {
   const { user, profile } = useAuth();
   const [showForm, setShowForm] = useState(false);
+
+  // Reset to FAQ screen when modal reopens
+  useEffect(() => {
+    if (open) setShowForm(false);
+  }, [open]);
   const [sending, setSending] = useState(false);
   const [formData, setFormData] = useState({
     name: "",

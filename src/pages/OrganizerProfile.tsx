@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Globe, Instagram, Facebook, CalendarDays, Heart, Mail } from "lucide-react";
@@ -8,6 +8,7 @@ import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AuthModal } from "@/components/AuthModal";
 import { ContactProducerModal } from "@/components/ContactProducerModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +19,7 @@ export default function OrganizerProfile() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [showContact, setShowContact] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
 
   const { data: profile, isLoading: loadingProfile } = useQuery({
     queryKey: ["organizer-profile", slug],
@@ -104,6 +106,14 @@ export default function OrganizerProfile() {
       toast({ title: "Faça login", description: "Você precisa estar logado para seguir produtores.", variant: "destructive" });
     },
   });
+
+  const handleFollowClick = useCallback(() => {
+    if (!user) {
+      setShowAuth(true);
+      return;
+    }
+    toggleFollow.mutate();
+  }, [user, toggleFollow]);
 
   const now = new Date();
   const upcomingEvents = events?.filter((e: any) => new Date(e.end_date) >= now) || [];
@@ -216,7 +226,7 @@ export default function OrganizerProfile() {
             <Button
               variant={isFollowing ? "default" : "outline"}
               className="gap-2"
-              onClick={() => toggleFollow.mutate()}
+              onClick={handleFollowClick}
               disabled={toggleFollow.isPending}
             >
               <Heart className={`h-4 w-4 ${isFollowing ? "fill-current" : ""}`} />
@@ -304,6 +314,9 @@ export default function OrganizerProfile() {
         producerId={profile.id}
         producerName={profile.full_name || "Produtor"}
       />
+
+      {/* Auth modal for follow */}
+      <AuthModal open={showAuth} onOpenChange={setShowAuth} />
     </>
   );
 }

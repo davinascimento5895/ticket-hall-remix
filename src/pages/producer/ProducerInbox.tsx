@@ -24,7 +24,8 @@ export default function ProducerInbox() {
         .from("producer_messages")
         .select("*")
         .eq("producer_id", user!.id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(50);
       if (error) throw error;
       return data;
     },

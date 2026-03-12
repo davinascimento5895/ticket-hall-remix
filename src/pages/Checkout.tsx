@@ -18,10 +18,16 @@ import { toast } from "@/hooks/use-toast";
 const steps = ["Comprador", "Participantes", "Pagamento", "Confirmação"];
 
 export default function Checkout() {
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(() => {
+    // If we have a stored orderId, resume at confirmation
+    return sessionStorage.getItem("checkout_order_id") ? 3 : 0;
+  });
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const [orderId, setOrderId] = useState<string | null>(null);
+  const [orderId, setOrderId] = useState<string | null>(() => {
+    // Recover orderId from sessionStorage on refresh
+    return sessionStorage.getItem("checkout_order_id");
+  });
   const [orderExpiresAt, setOrderExpiresAt] = useState<string | null>(null);
   const [paymentCreated, setPaymentCreated] = useState(false);
   const [awaitingPayment, setAwaitingPayment] = useState(false);
@@ -86,6 +92,7 @@ export default function Checkout() {
           toast({ title: "Pagamento confirmado!", description: "Seus ingressos foram gerados com sucesso." });
           clearCart();
           setStep(3);
+          sessionStorage.removeItem("checkout_order_id");
           setAwaitingPayment(false);
         } else if (newStatus === "cancelled" || newStatus === "expired") {
           toast({ title: "Pagamento não aprovado", description: "Tente novamente.", variant: "destructive" });
@@ -136,13 +143,17 @@ export default function Checkout() {
       const tierIds = ticketItems.map((i) => i.tierId);
       const quantities = ticketItems.map((i) => i.quantity);
 
-      // Create order via server-side RPC
+      // Build billing address string
+      const billingAddress = [buyerData.street, buyerData.addressNumber, buyerData.complement, buyerData.neighborhood, buyerData.city, buyerData.state, buyerData.cep].filter(Boolean).join(", ");
+
+      // Create order via server-side RPC (includes billing_address for free orders)
       const { data: rpcResult, error: rpcErr } = await supabase.rpc("create_order_validated", {
         p_tier_ids: tierIds,
         p_quantities: quantities,
         p_buyer_id: user.id,
         p_coupon_code: couponCode?.trim() || null,
         p_promoter_event_id: promoterEventId,
+        p_billing_address: billingAddress,
       });
 
       if (rpcErr) throw rpcErr;
@@ -156,12 +167,8 @@ export default function Checkout() {
       const newOrderId = result.order_id;
       const isServerFree = result.is_free;
       setOrderId(newOrderId);
+      sessionStorage.setItem("checkout_order_id", newOrderId);
       setOrderExpiresAt(isServerFree ? null : new Date(Date.now() + 15 * 60 * 1000).toISOString());
-
-      // Save buyer address on the order
-      await supabase.from("orders").update({
-        billing_address: [buyerData.street, buyerData.addressNumber, buyerData.complement, buyerData.neighborhood, buyerData.city, buyerData.state, buyerData.cep].filter(Boolean).join(", "),
-      }).eq("id", newOrderId);
 
       // Reserve tickets
       for (const item of ticketItems) {
@@ -266,8 +273,9 @@ export default function Checkout() {
         }
 
         toast({ title: "Inscrição confirmada!", description: "Seus ingressos foram gerados com sucesso." });
-        setStep(3); // Go to confirmation first
-        clearCart(); // Then clear cart (React 18 batches these)
+        setStep(3);
+        clearCart();
+        sessionStorage.removeItem("checkout_order_id");
       } else {
         setStep(2); // Go to payment
       }
@@ -295,6 +303,7 @@ export default function Checkout() {
         toast({ title: "Pagamento confirmado!", description: "Seus ingressos foram gerados com sucesso." });
         clearCart();
         setStep(3);
+        sessionStorage.removeItem("checkout_order_id");
       } else {
         setPixQrCode(result.pixQrCode || null);
         setPixQrCodeImage(result.pixQrCodeImage || null);
