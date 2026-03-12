@@ -226,7 +226,7 @@ export default function OrganizerProfile() {
             <Button
               variant={isFollowing ? "default" : "outline"}
               className="gap-2"
-              onClick={() => toggleFollow.mutate()}
+              onClick={handleFollowClick}
               disabled={toggleFollow.isPending}
             >
               <Heart className={`h-4 w-4 ${isFollowing ? "fill-current" : ""}`} />
