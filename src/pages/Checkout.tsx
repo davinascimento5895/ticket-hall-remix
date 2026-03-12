@@ -303,6 +303,7 @@ export default function Checkout() {
         toast({ title: "Pagamento confirmado!", description: "Seus ingressos foram gerados com sucesso." });
         clearCart();
         setStep(3);
+        sessionStorage.removeItem("checkout_order_id");
       } else {
         setPixQrCode(result.pixQrCode || null);
         setPixQrCodeImage(result.pixQrCodeImage || null);
