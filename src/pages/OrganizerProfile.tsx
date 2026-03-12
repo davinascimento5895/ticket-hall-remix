@@ -19,6 +19,15 @@ export default function OrganizerProfile() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [showContact, setShowContact] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+
+  const handleFollowClick = useCallback(() => {
+    if (!user) {
+      setShowAuth(true);
+      return;
+    }
+    toggleFollow.mutate();
+  }, [user, toggleFollow]);
 
   const { data: profile, isLoading: loadingProfile } = useQuery({
     queryKey: ["organizer-profile", slug],
