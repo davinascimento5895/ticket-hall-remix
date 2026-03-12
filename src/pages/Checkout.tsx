@@ -21,7 +21,10 @@ export default function Checkout() {
   const [step, setStep] = useState(0);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const [orderId, setOrderId] = useState<string | null>(null);
+  const [orderId, setOrderId] = useState<string | null>(() => {
+    // Recover orderId from sessionStorage on refresh
+    return sessionStorage.getItem("checkout_order_id");
+  });
   const [orderExpiresAt, setOrderExpiresAt] = useState<string | null>(null);
   const [paymentCreated, setPaymentCreated] = useState(false);
   const [awaitingPayment, setAwaitingPayment] = useState(false);
