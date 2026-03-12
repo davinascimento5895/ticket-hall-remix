@@ -314,6 +314,9 @@ export default function OrganizerProfile() {
         producerId={profile.id}
         producerName={profile.full_name || "Produtor"}
       />
+
+      {/* Auth modal for follow */}
+      <AuthModal open={showAuth} onOpenChange={setShowAuth} />
     </>
   );
 }
