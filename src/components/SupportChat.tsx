@@ -145,16 +145,19 @@ export function SupportChat() {
       {/* FAB */}
       <AnimatePresence>
         {!open && (
-          <motion.button
+          <motion.div
             key="chat-fab"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
-            onClick={() => setOpen(true)}
-            className="fixed bottom-20 md:bottom-6 right-4 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 transition-colors"
           >
-            <MessageCircle className="h-6 w-6" />
-          </motion.button>
+            <button
+              onClick={() => setOpen(true)}
+              className="fixed bottom-20 md:bottom-6 right-4 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 transition-colors"
+            >
+              <MessageCircle className="h-6 w-6" />
+            </button>
+          </motion.div>
         )}
       </AnimatePresence>
 
