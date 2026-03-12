@@ -107,6 +107,14 @@ export default function OrganizerProfile() {
     },
   });
 
+  const handleFollowClick = useCallback(() => {
+    if (!user) {
+      setShowAuth(true);
+      return;
+    }
+    toggleFollow.mutate();
+  }, [user, toggleFollow]);
+
   const now = new Date();
   const upcomingEvents = events?.filter((e: any) => new Date(e.end_date) >= now) || [];
   const pastEvents = events?.filter((e: any) => new Date(e.end_date) < now) || [];
