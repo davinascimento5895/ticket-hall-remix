@@ -155,6 +155,20 @@ export default function Checkout() {
         p_billing_address: billingAddress,
       });
 
+      if (rpcErr) throw rpcErr;
+      const result = rpcResult as any;
+      if (result?.error) {
+        toast({ title: "Erro ao criar pedido", description: result.error, variant: "destructive" });
+        setIsCreatingOrder(false);
+        return;
+      }
+
+      const newOrderId = result.order_id;
+      const isServerFree = result.is_free;
+      setOrderId(newOrderId);
+      sessionStorage.setItem("checkout_order_id", newOrderId);
+      setOrderExpiresAt(isServerFree ? null : new Date(Date.now() + 15 * 60 * 1000).toISOString());
+
       // Reserve tickets
       for (const item of ticketItems) {
         const { data: reserved, error: reserveErr } = await supabase.rpc("reserve_tickets", {
