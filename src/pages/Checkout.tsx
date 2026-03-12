@@ -136,32 +136,18 @@ export default function Checkout() {
       const tierIds = ticketItems.map((i) => i.tierId);
       const quantities = ticketItems.map((i) => i.quantity);
 
-      // Create order via server-side RPC
+      // Build billing address string
+      const billingAddress = [buyerData.street, buyerData.addressNumber, buyerData.complement, buyerData.neighborhood, buyerData.city, buyerData.state, buyerData.cep].filter(Boolean).join(", ");
+
+      // Create order via server-side RPC (includes billing_address for free orders)
       const { data: rpcResult, error: rpcErr } = await supabase.rpc("create_order_validated", {
         p_tier_ids: tierIds,
         p_quantities: quantities,
         p_buyer_id: user.id,
         p_coupon_code: couponCode?.trim() || null,
         p_promoter_event_id: promoterEventId,
+        p_billing_address: billingAddress,
       });
-
-      if (rpcErr) throw rpcErr;
-      const result = rpcResult as any;
-      if (result?.error) {
-        toast({ title: "Erro ao criar pedido", description: result.error, variant: "destructive" });
-        setIsCreatingOrder(false);
-        return;
-      }
-
-      const newOrderId = result.order_id;
-      const isServerFree = result.is_free;
-      setOrderId(newOrderId);
-      setOrderExpiresAt(isServerFree ? null : new Date(Date.now() + 15 * 60 * 1000).toISOString());
-
-      // Save buyer address on the order
-      await supabase.from("orders").update({
-        billing_address: [buyerData.street, buyerData.addressNumber, buyerData.complement, buyerData.neighborhood, buyerData.city, buyerData.state, buyerData.cep].filter(Boolean).join(", "),
-      }).eq("id", newOrderId);
 
       // Reserve tickets
       for (const item of ticketItems) {
