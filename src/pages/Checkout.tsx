@@ -92,6 +92,7 @@ export default function Checkout() {
           toast({ title: "Pagamento confirmado!", description: "Seus ingressos foram gerados com sucesso." });
           clearCart();
           setStep(3);
+          sessionStorage.removeItem("checkout_order_id");
           setAwaitingPayment(false);
         } else if (newStatus === "cancelled" || newStatus === "expired") {
           toast({ title: "Pagamento não aprovado", description: "Tente novamente.", variant: "destructive" });
