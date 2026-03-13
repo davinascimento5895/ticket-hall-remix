@@ -28,15 +28,10 @@ export default function MeusIngressos() {
   const [activeTab, setActiveTab] = useState<TabId>("active");
   const [searchQuery, setSearchQuery] = useState("");
   
-  const [qrModal, setQrModal] = useState<{
+  const [ticketDetailModal, setTicketDetailModal] = useState<{
     open: boolean;
-    ticketId: string;
-    qrCode: string;
-    qrCodeImageUrl?: string | null;
-    eventTitle: string;
-    tierName: string;
-    attendeeName?: string;
-  }>({ open: false, ticketId: "", qrCode: "", eventTitle: "", tierName: "" });
+    ticket: any;
+  }>({ open: false, ticket: null });
 
   const [transferModal, setTransferModal] = useState<{
     open: boolean;
