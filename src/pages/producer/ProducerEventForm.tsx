@@ -944,54 +944,38 @@ export default function ProducerEventForm() {
 
       </div>
 
-      {/* Fixed Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="mx-auto max-w-5xl flex items-center justify-between px-4 py-3 gap-2">
-          {/* Left: Discard */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate("/producer/events")}
-            className="text-muted-foreground"
-          >
-            Descartar
-          </Button>
-
-          {/* Center: Prev / Next */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={step === 0 || (step === 1 && isEdit)}
-              onClick={() => setStep((s) => s - 1)}
-              className="gap-1"
-            >
-              <ArrowLeft className="h-4 w-4" /> Anterior
-            </Button>
-            {step < STEPS.length - 1 ? (
-              <Button size="sm" onClick={() => setStep((s) => s + 1)} className="gap-1">
-                Próximo <ArrowRight className="h-4 w-4" />
-              </Button>
-            ) : (
-              <Button size="sm" onClick={() => handleSave(true)}>
-                Publicar evento
-              </Button>
-            )}
-          </div>
-
-          {/* Right: Save draft */}
+      {/* Mobile bottom action buttons */}
+      <div className="lg:hidden space-y-2 pb-4">
+        <Separator className="!mb-3" />
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handleSave(false)}
+            disabled={step === 0 || (step === 1 && isEdit)}
+            onClick={() => setStep((s) => s - 1)}
+            className="gap-1 flex-1"
           >
+            <ArrowLeft className="h-4 w-4" /> Anterior
+          </Button>
+          {step < STEPS.length - 1 ? (
+            <Button size="sm" onClick={() => setStep((s) => s + 1)} className="gap-1 flex-1">
+              Próximo <ArrowRight className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button size="sm" onClick={() => handleSave(true)} className="flex-1">
+              Publicar evento
+            </Button>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => handleSave(false)} className="flex-1">
             Salvar rascunho
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/producer/events")} className="flex-1 text-muted-foreground">
+            Descartar
           </Button>
         </div>
       </div>
-
-      {/* Spacer for fixed bottom bar */}
-      <div className="h-16" />
     </div>
   );
 }
