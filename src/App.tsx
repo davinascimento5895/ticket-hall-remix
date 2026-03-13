@@ -105,7 +105,17 @@ const LazyFallback = () => (
 );
 
 const App = () => {
-  const [queryClient] = useState(() => new QueryClient());
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 5 * 60 * 1000,   // 5 min — dados ficam "frescos" por 5 min
+        gcTime: 15 * 60 * 1000,      // 15 min — cache mantido 15 min após desmontar
+        refetchOnWindowFocus: false,  // não refaz fetch ao voltar à aba
+        refetchOnMount: false,        // não refaz fetch se dados já em cache
+        retry: 1,
+      },
+    },
+  }));
 
   return (
   <QueryClientProvider client={queryClient}>
