@@ -28,6 +28,7 @@ import { fetchAddress } from "@/lib/cep";
 import { generateUniqueSlug } from "@/lib/slug";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { ImageCropModal } from "@/components/producer/ImageCropModal";
 
 const STEPS = [
   { key: "type", label: "Tipo", icon: Globe },
@@ -101,6 +102,8 @@ export default function ProducerEventForm() {
   const [tierDialogOpen, setTierDialogOpen] = useState(false);
   const [editingTierIndex, setEditingTierIndex] = useState<number | null>(null);
   const [tierDraft, setTierDraft] = useState<TierDraft>(emptyTier());
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [cropImageSrc, setCropImageSrc] = useState("");
 
   const { data: capacityGroups = [] } = useQuery({
     queryKey: ["capacity-groups", id],
@@ -222,9 +225,17 @@ export default function ProducerEventForm() {
   const handleCoverSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setCoverFile(file);
-      setCoverPreview(URL.createObjectURL(file));
+      const url = URL.createObjectURL(file);
+      setCropImageSrc(url);
+      setCropModalOpen(true);
     }
+    // Reset input so re-selecting the same file works
+    e.target.value = "";
+  };
+
+  const handleCropDone = (croppedFile: File) => {
+    setCoverFile(croppedFile);
+    setCoverPreview(URL.createObjectURL(croppedFile));
   };
 
   const handleUploadCover = async () => {
@@ -565,9 +576,13 @@ export default function ProducerEventForm() {
                           <ImageIcon className="h-6 w-6 text-primary" />
                         </div>
                         <p className="text-sm font-medium text-foreground">Clique ou arraste a imagem aqui</p>
-                        <p className="text-xs text-muted-foreground mt-1 text-center px-4">
-                          Dimensão recomendada: 1600 x 838 pixels (proporção 16:9).<br />
-                          Formato JPEG, PNG ou WebP de no máximo 2MB.
+                        <div className="mt-2 px-3 py-1.5 rounded-md bg-muted border border-border">
+                          <p className="text-xs font-mono font-semibold text-foreground text-center">1600 × 838 px</p>
+                          <p className="text-[10px] text-muted-foreground text-center">proporção ~16:9</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-2 text-center px-4">
+                          JPEG, PNG ou WebP • Máx. 5MB<br />
+                          A imagem será ajustada automaticamente no próximo passo.
                         </p>
                       </label>
                     )}
@@ -702,6 +717,14 @@ export default function ProducerEventForm() {
               isEdit={editingTierIndex !== null}
               capacityGroups={capacityGroups}
               hasSeatMap={form.has_seat_map}
+            />
+
+            {/* Image Crop Modal */}
+            <ImageCropModal
+              open={cropModalOpen}
+              onOpenChange={setCropModalOpen}
+              imageSrc={cropImageSrc}
+              onCropDone={handleCropDone}
             />
           </div>
         )}
