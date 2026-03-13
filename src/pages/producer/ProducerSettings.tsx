@@ -6,12 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WebhooksManager } from "@/components/producer/WebhooksManager";
-import { TeamMembersManager } from "@/components/producer/TeamMembersManager";
 import { useAuth } from "@/contexts/AuthContext";
 import { updateProfile } from "@/lib/api";
-import { getBankAccounts, createBankAccount, updateBankAccount, deleteBankAccount } from "@/lib/api-financial";
+import { supabase } from "@/integrations/supabase/client";
+import { getBankAccounts, createBankAccount, deleteBankAccount } from "@/lib/api-financial";
 import { toast } from "@/hooks/use-toast";
-import { Trash2 } from "lucide-react";
+import { Trash2, Upload, Loader2, Camera, ImageIcon } from "lucide-react";
 
 export default function ProducerSettings() {
   const { user, profile } = useAuth();
@@ -20,6 +20,7 @@ export default function ProducerSettings() {
     full_name: profile?.full_name || "",
     phone: profile?.phone || "",
     cpf: profile?.cpf || "",
+    cnpj: (profile as any)?.cnpj || "",
   });
 
   const [bankForm, setBankForm] = useState({
@@ -30,6 +31,14 @@ export default function ProducerSettings() {
     account_number: "",
   });
 
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+
+  const avatarRef = useRef<HTMLInputElement>(null);
+  const logoRef = useRef<HTMLInputElement>(null);
+  const bannerRef = useRef<HTMLInputElement>(null);
+
   const { data: bankAccounts = [] } = useQuery({
     queryKey: ["bank-accounts", user?.id],
     queryFn: () => getBankAccounts(user!.id),
@@ -38,7 +47,7 @@ export default function ProducerSettings() {
   });
 
   const saveMutation = useMutation({
-    mutationFn: () => updateProfile(user!.id, { full_name: form.full_name, phone: form.phone, cpf: form.cpf }),
+    mutationFn: () => updateProfile(user!.id, { full_name: form.full_name, phone: form.phone, cpf: form.cpf, cnpj: form.cnpj } as any),
     onSuccess: () => toast({ title: "Perfil atualizado!" }),
     onError: (err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
   });
@@ -83,6 +92,39 @@ export default function ProducerSettings() {
     }, 800);
   }, [user]);
 
+  // Image upload handler
+  const handleImageUpload = async (
+    file: File,
+    field: "avatar_url" | "organizer_logo_url" | "organizer_banner_url",
+    setLoading: (v: boolean) => void,
+  ) => {
+    if (!user) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Imagem deve ter até 5MB", variant: "destructive" });
+      return;
+    }
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      toast({ title: "Use JPG, PNG ou WebP", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/${field}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("event-images").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data } = supabase.storage.from("event-images").getPublicUrl(path);
+      await updateProfile(user.id, { [field]: data.publicUrl } as any);
+      toast({ title: "Imagem atualizada!" });
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      window.location.reload();
+    } catch (err: any) {
+      toast({ title: "Erro ao enviar imagem", description: err.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <h1 className="font-display text-2xl font-bold">Configurações</h1>
@@ -92,23 +134,107 @@ export default function ProducerSettings() {
           <TabsTrigger value="profile">Perfil</TabsTrigger>
           <TabsTrigger value="organizer">Página Pública</TabsTrigger>
           <TabsTrigger value="bank">Bancário</TabsTrigger>
-          <TabsTrigger value="team">Equipe</TabsTrigger>
           <TabsTrigger value="integrations">Integrações</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="profile" className="pt-4 max-w-2xl">
+        <TabsContent value="profile" className="pt-4 max-w-2xl space-y-4">
+          {/* Avatar */}
+          <Card>
+            <CardHeader><CardTitle className="text-base">Foto de Perfil</CardTitle></CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4">
+                <div className="relative w-20 h-20 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-border">
+                  {profile?.avatar_url ? (
+                    <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-2xl font-bold text-muted-foreground">
+                      {profile?.full_name?.[0]?.toUpperCase() || "?"}
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <input ref={avatarRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, "avatar_url", setUploadingAvatar); e.target.value = ""; }} />
+                  <Button variant="outline" size="sm" onClick={() => avatarRef.current?.click()} disabled={uploadingAvatar}>
+                    {uploadingAvatar ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Camera className="h-4 w-4 mr-1" />}
+                    Alterar foto
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-1">JPG, PNG ou WebP · até 5MB</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Personal info */}
           <Card>
             <CardHeader><CardTitle className="text-base">Informações Pessoais</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div><Label>Nome completo</Label><Input value={form.full_name} onChange={(e) => setForm((p) => ({ ...p, full_name: e.target.value }))} /></div>
               <div><Label>Telefone</Label><Input value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} placeholder="(11) 99999-9999" /></div>
-              <div><Label>CPF</Label><Input value={form.cpf} onChange={(e) => setForm((p) => ({ ...p, cpf: e.target.value }))} placeholder="000.000.000-00" /></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div><Label>CPF</Label><Input value={form.cpf} onChange={(e) => setForm((p) => ({ ...p, cpf: e.target.value }))} placeholder="000.000.000-00" /></div>
+                <div><Label>CNPJ</Label><Input value={form.cnpj} onChange={(e) => setForm((p) => ({ ...p, cnpj: e.target.value }))} placeholder="00.000.000/0000-00" /></div>
+              </div>
               <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>Salvar</Button>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="organizer" className="pt-4 max-w-2xl">
+        <TabsContent value="organizer" className="pt-4 max-w-2xl space-y-4">
+          {/* Logo + Banner uploads */}
+          <Card>
+            <CardHeader><CardTitle className="text-base">Identidade Visual</CardTitle></CardHeader>
+            <CardContent className="space-y-6">
+              {/* Logo */}
+              <div>
+                <Label className="text-sm font-medium">Logo do organizador</Label>
+                <div className="flex items-center gap-4 mt-2">
+                  <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center overflow-hidden border border-border">
+                    {profile?.organizer_logo_url ? (
+                      <img src={profile.organizer_logo_url} alt="Logo" className="w-full h-full object-cover" />
+                    ) : (
+                      <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div>
+                    <input ref={logoRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, "organizer_logo_url", setUploadingLogo); e.target.value = ""; }} />
+                    <Button variant="outline" size="sm" onClick={() => logoRef.current?.click()} disabled={uploadingLogo}>
+                      {uploadingLogo ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Upload className="h-4 w-4 mr-1" />}
+                      {profile?.organizer_logo_url ? "Alterar logo" : "Enviar logo"}
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-1">Recomendado: 200x200px</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Banner */}
+              <div>
+                <Label className="text-sm font-medium">Banner / Capa</Label>
+                <div className="mt-2 w-full aspect-[3/1] max-h-[160px] rounded-lg bg-muted flex items-center justify-center overflow-hidden border border-dashed border-border">
+                  {profile?.organizer_banner_url ? (
+                    <img src={profile.organizer_banner_url} alt="Banner" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="flex flex-col items-center text-muted-foreground">
+                      <ImageIcon className="h-8 w-8 mb-1" />
+                      <span className="text-xs">Sem banner</span>
+                    </div>
+                  )}
+                </div>
+                <div className="mt-2">
+                  <input ref={bannerRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, "organizer_banner_url", setUploadingBanner); e.target.value = ""; }} />
+                  <Button variant="outline" size="sm" onClick={() => bannerRef.current?.click()} disabled={uploadingBanner}>
+                    {uploadingBanner ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Upload className="h-4 w-4 mr-1" />}
+                    {profile?.organizer_banner_url ? "Alterar banner" : "Enviar banner"}
+                  </Button>
+                  <span className="text-xs text-muted-foreground ml-2">Recomendado: 1920x640px</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Text fields */}
           <Card>
             <CardHeader><CardTitle className="text-base">Página do Organizador</CardTitle></CardHeader>
             <CardContent className="space-y-4">
@@ -162,10 +288,6 @@ export default function ProducerSettings() {
               </Button>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="team" className="pt-4 max-w-2xl">
-          <TeamMembersManager />
         </TabsContent>
 
         <TabsContent value="integrations" className="pt-4 max-w-2xl">

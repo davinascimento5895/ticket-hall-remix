@@ -6,16 +6,21 @@ import { useAuth } from "@/contexts/AuthContext";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Inbox, Mail, MailOpen, Clock, User } from "lucide-react";
+import { Inbox, Mail, MailOpen, Clock, User, Send, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
+import { toast } from "@/hooks/use-toast";
 
 export default function ProducerInbox() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const queryClient = useQueryClient();
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
+  const [replyText, setReplyText] = useState("");
+  const [showReply, setShowReply] = useState(false);
 
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ["producer-inbox", user?.id],
@@ -53,8 +58,41 @@ export default function ProducerInbox() {
     },
   });
 
+  const replyMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedMessage || !user || !replyText.trim()) return;
+      // Send a notification to the buyer
+      const { error: notifErr } = await supabase.from("notifications").insert({
+        user_id: selectedMessage.sender_id,
+        type: "producer_reply",
+        title: `Resposta: ${selectedMessage.subject}`,
+        body: replyText.trim(),
+        data: { producer_id: user.id, producer_name: profile?.full_name || "Produtor", original_message_id: selectedMessage.id },
+      });
+      if (notifErr) throw notifErr;
+      // Also send as a producer_message back (with sender/producer swapped)
+      const { error: msgErr } = await supabase.from("producer_messages").insert({
+        producer_id: selectedMessage.sender_id,
+        sender_id: user.id,
+        sender_name: profile?.full_name || "Produtor",
+        sender_email: user.email || "",
+        subject: `Re: ${selectedMessage.subject}`,
+        message: replyText.trim(),
+      });
+      if (msgErr) throw msgErr;
+    },
+    onSuccess: () => {
+      toast({ title: "Resposta enviada!" });
+      setReplyText("");
+      setShowReply(false);
+    },
+    onError: (err: any) => toast({ title: "Erro ao enviar", description: err.message, variant: "destructive" }),
+  });
+
   const handleOpen = (msg: any) => {
     setSelectedMessage(msg);
+    setShowReply(false);
+    setReplyText("");
     if (!msg.is_read) {
       markAsRead.mutate(msg.id);
     }
@@ -169,17 +207,42 @@ export default function ProducerInbox() {
                   {selectedMessage.message}
                 </div>
 
-                <div className="flex gap-3 pt-2 border-t border-border">
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => {
-                      window.location.href = `mailto:${selectedMessage.sender_email}?subject=Re: ${selectedMessage.subject}`;
-                    }}
-                  >
-                    <Mail className="h-4 w-4 mr-2" />
-                    Responder por e-mail
-                  </Button>
+                <div className="pt-2 border-t border-border space-y-3">
+                  {!showReply ? (
+                    <Button
+                      className="w-full"
+                      onClick={() => setShowReply(true)}
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      Responder
+                    </Button>
+                  ) : (
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-xs">Sua resposta</Label>
+                        <Textarea
+                          value={replyText}
+                          onChange={(e) => setReplyText(e.target.value)}
+                          placeholder="Escreva sua resposta..."
+                          rows={4}
+                          maxLength={2000}
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" className="flex-1" onClick={() => { setShowReply(false); setReplyText(""); }}>
+                          Cancelar
+                        </Button>
+                        <Button
+                          className="flex-1"
+                          onClick={() => replyMutation.mutate()}
+                          disabled={!replyText.trim() || replyMutation.isPending}
+                        >
+                          {replyMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
+                          Enviar resposta
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </>

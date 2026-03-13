@@ -26,8 +26,6 @@ export default function ProducerEventStaff() {
   const { id: eventId } = useParams();
   const { user } = useAuth();
   const qc = useQueryClient();
-  const [showInvite, setShowInvite] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState("");
   const [showLinkConfig, setShowLinkConfig] = useState(false);
   const [linkMaxUses, setLinkMaxUses] = useState("10");
   const [linkExpDays, setLinkExpDays] = useState("7");
@@ -102,28 +100,6 @@ export default function ProducerEventStaff() {
     },
   });
 
-  // Invite by email (creates pending entry in producer_team_members + event_staff if user exists)
-  const inviteMutation = useMutation({
-    mutationFn: async () => {
-      // Check if user exists by email in profiles (via a lookup)
-      // For now, create a producer_team_members entry with checkin_staff role
-      const { error } = await supabase.from("producer_team_members").insert({
-        producer_id: user!.id,
-        email: inviteEmail.trim().toLowerCase(),
-        role: "checkin_staff",
-        invite_token: crypto.randomUUID(),
-        status: "pending",
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      setShowInvite(false);
-      setInviteEmail("");
-      toast({ title: "Convite registrado!", description: "O convite foi salvo. Compartilhe o link de acesso com o staff." });
-    },
-    onError: (e: any) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
-  });
-
   const staffLink = event?.staff_access_code
     ? `${window.location.origin}/staff/join/${event.staff_access_code}`
     : null;
@@ -158,9 +134,6 @@ export default function ProducerEventStaff() {
           <p className="text-sm text-muted-foreground">Gerencie quem faz check-in neste evento</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" onClick={() => setShowInvite(true)}>
-            <Mail className="h-4 w-4 mr-1.5" /> Convidar por e-mail
-          </Button>
           <Button size="sm" onClick={() => setShowLinkConfig(true)}>
             <Link2 className="h-4 w-4 mr-1.5" /> Gerar Link
           </Button>
@@ -349,36 +322,6 @@ export default function ProducerEventStaff() {
         </DialogContent>
       </Dialog>
 
-      {/* Email Invite Dialog */}
-      <Dialog open={showInvite} onOpenChange={setShowInvite}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Registrar Staff por E-mail</DialogTitle>
-            <DialogDescription>
-              O registro será salvo no sistema. Envie o link de convite do evento diretamente ao staff para que ele possa se vincular.
-            </DialogDescription>
-          </DialogHeader>
-          <div>
-            <Label>E-mail</Label>
-            <Input
-              type="email"
-              value={inviteEmail}
-              onChange={(e) => setInviteEmail(e.target.value)}
-              placeholder="staff@email.com"
-              className="mt-1.5"
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowInvite(false)}>Cancelar</Button>
-            <Button
-              onClick={() => inviteMutation.mutate()}
-              disabled={!inviteEmail.includes("@") || inviteMutation.isPending}
-            >
-              <Mail className="h-4 w-4 mr-1.5" /> Registrar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

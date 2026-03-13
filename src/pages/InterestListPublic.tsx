@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TicketHallLogo } from "@/components/TicketHallLogo";
 import { SEOHead } from "@/components/SEOHead";
 import { Tag, MapPin, CalendarDays, Clock, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
@@ -179,16 +180,35 @@ export default function InterestListPublic() {
                         {field.field_name}
                         {field.is_required && <span className="text-destructive ml-0.5">*</span>}
                       </Label>
-                      <Input
-                        type={field.field_type === "email" ? "email" : field.field_type === "phone" ? "tel" : field.field_type === "number" ? "number" : "text"}
-                        placeholder={field.placeholder}
-                        value={answers[field.field_name] || ""}
-                        onChange={(e) => {
-                          setAnswers({ ...answers, [field.field_name]: e.target.value });
-                          if (errors[field.field_name]) setErrors({ ...errors, [field.field_name]: "" });
-                        }}
-                        className={errors[field.field_name] ? "border-destructive" : ""}
-                      />
+                      {field.field_type === "select" && Array.isArray(field.options) && field.options.length > 0 ? (
+                        <Select
+                          value={answers[field.field_name] || ""}
+                          onValueChange={(v) => {
+                            setAnswers({ ...answers, [field.field_name]: v });
+                            if (errors[field.field_name]) setErrors({ ...errors, [field.field_name]: "" });
+                          }}
+                        >
+                          <SelectTrigger className={errors[field.field_name] ? "border-destructive" : ""}>
+                            <SelectValue placeholder={field.placeholder || "Selecione uma opção"} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {field.options.map((opt: string) => (
+                              <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input
+                          type={field.field_type === "email" ? "email" : field.field_type === "phone" ? "tel" : field.field_type === "number" ? "number" : "text"}
+                          placeholder={field.placeholder}
+                          value={answers[field.field_name] || ""}
+                          onChange={(e) => {
+                            setAnswers({ ...answers, [field.field_name]: e.target.value });
+                            if (errors[field.field_name]) setErrors({ ...errors, [field.field_name]: "" });
+                          }}
+                          className={errors[field.field_name] ? "border-destructive" : ""}
+                        />
+                      )}
                       {errors[field.field_name] && (
                         <p className="text-xs text-destructive">{errors[field.field_name]}</p>
                       )}

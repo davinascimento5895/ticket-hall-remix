@@ -91,18 +91,16 @@ export default function ProducerEventMessages() {
         body,
         recipient_filter: filter,
         recipients_count: recipientCount,
-        status: "pending",
+        status: "draft",
       });
 
       await sendBulkMessage(msg.id);
-      // Nota: o envio real de e-mails está em desenvolvimento.
-      // A mensagem será salva como "queued" para processamento futuro.
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["event-messages"] });
       setSubject("");
       setBody("");
-      toast({ title: "Mensagem salva", description: "🚧 O envio de e-mails em massa será disponibilizado em breve. A mensagem foi salva como rascunho." });
+      toast({ title: "Mensagem enviada!", description: `Notificação in-app enviada para ${recipientCount} participante(s).` });
     },
     onError: (err: any) => toast({ title: "Erro ao enviar", description: err.message, variant: "destructive" }),
   });
@@ -120,11 +118,11 @@ export default function ProducerEventMessages() {
 
   return (
     <div className="space-y-6">
-      {/* Disclaimer */}
+      {/* Info */}
       <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border">
         <AlertTriangle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
         <p className="text-xs text-muted-foreground">
-          O envio de e-mails em massa está em desenvolvimento. As mensagens serão salvas como rascunho para envio futuro.
+          As mensagens são enviadas como notificações in-app para os participantes. Eles receberão a notificação ao acessar a plataforma.
         </p>
       </div>
 
@@ -156,8 +154,11 @@ export default function ProducerEventMessages() {
             <Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Escreva sua mensagem aqui..." rows={6} />
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => saveDraftMutation.mutate()} disabled={!subject || !body || saveDraftMutation.isPending}>
-              <Send className="h-4 w-4 mr-1" /> Salvar mensagem
+            <Button variant="outline" onClick={() => saveDraftMutation.mutate()} disabled={!subject || !body || saveDraftMutation.isPending}>
+              Salvar rascunho
+            </Button>
+            <Button onClick={() => sendMutation.mutate()} disabled={!subject || !body || sendMutation.isPending || recipientCount === 0}>
+              <Send className="h-4 w-4 mr-1" /> Enviar para {recipientCount} participante(s)
             </Button>
           </div>
         </CardContent>
