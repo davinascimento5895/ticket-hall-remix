@@ -308,10 +308,18 @@ Deno.serve(async (req) => {
     // 1. Create or find Asaas customer
     let customerId = order.asaas_customer_id;
     if (!customerId) {
+      const buyerCpf = buyer?.cpf?.replace(/\D/g, "");
+      if (!buyerCpf) {
+        return new Response(
+          JSON.stringify({ error: "CPF é obrigatório para processar o pagamento. Por favor, preencha seu CPF no checkout." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       const customerRes = await asaas("POST", "/customers", {
         name: buyer?.full_name || "Comprador TicketHall",
         email: userEmail,
-        cpfCnpj: buyer?.cpf?.replace(/\D/g, "") || undefined,
+        cpfCnpj: buyerCpf,
         mobilePhone: buyer?.phone?.replace(/\D/g, "") || undefined,
         notificationDisabled: true,
       });
