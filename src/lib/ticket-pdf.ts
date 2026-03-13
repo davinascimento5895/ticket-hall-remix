@@ -1,7 +1,8 @@
 import jsPDF from "jspdf";
 import type { TicketDownloadData } from "@/components/checkout/TicketDownloadCard";
+import logoSvgUrl from "@/assets/logo-full-black.svg";
 
-const PRIMARY_COLOR: [number, number, number] = [234, 88, 12]; // hsl(7 100% 59%) ≈ rgb
+const PRIMARY_COLOR: [number, number, number] = [234, 88, 12];
 const DARK_COLOR: [number, number, number] = [20, 20, 20];
 const MUTED_COLOR: [number, number, number] = [120, 120, 130];
 const LIGHT_BG: [number, number, number] = [245, 245, 245];
@@ -52,19 +53,28 @@ export async function generateTicketPDF(data: TicketDownloadData) {
   // ── Top accent bar ──
   doc.setFillColor(...PRIMARY_COLOR);
   doc.rect(0, 0, pageW, 6, "F");
-  y = 14;
+  y = 10;
 
-  // ── Brand header ──
-  doc.setFontSize(18);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...DARK_COLOR);
-  doc.text("TicketHall", margin, y);
+  // ── Brand header with logo ──
+  try {
+    const logoDataUrl = await loadImage(logoSvgUrl);
+    // Logo aspect ratio is ~1718:513 ≈ 3.35:1
+    const logoH = 8;
+    const logoW = logoH * 3.35;
+    doc.addImage(logoDataUrl, "PNG", margin, y, logoW, logoH);
+  } catch {
+    // Fallback text
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...DARK_COLOR);
+    doc.text("TicketHall", margin, y + 6);
+  }
 
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...MUTED_COLOR);
-  doc.text("tickethall.com.br", pageW - margin, y, { align: "right" });
-  y += 8;
+  doc.text("tickethall.com.br", pageW - margin, y + 6, { align: "right" });
+  y += 14;
 
   // ── Thin line ──
   doc.setDrawColor(...BORDER_COLOR);
