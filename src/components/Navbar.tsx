@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useSearchParams, useNavigate } from "react-router-dom";
-import { Menu, X, User, LogOut, ShoppingBag, Search, Plus } from "lucide-react";
+import { Menu, X, User, LogOut, ShoppingBag, Search, Plus, ArrowRightLeft } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,7 @@ export function Navbar() {
   const [authTab, setAuthTab] = useState<"login" | "register">("login");
   const [navSearch, setNavSearch] = useState("");
   const [producerModalOpen, setProducerModalOpen] = useState(false);
-  const { user, profile, role, signOut } = useAuth();
+  const { user, profile, role, allRoles, switchRole, signOut } = useAuth();
   const { itemCount } = useCart();
   const [searchParams] = useSearchParams();
   const location = useLocation();
@@ -73,7 +73,23 @@ export function Navbar() {
     }
   };
 
-  const dashboardLink = role === "admin" ? "/admin/dashboard" : role === "producer" ? "/producer/dashboard" : "/meus-ingressos";
+  const roleLabels: Record<string, string> = {
+    admin: "Administrador",
+    producer: "Produtor",
+    staff: "Equipe",
+    buyer: "Comprador",
+  };
+
+  const roleDashboardLinks: Record<string, string> = {
+    admin: "/admin/dashboard",
+    producer: "/producer/dashboard",
+    staff: "/staff",
+    buyer: "/meus-ingressos",
+  };
+
+  const switchableRoles = allRoles.filter((r) => r !== role);
+
+  const dashboardLink = role ? roleDashboardLinks[role] : "/meus-ingressos";
 
   return (
     <>
@@ -132,7 +148,7 @@ export function Navbar() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="gap-2">
                       <User className="h-4 w-4" />
-                      <span className="max-w-[120px] truncate">{profile?.full_name || "Minha Conta"}</span>
+                      <span className="max-w-[120px] truncate">{profile?.full_name || "Minha Conta"} — {roleLabels[role || "buyer"]}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
@@ -150,6 +166,23 @@ export function Navbar() {
                       <Plus className="h-4 w-4 mr-2" />
                       Criar evento
                     </DropdownMenuItem>
+                    {switchableRoles.length > 0 && (
+                      <>
+                        <DropdownMenuSeparator />
+                        {switchableRoles.map((r) => (
+                          <DropdownMenuItem
+                            key={r}
+                            onClick={() => {
+                              switchRole(r);
+                              navigate(roleDashboardLinks[r]);
+                            }}
+                          >
+                            <ArrowRightLeft className="h-4 w-4 mr-2" />
+                            Alterar para {roleLabels[r]}
+                          </DropdownMenuItem>
+                        ))}
+                      </>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={signOut} className="text-destructive">
                       <LogOut className="h-4 w-4 mr-2" /> Sair
