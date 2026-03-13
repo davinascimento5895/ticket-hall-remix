@@ -73,7 +73,23 @@ export function Navbar() {
     }
   };
 
-  const dashboardLink = role === "admin" ? "/admin/dashboard" : role === "producer" ? "/producer/dashboard" : "/meus-ingressos";
+  const roleLabels: Record<string, string> = {
+    admin: "Administrador",
+    producer: "Produtor",
+    staff: "Equipe",
+    buyer: "Comprador",
+  };
+
+  const roleDashboardLinks: Record<string, string> = {
+    admin: "/admin/dashboard",
+    producer: "/producer/dashboard",
+    staff: "/staff",
+    buyer: "/meus-ingressos",
+  };
+
+  const switchableRoles = allRoles.filter((r) => r !== role);
+
+  const dashboardLink = role ? roleDashboardLinks[role] : "/meus-ingressos";
 
   return (
     <>
