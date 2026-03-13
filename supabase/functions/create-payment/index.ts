@@ -491,7 +491,6 @@ Deno.serve(async (req) => {
       } catch { /* barcode is optional */ }
 
       updateData.asaas_payment_id = charge.id;
-      updateData.status = "awaiting_payment";
       updateData.payment_status = "pending";
       updateData.boleto_url = charge.bankSlipUrl || null;
       updateData.boleto_barcode = barcode;
