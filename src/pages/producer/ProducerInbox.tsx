@@ -30,6 +30,7 @@ export default function ProducerInbox() {
       return data;
     },
     enabled: !!user?.id,
+    staleTime: 60_000,
   });
 
   // Realtime: auto-refresh when new messages arrive
