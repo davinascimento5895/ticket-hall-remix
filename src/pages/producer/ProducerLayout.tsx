@@ -1,5 +1,5 @@
 import { Outlet, Link } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import {
   SidebarProvider,
   SidebarTrigger,
