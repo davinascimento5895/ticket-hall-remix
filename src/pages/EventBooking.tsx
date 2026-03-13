@@ -23,7 +23,7 @@ type Step = "date" | "tickets" | "summary" | "confirmation";
 export default function EventBooking() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
 
   const { data: event, isLoading: loadingEvent } = useQuery({
     queryKey: ["event", slug],
