@@ -64,6 +64,32 @@ export default function PedidoRecuperacao() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleRegeneratePix = async () => {
+    if (!orderId) return;
+    setIsRegeneratingPix(true);
+    try {
+      const result = await createPayment(orderId, "pix");
+      if (!result.success) {
+        toast({
+          title: "Não foi possível gerar o QR agora",
+          description: result.error || "Tente novamente em alguns segundos.",
+          variant: "destructive",
+        });
+        return;
+      }
+      await refetch();
+      toast({ title: "Cobrança PIX atualizada", description: "Confira o QR Code abaixo." });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao atualizar cobrança PIX",
+        description: error?.message || "Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRegeneratingPix(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="container pt-4 lg:pt-24 pb-16 max-w-2xl">
