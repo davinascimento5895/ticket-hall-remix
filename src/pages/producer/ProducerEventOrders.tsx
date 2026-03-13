@@ -52,12 +52,6 @@ export default function ProducerEventOrders() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <Link to="/producer/events" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2">
-          <ArrowLeft className="h-4 w-4" /> Voltar
-        </Link>
-        <h1 className="font-display text-2xl font-bold">Pedidos — {event?.title || "..."}</h1>
-      </div>
       <div className="flex justify-end">
         <Button variant="outline" size="sm" onClick={() => filtered.length && exportToCSV(filtered, orderCSVColumns, `pedidos_${id}`)} disabled={!filtered.length}>
           <Download className="h-4 w-4 mr-1" /> CSV
