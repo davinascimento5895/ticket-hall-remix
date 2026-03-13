@@ -188,7 +188,10 @@ Deno.serve(async (req) => {
           })
           .eq("id", orderId);
 
-        await supabase.from("tickets").update({ status: "cancelled" }).eq("order_id", orderId).in("status", ["active", "reserved"]);
+        // Release any reserved tickets and restore inventory
+        await releaseReservedTickets(supabase, orderId);
+        // Also cancel active tickets (already confirmed ones)
+        await supabase.from("tickets").update({ status: "cancelled" }).eq("order_id", orderId).eq("status", "active");
 
         if (order.promoter_event_id) {
           const { data: commission } = await supabase
