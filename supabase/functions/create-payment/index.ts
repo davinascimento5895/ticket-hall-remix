@@ -326,7 +326,7 @@ Deno.serve(async (req) => {
         );
       }
 
-      if (customerRes.errors) {
+      if (customerRes.errors || customerRes._empty) {
         // Try to find existing customer by CPF
         if (buyer?.cpf) {
           const existing = await asaas(
@@ -338,8 +338,8 @@ Deno.serve(async (req) => {
           } else {
             return new Response(
               JSON.stringify({
-                error: "Failed to create customer",
-                details: customerRes.errors,
+                error: "Falha ao criar cliente no gateway",
+                details: customerRes.errors || [{ description: "Resposta vazia do gateway" }],
               }),
               {
                 status: 400,
@@ -350,7 +350,29 @@ Deno.serve(async (req) => {
               }
             );
           }
+        } else {
+          return new Response(
+            JSON.stringify({
+              error: "Falha ao criar cliente no gateway",
+              details: customerRes.errors || [{ description: "Resposta vazia do gateway" }],
+            }),
+            {
+              status: 400,
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json",
+              },
+            }
+          );
         }
+      } else if (!customerRes.id) {
+        return new Response(
+          JSON.stringify({ error: "Gateway não retornou o ID do cliente." }),
+          {
+            status: 502,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
       } else {
         customerId = customerRes.id;
       }
