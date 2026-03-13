@@ -27,7 +27,6 @@ const navItems = [
   { title: "Dashboard", url: "/producer/dashboard", icon: LayoutDashboard },
   { title: "Meus Eventos", url: "/producer/events", icon: CalendarDays },
   { title: "Financeiro", url: "/producer/financial", icon: DollarSign },
-  { title: "Promoters", url: "/producer/promoters", icon: Users },
   { title: "Mensagens", url: "/producer/inbox", icon: Inbox },
   { title: "Listas de Interesse", url: "/producer/interest-lists", icon: ClipboardList },
   { title: "Configurações", url: "/producer/settings", icon: Settings },
