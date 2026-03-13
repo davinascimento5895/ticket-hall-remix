@@ -195,7 +195,7 @@ export default function EventBooking() {
     } finally {
       setIsProcessing(false);
     }
-  }, [user, selectedTier, quantity, couponCode, navigate]);
+  }, [user, selectedTier, quantity, couponCode, payerCpf, navigate]);
 
   const handleGoToTickets = () => {
     navigate("/meus-ingressos");
