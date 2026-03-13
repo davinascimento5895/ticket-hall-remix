@@ -26,6 +26,8 @@ interface AuthContextType {
     organizer_banner_url: string | null;
   } | null;
   role: AppRole | null;
+  allRoles: AppRole[];
+  switchRole: (role: AppRole) => void;
   loading: boolean;
   signOut: () => Promise<void>;
   refetchRole: () => Promise<void>;
@@ -36,6 +38,8 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   profile: null,
   role: null,
+  allRoles: [],
+  switchRole: () => {},
   loading: true,
   signOut: async () => {},
   refetchRole: async () => {},
@@ -48,6 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
   const [role, setRole] = useState<AppRole | null>(null);
+  const [allRoles, setAllRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
 
   const ensureProfile = async (userId: string) => {
@@ -77,8 +82,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq("user_id", userId);
     if (data && data.length > 0) {
       const roles = data.map((r) => r.role as AppRole);
+      setAllRoles(roles);
       const best = ROLE_PRIORITY.find((r) => roles.includes(r)) ?? roles[0];
       setRole(best);
+    } else {
+      setAllRoles([]);
+    }
+  };
+
+  const switchRole = (newRole: AppRole) => {
+    if (allRoles.includes(newRole)) {
+      setRole(newRole);
     }
   };
 
@@ -96,6 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setProfile(null);
         setRole(null);
+        setAllRoles([]);
       }
       setLoading(false);
     };
@@ -125,6 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setProfile(null);
     setRole(null);
+    setAllRoles([]);
   };
 
   const refetchRole = async () => {
@@ -135,7 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, profile, role, loading, signOut, refetchRole }}>
+    <AuthContext.Provider value={{ session, user, profile, role, allRoles, switchRole, loading, signOut, refetchRole }}>
       {children}
     </AuthContext.Provider>
   );
