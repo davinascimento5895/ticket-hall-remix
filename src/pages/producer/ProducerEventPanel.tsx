@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, Suspense } from "react";
 import { EmbedSnippetGenerator } from "@/components/EmbedSnippetGenerator";
 import { useParams, useNavigate, useLocation, Link, Outlet } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, LayoutDashboard, Ticket, Users, ScanLine, DollarSign, Mail, Tag, ChevronDown, Globe, MapPin, Calendar, Megaphone, Code } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, Ticket, Users, ScanLine, DollarSign, Mail, Tag, ChevronDown, Globe, MapPin, Calendar, Megaphone, Code, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -22,7 +22,8 @@ const TABS = [
   { key: "promoters", label: "Promoters", icon: Megaphone, path: "/promoters" },
   { key: "messages", label: "Mensagens", icon: Mail, path: "/messages" },
   { key: "coupons", label: "Cupons", icon: Tag, path: "/coupons" },
-];
+  { key: "settings", label: "Editar Evento", icon: Settings, path: "/settings", isEdit: true },
+] as const;
 
 export default function ProducerEventPanel() {
   const { id } = useParams();
@@ -53,6 +54,10 @@ export default function ProducerEventPanel() {
   const activeTab = TABS.find((t) => t.path === currentSuffix) || TABS[0];
 
   const navigateToTab = (tab: typeof TABS[number]) => {
+    if ('isEdit' in tab && tab.isEdit) {
+      navigate(`/producer/events/${id}/edit`);
+      return;
+    }
     navigate(`${basePath}${tab.path}`);
     setMobileTabsOpen(false);
   };
@@ -171,7 +176,13 @@ export default function ProducerEventPanel() {
       </div>
 
       {/* Tab Content */}
-      <Outlet />
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-[30vh]">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+        </div>
+      }>
+        <Outlet />
+      </Suspense>
     </div>
   );
 }
