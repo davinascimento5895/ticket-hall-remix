@@ -237,40 +237,12 @@ export default function MeusIngressos() {
         <div className="flex flex-col gap-2 shrink-0">
           {ticket.status === "active" && (
             <Button
-              variant="outline"
+              variant="default"
               size="sm"
               className="gap-1.5"
-              onClick={() =>
-                setQrModal({
-                  open: true,
-                  ticketId: ticket.id,
-                  qrCode: ticket.qr_code,
-                  qrCodeImageUrl: ticket.qr_code_image_url,
-                  eventTitle: ticket.events?.title || "",
-                  tierName: ticket.ticket_tiers?.name || "",
-                  attendeeName: ticket.attendee_name || undefined,
-                })
-              }
+              onClick={() => setTicketDetailModal({ open: true, ticket })}
             >
-              <QrCode className="h-4 w-4" /> QR Code
-            </Button>
-          )}
-          {ticket.status === "active" && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-1.5 text-muted-foreground"
-              onClick={() => {
-                const imageUrl = ticket.qr_code_image_url ||
-                  `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(ticket.qr_code)}`;
-                const link = document.createElement("a");
-                link.href = imageUrl;
-                link.download = `ingresso-${ticket.id.slice(0, 8)}.png`;
-                link.target = "_blank";
-                link.click();
-              }}
-            >
-              <Download className="h-4 w-4" /> Baixar
+              <Eye className="h-4 w-4" /> Ver ingresso
             </Button>
           )}
           {ticket.status === "active" && ticket.events?.start_date && (
@@ -285,7 +257,7 @@ export default function MeusIngressos() {
                 const url = generateGoogleCalendarUrl({
                   title: ev.title,
                   startDate: ev.start_date,
-                  endDate: ev.start_date, // fallback
+                  endDate: ev.start_date,
                   location,
                 });
                 window.open(url, "_blank");
