@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 interface ProtectedRouteProps {
   children: ReactNode;
-  allowedRoles?: Array<"admin" | "producer" | "buyer">;
+  allowedRoles?: Array<"admin" | "producer" | "buyer" | "staff">;
 }
 
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
@@ -26,10 +26,11 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
       return <Navigate to="/" replace />;
     }
     if (!allowedRoles.includes(role)) {
-      const redirectMap = {
+      const redirectMap: Record<string, string> = {
         admin: "/admin/dashboard",
         producer: "/producer/dashboard",
         buyer: "/eventos",
+        staff: "/staff",
       };
       return <Navigate to={redirectMap[role] || "/"} replace />;
     }

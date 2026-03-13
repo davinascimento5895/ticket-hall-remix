@@ -1,162 +1,145 @@
+# TicketHall — Plano Mestre de Redesign & Implementação
 
+## Documento de Referência
+Business Case & Product Design Analysis completo fornecido pelo cliente em 2026-03-06.
 
-# Staff Check-in Portal — Plano de Implementação
+---
 
-## Visão Geral
+## Design System Alvo (Novo)
+- **Tema**: Dark-first (`#0d0d0d` base, `#1a1a1a`/`#1f1f1f`/`#2c2c2c` superfícies)
+- **Cor principal (ação)**: Laranja `#ff472d` — CTAs, badges, ícones ativos, links, bordas de foco
+- **Cor secundária (gamificação)**: Verde-lima `#bad900` — pontos, sucesso, confirmações
+- **Texto principal**: Branco `#ffffff`
+- **Texto secundário**: Cinza claro `#9ca3af`
+- **Texto terciário (inativo)**: Cinza médio `#6b7280`
+- **Tipografia**: Sora (display) + Inter (body) — já configurado
+- **Border radius**: ~12-16px para cards, ~10px para inputs
+- **Componentes**: Chips/Pills, Bottom Sheets, Cards com gradiente escuro, Toggle switches
 
-Criar um portal dedicado para staff/operadores de check-in, com interface mobile-first otimizada para leitura de QR codes em eventos. O staff é vinculado a eventos pelo produtor via `producer_team_members` (role `checkin_staff`), e acessa uma experiência isolada do app principal.
+---
 
-## 1. Banco de Dados
+## Gap Analysis — Existente vs Documento de Design
 
-### 1.1 Novo role na enum `app_role`
-Adicionar `'staff'` à enum `app_role` existente para que o `ProtectedRoute` e o `AuthContext` reconheçam o novo tipo de usuário.
+### ✅ JÁ IMPLEMENTADO
+- Catálogo de eventos com filtros por categoria
+- Detalhe do evento com descrição, data, local
+- Fluxo de compra (carrinho → checkout → pagamento)
+- Meus Ingressos (lista de ingressos ativos)
+- QR Code por ingresso
+- Transferência de ingresso
+- Sistema de reembolso (RefundDialog)
+- Cupons de desconto
+- Fila virtual
+- Certificados pós-evento
+- Painel do produtor completo
+- Painel admin completo
+- Autenticação (login/registro com email)
+- Notificações (NotificationBell)
+- Blog
+- Página do organizador
+- LGPD/Privacidade
+- Bottom navigation mobile
+- Tema claro/escuro com transição animada
 
-```sql
-ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'staff';
-```
+### ❌ FEATURES FALTANTES
+1. **Onboarding** — 2-3 telas de boas-vindas com skip
+2. **Detecção automática de cidade** — GPS
+3. **Seletor de datas horizontal** — Barra scrollável no catálogo
+4. **Top-10 / Ranking** — Seção editorial com badges numerados
+5. **Filtro avançado (Bottom Sheet)** — Sort, range slider, gênero, horário
+6. **Grid view toggle** — Lista/grade no catálogo
+7. **Rating/Avaliação** — Estrelas + reviews de usuários (tabela + UI)
+8. **Random/Discovery** — Evento aleatório
+9. **Cast/Elenco** — Seção de artistas no detalhe
+10. **Mapa de assentos** — Seleção visual interativa
+11. **Sistema de pontos** — Fidelidade no checkout
+12. **Favoritos** — Salvar eventos (tabela + UI)
+13. **Ingressos arquivados** — Ativo/Arquivado com visual P&B
+14. **Chat de suporte** — Bot + quick replies in-app
+15. **Perfil completo** — Editar perfil, cidade, pagamentos, notificações
+16. **Login OTP** — Código por email/telefone
+17. **Login social** — Google, Apple
+18. **Compartilhamento** — Share via link
+19. **Notificações configuráveis** — SMS/Push/Email toggles
+20. **Seções editoriais** — "Novo", "Semana", curadoria
 
-### 1.2 Tabela `event_staff` (nova)
-Vincula staff a eventos específicos, controlando acesso. Substituirá a dependência em `producer_team_members` para o fluxo do staff.
+### 🔄 PRECISA REDESIGN VISUAL
+- Todas as páginas públicas (landing, catálogo, detalhe, checkout)
+- Navbar → Dark-first com laranja
+- Bottom Nav → Ícone ativo laranja
+- Cards de evento → Fundo #1f1f1f, gradiente, badges
+- Botões → Fill laranja, outline cinza
+- Inputs → Fundo #1f1f1f, borda #3a3a3a
+- Chips → Ativo laranja, inativo borda cinza
+- Login/Registro → Redesign completo
+- Meus Ingressos → Cards com barcode, ações
+- Painéis Producer/Admin → Dark-first
 
-```sql
-CREATE TABLE public.event_staff (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  event_id uuid NOT NULL REFERENCES public.events(id) ON DELETE CASCADE,
-  user_id uuid NOT NULL,
-  producer_id uuid NOT NULL,
-  checkin_list_id uuid REFERENCES public.checkin_lists(id),
-  assigned_at timestamptz DEFAULT now(),
-  UNIQUE(event_id, user_id)
-);
-ALTER TABLE public.event_staff ENABLE ROW LEVEL SECURITY;
-```
+---
 
-RLS:
-- Producers podem gerenciar staff dos seus eventos
-- Staff pode ver seus próprios registros
-- Admins acesso total
+## Fases de Implementação
 
-### 1.3 Habilitar Realtime na tabela `tickets`
-```sql
-ALTER PUBLICATION supabase_realtime ADD TABLE public.tickets;
-```
+### Fase 1 — Design System Foundation
+- [ ] Atualizar index.css (CSS variables nova paleta)
+- [ ] Atualizar tailwind.config.ts
+- [ ] Atualizar componentes base (Button, Input, Card, Badge, Chips)
+- [ ] Navbar dark-first com laranja
+- [ ] Bottom Nav com laranja
+- [ ] AuthModal redesign dark-first
 
-## 2. Fluxo do Produtor (atribuir staff)
+### Fase 2 — Páginas Públicas (Buyer UX)
+- [ ] Landing page redesign
+- [ ] Catálogo (seletor datas, chips, banner, Top-10)
+- [ ] Detalhe do evento (reviews, cast, CTA fixo)
+- [ ] Meus Ingressos (ativo/arquivado, barcode, reembolso)
+- [ ] Checkout redesign
 
-Atualizar `TeamMembersManager` ou criar seção no painel do evento para:
-- Quando o produtor convida alguém com role `checkin_staff`, o sistema cria a entrada em `user_roles` com role `staff` E vincula na `event_staff`
-- Adicionar UI no painel do evento para associar membros da equipe a eventos específicos
+### Fase 3 — Features Novas (Prioridade Alta)
+- [ ] Favoritos (tabela + UI)
+- [ ] Rating/Reviews (tabela + UI)
+- [ ] Filtro avançado (Bottom Sheet com Drawer)
+- [ ] Grid view toggle
+- [ ] Compartilhamento social
+- [ ] Perfil completo do usuário
+- [ ] Ingressos arquivados
 
-## 3. Autenticação e Rotas
+### Fase 4 — Features Avançadas
+- [ ] Random/Discovery
+- [ ] Sistema de pontos/fidelidade
+- [ ] Chat de suporte in-app
+- [ ] Onboarding (2-3 telas)
+- [ ] Detecção de cidade
+- [ ] Notificações configuráveis
+- [ ] Login OTP + Social
 
-### 3.1 Atualizar `AuthContext`
-- Incluir `'staff'` no tipo `AppRole`
+### Fase 5 — Painéis (Producer/Admin)
+- [ ] Redesign dark-first dos dashboards
+- [ ] Consistência com novo design system
 
-### 3.2 Atualizar `ProtectedRoute`  
-- Incluir `'staff'` nos `allowedRoles` aceitos
+---
 
-### 3.3 Novas rotas (standalone, sem MainLayout)
-```
-/staff → StaffEventList (seleção de evento)
-/staff/checkin/:eventId → StaffCheckinScreen (tela principal)
-```
+## Infraestrutura Backend (Plano Anterior — Mantido)
 
-## 4. Páginas do Staff
+### Bloco 1 — Schema & SQL Functions
+- Funções atômicas: reserve_tickets, confirm_order_payment, apply_coupon
+- Índices de performance
 
-### 4.1 `StaffEventList` — Seleção de Evento
-- Header minimalista: logo TicketHall + botão logout
-- Lista eventos ativos do staff (query em `event_staff`)
-- Cards com: nome, data, local, badge de status (EM ANDAMENTO / EM BREVE / ENCERRADO)
-- Encerrados com opacidade reduzida, não clicáveis
+### Bloco 2 — Edge Functions de Pagamento (Asaas)
+- create-payment, asaas-webhook, create-producer-account
+- Secrets: ASAAS_API_KEY, ASAAS_BASE_URL, QR_SECRET
 
-### 4.2 `StaffCheckinScreen` — Tela Principal de Check-in
-Layout mobile-first conforme especificação:
+### Bloco 3 — Checkout Real
+- Conectar UI ao create-payment
+- PIX, Cartão, Boleto
 
-```text
-┌─────────────────────────────────┐
-│  [Logo]  Nome do Evento  [Sair] │
-├─────────────────────────────────┤
-│  ✅ 142 entradas  |  🎟 380 total│
-│  ████████████░░░░  37%          │
-├─────────────────────────────────┤
-│                                 │
-│     [ SCANNER QR - ~50% tela ]  │
-│     moldura animada #ff472d     │
-│                                 │
-├─────────────────────────────────┤
-│  [ RESULTADO FULLSCREEN ]       │
-│  verde/amarelo/vermelho         │
-├─────────────────────────────────┤
-│  [🔦 Lanterna]  [🔊 Som]  [✍️] │
-└─────────────────────────────────┘
-```
+### Bloco 4 — QR Codes Seguros + Check-in
+- JWT assinado, validate-checkin
 
-**Scanner QR:**
-- `html5-qrcode` (já instalado) com moldura animada
-- Debounce de 1.5s entre leituras
-- Suporte a lanterna (torch API)
-- Pausa ao detectar QR, mostra feedback, retoma
+### Bloco 5 — Transferência + Cancelamento
+- transfer-ticket, cancel-event
 
-**Feedback visual (poka-yoke):**
-- VALID: tela verde fullscreen, ✅, nome + tier, 2s
-- ALREADY_USED: tela laranja, ⚠️, horário original
-- INVALID/CANCELLED: tela vermelha, ❌, mensagem de erro
+### Bloco 6 — Cron Jobs
+- cleanup_expired_reservations, event-reminders
 
-**Feedback sonoro (Web Audio API):**
-- VALID: bip agudo curto
-- ALREADY_USED: dois bips médios
-- INVALID: bip grave
-- Toggle on/off persistido em localStorage
-
-**Vibração:**
-- VALID: 200ms
-- ERRO: 500ms ou padrão [200, 100, 200]
-
-**Check-in manual (bottom sheet):**
-- Busca por nome ou código do pedido
-- Email mascarado (jo***@gmail.com)
-- Confirmação antes de executar
-- Apenas participantes do evento atual
-
-**Histórico da sessão (drawer lateral):**
-- Últimos N scans da sessão
-- Nome, hora, resultado (✅/⚠️/❌)
-- Botão undo visível por 10s após check-in válido (reverte ticket de `used` para `active`)
-
-**Contador em tempo real:**
-- Supabase Realtime subscription na tabela `tickets` filtrado por `event_id`
-- Total entradas / total ingressos / barra de progresso
-
-## 5. Edge Function — Sem alterações
-
-A edge function `validate-checkin` já suporta todo o fluxo necessário (validação JWT, check de status, registro de logs). O staff usará ela normalmente via `supabase.functions.invoke`.
-
-## 6. Config
-
-Adicionar ao `supabase/config.toml`:
-```toml
-[functions.validate-checkin]
-verify_jwt = false
-```
-(Se ainda não configurado — a função já faz validação manual do JWT.)
-
-## 7. Arquivos a Criar/Modificar
-
-| Ação | Arquivo |
-|------|---------|
-| Criar | `src/pages/staff/StaffEventList.tsx` |
-| Criar | `src/pages/staff/StaffCheckinScreen.tsx` |
-| Criar | `src/lib/audio-feedback.ts` (Web Audio API helpers) |
-| Modificar | `src/App.tsx` (adicionar rotas /staff) |
-| Modificar | `src/contexts/AuthContext.tsx` (adicionar 'staff' ao tipo) |
-| Modificar | `src/components/ProtectedRoute.tsx` (adicionar 'staff') |
-| Migração | Nova tabela `event_staff`, enum update, realtime |
-
-## 8. Segurança
-
-- Staff só acessa eventos vinculados na `event_staff`
-- RLS garante isolamento: staff vê apenas seus registros
-- Autenticação obrigatória via Supabase Auth
-- Sem acesso a rotas de produtor, admin ou comprador
-- Interface isolada sem navbar/sidebar do app principal
-
+### Bloco 7 — Segurança & LGPD
+- Rate limiting, consents, data requests
