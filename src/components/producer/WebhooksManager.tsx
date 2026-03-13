@@ -103,21 +103,24 @@ export function WebhooksManager() {
 
   const testMutation = useMutation({
     mutationFn: async (webhook: any) => {
-      const payload = { event: "test.ping", data: { message: "Teste de webhook TicketHall", timestamp: new Date().toISOString() } };
-      const { error } = await supabase.from("webhook_deliveries").insert({
-        webhook_id: webhook.id,
-        event_type: "test.ping",
-        payload,
-        response_status: null,
-        attempts: 1,
+      const testPayload = { event: "test.ping", data: { message: "Teste de webhook TicketHall", timestamp: new Date().toISOString() } };
+
+      // Call the dispatch-webhook edge function
+      const res = await supabase.functions.invoke("dispatch-webhook", {
+        body: {
+          webhook_id: webhook.id,
+          event_type: "test.ping",
+          payload: testPayload,
+        },
       });
-      if (error) throw error;
-      // WEBHOOK_DISPATCH_INTEGRATION_POINT — in production, call edge function to POST to webhook.url
+      if (res.error) throw res.error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["webhook-deliveries"] });
-      toast({ title: "Teste enviado!" });
+      queryClient.invalidateQueries({ queryKey: ["producer-webhooks"] });
+      toast({ title: "Teste enviado!", description: "Verifique o histórico para ver o resultado." });
     },
+    onError: (err: any) => toast({ title: "Erro ao testar", description: err.message, variant: "destructive" }),
   });
 
   const toggleEvent = (event: string) => {

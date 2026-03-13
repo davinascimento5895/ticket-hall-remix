@@ -406,10 +406,56 @@ export async function updateBulkMessageStatus(messageId: string, status: string)
 }
 
 export async function sendBulkMessage(messageId: string) {
-  // Edge function not yet deployed — update message status locally and notify user
+  // 1. Fetch the message to get its filter and content
+  const { data: msg, error: msgErr } = await supabase
+    .from("bulk_messages")
+    .select("*")
+    .eq("id", messageId)
+    .single();
+  if (msgErr || !msg) throw msgErr || new Error("Mensagem não encontrada");
+
+  // 2. Fetch recipient user IDs from tickets matching filter
+  const filter = msg.recipient_filter as any;
+  let query = supabase
+    .from("tickets")
+    .select("owner_id, attendee_email")
+    .eq("event_id", msg.event_id)
+    .eq("status", filter?.status || "active");
+  if (filter?.tier_ids?.length) {
+    query = query.in("tier_id", filter.tier_ids);
+  }
+  const { data: tickets, error: tErr } = await query;
+  if (tErr) throw tErr;
+
+  // Deduplicate by owner_id
+  const uniqueOwners = [...new Set((tickets || []).map(t => t.owner_id).filter(Boolean))];
+
+  if (uniqueOwners.length === 0) {
+    await supabase
+      .from("bulk_messages")
+      .update({ status: "sent", sent_at: new Date().toISOString() } as any)
+      .eq("id", messageId);
+    return;
+  }
+
+  // 3. Create in-app notifications for each unique owner
+  const notifications = uniqueOwners.map(uid => ({
+    user_id: uid,
+    type: "bulk_message",
+    title: msg.subject,
+    body: msg.body,
+    data: { message_id: messageId, event_id: msg.event_id },
+  }));
+
+  // Insert in batches of 500
+  for (let i = 0; i < notifications.length; i += 500) {
+    const chunk = notifications.slice(i, i + 500);
+    await supabase.from("notifications").insert(chunk);
+  }
+
+  // 4. Update message status to "sent"
   await supabase
     .from("bulk_messages")
-    .update({ status: "queued", sent_at: new Date().toISOString() })
+    .update({ status: "sent", sent_at: new Date().toISOString() } as any)
     .eq("id", messageId);
-  // TODO: Create send-bulk-message edge function for actual email delivery
 }

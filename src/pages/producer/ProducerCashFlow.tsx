@@ -2,11 +2,18 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp, TrendingDown, Wallet, Clock } from "lucide-react";
-import { getCashFlowSummary } from "@/lib/api-financial";
+import { getCashFlowSummary, syncOrderFinancials } from "@/lib/api-financial";
 
 const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",").replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`;
 
 export default function ProducerCashFlow({ producerId }: { producerId: string }) {
+  // Sync order-based transactions before loading summary
+  useQuery({
+    queryKey: ["sync-financials", producerId],
+    queryFn: () => syncOrderFinancials(producerId),
+    staleTime: 5 * 60_000,
+  });
+
   const { data, isLoading } = useQuery({
     queryKey: ["cash-flow", producerId],
     queryFn: () => getCashFlowSummary(producerId),

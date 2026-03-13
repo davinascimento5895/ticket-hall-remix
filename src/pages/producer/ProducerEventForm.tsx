@@ -116,15 +116,42 @@ export default function ProducerEventForm() {
       const { data, error } = await supabase.from("events").select("*").eq("id", id).single();
       if (error) throw error;
       if (data) {
+        // Parse concatenated address back into components
+        // Format: "Street, Number - Complement, Neighborhood"
+        let parsedAddress = data.venue_address || "";
+        let parsedNumber = "";
+        let parsedComplement = "";
+        let parsedNeighborhood = "";
+        if (parsedAddress) {
+          // Try to extract: "Street, Number - Complement, Neighborhood"
+          const dashParts = parsedAddress.split(" - ");
+          let beforeDash = dashParts[0];
+          let afterDash = dashParts.slice(1).join(" - ");
+          // Before dash: "Street, Number"
+          const commaParts = beforeDash.split(", ");
+          if (commaParts.length >= 2) {
+            parsedAddress = commaParts[0];
+            parsedNumber = commaParts[1];
+          }
+          // After dash: "Complement, Neighborhood"
+          if (afterDash) {
+            const compParts = afterDash.split(", ");
+            parsedComplement = compParts[0] || "";
+            parsedNeighborhood = compParts.slice(1).join(", ") || "";
+          } else if (commaParts.length >= 3) {
+            parsedNeighborhood = commaParts.slice(2).join(", ");
+          }
+        }
+
         setForm({
           title: data.title || "", slug: data.slug || "", description: data.description || "",
           category: data.category || "shows",
           start_date: data.start_date?.slice(0, 16) || "", end_date: data.end_date?.slice(0, 16) || "",
           doors_open_time: data.doors_open_time?.slice(0, 16) || "",
-          venue_name: data.venue_name || "", venue_address: data.venue_address || "",
+          venue_name: data.venue_name || "", venue_address: parsedAddress,
           venue_city: data.venue_city || "", venue_state: data.venue_state || "",
-          venue_zip: data.venue_zip || "", venue_number: "", venue_complement: "", venue_neighborhood: "",
-          is_online: data.is_online || false, online_url: data.online_url || "", online_platform: "external",
+          venue_zip: data.venue_zip || "", venue_number: parsedNumber, venue_complement: parsedComplement, venue_neighborhood: parsedNeighborhood,
+          is_online: data.is_online || false, online_url: data.online_url || "", online_platform: (data as any).online_platform || "external",
           minimum_age: data.minimum_age || 0, max_capacity: data.max_capacity || 0,
           cover_image_url: data.cover_image_url || "", status: data.status || "draft",
           has_seat_map: data.has_seat_map || false,
@@ -133,7 +160,7 @@ export default function ProducerEventForm() {
           has_certificates: data.has_certificates || false,
           has_insurance_option: data.has_insurance_option || false,
           insurance_price: data.insurance_price || 0,
-          visibility: "public",
+          visibility: (data as any).visibility || "public",
         });
         if (data.cover_image_url) setCoverPreview(data.cover_image_url);
         const smc = data.seat_map_config as any;
@@ -294,6 +321,7 @@ export default function ProducerEventForm() {
         venue_address: fullAddress, venue_city: form.venue_city,
         venue_state: form.venue_state, venue_zip: form.venue_zip,
         is_online: form.is_online, online_url: form.online_url,
+        online_platform: form.online_platform, visibility: form.visibility,
         minimum_age: form.minimum_age, max_capacity: form.max_capacity,
         cover_image_url: coverUrl, has_seat_map: form.has_seat_map,
         seat_map_config: seatMapConfig, has_virtual_queue: form.has_virtual_queue,

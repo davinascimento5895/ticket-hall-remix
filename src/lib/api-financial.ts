@@ -125,6 +125,127 @@ export async function deleteFinancialTransaction(id: string) {
 }
 
 // ============================================================
+// AUTO-SYNC: CREATE FINANCIAL TRANSACTIONS FROM ORDERS
+// ============================================================
+
+export async function syncOrderFinancials(producerId: string) {
+  // 1. Get all producer event IDs
+  const { data: events } = await supabase
+    .from("events")
+    .select("id, title, platform_fee_percent")
+    .eq("producer_id", producerId);
+  if (!events || events.length === 0) return;
+
+  const eventIds = events.map(e => e.id);
+  const eventMap = new Map(events.map(e => [e.id, e]));
+
+  // 2. Get all existing order-linked financial_transactions to avoid duplicates
+  const { data: existingTx } = await supabase
+    .from("financial_transactions")
+    .select("order_id, category")
+    .eq("producer_id", producerId)
+    .not("order_id", "is", null);
+
+  const existingSet = new Set(
+    (existingTx || []).map(t => `${t.order_id}__${t.category}`)
+  );
+
+  // 3. Paginate through all orders for producer events
+  let allOrders: any[] = [];
+  const PAGE = 1000;
+  let offset = 0;
+  while (true) {
+    const { data: batch } = await supabase
+      .from("orders")
+      .select("id, event_id, status, total, subtotal, platform_fee, payment_gateway_fee, refunded_amount, created_at, profiles!orders_buyer_id_fkey(full_name)")
+      .in("event_id", eventIds)
+      .in("status", ["paid", "refunded"])
+      .range(offset, offset + PAGE - 1);
+    if (!batch || batch.length === 0) break;
+    allOrders = allOrders.concat(batch);
+    if (batch.length < PAGE) break;
+    offset += PAGE;
+  }
+
+  // 4. Build inserts for missing transactions
+  const inserts: any[] = [];
+
+  for (const order of allOrders) {
+    const evt = eventMap.get(order.event_id);
+    const eventTitle = evt?.title || "Evento";
+    const buyerName = (order as any).profiles?.full_name || "Comprador";
+
+    // Receivable: ticket sale (net amount = total - platform_fee - gateway_fee)
+    if (order.status === "paid" || order.status === "refunded") {
+      const key = `${order.id}__ticket_sale`;
+      if (!existingSet.has(key)) {
+        const netAmount = Number(order.total) - Number(order.platform_fee || 0) - Number(order.payment_gateway_fee || 0);
+        inserts.push({
+          producer_id: producerId,
+          event_id: order.event_id,
+          order_id: order.id,
+          type: "receivable",
+          category: "ticket_sale",
+          description: `Venda — ${eventTitle} — ${buyerName}`,
+          amount: netAmount > 0 ? netAmount : 0,
+          status: "confirmed",
+          due_date: order.created_at?.slice(0, 10),
+        });
+        existingSet.add(key);
+      }
+    }
+
+    // Payable: platform fee
+    if ((order.status === "paid" || order.status === "refunded") && Number(order.platform_fee) > 0) {
+      const key = `${order.id}__platform_fee`;
+      if (!existingSet.has(key)) {
+        inserts.push({
+          producer_id: producerId,
+          event_id: order.event_id,
+          order_id: order.id,
+          type: "payable",
+          category: "platform_fee",
+          description: `Taxa plataforma — ${eventTitle} — Pedido #${order.id.slice(0, 8)}`,
+          amount: Number(order.platform_fee),
+          status: "confirmed",
+          due_date: order.created_at?.slice(0, 10),
+        });
+        existingSet.add(key);
+      }
+    }
+
+    // Payable: refund
+    if (order.status === "refunded" && Number(order.refunded_amount) > 0) {
+      const key = `${order.id}__refund`;
+      if (!existingSet.has(key)) {
+        inserts.push({
+          producer_id: producerId,
+          event_id: order.event_id,
+          order_id: order.id,
+          type: "payable",
+          category: "refund",
+          description: `Reembolso — ${eventTitle} — ${buyerName}`,
+          amount: Number(order.refunded_amount),
+          status: "confirmed",
+          due_date: order.created_at?.slice(0, 10),
+        });
+        existingSet.add(key);
+      }
+    }
+  }
+
+  // 5. Batch insert (Supabase supports up to ~1000 rows per insert)
+  if (inserts.length > 0) {
+    for (let i = 0; i < inserts.length; i += 500) {
+      const chunk = inserts.slice(i, i + 500);
+      await supabase.from("financial_transactions").insert(chunk);
+    }
+  }
+
+  return inserts.length;
+}
+
+// ============================================================
 // CASH FLOW SUMMARY
 // ============================================================
 

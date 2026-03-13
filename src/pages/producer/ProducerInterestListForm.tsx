@@ -73,6 +73,8 @@ export default function ProducerInterestListForm() {
   const [newFieldType, setNewFieldType] = useState("text");
   const [newFieldPlaceholder, setNewFieldPlaceholder] = useState("");
   const [newFieldRequired, setNewFieldRequired] = useState(false);
+  const [newFieldOptions, setNewFieldOptions] = useState<string[]>([]);
+  const [newOptionText, setNewOptionText] = useState("");
 
   // Load existing data
   const { data: existing } = useQuery({
@@ -146,6 +148,8 @@ export default function ProducerInterestListForm() {
     setNewFieldType("text");
     setNewFieldPlaceholder("");
     setNewFieldRequired(false);
+    setNewFieldOptions([]);
+    setNewOptionText("");
     setFieldDialog(true);
   };
 
@@ -156,17 +160,21 @@ export default function ProducerInterestListForm() {
     setNewFieldType(f.field_type);
     setNewFieldPlaceholder(f.placeholder);
     setNewFieldRequired(f.is_required);
+    setNewFieldOptions(Array.isArray(f.options) ? f.options : []);
+    setNewOptionText("");
     setFieldDialog(true);
   };
 
   const saveField = () => {
     if (!newFieldName.trim()) { toast.error("Nome do campo é obrigatório"); return; }
+    if (newFieldType === "select" && newFieldOptions.length < 2) { toast.error("Adicione pelo menos 2 opções para o campo de seleção"); return; }
     const field: InterestListField = {
       field_name: newFieldName.trim(),
       field_type: newFieldType,
       placeholder: newFieldPlaceholder.trim() || `Digite ${newFieldName.trim().toLowerCase()}`,
       is_required: newFieldRequired,
       sort_order: editingFieldIdx !== null ? editingFieldIdx : fields.length,
+      options: newFieldType === "select" ? newFieldOptions : null,
     };
     if (editingFieldIdx !== null) {
       const next = [...fields];
@@ -478,6 +486,46 @@ export default function ProducerInterestListForm() {
               <Switch checked={newFieldRequired} onCheckedChange={setNewFieldRequired} />
               <span className="text-sm text-muted-foreground">{newFieldRequired ? "Sim" : "Não"}</span>
             </div>
+            {newFieldType === "select" && (
+              <div className="space-y-2">
+                <Label>Opções do dropdown</Label>
+                <div className="space-y-1">
+                  {newFieldOptions.map((opt, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <span className="text-sm flex-1 bg-muted px-2 py-1 rounded">{opt}</span>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => setNewFieldOptions(newFieldOptions.filter((_, j) => j !== i))}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    value={newOptionText}
+                    onChange={(e) => setNewOptionText(e.target.value)}
+                    placeholder="Nova opção"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        if (newOptionText.trim()) {
+                          setNewFieldOptions([...newFieldOptions, newOptionText.trim()]);
+                          setNewOptionText("");
+                        }
+                      }
+                    }}
+                  />
+                  <Button variant="outline" size="sm" type="button" onClick={() => {
+                    if (newOptionText.trim()) {
+                      setNewFieldOptions([...newFieldOptions, newOptionText.trim()]);
+                      setNewOptionText("");
+                    }
+                  }}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">Adicione pelo menos 2 opções. Pressione Enter ou clique + para adicionar.</p>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setFieldDialog(false)}>Cancelar</Button>
