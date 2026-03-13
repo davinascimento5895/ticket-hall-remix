@@ -10,8 +10,7 @@ import { SEOHead } from "@/components/SEOHead";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { createPayment, CreditCardData } from "@/lib/api-payment";
-import { CheckoutStepPayment } from "@/components/checkout/CheckoutStepPayment";
+import { createPayment } from "@/lib/api-payment";
 import { toast } from "@/hooks/use-toast";
 
 export default function PedidoRecuperacao() {
@@ -19,6 +18,7 @@ export default function PedidoRecuperacao() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
+  const [isRegeneratingPix, setIsRegeneratingPix] = useState(false);
 
   const { data: order, isLoading, refetch } = useQuery({
     queryKey: ["order-recovery", orderId],
@@ -62,6 +62,32 @@ export default function PedidoRecuperacao() {
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleRegeneratePix = async () => {
+    if (!orderId) return;
+    setIsRegeneratingPix(true);
+    try {
+      const result = await createPayment(orderId, "pix");
+      if (!result.success) {
+        toast({
+          title: "Não foi possível gerar o QR agora",
+          description: result.error || "Tente novamente em alguns segundos.",
+          variant: "destructive",
+        });
+        return;
+      }
+      await refetch();
+      toast({ title: "Cobrança PIX atualizada", description: "Confira o QR Code abaixo." });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao atualizar cobrança PIX",
+        description: error?.message || "Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRegeneratingPix(false);
+    }
   };
 
   if (isLoading) {
@@ -155,7 +181,11 @@ export default function PedidoRecuperacao() {
             <CardContent className="p-5 space-y-4 text-center">
               <h3 className="font-display font-semibold">Pague via PIX</h3>
               {order.pix_qr_code_image && (
-                <img src={order.pix_qr_code_image} alt="QR Code PIX" className="w-48 h-48 mx-auto" />
+                <img
+                  src={order.pix_qr_code_image.startsWith("data:image") ? order.pix_qr_code_image : `data:image/png;base64,${order.pix_qr_code_image}`}
+                  alt="QR Code PIX"
+                  className="w-48 h-48 mx-auto"
+                />
               )}
               <div className="bg-muted rounded-lg p-3">
                 <p className="text-xs text-muted-foreground mb-2">Código PIX (copia e cola):</p>
@@ -169,6 +199,21 @@ export default function PedidoRecuperacao() {
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 Aguardando confirmação do pagamento...
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {isPending && order.payment_method === "pix" && !order.pix_qr_code && (
+          <Card className="mb-6">
+            <CardContent className="p-5 space-y-4 text-center">
+              <h3 className="font-display font-semibold">Gerando cobrança PIX</h3>
+              <p className="text-sm text-muted-foreground">
+                Estamos aguardando o gateway retornar seu código PIX. Clique abaixo para atualizar.
+              </p>
+              <Button variant="outline" onClick={handleRegeneratePix} disabled={isRegeneratingPix}>
+                {isRegeneratingPix ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                Atualizar QR Code PIX
+              </Button>
             </CardContent>
           </Card>
         )}
