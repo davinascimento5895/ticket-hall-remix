@@ -122,22 +122,25 @@ export function CheckoutStepPayment({
   };
 
   const handleConfirm = () => {
+    // Validate CPF before any payment method
+    if (!payerCpf.trim() || !validateCPF(payerCpf)) {
+      toast({ title: "CPF inválido", description: "Preencha um CPF válido para prosseguir com o pagamento.", variant: "destructive" });
+      return;
+    }
+
     if (paymentMethod === "credit_card") {
       if (!cardData.holderName || !cardData.number || !cardData.expiryMonth || !cardData.expiryYear || !cardData.ccv) {
         toast({ title: "Preencha todos os dados do cartão", variant: "destructive" });
         return;
       }
-      // M09: Validate card number with Luhn
       if (!luhnCheck(cardData.number)) {
         toast({ title: "Número de cartão inválido", description: "Verifique o número do cartão.", variant: "destructive" });
         return;
       }
-      // M09: Validate expiry date
       if (!validateCardExpiry(cardData.expiryMonth, cardData.expiryYear)) {
         toast({ title: "Data de validade inválida", description: "O cartão pode estar vencido.", variant: "destructive" });
         return;
       }
-      // M09: Validate CVV
       const cvvClean = cardData.ccv.replace(/\D/g, "");
       if (cvvClean.length < 3 || cvvClean.length > 4) {
         toast({ title: "CVV inválido", description: "O CVV deve ter 3 ou 4 dígitos.", variant: "destructive" });
