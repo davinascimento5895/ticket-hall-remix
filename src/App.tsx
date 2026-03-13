@@ -91,6 +91,10 @@ const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
 const AdminFinance = lazy(() => import("./pages/admin/AdminFinance"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 
+// Staff pages — lazy loaded
+const StaffEventList = lazy(() => import("./pages/staff/StaffEventList"));
+const StaffCheckinScreen = lazy(() => import("./pages/staff/StaffCheckinScreen"));
+
 
 const LazyFallback = () => (
   <div className="flex items-center justify-center min-h-[50vh]">
