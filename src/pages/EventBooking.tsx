@@ -161,7 +161,11 @@ export default function EventBooking() {
         toast({ title: "Inscrição confirmada!", description: "Seus ingressos foram gerados." });
         setStep("confirmation");
       } else {
-        const payResult = await createPayment(newOrderId, method as "pix" | "credit_card" | "boleto", cardData, installments);
+        // Save CPF to profile
+        if (payerCpf) {
+          await supabase.from("profiles").update({ cpf: payerCpf }).eq("id", user.id);
+        }
+        const payResult = await createPayment(newOrderId, method as "pix" | "credit_card" | "boleto", cardData, installments, payerCpf);
 
         if (!payResult.success) {
           toast({ title: "Erro no pagamento", description: payResult.error || "Tente novamente.", variant: "destructive" });
