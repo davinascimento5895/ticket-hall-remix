@@ -198,16 +198,6 @@ export async function getProducers(search?: string) {
   return profiles.map((p) => ({ ...p, events_count: countMap.get(p.id) || 0 }));
 }
 
-export async function getPendingProducers() {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, full_name, phone, cpf, created_at, producer_status")
-    .eq("producer_status", "pending")
-    .order("created_at", { ascending: true });
-  if (error) throw error;
-  return data || [];
-}
-
 export async function getProducerDetail(producerId: string) {
   const [profileRes, eventsRes] = await Promise.all([
     supabase.from("profiles").select("id, full_name, phone, created_at, producer_status").eq("id", producerId).single(),
@@ -215,31 +205,6 @@ export async function getProducerDetail(producerId: string) {
   ]);
   if (profileRes.error) throw profileRes.error;
   return { profile: profileRes.data, events: eventsRes.data || [] };
-}
-
-export async function updateProducerStatus(userId: string, status: string) {
-  const { data, error } = await supabase.from("profiles").update({ producer_status: status as any }).eq("id", userId).select().single();
-  if (error) throw error;
-  return data;
-}
-
-export async function approveProducer(producerId: string) {
-  const { data, error } = await supabase.functions.invoke("create-producer-account", {
-    body: { producerId },
-  });
-  if (error) throw error;
-  return data;
-}
-
-export async function rejectProducer(producerId: string) {
-  const { data, error } = await supabase
-    .from("profiles")
-    .update({ producer_status: "rejected" as any })
-    .eq("id", producerId)
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
 }
 
 export async function adminDeleteEvent(eventId: string) {
