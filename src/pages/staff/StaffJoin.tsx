@@ -10,7 +10,7 @@ import logoBlack from "@/assets/logo-full-black.svg";
 
 export default function StaffJoin() {
   const { code } = useParams<{ code: string }>();
-  const { user, loading } = useAuth();
+  const { user, loading, refetchRole } = useAuth();
   const navigate = useNavigate();
   const [status, setStatus] = useState<"loading" | "success" | "error" | "auth_required">("loading");
   const [message, setMessage] = useState("");
@@ -38,6 +38,7 @@ export default function StaffJoin() {
         setStatus("error");
         setMessage(result.error);
       } else {
+        await refetchRole();
         setStatus("success");
         setEventTitle(result.event_title);
         setMessage(result.already_member ? "Você já faz parte desta equipe!" : "Você foi adicionado à equipe!");
