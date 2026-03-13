@@ -433,15 +433,10 @@ export default function MeusIngressos() {
         )}
       </div>
 
-      <QRCodeModal
-        open={qrModal.open}
-        onOpenChange={(open) => setQrModal((p) => ({ ...p, open }))}
-        ticketId={qrModal.ticketId}
-        qrCode={qrModal.qrCode}
-        qrCodeImageUrl={qrModal.qrCodeImageUrl}
-        eventTitle={qrModal.eventTitle}
-        tierName={qrModal.tierName}
-        attendeeName={qrModal.attendeeName}
+      <TicketDetailModal
+        open={ticketDetailModal.open}
+        onOpenChange={(open) => setTicketDetailModal((p) => ({ ...p, open }))}
+        ticket={ticketDetailModal.ticket}
       />
 
       <TransferTicketModal
