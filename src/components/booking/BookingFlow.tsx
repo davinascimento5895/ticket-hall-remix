@@ -53,6 +53,7 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
   const [paymentMethod, setPaymentMethod] = useState("pix");
   const [orderId, setOrderId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [payerCpf, setPayerCpf] = useState("");
 
   const unitPrice = selectedTier?.price ?? 0;
   const subtotal = unitPrice * quantity;
