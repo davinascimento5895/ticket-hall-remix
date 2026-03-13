@@ -148,7 +148,7 @@ export function Navbar() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="gap-2">
                       <User className="h-4 w-4" />
-                      <span className="max-w-[120px] truncate">{profile?.full_name || "Minha Conta"}</span>
+                      <span className="max-w-[120px] truncate">{profile?.full_name || "Minha Conta"} — {roleLabels[role || "buyer"]}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
