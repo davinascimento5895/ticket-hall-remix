@@ -156,11 +156,8 @@ export default function ProducerEventMessages() {
             <Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Escreva sua mensagem aqui..." rows={6} />
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => sendMutation.mutate()} disabled={!subject || !body || sendMutation.isPending || saveDraftMutation.isPending}>
-              <Send className="h-4 w-4 mr-1" /> Enviar mensagem
-            </Button>
-            <Button variant="outline" onClick={() => saveDraftMutation.mutate()} disabled={!subject || !body || saveDraftMutation.isPending || sendMutation.isPending}>
-              Salvar rascunho
+            <Button onClick={() => saveDraftMutation.mutate()} disabled={!subject || !body || saveDraftMutation.isPending}>
+              <Send className="h-4 w-4 mr-1" /> Salvar mensagem
             </Button>
           </div>
         </CardContent>

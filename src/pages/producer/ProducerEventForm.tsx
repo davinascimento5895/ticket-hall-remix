@@ -785,10 +785,12 @@ export default function ProducerEventForm() {
 
         {/* Step 5: Products */}
         {step === 5 && (
-          isEdit ? <EventProductsManager eventId={id!} /> : (
+         isEdit ? <EventProductsManager eventId={id!} /> : (
             <Card>
-              <CardContent className="py-8 text-center">
-                <p className="text-sm text-muted-foreground">Salve o evento primeiro para adicionar produtos.</p>
+              <CardContent className="py-8 text-center space-y-2">
+                <Settings className="h-8 w-8 mx-auto text-muted-foreground opacity-50" />
+                <p className="text-sm font-medium text-foreground">Disponível após salvar</p>
+                <p className="text-xs text-muted-foreground">Salve o evento primeiro para poder adicionar produtos e complementos ao catálogo.</p>
               </CardContent>
             </Card>
           )

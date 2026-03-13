@@ -59,14 +59,9 @@ export default function ProducerEventGuestlist() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <Link to="/producer/events" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2">
-          <ArrowLeft className="h-4 w-4" /> Voltar
-        </Link>
-        <div className="flex items-center justify-between">
-          <h1 className="font-display text-2xl font-bold">Lista de Convidados — {event?.title || "..."}</h1>
-          <Button size="sm" onClick={() => setShowForm(!showForm)} className="gap-1"><Plus className="h-4 w-4" />Adicionar</Button>
-        </div>
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">Gerencie a lista de convidados VIP</p>
+        <Button size="sm" onClick={() => setShowForm(!showForm)} className="gap-1"><Plus className="h-4 w-4" />Adicionar</Button>
       </div>
 
       {showForm && (
