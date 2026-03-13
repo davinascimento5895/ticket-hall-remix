@@ -54,6 +54,10 @@ export default function ProducerEventPanel() {
   const activeTab = TABS.find((t) => t.path === currentSuffix) || TABS[0];
 
   const navigateToTab = (tab: typeof TABS[number]) => {
+    if ('isEdit' in tab && tab.isEdit) {
+      navigate(`/producer/events/${id}/edit`);
+      return;
+    }
     navigate(`${basePath}${tab.path}`);
     setMobileTabsOpen(false);
   };
