@@ -24,11 +24,11 @@ import { cn } from "@/lib/utils";
 
 export default function EventDetail() {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [unlockCode, setUnlockCode] = useState("");
   const [showUnlockInput, setShowUnlockInput] = useState(false);
   const [activeSection, setActiveSection] = useState<"description" | "tickets" | "venue">("description");
-  const [bookingOpen, setBookingOpen] = useState(false);
 
   const { data: event, isLoading: loadingEvent } = useQuery({
     queryKey: ["event", slug],
