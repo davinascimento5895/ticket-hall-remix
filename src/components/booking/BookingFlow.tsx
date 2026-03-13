@@ -176,8 +176,10 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
           toast({ title: "Pagamento confirmado!", description: "Seus ingressos foram gerados." });
           setStep("confirmation");
         } else {
-          toast({ title: "Aguardando pagamento", description: "Complete o pagamento para receber seus ingressos." });
-          setStep("confirmation");
+          // PIX/Boleto: redirect to order recovery page to show QR/barcode
+          onOpenChange(false);
+          toast({ title: "Pedido criado!", description: "Complete o pagamento para receber seus ingressos." });
+          navigate(`/pedido/${newOrderId}`);
         }
       }
     } catch (error: any) {
