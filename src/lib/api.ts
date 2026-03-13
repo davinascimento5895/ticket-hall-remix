@@ -92,7 +92,7 @@ export async function getMyOrders(userId: string) {
 export async function getMyTickets(userId: string) {
   const { data, error } = await supabase
     .from("tickets")
-    .select("*, ticket_tiers(name, price, is_resellable, is_transferable), events(title, slug, cover_image_url, start_date, venue_city, venue_name)")
+    .select("*, ticket_tiers(name, price, is_resellable, is_transferable), events(title, slug, cover_image_url, start_date, end_date, venue_name, venue_address, venue_city, venue_state, is_online, description), orders(id, total, subtotal, platform_fee, discount_amount, created_at, payment_method)")
     .eq("owner_id", userId)
     .order("created_at", { ascending: false });
   if (error) throw error;
