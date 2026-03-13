@@ -70,6 +70,8 @@ export function CheckoutStepPayment({
   paymentCreated,
   awaitingPayment,
   expiresAt,
+  payerCpf,
+  onPayerCpfChange,
 }: CheckoutStepPaymentProps) {
   const [paymentMethod, setPaymentMethod] = useState<string>("pix");
   const [installments, setInstallments] = useState<number>(1);
