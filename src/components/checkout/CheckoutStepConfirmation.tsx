@@ -151,6 +151,7 @@ export function CheckoutStepConfirmation({ orderId }: CheckoutStepConfirmationPr
                     key={t.id}
                     ticketId={t.id}
                     tierName={(t.ticket_tiers as any)?.name || "Ingresso"}
+                    tierPrice={(t.ticket_tiers as any)?.price}
                     attendeeName={t.attendee_name}
                     attendeeCpf={t.attendee_cpf}
                     qrCode={t.qr_code || t.id}
@@ -159,10 +160,14 @@ export function CheckoutStepConfirmation({ orderId }: CheckoutStepConfirmationPr
                     eventDate={event.start_date}
                     eventEndDate={event.end_date}
                     venueName={event.venue_name}
+                    venueAddress={event.venue_address}
                     venueCity={event.venue_city}
                     isOnline={event.is_online}
                     coverImageUrl={event.cover_image_url}
                     orderCode={orderCode}
+                    purchaseDate={order.created_at}
+                    paymentMethod={order.payment_method}
+                    eventDescription={event.description}
                     index={idx}
                   />
                 ))}
