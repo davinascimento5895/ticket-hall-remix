@@ -38,6 +38,7 @@ export default function StaffJoin() {
         setStatus("error");
         setMessage(result.error);
       } else {
+        await refetchRole();
         setStatus("success");
         setEventTitle(result.event_title);
         setMessage(result.already_member ? "Você já faz parte desta equipe!" : "Você foi adicionado à equipe!");
