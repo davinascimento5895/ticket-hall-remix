@@ -223,7 +223,6 @@ export default function EventBooking() {
       <SEOHead
         title={`Comprar ingressos — ${event.title}`}
         description={`Adquira seus ingressos para ${event.title}`}
-        canonical={`/eventos/${slug}/comprar`}
       />
 
       <div className="min-h-screen bg-background flex flex-col">
