@@ -239,8 +239,8 @@ export default function ProducerEventForm() {
 
   const handleSave = async (publish = false) => {
     if (!user) return;
-    if (publish && profile?.producer_status !== "approved") {
-      toast({ title: "Conta pendente", description: "Sua conta de produtor ainda não foi aprovada. Aguarde a aprovação para publicar eventos.", variant: "destructive" });
+    if (publish && !user) {
+      toast({ title: "Erro", description: "Você precisa estar autenticado para publicar eventos.", variant: "destructive" });
       return;
     }
     try {
