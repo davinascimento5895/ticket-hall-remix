@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { X, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { BookingSummaryStep } from "./BookingSummaryStep";
 import { BookingConfirmation } from "./BookingConfirmation";
 import { supabase } from "@/integrations/supabase/client";
 import { createPayment, type CreditCardData } from "@/lib/api-payment";
+import { formatCPF } from "@/lib/validators";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -40,7 +41,7 @@ type Step = "date" | "tickets" | "summary" | "confirmation";
 
 export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowProps) {
   const isMobile = useIsMobile();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
 
   const isMultiDay = event.is_multi_day || new Date(event.start_date).toDateString() !== new Date(event.end_date).toDateString();
@@ -53,6 +54,14 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
   const [paymentMethod, setPaymentMethod] = useState("pix");
   const [orderId, setOrderId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [payerCpf, setPayerCpf] = useState("");
+
+  // Auto-fill CPF from profile
+  useEffect(() => {
+    if (profile?.cpf && !payerCpf) {
+      setPayerCpf(formatCPF(profile.cpf));
+    }
+  }, [profile]);
 
   const unitPrice = selectedTier?.price ?? 0;
   const subtotal = unitPrice * quantity;
@@ -164,7 +173,11 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
         setStep("confirmation");
       } else {
         // Process payment
-        const payResult = await createPayment(newOrderId, method as "pix" | "credit_card" | "boleto", cardData, installments);
+        // Save CPF to profile
+        if (payerCpf) {
+          await supabase.from("profiles").update({ cpf: payerCpf }).eq("id", user.id);
+        }
+        const payResult = await createPayment(newOrderId, method as "pix" | "credit_card" | "boleto", cardData, installments, payerCpf);
 
         if (!payResult.success) {
           toast({ title: "Erro no pagamento", description: payResult.error || "Tente novamente.", variant: "destructive" });
@@ -288,6 +301,8 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
               onPaymentMethodChange={setPaymentMethod}
               onConfirm={(cardData, installments) => handleConfirmPayment(paymentMethod, cardData, installments)}
               isProcessing={isProcessing}
+              payerCpf={payerCpf}
+              onPayerCpfChange={setPayerCpf}
             />
           )}
           {step === "confirmation" && (

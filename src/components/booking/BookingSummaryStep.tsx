@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { type CreditCardData, getInstallmentOptions } from "@/lib/api-payment";
+import { validateCPF, formatCPF } from "@/lib/validators";
+import { toast } from "@/hooks/use-toast";
 
 interface Props {
   event: {
@@ -31,6 +33,8 @@ interface Props {
   onConfirm: (cardData?: CreditCardData, installments?: number) => void;
   isProcessing: boolean;
   isFree?: boolean;
+  payerCpf: string;
+  onPayerCpfChange: (cpf: string) => void;
 }
 
 const fmt = (v: number) => `R$ ${Number(v).toFixed(2).replace(".", ",")}`;
@@ -47,6 +51,7 @@ export function BookingSummaryStep({
   couponCode, onCouponChange, onApplyCoupon,
   paymentMethod, onPaymentMethodChange,
   onConfirm, isProcessing, isFree,
+  payerCpf, onPayerCpfChange,
 }: Props) {
   const [cardNumber, setCardNumber] = useState("");
   const [cardName, setCardName] = useState("");
@@ -59,6 +64,13 @@ export function BookingSummaryStep({
       onConfirm();
       return;
     }
+
+    // Validate CPF before payment
+    if (!payerCpf.trim() || !validateCPF(payerCpf)) {
+      toast({ title: "CPF inválido", description: "Preencha um CPF válido para prosseguir com o pagamento.", variant: "destructive" });
+      return;
+    }
+
     if (paymentMethod === "credit_card") {
       onConfirm({
         holderName: cardName,
@@ -144,6 +156,23 @@ export function BookingSummaryStep({
           </Button>
         </div>
       </div>
+
+      {/* CPF do pagador - only for paid events */}
+      {!isFree && (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">CPF do pagador <span className="text-destructive">*</span></Label>
+          <Input
+            value={payerCpf}
+            onChange={(e) => onPayerCpfChange(formatCPF(e.target.value))}
+            placeholder="000.000.000-00"
+            maxLength={14}
+            className="text-sm"
+          />
+          <p className="text-xs text-muted-foreground">
+            Caso queira pagar em nome de outra pessoa, altere o CPF acima.
+          </p>
+        </div>
+      )}
 
       {/* Payment method - only for paid events */}
       {!isFree && (
