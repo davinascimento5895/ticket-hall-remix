@@ -417,19 +417,31 @@ Deno.serve(async (req) => {
       paymentPayload.dueDate = today;
 
       const charge = await asaas("POST", "/payments", paymentPayload);
-      if (charge.errors) {
+      if (charge.errors || charge._empty || !charge.id) {
         return new Response(
-          JSON.stringify({ error: "Payment creation failed", details: charge.errors }),
+          JSON.stringify({
+            error: "Não foi possível gerar cobrança PIX.",
+            details: charge.errors || [{ description: "Gateway não retornou o ID da cobrança." }],
+          }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
       // Fetch PIX QR Code (separate call)
       const pix = await asaas("GET", `/payments/${charge.id}/pixQrCode`);
+      if (pix.errors || pix._empty || !pix.payload) {
+        return new Response(
+          JSON.stringify({
+            error: "Cobrança PIX criada, mas o QR Code não foi retornado pelo gateway.",
+            details: pix.errors || [{ description: "Resposta vazia ao buscar QR Code." }],
+          }),
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
       updateData.asaas_payment_id = charge.id;
       updateData.payment_status = "pending";
-      updateData.pix_qr_code = pix.payload || null;
+      updateData.pix_qr_code = pix.payload;
       updateData.pix_qr_code_image = pix.encodedImage || null;
       updateData.expires_at = pix.expirationDate || new Date(Date.now() + 30 * 60 * 1000).toISOString();
 
