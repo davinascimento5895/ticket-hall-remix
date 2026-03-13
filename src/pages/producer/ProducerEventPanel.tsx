@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, Suspense } from "react";
 import { EmbedSnippetGenerator } from "@/components/EmbedSnippetGenerator";
 import { useParams, useNavigate, useLocation, Link, Outlet } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
