@@ -225,9 +225,17 @@ export default function ProducerEventForm() {
   const handleCoverSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setCoverFile(file);
-      setCoverPreview(URL.createObjectURL(file));
+      const url = URL.createObjectURL(file);
+      setCropImageSrc(url);
+      setCropModalOpen(true);
     }
+    // Reset input so re-selecting the same file works
+    e.target.value = "";
+  };
+
+  const handleCropDone = (croppedFile: File) => {
+    setCoverFile(croppedFile);
+    setCoverPreview(URL.createObjectURL(croppedFile));
   };
 
   const handleUploadCover = async () => {
