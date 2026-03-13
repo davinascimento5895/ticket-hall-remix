@@ -147,3 +147,19 @@ export async function deleteCapacityGroup(id: string) {
 // EVENT PRODUCTS — moved to src/lib/api-products.ts
 // Re-export for backwards compatibility
 export { getEventProducts, getEventProductsAll, createEventProduct, updateEventProduct, deleteEventProduct } from "@/lib/api-products";
+
+import { supabase as sb } from "@/integrations/supabase/client";
+
+export async function saveOrderProducts(products: {
+  order_id: string;
+  product_id: string;
+  quantity: number;
+  unit_price: number;
+}[]) {
+  const { data, error } = await sb
+    .from("order_products")
+    .insert(products)
+    .select();
+  if (error) throw error;
+  return data;
+}
