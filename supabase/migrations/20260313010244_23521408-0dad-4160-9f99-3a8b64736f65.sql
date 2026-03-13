@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.create_order_validated(uuid[], integer[], uuid, text, uuid);

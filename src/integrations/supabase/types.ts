@@ -2511,28 +2511,17 @@ export type Database = {
         }
         Returns: boolean
       }
-      create_order_validated:
-        | {
-            Args: {
-              p_buyer_id: string
-              p_coupon_code?: string
-              p_promoter_event_id?: string
-              p_quantities: number[]
-              p_tier_ids: string[]
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              p_billing_address?: string
-              p_buyer_id: string
-              p_coupon_code?: string
-              p_promoter_event_id?: string
-              p_quantities: number[]
-              p_tier_ids: string[]
-            }
-            Returns: Json
-          }
+      create_order_validated: {
+        Args: {
+          p_billing_address?: string
+          p_buyer_id: string
+          p_coupon_code?: string
+          p_promoter_event_id?: string
+          p_quantities: number[]
+          p_tier_ids: string[]
+        }
+        Returns: Json
+      }
       create_resale_listing_atomic: {
         Args: {
           p_asking_price: number
