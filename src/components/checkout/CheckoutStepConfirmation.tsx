@@ -17,7 +17,7 @@ export function CheckoutStepConfirmation({ orderId }: CheckoutStepConfirmationPr
     queryFn: async () => {
       const { data } = await supabase
         .from("orders")
-        .select("*, events(title, start_date, end_date, venue_name, venue_address, venue_city, cover_image_url, slug, is_online, online_url)")
+        .select("*, events(title, start_date, end_date, venue_name, venue_address, venue_city, cover_image_url, slug, is_online, online_url, description)")
         .eq("id", orderId!)
         .single();
       return data;
@@ -30,7 +30,7 @@ export function CheckoutStepConfirmation({ orderId }: CheckoutStepConfirmationPr
     queryFn: async () => {
       const { data } = await supabase
         .from("tickets")
-        .select("id, qr_code, qr_code_image_url, attendee_name, attendee_cpf, ticket_tiers(name)")
+        .select("id, qr_code, qr_code_image_url, attendee_name, attendee_cpf, ticket_tiers(name, price)")
         .eq("order_id", orderId!);
       return data;
     },
@@ -151,6 +151,7 @@ export function CheckoutStepConfirmation({ orderId }: CheckoutStepConfirmationPr
                     key={t.id}
                     ticketId={t.id}
                     tierName={(t.ticket_tiers as any)?.name || "Ingresso"}
+                    tierPrice={(t.ticket_tiers as any)?.price}
                     attendeeName={t.attendee_name}
                     attendeeCpf={t.attendee_cpf}
                     qrCode={t.qr_code || t.id}
@@ -159,10 +160,14 @@ export function CheckoutStepConfirmation({ orderId }: CheckoutStepConfirmationPr
                     eventDate={event.start_date}
                     eventEndDate={event.end_date}
                     venueName={event.venue_name}
+                    venueAddress={event.venue_address}
                     venueCity={event.venue_city}
                     isOnline={event.is_online}
                     coverImageUrl={event.cover_image_url}
                     orderCode={orderCode}
+                    purchaseDate={order.created_at}
+                    paymentMethod={order.payment_method}
+                    eventDescription={event.description}
                     index={idx}
                   />
                 ))}
