@@ -1,97 +1,145 @@
+# TicketHall — Plano Mestre de Redesign & Implementação
 
-
-# Audit: Event Panel Tabs — Issues and Fixes
-
-## Summary of Findings
-
-After reviewing all 11 tabs in the Producer Event Panel, here are the issues organized by severity.
+## Documento de Referência
+Business Case & Product Design Analysis completo fornecido pelo cliente em 2026-03-06.
 
 ---
 
-## Critical Issues
-
-### 1. Promoters tab: No way to create promoters
-The Promoters tab references `supabase.from("promoters")` to list available promoters, but the global Promoters management page (`/producer/promoters`) was **removed from both the sidebar and routes**. The empty state says "Cadastre promoters primeiro em **Promoters** no menu lateral" — but that menu item no longer exists. **Producers have no way to create promoters**, making this tab completely broken.
-
-**Fix**: Either (a) re-add the global Promoters route to the sidebar, or (b) embed the promoter creation/management (from `ProducerPromotersList`) directly inside the Promoters event tab, so producers can create promoters in-context.
-
-### 2. Products tab: Only available when editing, not when creating
-`EventProductsManager` is only rendered when `isEdit` is true (step 5). During event creation, it shows a placeholder saying "Salve o evento primeiro." This is correct behavior, but the step label "Produtos" still appears in the sidebar during creation, misleading users into thinking they can configure products.
-
-**Fix**: Either hide step 5 entirely during creation, or show a clearer message explaining that products can be added after saving.
-
----
-
-## UX / Consistency Issues
-
-### 3. Redundant headers on Orders, Guestlist, Checkin, and Messages tabs
-These tabs render their own `<Link to="/producer/events">Voltar</Link>` breadcrumb and duplicate the event title (e.g., "Pedidos — Event Name"). This is redundant because the Panel already shows the event header with title, status badge, and a "Voltar aos eventos" link. It wastes vertical space and creates visual noise.
-
-**Affected tabs**: Orders, Guestlist, Check-in, Messages, Coupons (partially).
-
-**Fix**: Remove the redundant back links and event title headers from these tab components since they're already shown by `ProducerEventPanel`.
-
-### 4. Messages tab: Fake send functionality
-The "Enviar mensagem" button creates a record but shows a toast saying "🚧 O envio de e-mails em massa será disponibilizado em breve." This is confusing — the button says "Enviar" but nothing actually sends.
-
-**Fix**: Rename the button to "Salvar mensagem" or add a visible disclaimer banner explaining the feature is under development, similar to the product catalog disclaimer.
-
-### 5. Staff tab: Email invite doesn't actually send emails
-`inviteMutation` inserts into `producer_team_members` but there's no edge function or trigger to actually send an invitation email. The toast says "O staff receberá o convite por e-mail" but no email is sent.
-
-**Fix**: Add a disclaimer or change the flow to clarify that the invite is just a record — or implement the actual email sending via an edge function.
-
-### 6. Check-in tab: Online status is static
-`const [isOnline] = useState(navigator.onLine)` — this is set once and never updates. If the user goes offline/online, the indicator won't change.
-
-**Fix**: Use `useEffect` with `online`/`offline` event listeners to keep this reactive.
+## Design System Alvo (Novo)
+- **Tema**: Dark-first (`#0d0d0d` base, `#1a1a1a`/`#1f1f1f`/`#2c2c2c` superfícies)
+- **Cor principal (ação)**: Laranja `#ff472d` — CTAs, badges, ícones ativos, links, bordas de foco
+- **Cor secundária (gamificação)**: Verde-lima `#bad900` — pontos, sucesso, confirmações
+- **Texto principal**: Branco `#ffffff`
+- **Texto secundário**: Cinza claro `#9ca3af`
+- **Texto terciário (inativo)**: Cinza médio `#6b7280`
+- **Tipografia**: Sora (display) + Inter (body) — já configurado
+- **Border radius**: ~12-16px para cards, ~10px para inputs
+- **Componentes**: Chips/Pills, Bottom Sheets, Cards com gradiente escuro, Toggle switches
 
 ---
 
-## Minor Issues
+## Gap Analysis — Existente vs Documento de Design
 
-### 7. Tickets tab: Tax column always shows R$ 0,00
-The "Taxa" column in the tier table hardcodes `fmt(0)`. This provides no useful information.
+### ✅ JÁ IMPLEMENTADO
+- Catálogo de eventos com filtros por categoria
+- Detalhe do evento com descrição, data, local
+- Fluxo de compra (carrinho → checkout → pagamento)
+- Meus Ingressos (lista de ingressos ativos)
+- QR Code por ingresso
+- Transferência de ingresso
+- Sistema de reembolso (RefundDialog)
+- Cupons de desconto
+- Fila virtual
+- Certificados pós-evento
+- Painel do produtor completo
+- Painel admin completo
+- Autenticação (login/registro com email)
+- Notificações (NotificationBell)
+- Blog
+- Página do organizador
+- LGPD/Privacidade
+- Bottom navigation mobile
+- Tema claro/escuro com transição animada
 
-**Fix**: Calculate the actual platform fee or remove the column.
+### ❌ FEATURES FALTANTES
+1. **Onboarding** — 2-3 telas de boas-vindas com skip
+2. **Detecção automática de cidade** — GPS
+3. **Seletor de datas horizontal** — Barra scrollável no catálogo
+4. **Top-10 / Ranking** — Seção editorial com badges numerados
+5. **Filtro avançado (Bottom Sheet)** — Sort, range slider, gênero, horário
+6. **Grid view toggle** — Lista/grade no catálogo
+7. **Rating/Avaliação** — Estrelas + reviews de usuários (tabela + UI)
+8. **Random/Discovery** — Evento aleatório
+9. **Cast/Elenco** — Seção de artistas no detalhe
+10. **Mapa de assentos** — Seleção visual interativa
+11. **Sistema de pontos** — Fidelidade no checkout
+12. **Favoritos** — Salvar eventos (tabela + UI)
+13. **Ingressos arquivados** — Ativo/Arquivado com visual P&B
+14. **Chat de suporte** — Bot + quick replies in-app
+15. **Perfil completo** — Editar perfil, cidade, pagamentos, notificações
+16. **Login OTP** — Código por email/telefone
+17. **Login social** — Google, Apple
+18. **Compartilhamento** — Share via link
+19. **Notificações configuráveis** — SMS/Push/Email toggles
+20. **Seções editoriais** — "Novo", "Semana", curadoria
 
-### 8. Financial tab: No link to global financial page
-The event-level financial tab is self-contained but doesn't reference or link to the producer's global financial overview (`/producer/financial`).
-
-**Fix**: Add a subtle link to the global financial page for cross-referencing.
-
-### 9. Dashboard tab: "Última atualização" shows current time
-`new Date().toLocaleString("pt-BR")` just shows when the page rendered, not when data was last fetched. This is misleading.
-
-**Fix**: Use `dataUpdatedAt` from react-query to show actual data freshness.
+### 🔄 PRECISA REDESIGN VISUAL
+- Todas as páginas públicas (landing, catálogo, detalhe, checkout)
+- Navbar → Dark-first com laranja
+- Bottom Nav → Ícone ativo laranja
+- Cards de evento → Fundo #1f1f1f, gradiente, badges
+- Botões → Fill laranja, outline cinza
+- Inputs → Fundo #1f1f1f, borda #3a3a3a
+- Chips → Ativo laranja, inativo borda cinza
+- Login/Registro → Redesign completo
+- Meus Ingressos → Cards com barcode, ações
+- Painéis Producer/Admin → Dark-first
 
 ---
 
-## Tabs That Work Correctly
-- **Dashboard**: Data queries, charts, metrics all properly wired.
-- **Tickets**: Read-only view with stats, properly links to edit form.
-- **Participants**: Filters, search, CSV export all functional.
-- **Financial**: Summary cards, transaction history, filters, CSV export all functional.
-- **Coupons**: Full CRUD with validation, tier filtering, toggle active/inactive.
-- **Guestlist**: Add/remove/checkin guests works (aside from redundant header).
-- **Staff**: Link generation, member management, access control all functional (aside from email issue).
-- **Editar Evento**: Correctly redirects to the edit form.
+## Fases de Implementação
+
+### Fase 1 — Design System Foundation
+- [ ] Atualizar index.css (CSS variables nova paleta)
+- [ ] Atualizar tailwind.config.ts
+- [ ] Atualizar componentes base (Button, Input, Card, Badge, Chips)
+- [ ] Navbar dark-first com laranja
+- [ ] Bottom Nav com laranja
+- [ ] AuthModal redesign dark-first
+
+### Fase 2 — Páginas Públicas (Buyer UX)
+- [ ] Landing page redesign
+- [ ] Catálogo (seletor datas, chips, banner, Top-10)
+- [ ] Detalhe do evento (reviews, cast, CTA fixo)
+- [ ] Meus Ingressos (ativo/arquivado, barcode, reembolso)
+- [ ] Checkout redesign
+
+### Fase 3 — Features Novas (Prioridade Alta)
+- [ ] Favoritos (tabela + UI)
+- [ ] Rating/Reviews (tabela + UI)
+- [ ] Filtro avançado (Bottom Sheet com Drawer)
+- [ ] Grid view toggle
+- [ ] Compartilhamento social
+- [ ] Perfil completo do usuário
+- [ ] Ingressos arquivados
+
+### Fase 4 — Features Avançadas
+- [ ] Random/Discovery
+- [ ] Sistema de pontos/fidelidade
+- [ ] Chat de suporte in-app
+- [ ] Onboarding (2-3 telas)
+- [ ] Detecção de cidade
+- [ ] Notificações configuráveis
+- [ ] Login OTP + Social
+
+### Fase 5 — Painéis (Producer/Admin)
+- [ ] Redesign dark-first dos dashboards
+- [ ] Consistência com novo design system
 
 ---
 
-## Proposed Implementation Plan
+## Infraestrutura Backend (Plano Anterior — Mantido)
 
-1. **Embed promoter management into the Promoters tab** — Add a sub-tab or section within `ProducerEventPromoters` that renders `ProducerPromotersList` directly, so producers can create promoters without needing a separate page.
+### Bloco 1 — Schema & SQL Functions
+- Funções atômicas: reserve_tickets, confirm_order_payment, apply_coupon
+- Índices de performance
 
-2. **Remove redundant headers** from Orders, Guestlist, Check-in, Messages tabs — strip back links and duplicate titles since they're already in the Panel.
+### Bloco 2 — Edge Functions de Pagamento (Asaas)
+- create-payment, asaas-webhook, create-producer-account
+- Secrets: ASAAS_API_KEY, ASAAS_BASE_URL, QR_SECRET
 
-3. **Fix Check-in online status** — make it reactive with event listeners.
+### Bloco 3 — Checkout Real
+- Conectar UI ao create-payment
+- PIX, Cartão, Boleto
 
-4. **Add disclaimers** to Messages send button and Staff email invite explaining these features are under development.
+### Bloco 4 — QR Codes Seguros + Check-in
+- JWT assinado, validate-checkin
 
-5. **Fix Tickets tax column** — remove the hardcoded zero or show actual platform fee.
+### Bloco 5 — Transferência + Cancelamento
+- transfer-ticket, cancel-event
 
-6. **Fix Dashboard timestamp** — use react-query's `dataUpdatedAt`.
+### Bloco 6 — Cron Jobs
+- cleanup_expired_reservations, event-reminders
 
-7. **Hide Products step during creation** or improve the placeholder message.
-
+### Bloco 7 — Segurança & LGPD
+- Rate limiting, consents, data requests

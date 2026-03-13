@@ -1,6 +1,6 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Search, RotateCcw, Download, FileText } from "lucide-react";
+import { Search, RotateCcw, Download, FileText } from "lucide-react";
 import { exportToCSV, orderCSVColumns } from "@/lib/csv-export";
 import { toast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,12 +18,6 @@ export default function ProducerEventOrders() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [refundOrder, setRefundOrder] = useState<any>(null);
-
-  const { data: event } = useQuery({
-    queryKey: ["producer-event", id],
-    queryFn: async () => { const { data } = await supabase.from("events").select("title").eq("id", id).single(); return data; },
-    enabled: !!id,
-  });
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ["event-orders", id],
@@ -52,12 +46,6 @@ export default function ProducerEventOrders() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <Link to="/producer/events" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2">
-          <ArrowLeft className="h-4 w-4" /> Voltar
-        </Link>
-        <h1 className="font-display text-2xl font-bold">Pedidos — {event?.title || "..."}</h1>
-      </div>
       <div className="flex justify-end">
         <Button variant="outline" size="sm" onClick={() => filtered.length && exportToCSV(filtered, orderCSVColumns, `pedidos_${id}`)} disabled={!filtered.length}>
           <Download className="h-4 w-4 mr-1" /> CSV
