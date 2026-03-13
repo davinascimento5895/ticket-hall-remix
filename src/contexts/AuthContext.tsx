@@ -38,6 +38,8 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   profile: null,
   role: null,
+  allRoles: [],
+  switchRole: () => {},
   loading: true,
   signOut: async () => {},
   refetchRole: async () => {},
