@@ -24,9 +24,15 @@ export async function validateCheckin(params: {
   });
 
   if (error) {
-    // Edge function returned non-2xx — parse the body
-    const parsed = typeof error === "object" && "message" in error ? error : { message: String(error) };
-    throw new Error(parsed.message || "Erro no check-in");
+    // For FunctionsHttpError, data contains the parsed JSON body
+    if (data && typeof data === "object" && "result" in data) {
+      return data as CheckinResult;
+    }
+    throw new Error(
+      typeof error === "object" && "message" in error
+        ? (error as any).message
+        : String(error)
+    );
   }
 
   return data as CheckinResult;
