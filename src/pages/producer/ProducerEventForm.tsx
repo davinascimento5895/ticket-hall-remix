@@ -555,38 +555,48 @@ export default function ProducerEventForm() {
 
                 <div>
                   <Label>Imagem de divulgação</Label>
-                  <div className={cn(
-                    "mt-2 border-2 border-dashed rounded-xl transition-colors",
-                    coverPreview ? "border-primary/50" : "border-border hover:border-primary/50"
-                  )}>
-                    {coverPreview ? (
-                      <div className="relative">
-                        <img src={coverPreview} alt="Capa do evento" className="w-full aspect-[1600/838] object-cover rounded-xl" />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
-                          <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-md bg-secondary text-secondary-foreground text-sm font-medium hover:bg-secondary/80 transition-colors">
-                            <input type="file" accept="image/*" onChange={handleCoverSelect} className="hidden" />
-                            <Upload className="h-4 w-4" />Trocar imagem
-                          </label>
+                  {cropImageSrc ? (
+                    <div className="mt-2 border-2 border-primary/50 rounded-xl p-4 bg-muted/30">
+                      <InlineImageCrop
+                        imageSrc={cropImageSrc}
+                        onCropDone={handleCropDone}
+                        onCancel={handleCropCancel}
+                      />
+                    </div>
+                  ) : (
+                    <div className={cn(
+                      "mt-2 border-2 border-dashed rounded-xl transition-colors",
+                      coverPreview ? "border-primary/50" : "border-border hover:border-primary/50"
+                    )}>
+                      {coverPreview ? (
+                        <div className="relative">
+                          <img src={coverPreview} alt="Capa do evento" className="w-full aspect-[1600/838] object-cover rounded-xl" />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
+                            <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-md bg-secondary text-secondary-foreground text-sm font-medium hover:bg-secondary/80 transition-colors">
+                              <input type="file" accept="image/*" onChange={handleCoverSelect} className="hidden" />
+                              <Upload className="h-4 w-4" />Trocar imagem
+                            </label>
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <label className="flex flex-col items-center justify-center py-10 cursor-pointer">
-                        <input type="file" accept="image/*" onChange={handleCoverSelect} className="hidden" />
-                        <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-3">
-                          <ImageIcon className="h-6 w-6 text-primary" />
-                        </div>
-                        <p className="text-sm font-medium text-foreground">Clique ou arraste a imagem aqui</p>
-                        <div className="mt-2 px-3 py-1.5 rounded-md bg-muted border border-border">
-                          <p className="text-xs font-mono font-semibold text-foreground text-center">1600 × 838 px</p>
-                          <p className="text-[10px] text-muted-foreground text-center">proporção ~16:9</p>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-2 text-center px-4">
-                          JPEG, PNG ou WebP • Máx. 5MB<br />
-                          O recorte abre imediatamente após selecionar a imagem.
-                        </p>
-                      </label>
-                    )}
-                  </div>
+                      ) : (
+                        <label className="flex flex-col items-center justify-center py-10 cursor-pointer">
+                          <input type="file" accept="image/*" onChange={handleCoverSelect} className="hidden" />
+                          <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                            <ImageIcon className="h-6 w-6 text-primary" />
+                          </div>
+                          <p className="text-sm font-medium text-foreground">Clique ou arraste a imagem aqui</p>
+                          <div className="mt-2 px-3 py-1.5 rounded-md bg-muted border border-border">
+                            <p className="text-xs font-mono font-semibold text-foreground text-center">1600 × 838 px</p>
+                            <p className="text-[10px] text-muted-foreground text-center">proporção ~16:9</p>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-2 text-center px-4">
+                            JPEG, PNG ou WebP • Máx. 5MB<br />
+                            O recorte abre imediatamente após selecionar a imagem.
+                          </p>
+                        </label>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div>
