@@ -215,7 +215,6 @@ Deno.serve(async (req) => {
       const updateData: Record<string, unknown> = {
         payment_method: paymentMethod,
         payment_gateway: "asaas_stub",
-        status: "awaiting_payment",
         payment_status: "pending",
         installments: installments || 1,
         updated_at: new Date().toISOString(),
