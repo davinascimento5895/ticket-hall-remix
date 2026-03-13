@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import ReactCrop, { type Crop, centerCrop, makeAspectCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Crop as CropIcon, RotateCcw } from "lucide-react";
 
@@ -89,10 +89,10 @@ export function ImageCropModal({ open, onOpenChange, imageSrc, onCropDone }: Ima
             <CropIcon className="h-5 w-5 text-primary" />
             Ajustar imagem de capa
           </DialogTitle>
-          <p className="text-sm text-muted-foreground">
+          <DialogDescription>
             Ajuste o recorte para garantir que a imagem fique perfeita no banner.
             Dimensão final: <span className="font-mono font-semibold text-foreground">{TARGET_W} × {TARGET_H}px</span> (proporção ~16:9)
-          </p>
+          </DialogDescription>
         </DialogHeader>
 
         <div className="relative rounded-lg overflow-hidden bg-muted/50 border border-border">

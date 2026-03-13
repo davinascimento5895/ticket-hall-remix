@@ -580,7 +580,7 @@ export default function ProducerEventForm() {
                         </div>
                         <p className="text-xs text-muted-foreground mt-2 text-center px-4">
                           JPEG, PNG ou WebP • Máx. 5MB<br />
-                          A imagem será ajustada automaticamente no próximo passo.
+                          O recorte abre imediatamente após selecionar a imagem.
                         </p>
                       </label>
                     )}
@@ -715,14 +715,6 @@ export default function ProducerEventForm() {
               isEdit={editingTierIndex !== null}
               capacityGroups={capacityGroups}
               hasSeatMap={form.has_seat_map}
-            />
-
-            {/* Image Crop Modal */}
-            <ImageCropModal
-              open={cropModalOpen}
-              onOpenChange={setCropModalOpen}
-              imageSrc={cropImageSrc}
-              onCropDone={handleCropDone}
             />
           </div>
         )}
@@ -916,6 +908,14 @@ export default function ProducerEventForm() {
           </div>
         </div>
       </div>
+
+      {/* Image Crop Modal — always mounted regardless of step */}
+      <ImageCropModal
+        open={cropModalOpen}
+        onOpenChange={setCropModalOpen}
+        imageSrc={cropImageSrc}
+        onCropDone={handleCropDone}
+      />
     </div>
   );
 }
