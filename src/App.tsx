@@ -166,6 +166,7 @@ const App = () => {
               {/* Staff Portal (standalone, no MainLayout) */}
               <Route path="/staff" element={<ProtectedRoute allowedRoles={["staff", "admin", "producer"]}><StaffEventList /></ProtectedRoute>} />
               <Route path="/staff/checkin/:eventId" element={<ProtectedRoute allowedRoles={["staff", "admin", "producer"]}><StaffCheckinScreen /></ProtectedRoute>} />
+              <Route path="/staff/join/:code" element={<StaffJoin />} />
 
               {/* Producer Panel */}
               <Route
