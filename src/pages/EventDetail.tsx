@@ -517,20 +517,22 @@ export default function EventDetail() {
         </div>
       </div>
 
-      {/* Mobile sticky CTA - orange bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-lg border-t border-border p-4 safe-area-bottom">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-xs text-muted-foreground">A partir de</p>
-            <p className="font-display font-bold text-foreground">
-              {lowestPrice !== null ? (lowestPrice === 0 ? "Grátis" : fmt(lowestPrice)) : "—"}
-            </p>
+      {/* Mobile sticky CTA - above bottom nav */}
+      {activeSection !== "tickets" && (
+        <div className="lg:hidden fixed bottom-[72px] left-0 right-0 z-40 bg-card/95 backdrop-blur-lg border-t border-border p-4 safe-area-bottom">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs text-muted-foreground">A partir de</p>
+              <p className="font-display font-bold text-foreground">
+                {lowestPrice !== null ? (lowestPrice === 0 ? "Grátis" : fmt(lowestPrice)) : "—"}
+              </p>
+            </div>
+            <Button onClick={() => setActiveSection("tickets")}>
+              {lowestPrice === 0 ? "Inscrever-se" : "Ver ingressos"}
+            </Button>
           </div>
-          <Button onClick={() => navigate(`/eventos/${slug}/comprar`)}>
-            {lowestPrice === 0 ? "Inscrever-se" : "Comprar ingresso"}
-          </Button>
         </div>
-      </div>
+      )}
 
     </div>
   );
