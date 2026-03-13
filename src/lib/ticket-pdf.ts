@@ -103,11 +103,12 @@ export async function generateTicketPDF(data: TicketDownloadData) {
     : null;
 
   doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
+  doc.setFont("helvetica", "bold");
   doc.setTextColor(...PRIMARY_COLOR);
-  doc.text("📅", margin, y);
+  doc.text("Data:", margin, y);
+  doc.setFont("helvetica", "normal");
   doc.setTextColor(...DARK_COLOR);
-  doc.text(`${dateStr}  •  ${timeStr}${endTimeStr ? ` — ${endTimeStr}` : ""}`, margin + 6, y);
+  doc.text(`${dateStr}  •  ${timeStr}${endTimeStr ? ` — ${endTimeStr}` : ""}`, margin + 12, y);
   y += 6;
 
   // ── Venue ──
@@ -116,12 +117,12 @@ export async function generateTicketPDF(data: TicketDownloadData) {
     : [data.venueName, data.venueAddress, data.venueCity, data.venueState].filter(Boolean);
 
   if (locationParts.length > 0) {
-    doc.setTextColor(...PRIMARY_COLOR);
-    doc.text("📍", margin, y);
-    doc.setTextColor(...DARK_COLOR);
     doc.setFont("helvetica", "bold");
+    doc.setTextColor(...PRIMARY_COLOR);
+    doc.text("Local:", margin, y);
+    doc.setTextColor(...DARK_COLOR);
     const venueName = data.venueName || locationParts[0] || "";
-    doc.text(venueName, margin + 6, y);
+    doc.text(venueName, margin + 14, y);
     y += 5;
 
     const addressParts = data.isOnline
@@ -131,8 +132,8 @@ export async function generateTicketPDF(data: TicketDownloadData) {
       doc.setFont("helvetica", "normal");
       doc.setTextColor(...MUTED_COLOR);
       doc.setFontSize(9);
-      const addrLines = doc.splitTextToSize(addressParts.join(", "), contentW - 6);
-      doc.text(addrLines, margin + 6, y);
+      const addrLines = doc.splitTextToSize(addressParts.join(", "), contentW - 14);
+      doc.text(addrLines, margin + 14, y);
       y += addrLines.length * 4 + 2;
     }
   }
