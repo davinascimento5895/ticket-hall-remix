@@ -10,8 +10,7 @@ import { SEOHead } from "@/components/SEOHead";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { createPayment, CreditCardData } from "@/lib/api-payment";
-import { CheckoutStepPayment } from "@/components/checkout/CheckoutStepPayment";
+import { createPayment } from "@/lib/api-payment";
 import { toast } from "@/hooks/use-toast";
 
 export default function PedidoRecuperacao() {
