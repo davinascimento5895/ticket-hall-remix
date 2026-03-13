@@ -1,5 +1,38 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+/** Cancel reserved tickets for an order and release quantity_reserved atomically */
+async function releaseReservedTickets(supabase: any, orderId: string) {
+  const { data: reservedTickets } = await supabase
+    .from("tickets")
+    .select("id, tier_id")
+    .eq("order_id", orderId)
+    .eq("status", "reserved");
+
+  if (reservedTickets?.length) {
+    await supabase.from("tickets")
+      .update({ status: "cancelled" })
+      .eq("order_id", orderId)
+      .eq("status", "reserved");
+
+    const tierCounts: Record<string, number> = {};
+    for (const t of reservedTickets) {
+      tierCounts[t.tier_id] = (tierCounts[t.tier_id] || 0) + 1;
+    }
+    for (const [tierId, cnt] of Object.entries(tierCounts)) {
+      const { data: tier } = await supabase
+        .from("ticket_tiers")
+        .select("quantity_reserved")
+        .eq("id", tierId)
+        .single();
+      if (tier) {
+        await supabase.from("ticket_tiers")
+          .update({ quantity_reserved: Math.max(0, (tier.quantity_reserved || 0) - cnt) })
+          .eq("id", tierId);
+      }
+    }
+  }
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
