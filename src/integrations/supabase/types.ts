@@ -705,6 +705,48 @@ export type Database = {
           },
         ]
       }
+      event_staff: {
+        Row: {
+          assigned_at: string | null
+          checkin_list_id: string | null
+          event_id: string
+          id: string
+          producer_id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          checkin_list_id?: string | null
+          event_id: string
+          id?: string
+          producer_id: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          checkin_list_id?: string | null
+          event_id?: string
+          id?: string
+          producer_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_staff_checkin_list_id_fkey"
+            columns: ["checkin_list_id"]
+            isOneToOne: false
+            referencedRelation: "checkin_lists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_staff_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           banner_image_url: string | null
@@ -2573,7 +2615,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "producer" | "buyer"
+      app_role: "admin" | "producer" | "buyer" | "staff"
       producer_status: "pending" | "approved" | "rejected" | "suspended"
     }
     CompositeTypes: {
@@ -2702,7 +2744,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "producer", "buyer"],
+      app_role: ["admin", "producer", "buyer", "staff"],
       producer_status: ["pending", "approved", "rejected", "suspended"],
     },
   },
