@@ -132,8 +132,8 @@ export async function generateTicketPDF(data: TicketDownloadData) {
       doc.setFont("helvetica", "normal");
       doc.setTextColor(...MUTED_COLOR);
       doc.setFontSize(9);
-      const addrLines = doc.splitTextToSize(addressParts.join(", "), contentW - 6);
-      doc.text(addrLines, margin + 6, y);
+      const addrLines = doc.splitTextToSize(addressParts.join(", "), contentW - 14);
+      doc.text(addrLines, margin + 14, y);
       y += addrLines.length * 4 + 2;
     }
   }
