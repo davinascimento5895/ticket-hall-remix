@@ -45,6 +45,7 @@ export function exportToCSV<T extends Record<string, any>>(
 export const orderCSVColumns = [
   { key: "id", header: "ID" },
   { key: "profiles.full_name", header: "Comprador" },
+  { key: "events.title", header: "Evento" },
   { key: "total", header: "Total", format: (v: number) => v?.toFixed(2) || "0" },
   { key: "platform_fee", header: "Taxa Plataforma", format: (v: number) => v?.toFixed(2) || "0" },
   { key: "payment_method", header: "Método" },

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Star, StarOff, Percent, Trash2 } from "lucide-react";
+import { Search, Star, StarOff, Percent, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -59,6 +59,8 @@ export default function AdminEvents() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 400);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const perPage = 20;
 
   const { data: events, isLoading } = useQuery({
     queryKey: ["admin-events", statusFilter, debouncedSearch],
@@ -83,6 +85,15 @@ export default function AdminEvents() {
   const handleFeeUpdate = (id: string, fee: number) => {
     updateMutation.mutate({ id, updates: { platform_fee_percent: fee } });
   };
+
+  // Pagination
+  const allEvents = events || [];
+  const totalPages = Math.max(1, Math.ceil(allEvents.length / perPage));
+  const paginatedEvents = allEvents.slice((page - 1) * perPage, page * perPage);
+  // Reset page when filters change
+  const currentFilterKey = `${statusFilter}-${debouncedSearch}`;
+  const [lastFilterKey, setLastFilterKey] = useState(currentFilterKey);
+  if (currentFilterKey !== lastFilterKey) { setLastFilterKey(currentFilterKey); setPage(1); }
 
   const statuses = [
     { value: "all", label: "Todos" },
@@ -131,7 +142,7 @@ export default function AdminEvents() {
                   </tr>
                 </thead>
                 <tbody>
-                  {events.map((event: any) => (
+                  {paginatedEvents.map((event: any) => (
                     <tr key={event.id} className="border-b border-border/50 hover:bg-muted/30">
                       <td className="p-3 font-medium max-w-[200px] truncate">{event.title}</td>
                       <td className="p-3 text-muted-foreground">{event.profiles?.full_name || "—"}</td>
@@ -179,6 +190,21 @@ export default function AdminEvents() {
           )}
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      {allEvents.length > perPage && (
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>{allEvents.length} evento(s) · Página {page} de {totalPages}</span>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
