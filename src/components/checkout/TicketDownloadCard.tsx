@@ -1,11 +1,12 @@
-import { useRef, useState } from "react";
-import { Download, Ticket, MapPin, Calendar, Clock, Hash } from "lucide-react";
+import { useState } from "react";
+import { Printer, Download, Calendar, Clock, MapPin, Ticket, Hash, User, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import html2canvas from "html2canvas";
+import { generateTicketPDF } from "@/lib/ticket-pdf";
 
-interface TicketDownloadCardProps {
+export interface TicketDownloadData {
   ticketId: string;
   tierName: string;
+  tierPrice?: number;
   attendeeName?: string;
   attendeeCpf?: string;
   qrCode: string;
@@ -14,31 +15,40 @@ interface TicketDownloadCardProps {
   eventDate: string;
   eventEndDate?: string;
   venueName?: string;
+  venueAddress?: string;
   venueCity?: string;
+  venueState?: string;
   isOnline?: boolean;
   coverImageUrl?: string | null;
   orderCode: string;
+  purchaseDate?: string;
+  paymentMethod?: string;
+  eventDescription?: string;
   index: number;
 }
 
-export function TicketDownloadCard({
-  ticketId,
-  tierName,
-  attendeeName,
-  attendeeCpf,
-  qrCode,
-  qrCodeImageUrl,
-  eventTitle,
-  eventDate,
-  eventEndDate,
-  venueName,
-  venueCity,
-  isOnline,
-  coverImageUrl,
-  orderCode,
-  index,
-}: TicketDownloadCardProps) {
-  const cardRef = useRef<HTMLDivElement>(null);
+export function TicketDownloadCard(props: TicketDownloadData) {
+  const {
+    ticketId,
+    tierName,
+    tierPrice,
+    attendeeName,
+    attendeeCpf,
+    qrCode,
+    qrCodeImageUrl,
+    eventTitle,
+    eventDate,
+    eventEndDate,
+    venueName,
+    venueAddress,
+    venueCity,
+    venueState,
+    isOnline,
+    orderCode,
+    purchaseDate,
+    index,
+  } = props;
+
   const [downloading, setDownloading] = useState(false);
 
   const qrImageUrl =
@@ -60,159 +70,142 @@ export function TicketDownloadCard({
     ? new Date(eventEndDate).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
     : null;
 
-  const location = isOnline
-    ? "Evento Online"
-    : [venueName, venueCity].filter(Boolean).join(", ");
+  const locationParts = isOnline
+    ? ["Evento Online"]
+    : [venueName, venueAddress, venueCity, venueState].filter(Boolean);
+  const locationLine = locationParts.join(", ");
 
-  const handleDownload = async () => {
-    if (!cardRef.current) return;
+  const purchaseDateFormatted = purchaseDate
+    ? new Date(purchaseDate).toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : null;
+
+  const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
+
+  const handleDownloadPDF = async () => {
     setDownloading(true);
     try {
-      const canvas = await html2canvas(cardRef.current, {
-        scale: 2,
-        backgroundColor: null,
-        useCORS: true,
-        logging: false,
-      });
-      const link = document.createElement("a");
-      link.download = `ingresso-${ticketId.slice(0, 8)}.png`;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-    } catch {
-      // fallback: download QR only
-      window.open(qrImageUrl, "_blank");
+      await generateTicketPDF(props);
+    } catch (err) {
+      console.error("PDF generation error:", err);
     } finally {
       setDownloading(false);
     }
   };
 
   return (
-    <div className="space-y-3">
-      {/* Printable ticket card */}
-      <div
-        ref={cardRef}
-        className="rounded-2xl overflow-hidden border border-border bg-card shadow-sm"
-        style={{ maxWidth: 420 }}
-      >
-        {/* Top band with event image or gradient */}
-        <div className="relative h-28 overflow-hidden bg-primary/10">
-          {coverImageUrl ? (
-            <img
-              src={coverImageUrl}
-              alt=""
-              className="w-full h-full object-cover"
-              crossOrigin="anonymous"
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent" />
-          <div className="absolute bottom-3 left-4 right-4">
-            <p className="font-display font-bold text-foreground text-base leading-tight line-clamp-2">
+    <div className="space-y-3 w-full" style={{ maxWidth: 440 }}>
+      {/* Visual ticket preview card */}
+      <div className="rounded-2xl overflow-hidden border border-border bg-card shadow-sm">
+        {/* Header accent bar */}
+        <div className="h-2 bg-primary" />
+
+        <div className="p-5 space-y-4">
+          {/* Event title */}
+          <div>
+            <p className="font-display font-bold text-foreground text-lg leading-tight">
               {eventTitle}
             </p>
           </div>
-        </div>
 
-        {/* Content */}
-        <div className="px-4 pt-3 pb-4 space-y-3">
-          {/* Info grid */}
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div className="flex items-start gap-2">
-              <Calendar className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
-              <div>
-                <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Data</p>
-                <p className="text-foreground font-medium text-xs">{formattedDate}</p>
-              </div>
+          {/* Date, time, location row */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm text-foreground">
+              <Calendar className="h-4 w-4 text-primary shrink-0" />
+              <span className="font-medium">{formattedDate}</span>
+              <span className="text-muted-foreground">•</span>
+              <Clock className="h-4 w-4 text-primary shrink-0" />
+              <span className="font-medium">
+                {formattedTime}{endTime ? ` — ${endTime}` : ""}
+              </span>
             </div>
-            <div className="flex items-start gap-2">
-              <Clock className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
-              <div>
-                <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Horário</p>
-                <p className="text-foreground font-medium text-xs">
-                  {formattedTime}
-                  {endTime ? ` — ${endTime}` : ""}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <MapPin className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
-              <div>
-                <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Local</p>
-                <p className="text-foreground font-medium text-xs line-clamp-2">{location || "—"}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <Ticket className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
-              <div>
-                <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Tipo</p>
-                <p className="text-foreground font-medium text-xs">{tierName}</p>
-              </div>
+            <div className="flex items-start gap-2 text-sm text-muted-foreground">
+              <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+              <span>{locationLine || "Local a definir"}</span>
             </div>
           </div>
 
-          {/* Dashed separator */}
+          {/* Dashed divider */}
           <div className="border-t border-dashed border-border" />
 
-          {/* Attendee + QR row */}
+          {/* Ticket info + QR */}
           <div className="flex gap-4 items-start">
-            {/* Left: attendee info */}
-            <div className="flex-1 min-w-0 space-y-1.5">
+            <div className="flex-1 min-w-0 space-y-3">
+              {/* Tier & price */}
+              <div className="rounded-lg bg-muted/50 p-3 space-y-1">
+                <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">Ingresso</p>
+                <p className="font-display font-bold text-foreground">{tierName}</p>
+                {tierPrice != null && tierPrice > 0 && (
+                  <p className="text-foreground font-semibold">{fmt(tierPrice)}</p>
+                )}
+              </div>
+
+              {/* Attendee */}
               {attendeeName && (
-                <div>
-                  <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Titular</p>
-                  <p className="text-foreground font-semibold text-sm truncate">{attendeeName}</p>
+                <div className="rounded-lg bg-muted/50 p-3 space-y-1">
+                  <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">Participante</p>
+                  <p className="font-display font-semibold text-foreground text-sm">{attendeeName}</p>
+                  {attendeeCpf && (
+                    <p className="text-xs text-muted-foreground font-mono">{attendeeCpf}</p>
+                  )}
                 </div>
               )}
-              {attendeeCpf && (
-                <div>
-                  <p className="text-[11px] text-muted-foreground uppercase tracking-wider">CPF</p>
-                  <p className="text-foreground text-xs font-mono">{attendeeCpf}</p>
-                </div>
-              )}
-              <div className="flex items-center gap-1.5">
-                <Hash className="h-3 w-3 text-muted-foreground shrink-0" />
-                <p className="text-[11px] text-muted-foreground font-mono">
-                  {ticketId.slice(0, 8).toUpperCase()}
-                </p>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <p className="text-[10px] text-muted-foreground">
-                  Pedido: {orderCode}
-                </p>
-              </div>
             </div>
 
-            {/* Right: QR code */}
-            <div className="shrink-0 w-28 h-28 bg-card rounded-lg border border-border p-1.5 flex items-center justify-center">
-              <img
-                src={qrImageUrl}
-                alt="QR Code"
-                className="w-full h-full object-contain"
-                crossOrigin="anonymous"
-              />
+            {/* QR code */}
+            <div className="shrink-0 flex flex-col items-center gap-1.5">
+              <div className="w-28 h-28 bg-card rounded-lg border border-border p-1.5 flex items-center justify-center">
+                <img
+                  src={qrImageUrl}
+                  alt="QR Code"
+                  className="w-full h-full object-contain"
+                  crossOrigin="anonymous"
+                />
+              </div>
+              <p className="text-[10px] font-mono text-muted-foreground tracking-wide">
+                {ticketId.slice(0, 10).toUpperCase()}
+              </p>
             </div>
           </div>
 
-          {/* Footer brand */}
-          <div className="text-center pt-1">
-            <p className="text-[10px] text-muted-foreground tracking-wider">
+          {/* Dashed divider */}
+          <div className="border-t border-dashed border-border" />
+
+          {/* Purchase info footer */}
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <Hash className="h-3 w-3" />
+              <span>Pedido: {orderCode}</span>
+            </div>
+            {purchaseDateFormatted && (
+              <span>Comprado em {purchaseDateFormatted}</span>
+            )}
+          </div>
+
+          {/* Brand */}
+          <div className="text-center">
+            <p className="text-[10px] text-muted-foreground tracking-widest uppercase">
               tickethall.com.br
             </p>
           </div>
         </div>
       </div>
 
-      {/* Download button */}
+      {/* Download PDF button */}
       <Button
         variant="outline"
         size="sm"
         className="w-full gap-2"
-        onClick={handleDownload}
+        onClick={handleDownloadPDF}
         disabled={downloading}
       >
-        <Download className="h-4 w-4" />
-        {downloading ? "Gerando imagem..." : `Baixar ingresso ${index + 1}`}
+        <Printer className="h-4 w-4" />
+        {downloading ? "Gerando PDF..." : `Imprimir ingresso${index > 0 ? ` ${index + 1}` : ""}`}
       </Button>
     </div>
   );
