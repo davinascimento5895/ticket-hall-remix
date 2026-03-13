@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Fetch order
+    // Fetch order with validation
     const { data: order, error: orderErr } = await supabaseAdmin
       .from("orders")
       .select("*")
@@ -111,11 +111,41 @@ Deno.serve(async (req) => {
 
     if (orderErr || !order) {
       return new Response(
-        JSON.stringify({ error: "Order not found or access denied" }),
-        {
-          status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        JSON.stringify({ error: "Pedido não encontrado ou acesso negado." }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate order is in a payable state
+    if (order.status === "paid") {
+      return new Response(
+        JSON.stringify({ success: true, alreadyCreated: true, immediateConfirmation: true, message: "Pedido já está pago." }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    if (order.status !== "pending") {
+      return new Response(
+        JSON.stringify({ error: `Pedido não está pendente (status: ${order.status}). Crie um novo pedido.` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    // Check if order expired
+    if (order.expires_at && new Date(order.expires_at) < new Date()) {
+      return new Response(
+        JSON.stringify({ error: "Pedido expirado. Por favor, crie um novo pedido." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    // Verify tickets exist for this order
+    const { count: ticketCount } = await supabaseAdmin
+      .from("tickets")
+      .select("id", { count: "exact", head: true })
+      .eq("order_id", orderId)
+      .eq("status", "reserved");
+    if (!ticketCount || ticketCount === 0) {
+      return new Response(
+        JSON.stringify({ error: "Nenhum ingresso reservado para este pedido. Tente novamente." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
