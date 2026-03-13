@@ -13,6 +13,7 @@ import { BookingSummaryStep } from "./BookingSummaryStep";
 import { BookingConfirmation } from "./BookingConfirmation";
 import { supabase } from "@/integrations/supabase/client";
 import { createPayment, type CreditCardData } from "@/lib/api-payment";
+import { formatCPF } from "@/lib/validators";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
