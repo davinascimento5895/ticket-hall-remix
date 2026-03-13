@@ -152,7 +152,15 @@ export function CheckoutStepData({
           });
           return;
         }
-        if (data?.cpf?.trim() && !validateCPF(data.cpf)) {
+        if (!data?.cpf?.trim()) {
+          toast({
+            title: "Dados incompletos",
+            description: `Preencha o CPF do participante para ${item.tierName} (Ingresso ${qi + 1})`,
+            variant: "destructive",
+          });
+          return;
+        }
+        if (!validateCPF(data.cpf)) {
           toast({
             title: "CPF inválido",
             description: `O CPF informado para ${item.tierName} (Ingresso ${qi + 1}) é inválido`,
