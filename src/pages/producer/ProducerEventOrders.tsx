@@ -1,6 +1,6 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Search, RotateCcw, Download, FileText } from "lucide-react";
+import { Search, RotateCcw, Download, FileText } from "lucide-react";
 import { exportToCSV, orderCSVColumns } from "@/lib/csv-export";
 import { toast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
