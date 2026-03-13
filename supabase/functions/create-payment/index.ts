@@ -393,7 +393,6 @@ Deno.serve(async (req) => {
       const pix = await asaas("GET", `/payments/${charge.id}/pixQrCode`);
 
       updateData.asaas_payment_id = charge.id;
-      updateData.status = "awaiting_payment";
       updateData.payment_status = "pending";
       updateData.pix_qr_code = pix.payload || null;
       updateData.pix_qr_code_image = pix.encodedImage || null;
