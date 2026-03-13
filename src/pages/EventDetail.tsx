@@ -97,7 +97,7 @@ export default function EventDetail() {
     enabled: !!event?.producer_id,
   });
 
-  const { addItem } = useCart();
+  const { addItem, itemCount } = useCart();
 
   useRealtimeSubscription({
     table: "tickets",
