@@ -22,7 +22,12 @@ const asaas = async (method: string, path: string, body?: unknown) => {
   });
 
   const text = await res.text();
-  if (!text) return { _empty: true, httpStatus: res.status };
+  if (!text) {
+    if (!res.ok) {
+      return { errors: [{ description: `Gateway returned HTTP ${res.status}` }] };
+    }
+    return { _empty: true, httpStatus: res.status };
+  }
   try {
     return JSON.parse(text);
   } catch {
