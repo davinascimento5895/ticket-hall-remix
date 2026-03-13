@@ -18,6 +18,7 @@ import Index from "./pages/Index";
 import Produtores from "./pages/Produtores";
 import Eventos from "./pages/Eventos";
 import EventDetail from "./pages/EventDetail";
+import EventBooking from "./pages/EventBooking";
 import Carrinho from "./pages/Carrinho";
 import Checkout from "./pages/Checkout";
 import MeusIngressos from "./pages/MeusIngressos";
