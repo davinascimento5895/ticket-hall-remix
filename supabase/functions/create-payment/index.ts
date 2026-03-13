@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
     }
 
     // Parse body
-    const { orderId, paymentMethod, creditCard, installments } =
+    const { orderId, paymentMethod, creditCard, installments, payerCpf } =
       await req.json();
 
     if (!orderId || !paymentMethod) {
@@ -308,12 +308,18 @@ Deno.serve(async (req) => {
     // 1. Create or find Asaas customer
     let customerId = order.asaas_customer_id;
     if (!customerId) {
-      const buyerCpf = buyer?.cpf?.replace(/\D/g, "");
+      // Use payerCpf from request body (preferred), fallback to profile
+      const buyerCpf = (payerCpf || buyer?.cpf || "").replace(/\D/g, "");
       if (!buyerCpf) {
         return new Response(
           JSON.stringify({ error: "CPF é obrigatório para processar o pagamento. Por favor, preencha seu CPF no checkout." }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
+      }
+
+      // Also persist the CPF to the profile for future use
+      if (payerCpf) {
+        await supabaseAdmin.from("profiles").update({ cpf: payerCpf }).eq("id", userId);
       }
 
       const customerRes = await asaas("POST", "/customers", {

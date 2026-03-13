@@ -34,10 +34,11 @@ export const createPayment = async (
   orderId: string,
   paymentMethod: "pix" | "credit_card" | "boleto",
   creditCard?: CreditCardData,
-  installments?: number
+  installments?: number,
+  payerCpf?: string
 ): Promise<CreatePaymentResult> => {
   const { data, error } = await supabase.functions.invoke("create-payment", {
-    body: { orderId, paymentMethod, creditCard, installments },
+    body: { orderId, paymentMethod, creditCard, installments, payerCpf },
   });
 
   if (error) {
