@@ -526,10 +526,23 @@ Deno.serve(async (req) => {
       paymentPayload.dueDate = addBusinessDays(new Date(), 3);
 
       const charge = await asaas("POST", "/payments", paymentPayload);
-      if (charge.errors) {
+      if (charge.errors || charge._empty || !charge.id) {
         return new Response(
-          JSON.stringify({ error: "Payment creation failed", details: charge.errors }),
+          JSON.stringify({
+            error: "Falha ao gerar boleto.",
+            details: charge.errors || [{ description: "Gateway não retornou o ID da cobrança." }],
+          }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (!charge.bankSlipUrl) {
+        return new Response(
+          JSON.stringify({
+            error: "Boleto criado sem link de pagamento.",
+            details: [{ description: "Tente novamente em instantes." }],
+          }),
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
