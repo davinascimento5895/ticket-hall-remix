@@ -120,11 +120,12 @@ export default function ProducerEventMessages() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <Link to="/producer/events" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2">
-          <ArrowLeft className="h-4 w-4" /> Voltar
-        </Link>
-        <h1 className="font-display text-2xl font-bold">Mensagens — {event?.title || "..."}</h1>
+      {/* Disclaimer */}
+      <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border">
+        <AlertTriangle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+        <p className="text-xs text-muted-foreground">
+          O envio de e-mails em massa está em desenvolvimento. As mensagens serão salvas como rascunho para envio futuro.
+        </p>
       </div>
 
       {/* Compose */}
