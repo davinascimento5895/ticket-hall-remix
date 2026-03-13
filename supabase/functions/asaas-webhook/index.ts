@@ -232,11 +232,10 @@ Deno.serve(async (req) => {
 
       case "PAYMENT_DELETED":
       case "PAYMENT_RESTORED": {
-        // A09: Handle additional Asaas statuses
         console.log(`Payment ${event} for order:`, orderId);
         if (event === "PAYMENT_DELETED" && order.status === "pending") {
           await supabase.from("orders").update({ status: "cancelled", payment_status: "cancelled", updated_at: new Date().toISOString() }).eq("id", orderId);
-          await supabase.from("tickets").update({ status: "cancelled" }).eq("order_id", orderId).eq("status", "reserved");
+          await releaseReservedTickets(supabase, orderId);
         }
         break;
       }
