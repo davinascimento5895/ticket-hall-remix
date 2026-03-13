@@ -19,7 +19,7 @@ export default function ProducerEventCheckin() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
-  const [isOnline] = useState(navigator.onLine);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [lastResult, setLastResult] = useState<CheckinResult | null>(null);
   const [scannerActive, setScannerActive] = useState(false);
   const scannerRef = useRef<Html5Qrcode | null>(null);
