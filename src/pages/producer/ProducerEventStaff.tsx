@@ -119,7 +119,7 @@ export default function ProducerEventStaff() {
     onSuccess: () => {
       setShowInvite(false);
       setInviteEmail("");
-      toast({ title: "Convite enviado!", description: "O staff receberá o convite por e-mail." });
+      toast({ title: "Convite registrado!", description: "O convite foi salvo. Compartilhe o link de acesso com o staff." });
     },
     onError: (e: any) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
   });
