@@ -1,6 +1,6 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Trash2, CheckCircle2 } from "lucide-react";
+import { Plus, Trash2, CheckCircle2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,12 +21,6 @@ export default function ProducerEventGuestlist() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", email: "", phone: "" });
 
-  const { data: event } = useQuery({
-    queryKey: ["producer-event", id],
-    queryFn: async () => { const { data } = await supabase.from("events").select("title").eq("id", id).single(); return data; },
-    enabled: !!id,
-    staleTime: 30_000,
-  });
 
   const { data: guests, isLoading } = useQuery({
     queryKey: ["event-guestlist", id],
@@ -65,14 +59,9 @@ export default function ProducerEventGuestlist() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <Link to="/producer/events" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2">
-          <ArrowLeft className="h-4 w-4" /> Voltar
-        </Link>
-        <div className="flex items-center justify-between">
-          <h1 className="font-display text-2xl font-bold">Lista de Convidados — {event?.title || "..."}</h1>
-          <Button size="sm" onClick={() => setShowForm(!showForm)} className="gap-1"><Plus className="h-4 w-4" />Adicionar</Button>
-        </div>
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">Gerencie a lista de convidados VIP</p>
+        <Button size="sm" onClick={() => setShowForm(!showForm)} className="gap-1"><Plus className="h-4 w-4" />Adicionar</Button>
       </div>
 
       {showForm && (

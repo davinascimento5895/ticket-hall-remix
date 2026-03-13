@@ -98,9 +98,8 @@ export default function ProducerEventTicketsTab() {
                   <tr className="border-b border-border text-left text-muted-foreground">
                     <th className="p-3 font-medium">Tipo</th>
                     <th className="p-3 font-medium">Vendidos/Total</th>
-                    <th className="p-3 font-medium">Valor</th>
-                    <th className="p-3 font-medium">Taxa</th>
-                    <th className="p-3 font-medium">Visibilidade</th>
+                     <th className="p-3 font-medium">Valor</th>
+                     <th className="p-3 font-medium">Visibilidade</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -114,9 +113,8 @@ export default function ProducerEventTicketsTab() {
                         <span className="text-foreground font-medium">{tier.quantity_sold || 0}</span>
                         <span className="text-muted-foreground">/{tier.quantity_total}</span>
                       </td>
-                      <td className="p-3">{tier.tier_type === "free" ? "Grátis" : fmt(tier.price || 0)}</td>
-                      <td className="p-3 text-muted-foreground">{fmt(0)}</td>
-                      <td className="p-3">
+                       <td className="p-3">{tier.tier_type === "free" ? "Grátis" : fmt(tier.price || 0)}</td>
+                       <td className="p-3">
                         {tier.is_visible !== false ? (
                           <span className="inline-flex items-center gap-1 text-xs text-primary"><Eye className="h-3.5 w-3.5" />Visível</span>
                         ) : (

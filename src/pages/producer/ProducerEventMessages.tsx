@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Send, Mail } from "lucide-react";
+import { Send, Mail, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -120,11 +120,12 @@ export default function ProducerEventMessages() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <Link to="/producer/events" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2">
-          <ArrowLeft className="h-4 w-4" /> Voltar
-        </Link>
-        <h1 className="font-display text-2xl font-bold">Mensagens — {event?.title || "..."}</h1>
+      {/* Disclaimer */}
+      <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border">
+        <AlertTriangle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+        <p className="text-xs text-muted-foreground">
+          O envio de e-mails em massa está em desenvolvimento. As mensagens serão salvas como rascunho para envio futuro.
+        </p>
       </div>
 
       {/* Compose */}
@@ -155,11 +156,8 @@ export default function ProducerEventMessages() {
             <Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Escreva sua mensagem aqui..." rows={6} />
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => sendMutation.mutate()} disabled={!subject || !body || sendMutation.isPending || saveDraftMutation.isPending}>
-              <Send className="h-4 w-4 mr-1" /> Enviar mensagem
-            </Button>
-            <Button variant="outline" onClick={() => saveDraftMutation.mutate()} disabled={!subject || !body || saveDraftMutation.isPending || sendMutation.isPending}>
-              Salvar rascunho
+            <Button onClick={() => saveDraftMutation.mutate()} disabled={!subject || !body || saveDraftMutation.isPending}>
+              <Send className="h-4 w-4 mr-1" /> Salvar mensagem
             </Button>
           </div>
         </CardContent>

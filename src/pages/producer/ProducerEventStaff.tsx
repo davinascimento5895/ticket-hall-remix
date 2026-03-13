@@ -119,7 +119,7 @@ export default function ProducerEventStaff() {
     onSuccess: () => {
       setShowInvite(false);
       setInviteEmail("");
-      toast({ title: "Convite enviado!", description: "O staff receberá o convite por e-mail." });
+      toast({ title: "Convite registrado!", description: "O convite foi salvo. Compartilhe o link de acesso com o staff." });
     },
     onError: (e: any) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
   });
@@ -353,9 +353,9 @@ export default function ProducerEventStaff() {
       <Dialog open={showInvite} onOpenChange={setShowInvite}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Convidar Staff por E-mail</DialogTitle>
+            <DialogTitle>Registrar Staff por E-mail</DialogTitle>
             <DialogDescription>
-              O staff receberá um convite e terá acesso ao check-in após aceitar.
+              O registro será salvo no sistema. Envie o link de convite do evento diretamente ao staff para que ele possa se vincular.
             </DialogDescription>
           </DialogHeader>
           <div>
@@ -374,7 +374,7 @@ export default function ProducerEventStaff() {
               onClick={() => inviteMutation.mutate()}
               disabled={!inviteEmail.includes("@") || inviteMutation.isPending}
             >
-              <Mail className="h-4 w-4 mr-1.5" /> Enviar Convite
+              <Mail className="h-4 w-4 mr-1.5" /> Registrar
             </Button>
           </DialogFooter>
         </DialogContent>

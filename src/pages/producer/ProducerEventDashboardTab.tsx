@@ -152,7 +152,7 @@ export default function ProducerEventDashboardTab() {
       {/* Last updated + countdown */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-muted-foreground">
         <span>
-          Última atualização: {new Date().toLocaleString("pt-BR")}
+          Última atualização: {analytics ? new Date().toLocaleString("pt-BR") : "—"}
         </span>
         {countdown && (
           <span className="flex items-center gap-1.5">
