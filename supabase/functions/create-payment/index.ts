@@ -462,7 +462,6 @@ Deno.serve(async (req) => {
 
         responseData.immediateConfirmation = true;
       } else {
-        updateData.status = "awaiting_payment";
         updateData.payment_status = charge.status === "PENDING" ? "pending" : "processing";
       }
 
