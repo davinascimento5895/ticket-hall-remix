@@ -1,10 +1,11 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
+import { formatCPF } from "@/lib/validators";
 import { BookingDateStep } from "@/components/booking/BookingDateStep";
 import { BookingTicketStep } from "@/components/booking/BookingTicketStep";
 import { BookingSummaryStep } from "@/components/booking/BookingSummaryStep";
@@ -22,7 +23,7 @@ type Step = "date" | "tickets" | "summary" | "confirmation";
 export default function EventBooking() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
 
   const { data: event, isLoading: loadingEvent } = useQuery({
     queryKey: ["event", slug],
@@ -49,6 +50,14 @@ export default function EventBooking() {
   const [paymentMethod, setPaymentMethod] = useState("pix");
   const [orderId, setOrderId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [payerCpf, setPayerCpf] = useState("");
+
+  // Auto-fill CPF from profile
+  useEffect(() => {
+    if (profile?.cpf && !payerCpf) {
+      setPayerCpf(formatCPF(profile.cpf));
+    }
+  }, [profile]);
 
   // Initialize step once event loads
   if (event && step === null) {
@@ -160,7 +169,11 @@ export default function EventBooking() {
         toast({ title: "Inscrição confirmada!", description: "Seus ingressos foram gerados." });
         setStep("confirmation");
       } else {
-        const payResult = await createPayment(newOrderId, method as "pix" | "credit_card" | "boleto", cardData, installments);
+        // Save CPF to profile
+        if (payerCpf) {
+          await supabase.from("profiles").update({ cpf: payerCpf }).eq("id", user.id);
+        }
+        const payResult = await createPayment(newOrderId, method as "pix" | "credit_card" | "boleto", cardData, installments, payerCpf);
 
         if (!payResult.success) {
           toast({ title: "Erro no pagamento", description: payResult.error || "Tente novamente.", variant: "destructive" });
@@ -309,6 +322,8 @@ export default function EventBooking() {
                 onPaymentMethodChange={setPaymentMethod}
                 onConfirm={(cardData, installments) => handleConfirmPayment(paymentMethod, cardData, installments)}
                 isProcessing={isProcessing}
+                payerCpf={payerCpf}
+                onPayerCpfChange={setPayerCpf}
               />
             )}
             {step === "confirmation" && (
