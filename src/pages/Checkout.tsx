@@ -307,7 +307,7 @@ export default function Checkout() {
 
     setIsProcessingPayment(true);
     try {
-      const result = await createPayment(orderId, method as "pix" | "credit_card" | "boleto", creditCard, installments, buyerData.cpf);
+      const result = await createPayment(orderId, method as "pix" | "credit_card" | "boleto", cardData, installments, buyerData.cpf);
       if (!result.success) {
         toast({ title: "Erro no pagamento", description: result.error || "Tente novamente.", variant: "destructive" });
         setIsProcessingPayment(false);
