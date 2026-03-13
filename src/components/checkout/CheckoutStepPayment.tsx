@@ -23,6 +23,8 @@ interface CheckoutStepPaymentProps {
   paymentCreated: boolean;
   awaitingPayment: boolean;
   expiresAt?: string | null;
+  payerCpf: string;
+  onPayerCpfChange: (cpf: string) => void;
 }
 
 const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
