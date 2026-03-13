@@ -161,6 +161,10 @@ const App = () => {
               <Route path="/lista/:slug" element={<InterestListPublic />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
 
+              {/* Staff Portal (standalone, no MainLayout) */}
+              <Route path="/staff" element={<ProtectedRoute allowedRoles={["staff", "admin", "producer"]}><StaffEventList /></ProtectedRoute>} />
+              <Route path="/staff/checkin/:eventId" element={<ProtectedRoute allowedRoles={["staff", "admin", "producer"]}><StaffCheckinScreen /></ProtectedRoute>} />
+
               {/* Producer Panel */}
               <Route
                 path="/producer"
