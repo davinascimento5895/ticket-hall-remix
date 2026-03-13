@@ -28,7 +28,10 @@ export default function EventDetail() {
   const [searchParams] = useSearchParams();
   const [unlockCode, setUnlockCode] = useState("");
   const [showUnlockInput, setShowUnlockInput] = useState(false);
-  const [activeSection, setActiveSection] = useState<"description" | "tickets" | "venue">("description");
+  const initialTab = new URLSearchParams(window.location.search).get("tab");
+  const [activeSection, setActiveSection] = useState<"description" | "tickets" | "venue">(
+    initialTab === "tickets" || initialTab === "venue" ? initialTab : "tickets"
+  );
 
   const { data: event, isLoading: loadingEvent } = useQuery({
     queryKey: ["event", slug],
