@@ -314,6 +314,8 @@ export default function EventBooking() {
                 onPaymentMethodChange={setPaymentMethod}
                 onConfirm={(cardData, installments) => handleConfirmPayment(paymentMethod, cardData, installments)}
                 isProcessing={isProcessing}
+                payerCpf={payerCpf}
+                onPayerCpfChange={setPayerCpf}
               />
             )}
             {step === "confirmation" && (

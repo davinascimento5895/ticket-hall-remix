@@ -293,6 +293,8 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
               onPaymentMethodChange={setPaymentMethod}
               onConfirm={(cardData, installments) => handleConfirmPayment(paymentMethod, cardData, installments)}
               isProcessing={isProcessing}
+              payerCpf={payerCpf}
+              onPayerCpfChange={setPayerCpf}
             />
           )}
           {step === "confirmation" && (
