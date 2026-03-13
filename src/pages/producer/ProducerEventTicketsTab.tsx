@@ -98,9 +98,8 @@ export default function ProducerEventTicketsTab() {
                   <tr className="border-b border-border text-left text-muted-foreground">
                     <th className="p-3 font-medium">Tipo</th>
                     <th className="p-3 font-medium">Vendidos/Total</th>
-                    <th className="p-3 font-medium">Valor</th>
-                    <th className="p-3 font-medium">Taxa</th>
-                    <th className="p-3 font-medium">Visibilidade</th>
+                     <th className="p-3 font-medium">Valor</th>
+                     <th className="p-3 font-medium">Visibilidade</th>
                   </tr>
                 </thead>
                 <tbody>
