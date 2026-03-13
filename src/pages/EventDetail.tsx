@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link, useSearchParams } from "react-router-dom";
+import { useParams, Link, useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Calendar, MapPin, Clock, Share2, Users, ArrowLeft, Lock, Package, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +8,6 @@ import { getCategoryLabel } from "@/lib/categories";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { TicketTierCard } from "@/components/TicketTierCard";
-import { BookingFlow } from "@/components/booking/BookingFlow";
 import { SEOHead } from "@/components/SEOHead";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { ShareSheet } from "@/components/ShareSheet";
@@ -25,11 +24,11 @@ import { cn } from "@/lib/utils";
 
 export default function EventDetail() {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [unlockCode, setUnlockCode] = useState("");
   const [showUnlockInput, setShowUnlockInput] = useState(false);
   const [activeSection, setActiveSection] = useState<"description" | "tickets" | "venue">("description");
-  const [bookingOpen, setBookingOpen] = useState(false);
 
   const { data: event, isLoading: loadingEvent } = useQuery({
     queryKey: ["event", slug],
@@ -498,7 +497,7 @@ export default function EventDetail() {
                       {lowestPrice === 0 ? "Grátis" : fmt(lowestPrice)}
                     </span>
                   </p>
-                  <Button className="w-full" onClick={() => setBookingOpen(true)}>
+                  <Button className="w-full" onClick={() => navigate(`/eventos/${slug}/comprar`)}>
                     {lowestPrice === 0 ? "Inscrever-se" : "Comprar ingresso"}
                   </Button>
                 </>
@@ -524,21 +523,12 @@ export default function EventDetail() {
               {lowestPrice !== null ? (lowestPrice === 0 ? "Grátis" : fmt(lowestPrice)) : "—"}
             </p>
           </div>
-          <Button onClick={() => setBookingOpen(true)}>
+          <Button onClick={() => navigate(`/eventos/${slug}/comprar`)}>
             {lowestPrice === 0 ? "Inscrever-se" : "Comprar ingresso"}
           </Button>
         </div>
       </div>
 
-      {/* Booking Flow */}
-      {event && allTiers && (
-        <BookingFlow
-          open={bookingOpen}
-          onOpenChange={setBookingOpen}
-          event={event}
-          tiers={tiers}
-        />
-      )}
     </div>
   );
 }
