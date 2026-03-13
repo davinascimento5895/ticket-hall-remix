@@ -901,26 +901,56 @@ export default function ProducerEventForm() {
           </Card>
         )}
 
-        {/* Navigation */}
-        <div className="flex items-center justify-between pt-2">
-          <Button variant="outline" disabled={step === 0 || (step === 1 && isEdit)} onClick={() => setStep((s) => s - 1)} className="gap-1">
-            <ArrowLeft className="h-4 w-4" /> Anterior
+      </div>
+
+      {/* Fixed Bottom Bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="mx-auto max-w-5xl flex items-center justify-between px-4 py-3 gap-2">
+          {/* Left: Discard */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/producer/events")}
+            className="text-muted-foreground"
+          >
+            Descartar
           </Button>
-          <div className="flex gap-2">
-            {step === STEPS.length - 1 ? (
-              <>
-                <Button variant="outline" onClick={() => handleSave(false)}>Salvar rascunho</Button>
-                <Button onClick={() => handleSave(true)}>Publicar evento</Button>
-              </>
-            ) : (
-              <Button onClick={() => setStep((s) => s + 1)} className="gap-1">
+
+          {/* Center: Prev / Next */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={step === 0 || (step === 1 && isEdit)}
+              onClick={() => setStep((s) => s - 1)}
+              className="gap-1"
+            >
+              <ArrowLeft className="h-4 w-4" /> Anterior
+            </Button>
+            {step < STEPS.length - 1 ? (
+              <Button size="sm" onClick={() => setStep((s) => s + 1)} className="gap-1">
                 Próximo <ArrowRight className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button size="sm" onClick={() => handleSave(true)}>
+                Publicar evento
               </Button>
             )}
           </div>
+
+          {/* Right: Save draft */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleSave(false)}
+          >
+            Salvar rascunho
+          </Button>
         </div>
       </div>
 
+      {/* Spacer for fixed bottom bar */}
+      <div className="h-16" />
     </div>
   );
 }
