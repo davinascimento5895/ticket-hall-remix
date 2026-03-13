@@ -146,6 +146,9 @@ export default function EventDetail() {
     }
   };
 
+  const [showCartCTA, setShowCartCTA] = useState(false);
+  const [lastAddedTierName, setLastAddedTierName] = useState("");
+
   const handleAddToCart = (tierId: string, quantity: number) => {
     const tier = allTiers?.find((t: any) => t.id === tierId);
     if (!tier || !event) return;
@@ -157,7 +160,8 @@ export default function EventDetail() {
       platformFeePercent: event.platform_fee_percent ?? 7,
       maxPerOrder: tier.max_per_order ?? 10,
     });
-    toast({ title: "Adicionado ao carrinho", description: `${quantity}x ${tier.name}` });
+    setLastAddedTierName(tier.name);
+    setShowCartCTA(true);
   };
 
   const handleShare = async () => {
