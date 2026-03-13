@@ -18,6 +18,7 @@ export default function PedidoRecuperacao() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
+  const [isRegeneratingPix, setIsRegeneratingPix] = useState(false);
 
   const { data: order, isLoading, refetch } = useQuery({
     queryKey: ["order-recovery", orderId],
