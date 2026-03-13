@@ -1,5 +1,38 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+/** Cancel reserved tickets for an order and release quantity_reserved atomically */
+async function releaseReservedTickets(supabase: any, orderId: string) {
+  const { data: reservedTickets } = await supabase
+    .from("tickets")
+    .select("id, tier_id")
+    .eq("order_id", orderId)
+    .eq("status", "reserved");
+
+  if (reservedTickets?.length) {
+    await supabase.from("tickets")
+      .update({ status: "cancelled" })
+      .eq("order_id", orderId)
+      .eq("status", "reserved");
+
+    const tierCounts: Record<string, number> = {};
+    for (const t of reservedTickets) {
+      tierCounts[t.tier_id] = (tierCounts[t.tier_id] || 0) + 1;
+    }
+    for (const [tierId, cnt] of Object.entries(tierCounts)) {
+      const { data: tier } = await supabase
+        .from("ticket_tiers")
+        .select("quantity_reserved")
+        .eq("id", tierId)
+        .single();
+      if (tier) {
+        await supabase.from("ticket_tiers")
+          .update({ quantity_reserved: Math.max(0, (tier.quantity_reserved || 0) - cnt) })
+          .eq("id", tierId);
+      }
+    }
+  }
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -132,8 +165,8 @@ Deno.serve(async (req) => {
             .eq("id", orderId)
             .eq("status", "pending");
 
-          // Release reserved tickets
-          await supabase.from("tickets").update({ status: "cancelled" }).eq("order_id", orderId).eq("status", "reserved");
+          // Release reserved tickets and restore inventory
+          await releaseReservedTickets(supabase, orderId);
         }
         console.log("Payment overdue for order:", orderId);
         break;
@@ -155,7 +188,10 @@ Deno.serve(async (req) => {
           })
           .eq("id", orderId);
 
-        await supabase.from("tickets").update({ status: "cancelled" }).eq("order_id", orderId).in("status", ["active", "reserved"]);
+        // Release any reserved tickets and restore inventory
+        await releaseReservedTickets(supabase, orderId);
+        // Also cancel active tickets (already confirmed ones)
+        await supabase.from("tickets").update({ status: "cancelled" }).eq("order_id", orderId).eq("status", "active");
 
         if (order.promoter_event_id) {
           const { data: commission } = await supabase
@@ -199,11 +235,10 @@ Deno.serve(async (req) => {
 
       case "PAYMENT_DELETED":
       case "PAYMENT_RESTORED": {
-        // A09: Handle additional Asaas statuses
         console.log(`Payment ${event} for order:`, orderId);
         if (event === "PAYMENT_DELETED" && order.status === "pending") {
           await supabase.from("orders").update({ status: "cancelled", payment_status: "cancelled", updated_at: new Date().toISOString() }).eq("id", orderId);
-          await supabase.from("tickets").update({ status: "cancelled" }).eq("order_id", orderId).eq("status", "reserved");
+          await releaseReservedTickets(supabase, orderId);
         }
         break;
       }
