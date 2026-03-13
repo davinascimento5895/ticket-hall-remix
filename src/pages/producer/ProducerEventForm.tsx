@@ -226,15 +226,18 @@ export default function ProducerEventForm() {
     if (file) {
       const url = URL.createObjectURL(file);
       setCropImageSrc(url);
-      setCropModalOpen(true);
     }
-    // Reset input so re-selecting the same file works
     e.target.value = "";
   };
 
   const handleCropDone = (croppedFile: File) => {
     setCoverFile(croppedFile);
     setCoverPreview(URL.createObjectURL(croppedFile));
+    setCropImageSrc("");
+  };
+
+  const handleCropCancel = () => {
+    setCropImageSrc("");
   };
 
   const handleUploadCover = async () => {
