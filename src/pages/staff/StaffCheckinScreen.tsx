@@ -159,14 +159,7 @@ export default function StaffCheckinScreen() {
       const result = await validateCheckin({ qrCode, scannedBy: user?.id });
       showFeedback(result.result as ScanResult, result.message, result.attendeeName, result.tierName, result.checkedInAt);
     } catch (err: any) {
-      let msg = err?.message || "Erro desconhecido";
-      let result: ScanResult = "error";
-      try {
-        const parsed = JSON.parse(msg);
-        if (parsed.result) result = parsed.result;
-        if (parsed.message) msg = parsed.message;
-      } catch {}
-      showFeedback(result, msg);
+      showFeedback("error", err?.message || "Erro desconhecido");
     }
 
     setTimeout(() => { debounceRef.current = false; }, 1500);
