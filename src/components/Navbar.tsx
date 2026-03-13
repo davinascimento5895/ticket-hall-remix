@@ -159,6 +159,12 @@ export function Navbar() {
                       <Link to="/meus-ingressos">Meus Ingressos</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
+                      <Link to="/meus-pedidos">Meus Pedidos</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/favoritos">Favoritos</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
                       <Link to="/notificacoes">Notificações</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
