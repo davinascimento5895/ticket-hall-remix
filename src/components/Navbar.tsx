@@ -68,7 +68,7 @@ export function Navbar() {
   const handleNavSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (navSearch.trim()) {
-      navigate(`/busca?q=${encodeURIComponent(navSearch.trim())}`);
+      navigate(`/eventos?q=${encodeURIComponent(navSearch.trim())}`);
       setNavSearch("");
     }
   };
