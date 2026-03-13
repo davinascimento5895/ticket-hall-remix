@@ -28,6 +28,7 @@ import { fetchAddress } from "@/lib/cep";
 import { generateUniqueSlug } from "@/lib/slug";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { ImageCropModal } from "@/components/producer/ImageCropModal";
 
 const STEPS = [
   { key: "type", label: "Tipo", icon: Globe },
