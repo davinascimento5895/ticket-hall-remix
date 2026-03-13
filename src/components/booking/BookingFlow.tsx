@@ -59,7 +59,6 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
   // Auto-fill CPF from profile
   useEffect(() => {
     if (profile?.cpf && !payerCpf) {
-      const { formatCPF } = require("@/lib/validators");
       setPayerCpf(formatCPF(profile.cpf));
     }
   }, [profile]);
