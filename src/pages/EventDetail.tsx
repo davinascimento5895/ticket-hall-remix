@@ -8,7 +8,6 @@ import { getCategoryLabel } from "@/lib/categories";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { TicketTierCard } from "@/components/TicketTierCard";
-import { BookingFlow } from "@/components/booking/BookingFlow";
 import { SEOHead } from "@/components/SEOHead";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { ShareSheet } from "@/components/ShareSheet";
