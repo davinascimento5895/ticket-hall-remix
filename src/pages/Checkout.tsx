@@ -299,9 +299,15 @@ export default function Checkout() {
   // Process payment
   const handleConfirmPayment = useCallback(async (method: string, cardData?: CreditCardData, installments?: number) => {
     if (!orderId) return;
+
+    // Save payer CPF to profile
+    if (buyerData.cpf) {
+      await supabase.from("profiles").update({ cpf: buyerData.cpf }).eq("id", user!.id);
+    }
+
     setIsProcessingPayment(true);
     try {
-      const result = await createPayment(orderId, method as "pix" | "credit_card" | "boleto", cardData, installments);
+      const result = await createPayment(orderId, method as "pix" | "credit_card" | "boleto", creditCard, installments, buyerData.cpf);
       if (!result.success) {
         toast({ title: "Erro no pagamento", description: result.error || "Tente novamente.", variant: "destructive" });
         setIsProcessingPayment(false);
@@ -330,7 +336,7 @@ export default function Checkout() {
     } finally {
       setIsProcessingPayment(false);
     }
-  }, [orderId, clearCart]);
+  }, [orderId, clearCart, buyerData.cpf, user]);
 
   if (items.length === 0 && step < 3) {
     return <Navigate to="/carrinho" replace />;
