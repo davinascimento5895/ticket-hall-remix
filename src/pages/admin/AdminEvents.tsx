@@ -63,7 +63,7 @@ export default function AdminEvents() {
   const { data: events, isLoading } = useQuery({
     queryKey: ["admin-events", statusFilter, debouncedSearch],
     queryFn: () => getAllEvents({ status: statusFilter, search: debouncedSearch }),
-    staleTime: 30_000,
+    staleTime: 2 * 60_000,
   });
 
   const updateMutation = useMutation({
