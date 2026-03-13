@@ -230,11 +230,11 @@ export default function EventDetail() {
       />
 
       {/* Cover image - full banner */}
-      <div className="relative w-full bg-secondary overflow-hidden">
+      <div className="relative w-full flex justify-center bg-secondary overflow-hidden">
         {event.cover_image_url ? (
-          <img src={event.cover_image_url} alt={event.title} className="w-full aspect-[1600/838] object-cover" />
+          <img src={event.cover_image_url} alt={event.title} className="w-auto max-w-full max-h-[380px] object-contain" />
         ) : (
-          <div className="w-full aspect-[1600/838] bg-secondary" />
+          <div className="w-full h-[380px] bg-secondary" />
         )}
         <FavoriteButton eventId={event.id} size="md" className="absolute top-4 right-4" />
       </div>
