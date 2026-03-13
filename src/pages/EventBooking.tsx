@@ -269,7 +269,7 @@ export default function EventBooking() {
                 tiers={tiers}
                 selectedDate={selectedDate}
                 onSelectTier={handleSelectTier}
-                seatMapConfig={event.seat_map_config}
+                seatMapConfig={event.seat_map_config as any}
                 hasSeatMap={!!event.has_seat_map}
               />
             )}
