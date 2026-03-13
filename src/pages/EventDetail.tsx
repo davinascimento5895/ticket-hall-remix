@@ -229,18 +229,17 @@ export default function EventDetail() {
         }}
       />
 
-      {/* Cover image - cinematic */}
-      <div className="relative w-full h-[300px] lg:h-[420px] bg-secondary overflow-hidden">
+      {/* Cover image - full banner */}
+      <div className="relative w-full bg-secondary overflow-hidden">
         {event.cover_image_url ? (
-          <img src={event.cover_image_url} alt={event.title} className="w-full h-full object-cover" />
+          <img src={event.cover_image_url} alt={event.title} className="w-full aspect-[1600/838] object-cover" />
         ) : (
-          <div className="w-full h-full bg-secondary" />
+          <div className="w-full aspect-[1600/838] bg-secondary" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
         <FavoriteButton eventId={event.id} size="md" className="absolute top-4 right-4" />
       </div>
 
-      <div className="container relative -mt-28 pb-16">
+      <div className="container relative pb-16 mt-6">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Main content */}
           <div className="flex-1 space-y-6">
