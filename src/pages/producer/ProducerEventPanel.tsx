@@ -176,7 +176,13 @@ export default function ProducerEventPanel() {
       </div>
 
       {/* Tab Content */}
-      <Outlet />
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-[30vh]">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+        </div>
+      }>
+        <Outlet />
+      </Suspense>
     </div>
   );
 }
