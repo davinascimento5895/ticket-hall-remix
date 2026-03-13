@@ -1,11 +1,11 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { SEOHead } from "@/components/SEOHead";
-import { Ticket, Calendar, MapPin, QrCode, Send, Clock, Search, Archive, Download, Repeat, XCircle, CalendarPlus, Mail } from "lucide-react";
+import { Ticket, Calendar, MapPin, QrCode, Send, Clock, Search, Archive, Download, Repeat, XCircle, CalendarPlus, Mail, ChevronRight, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
-import { QRCodeModal } from "@/components/QRCodeModal";
+import { TicketDetailModal } from "@/components/TicketDetailModal";
 import { TransferTicketModal } from "@/components/TransferTicketModal";
 import { ResaleListingModal } from "@/components/ResaleListingModal";
 import { EmptyState } from "@/components/EmptyState";
