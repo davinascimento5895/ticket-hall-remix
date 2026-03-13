@@ -270,7 +270,7 @@ export function CheckoutStepData({
                   />
                 </div>
                 <div>
-                  <Label className="text-xs">CPF (opcional)</Label>
+                  <Label className="text-xs">CPF *</Label>
                   <Input
                     value={data.cpf}
                     onChange={(e) => setAttendeeData((p) => ({ ...p, [key]: { ...data, cpf: formatCPF(e.target.value) } }))}
