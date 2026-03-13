@@ -2,6 +2,18 @@ import { Link, useNavigate } from "react-router-dom";
 import { Trash2, ShoppingCart, ArrowLeft, LogIn, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { EmptyState } from "@/components/EmptyState";
 import { AuthModal } from "@/components/AuthModal";
