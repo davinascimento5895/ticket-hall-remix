@@ -165,8 +165,8 @@ Deno.serve(async (req) => {
             .eq("id", orderId)
             .eq("status", "pending");
 
-          // Release reserved tickets
-          await supabase.from("tickets").update({ status: "cancelled" }).eq("order_id", orderId).eq("status", "reserved");
+          // Release reserved tickets and restore inventory
+          await releaseReservedTickets(supabase, orderId);
         }
         console.log("Payment overdue for order:", orderId);
         break;
