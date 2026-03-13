@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
     // Rate limit: max 10 payment attempts per hour per user
     const rlKey = `payment:${userId}`;
     const now = new Date();
-    const { data: rl } = await supabaseAdmin.from("rate_limits").select("count, expires_at").eq("key", rlKey).single();
+    const { data: rl } = await supabaseAdmin.from("rate_limits").select("count, expires_at").eq("key", rlKey).maybeSingle();
     if (rl && new Date(rl.expires_at) > now && rl.count >= 10) {
       return new Response(JSON.stringify({ error: "Muitas tentativas. Aguarde alguns minutos." }), {
         status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Fetch order
+    // Fetch order with validation
     const { data: order, error: orderErr } = await supabaseAdmin
       .from("orders")
       .select("*")
@@ -111,11 +111,41 @@ Deno.serve(async (req) => {
 
     if (orderErr || !order) {
       return new Response(
-        JSON.stringify({ error: "Order not found or access denied" }),
-        {
-          status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        JSON.stringify({ error: "Pedido não encontrado ou acesso negado." }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate order is in a payable state
+    if (order.status === "paid") {
+      return new Response(
+        JSON.stringify({ success: true, alreadyCreated: true, immediateConfirmation: true, message: "Pedido já está pago." }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    if (order.status !== "pending") {
+      return new Response(
+        JSON.stringify({ error: `Pedido não está pendente (status: ${order.status}). Crie um novo pedido.` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    // Check if order expired
+    if (order.expires_at && new Date(order.expires_at) < new Date()) {
+      return new Response(
+        JSON.stringify({ error: "Pedido expirado. Por favor, crie um novo pedido." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    // Verify tickets exist for this order
+    const { count: ticketCount } = await supabaseAdmin
+      .from("tickets")
+      .select("id", { count: "exact", head: true })
+      .eq("order_id", orderId)
+      .eq("status", "reserved");
+    if (!ticketCount || ticketCount === 0) {
+      return new Response(
+        JSON.stringify({ error: "Nenhum ingresso reservado para este pedido. Tente novamente." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -185,7 +215,6 @@ Deno.serve(async (req) => {
       const updateData: Record<string, unknown> = {
         payment_method: paymentMethod,
         payment_gateway: "asaas_stub",
-        status: "awaiting_payment",
         payment_status: "pending",
         installments: installments || 1,
         updated_at: new Date().toISOString(),
@@ -364,7 +393,6 @@ Deno.serve(async (req) => {
       const pix = await asaas("GET", `/payments/${charge.id}/pixQrCode`);
 
       updateData.asaas_payment_id = charge.id;
-      updateData.status = "awaiting_payment";
       updateData.payment_status = "pending";
       updateData.pix_qr_code = pix.payload || null;
       updateData.pix_qr_code_image = pix.encodedImage || null;
@@ -434,7 +462,6 @@ Deno.serve(async (req) => {
 
         responseData.immediateConfirmation = true;
       } else {
-        updateData.status = "awaiting_payment";
         updateData.payment_status = charge.status === "PENDING" ? "pending" : "processing";
       }
 
@@ -464,7 +491,6 @@ Deno.serve(async (req) => {
       } catch { /* barcode is optional */ }
 
       updateData.asaas_payment_id = charge.id;
-      updateData.status = "awaiting_payment";
       updateData.payment_status = "pending";
       updateData.boleto_url = charge.bankSlipUrl || null;
       updateData.boleto_barcode = barcode;
