@@ -131,10 +131,6 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
     }
     setLoading(true);
     try {
-      const { error } = await supabase.functions.invoke("become-producer", {
-        body: { cpf: cleanCpf, phone: cleanPhone },
-      });
-      if (error) throw error;
       const result = await supabase.functions.invoke("become-producer", {
         body: { cpf: cleanCpf, phone: cleanPhone },
       });
@@ -142,18 +138,12 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
       const data = result.data as any;
       if (data?.alreadyProducer) {
         toast.success("Você já é produtor!");
-        await refetchRole();
-        onOpenChange(false);
-        navigate("/producer/events/new");
-      } else if (data?.status === "pending") {
-        toast.success("Solicitação enviada! Você será notificado quando sua conta de produtor for aprovada.");
-        onOpenChange(false);
       } else {
         toast.success("Conta de produtor ativada! Bem-vindo!");
-        await refetchRole();
-        onOpenChange(false);
-        navigate("/producer/events/new");
       }
+      await refetchRole();
+      onOpenChange(false);
+      navigate("/producer/events/new");
     } catch {
       toast.error("Erro ao ativar conta de produtor");
     } finally {
