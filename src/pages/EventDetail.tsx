@@ -523,7 +523,7 @@ export default function EventDetail() {
               {lowestPrice !== null ? (lowestPrice === 0 ? "Grátis" : fmt(lowestPrice)) : "—"}
             </p>
           </div>
-          <Button onClick={() => setBookingOpen(true)}>
+          <Button onClick={() => navigate(`/eventos/${slug}/comprar`)}>
             {lowestPrice === 0 ? "Inscrever-se" : "Comprar ingresso"}
           </Button>
         </div>
