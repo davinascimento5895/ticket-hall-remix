@@ -28,7 +28,10 @@ export default function EventDetail() {
   const [searchParams] = useSearchParams();
   const [unlockCode, setUnlockCode] = useState("");
   const [showUnlockInput, setShowUnlockInput] = useState(false);
-  const [activeSection, setActiveSection] = useState<"description" | "tickets" | "venue">("description");
+  const initialTab = new URLSearchParams(window.location.search).get("tab");
+  const [activeSection, setActiveSection] = useState<"description" | "tickets" | "venue">(
+    initialTab === "tickets" || initialTab === "venue" ? initialTab : "tickets"
+  );
 
   const { data: event, isLoading: loadingEvent } = useQuery({
     queryKey: ["event", slug],
@@ -204,7 +207,7 @@ export default function EventDetail() {
   const lowestPrice = tiers.length > 0 ? Math.min(...tiers.map((t: any) => t.price ?? 0)) : null;
 
   return (
-    <div className="pb-24 lg:pb-0">
+    <div className="pb-[144px] lg:pb-0">
       <SEOHead
         title={event.title}
         description={event.description?.slice(0, 155) || `Compre ingressos para ${event.title} no TicketHall`}
@@ -497,8 +500,8 @@ export default function EventDetail() {
                       {lowestPrice === 0 ? "Grátis" : fmt(lowestPrice)}
                     </span>
                   </p>
-                  <Button className="w-full" onClick={() => navigate(`/eventos/${slug}/comprar`)}>
-                    {lowestPrice === 0 ? "Inscrever-se" : "Comprar ingresso"}
+              <Button className="w-full" onClick={() => setActiveSection("tickets")}>
+                    {lowestPrice === 0 ? "Inscrever-se" : "Ver ingressos"}
                   </Button>
                 </>
               ) : (
@@ -514,20 +517,22 @@ export default function EventDetail() {
         </div>
       </div>
 
-      {/* Mobile sticky CTA - orange bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-lg border-t border-border p-4 safe-area-bottom">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-xs text-muted-foreground">A partir de</p>
-            <p className="font-display font-bold text-foreground">
-              {lowestPrice !== null ? (lowestPrice === 0 ? "Grátis" : fmt(lowestPrice)) : "—"}
-            </p>
+      {/* Mobile sticky CTA - above bottom nav */}
+      {activeSection !== "tickets" && (
+        <div className="lg:hidden fixed bottom-[72px] left-0 right-0 z-40 bg-card/95 backdrop-blur-lg border-t border-border p-4 safe-area-bottom">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs text-muted-foreground">A partir de</p>
+              <p className="font-display font-bold text-foreground">
+                {lowestPrice !== null ? (lowestPrice === 0 ? "Grátis" : fmt(lowestPrice)) : "—"}
+              </p>
+            </div>
+            <Button onClick={() => setActiveSection("tickets")}>
+              {lowestPrice === 0 ? "Inscrever-se" : "Ver ingressos"}
+            </Button>
           </div>
-          <Button onClick={() => navigate(`/eventos/${slug}/comprar`)}>
-            {lowestPrice === 0 ? "Inscrever-se" : "Comprar ingresso"}
-          </Button>
         </div>
-      </div>
+      )}
 
     </div>
   );

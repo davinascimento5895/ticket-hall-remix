@@ -68,7 +68,7 @@ export function Navbar() {
   const handleNavSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (navSearch.trim()) {
-      navigate(`/busca?q=${encodeURIComponent(navSearch.trim())}`);
+      navigate(`/eventos?q=${encodeURIComponent(navSearch.trim())}`);
       setNavSearch("");
     }
   };
@@ -157,6 +157,12 @@ export function Navbar() {
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to="/meus-ingressos">Meus Ingressos</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/meus-pedidos">Meus Pedidos</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/favoritos">Favoritos</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to="/notificacoes">Notificações</Link>
@@ -300,8 +306,24 @@ export function Navbar() {
                 <Link to={dashboardLink} className="block text-sm font-medium py-2.5" onClick={() => setMobileOpen(false)}>Meu Painel</Link>
               )}
               <Link to="/meus-ingressos" className="block text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 transition-colors" onClick={() => setMobileOpen(false)}>Meus Ingressos</Link>
+              <Link to="/meus-pedidos" className="block text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 transition-colors" onClick={() => setMobileOpen(false)}>Meus Pedidos</Link>
               <Link to="/favoritos" className="block text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 transition-colors" onClick={() => setMobileOpen(false)}>Favoritos</Link>
               <Link to="/meu-perfil" className="block text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 transition-colors" onClick={() => setMobileOpen(false)}>Meu Perfil</Link>
+              {switchableRoles.length > 0 && (
+                <>
+                  <div className="border-t border-border my-2" />
+                  {switchableRoles.map((r) => (
+                    <button
+                      key={r}
+                      className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 w-full transition-colors"
+                      onClick={() => { switchRole(r); navigate(roleDashboardLinks[r]); setMobileOpen(false); }}
+                    >
+                      <ArrowRightLeft className="h-4 w-4 mr-2" />
+                      Alterar para {roleLabels[r]}
+                    </button>
+                  ))}
+                </>
+              )}
               <div className="border-t border-border my-2" />
               <Button variant="ghost" size="sm" className="w-full justify-start text-destructive" onClick={() => { signOut(); setMobileOpen(false); }}>
                 <LogOut className="h-4 w-4 mr-2" /> Sair
