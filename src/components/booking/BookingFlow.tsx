@@ -55,6 +55,14 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
   const [isProcessing, setIsProcessing] = useState(false);
   const [payerCpf, setPayerCpf] = useState("");
 
+  // Auto-fill CPF from profile
+  useEffect(() => {
+    if (profile?.cpf && !payerCpf) {
+      const { formatCPF } = require("@/lib/validators");
+      setPayerCpf(formatCPF(profile.cpf));
+    }
+  }, [profile]);
+
   const unitPrice = selectedTier?.price ?? 0;
   const subtotal = unitPrice * quantity;
   const feePercent = event.platform_fee_percent ?? 7;
