@@ -353,9 +353,9 @@ export default function ProducerEventStaff() {
       <Dialog open={showInvite} onOpenChange={setShowInvite}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Convidar Staff por E-mail</DialogTitle>
+            <DialogTitle>Registrar Staff por E-mail</DialogTitle>
             <DialogDescription>
-              O staff receberá um convite e terá acesso ao check-in após aceitar.
+              O registro será salvo no sistema. Envie o link de convite do evento diretamente ao staff para que ele possa se vincular.
             </DialogDescription>
           </DialogHeader>
           <div>
