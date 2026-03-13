@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useSearchParams, useNavigate } from "react-router-dom";
-import { Menu, X, User, LogOut, ShoppingBag, Search, Plus } from "lucide-react";
+import { Menu, X, User, LogOut, ShoppingBag, Search, Plus, ArrowRightLeft } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { Button } from "@/components/ui/button";
