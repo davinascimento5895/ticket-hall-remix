@@ -152,7 +152,15 @@ export function CheckoutStepData({
           });
           return;
         }
-        if (data?.cpf?.trim() && !validateCPF(data.cpf)) {
+        if (!data?.cpf?.trim()) {
+          toast({
+            title: "Dados incompletos",
+            description: `Preencha o CPF do participante para ${item.tierName} (Ingresso ${qi + 1})`,
+            variant: "destructive",
+          });
+          return;
+        }
+        if (!validateCPF(data.cpf)) {
           toast({
             title: "CPF inválido",
             description: `O CPF informado para ${item.tierName} (Ingresso ${qi + 1}) é inválido`,
@@ -228,7 +236,7 @@ export function CheckoutStepData({
             <div key={key} className="p-4 rounded-lg border border-border bg-card space-y-3">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium text-muted-foreground">
-                  Inscrição nº{qi + 1}: {item.tierName}
+                  Ingresso {qi + 1} de {item.quantity}: {item.tierName}
                 </p>
                 {buyerData && (
                   <Button
@@ -262,7 +270,7 @@ export function CheckoutStepData({
                   />
                 </div>
                 <div>
-                  <Label className="text-xs">CPF (opcional)</Label>
+                  <Label className="text-xs">CPF *</Label>
                   <Input
                     value={data.cpf}
                     onChange={(e) => setAttendeeData((p) => ({ ...p, [key]: { ...data, cpf: formatCPF(e.target.value) } }))}

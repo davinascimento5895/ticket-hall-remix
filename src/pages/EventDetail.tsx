@@ -97,7 +97,7 @@ export default function EventDetail() {
     enabled: !!event?.producer_id,
   });
 
-  const { addItem } = useCart();
+  const { addItem, itemCount } = useCart();
 
   useRealtimeSubscription({
     table: "tickets",
@@ -146,6 +146,9 @@ export default function EventDetail() {
     }
   };
 
+  const [showCartCTA, setShowCartCTA] = useState(false);
+  const [lastAddedTierName, setLastAddedTierName] = useState("");
+
   const handleAddToCart = (tierId: string, quantity: number) => {
     const tier = allTiers?.find((t: any) => t.id === tierId);
     if (!tier || !event) return;
@@ -157,7 +160,8 @@ export default function EventDetail() {
       platformFeePercent: event.platform_fee_percent ?? 7,
       maxPerOrder: tier.max_per_order ?? 10,
     });
-    toast({ title: "Adicionado ao carrinho", description: `${quantity}x ${tier.name}` });
+    setLastAddedTierName(tier.name);
+    setShowCartCTA(true);
   };
 
   const handleShare = async () => {
@@ -517,8 +521,28 @@ export default function EventDetail() {
         </div>
       </div>
 
+      {/* Cart CTA bar — shown after adding to cart */}
+      {showCartCTA && (
+        <div className="fixed bottom-[72px] lg:bottom-0 left-0 right-0 z-40 bg-primary text-primary-foreground p-4 animate-fade-in shadow-lg">
+          <div className="container flex items-center justify-between gap-4 max-w-lg mx-auto">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">✓ {lastAddedTierName} adicionado</p>
+              <p className="text-xs opacity-80">{itemCount} {itemCount === 1 ? "item" : "itens"} no carrinho</p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button variant="secondary" size="sm" onClick={() => setShowCartCTA(false)} className="text-xs">
+                Continuar
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => navigate("/carrinho")} className="text-xs bg-primary-foreground text-primary hover:bg-primary-foreground/90">
+                Finalizar compra
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mobile sticky CTA - above bottom nav */}
-      {activeSection !== "tickets" && (
+      {!showCartCTA && activeSection !== "tickets" && (
         <div className="lg:hidden fixed bottom-[72px] left-0 right-0 z-40 bg-card/95 backdrop-blur-lg border-t border-border p-4 safe-area-bottom">
           <div className="flex items-center justify-between gap-4">
             <div>
