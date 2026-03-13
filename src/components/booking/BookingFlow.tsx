@@ -40,7 +40,7 @@ type Step = "date" | "tickets" | "summary" | "confirmation";
 
 export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowProps) {
   const isMobile = useIsMobile();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
 
   const isMultiDay = event.is_multi_day || new Date(event.start_date).toDateString() !== new Date(event.end_date).toDateString();
