@@ -1,6 +1,17 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Trash2, ShoppingCart, ArrowLeft, LogIn, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { EmptyState } from "@/components/EmptyState";
@@ -156,9 +167,27 @@ export default function Carrinho() {
                     <option key={n} value={n}>{n}</option>
                   ))}
                 </select>
-                <button onClick={() => removeItem(item.tierId)} className="p-2 text-muted-foreground hover:text-destructive transition-colors">
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button className="p-2 text-muted-foreground hover:text-destructive transition-colors">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Remover ingresso?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Tem certeza que deseja remover <strong>{item.tierName}</strong> do carrinho?
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => removeItem(item.tierId)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        Remover
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
           ))}
