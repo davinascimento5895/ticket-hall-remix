@@ -388,46 +388,10 @@ export default function EventDetail() {
                   </div>
                 )}
 
-                {/* Products */}
+                {/* Products Catalog */}
                 {products.length > 0 && (
                   <div className="pt-6">
-                    <h3 className="font-display font-semibold text-foreground mb-3">Adicione ao seu ingresso</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {products.map((p: any) => (
-                        <div key={p.id} className="p-4 rounded-lg border border-border bg-card space-y-2">
-                          <div className="flex items-start gap-3">
-                            {p.image_url ? (
-                              <img src={p.image_url} alt={p.name} className="w-16 h-16 rounded-lg object-cover shrink-0" />
-                            ) : (
-                              <div className="w-16 h-16 rounded-lg bg-secondary flex items-center justify-center shrink-0">
-                                <Package className="h-6 w-6 text-muted-foreground" />
-                              </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-foreground">{p.name}</p>
-                              {p.description && <p className="text-xs text-muted-foreground line-clamp-2">{p.description}</p>}
-                              <p className="text-sm font-semibold text-foreground mt-1">{fmt(p.price)}</p>
-                            </div>
-                          </div>
-                          {p.quantity_available != null && p.quantity_sold >= p.quantity_available ? (
-                            <p className="text-xs text-destructive">Esgotado</p>
-                          ) : (
-                            <Button size="sm" variant="outline" className="w-full" onClick={() => {
-                              addItem({
-                                tierId: `product-${p.id}`, eventId: event.id,
-                                tierName: p.name, eventTitle: event.title,
-                                eventSlug: event.slug, price: p.price, quantity: 1,
-                                platformFeePercent: event.platform_fee_percent ?? 7,
-                                maxPerOrder: p.max_per_order ?? 10,
-                              });
-                              toast({ title: "Produto adicionado ao carrinho" });
-                            }}>
-                              Adicionar
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                    <EventProductCatalog eventId={event.id} />
                   </div>
                 )}
               </div>
