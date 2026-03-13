@@ -30,7 +30,7 @@ export function CheckoutStepConfirmation({ orderId }: CheckoutStepConfirmationPr
     queryFn: async () => {
       const { data } = await supabase
         .from("tickets")
-        .select("id, qr_code, qr_code_image_url, attendee_name, attendee_cpf, ticket_tiers(name)")
+        .select("id, qr_code, qr_code_image_url, attendee_name, attendee_cpf, ticket_tiers(name, price)")
         .eq("order_id", orderId!);
       return data;
     },
