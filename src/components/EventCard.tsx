@@ -1,5 +1,5 @@
 import { Calendar, MapPin } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { cn } from "@/lib/utils";
@@ -18,8 +18,18 @@ interface EventCardProps {
 }
 
 export function EventCard({ title, date, city, imageUrl, priceFrom, category, slug, eventId, className }: EventCardProps) {
+  const navigate = useNavigate();
   const Wrapper = slug ? Link : "div";
   const wrapperProps = slug ? { to: `/eventos/${slug}` } : {};
+
+  const handleBuyClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (slug) {
+      navigate(`/eventos/${slug}/comprar`);
+    }
+  };
+
   return (
     <Wrapper
       {...wrapperProps as any}
@@ -62,7 +72,7 @@ export function EventCard({ title, date, city, imageUrl, priceFrom, category, sl
               {priceFrom === 0 ? "Grátis" : `R$ ${priceFrom.toFixed(2).replace(".", ",")}`}
             </span>
           </span>
-          <Button size="sm" variant="default" className="text-xs">
+          <Button size="sm" variant="default" className="text-xs" onClick={handleBuyClick}>
             {priceFrom === 0 ? "Inscrever-se" : "Comprar"}
           </Button>
         </div>
