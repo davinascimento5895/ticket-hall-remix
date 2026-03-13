@@ -140,6 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setProfile(null);
     setRole(null);
+    setAllRoles([]);
   };
 
   const refetchRole = async () => {
