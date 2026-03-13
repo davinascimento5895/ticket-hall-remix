@@ -908,6 +908,14 @@ export default function ProducerEventForm() {
           </div>
         </div>
       </div>
+
+      {/* Image Crop Modal — always mounted regardless of step */}
+      <ImageCropModal
+        open={cropModalOpen}
+        onOpenChange={setCropModalOpen}
+        imageSrc={cropImageSrc}
+        onCropDone={handleCropDone}
+      />
     </div>
   );
 }
