@@ -201,7 +201,7 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
     } finally {
       setIsProcessing(false);
     }
-  }, [user, selectedTier, quantity, event, couponCode]);
+  }, [user, selectedTier, quantity, event, couponCode, payerCpf, navigate, onOpenChange]);
 
   // No longer need realtime subscription in BookingFlow since PIX/boleto redirects to /pedido/:id
 
