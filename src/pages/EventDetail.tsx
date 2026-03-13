@@ -207,7 +207,7 @@ export default function EventDetail() {
   const lowestPrice = tiers.length > 0 ? Math.min(...tiers.map((t: any) => t.price ?? 0)) : null;
 
   return (
-    <div className="pb-24 lg:pb-0">
+    <div className="pb-[144px] lg:pb-0">
       <SEOHead
         title={event.title}
         description={event.description?.slice(0, 155) || `Compre ingressos para ${event.title} no TicketHall`}

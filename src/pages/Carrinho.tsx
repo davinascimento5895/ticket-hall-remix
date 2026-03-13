@@ -139,7 +139,7 @@ export default function Carrinho() {
                 <img src={item.coverImageUrl} alt="" className="w-16 h-16 rounded object-cover hidden sm:block" />
               )}
               <div className="flex-1 min-w-0">
-                <p className="font-display font-semibold text-foreground truncate">{item.eventTitle}</p>
+                <Link to={`/eventos/${item.eventSlug}`} className="font-display font-semibold text-foreground truncate hover:text-primary transition-colors block" onClick={(e) => e.stopPropagation()}>{item.eventTitle}</Link>
                 <p className="text-sm text-muted-foreground">{item.tierName}</p>
                 <p className="text-sm font-medium text-foreground">{fmt(item.price)} × {item.quantity}</p>
                 {unavailableItems.includes(item.tierId) && (
