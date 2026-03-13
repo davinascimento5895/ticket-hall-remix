@@ -49,6 +49,7 @@ export default function EventBooking() {
   const [paymentMethod, setPaymentMethod] = useState("pix");
   const [orderId, setOrderId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [payerCpf, setPayerCpf] = useState("");
 
   // Initialize step once event loads
   if (event && step === null) {
