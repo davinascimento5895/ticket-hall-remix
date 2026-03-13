@@ -56,9 +56,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    // C09: Set status to "pending" — requires admin approval
+    // Update profile with CPF and phone, set status to approved immediately
     const updates: Record<string, string> = {
-      producer_status: "pending",
+      producer_status: "approved",
     };
     if (cpf) updates.cpf = cpf.replace(/\D/g, "");
     if (phone) updates.phone = phone.replace(/\D/g, "");
@@ -68,34 +68,62 @@ Deno.serve(async (req) => {
       .update(updates)
       .eq("id", user.id);
 
-    // Do NOT grant producer role yet — admin must approve first
-
-    // Notify admins about new producer request
-    const { data: admins } = await supabaseAdmin
+    // Grant producer role immediately
+    await supabaseAdmin
       .from("user_roles")
-      .select("user_id")
-      .eq("role", "admin");
+      .upsert({ user_id: user.id, role: "producer" }, { onConflict: "user_id,role" });
 
-    if (admins?.length) {
-      const { data: profile } = await supabaseAdmin
-        .from("profiles")
-        .select("full_name")
-        .eq("id", user.id)
-        .single();
+    // Try to create Asaas sub-account (non-blocking)
+    const asaasBaseUrl = Deno.env.get("ASAAS_BASE_URL");
+    const asaasApiKey = Deno.env.get("ASAAS_API_KEY");
 
-      await supabaseAdmin.from("notifications").insert(
-        admins.map((a) => ({
-          user_id: a.user_id,
-          type: "producer_request",
-          title: "Nova solicitação de produtor",
-          body: `${profile?.full_name || user.email} solicitou acesso como produtor.`,
-          data: { userId: user.id, email: user.email },
-        }))
-      );
+    if (asaasBaseUrl && asaasApiKey) {
+      try {
+        const { data: profile } = await supabaseAdmin
+          .from("profiles")
+          .select("full_name, cpf, phone")
+          .eq("id", user.id)
+          .single();
+
+        const accountPayload: Record<string, unknown> = {
+          name: profile?.full_name || "Produtor TicketHall",
+          email: user.email,
+          cpfCnpj: (cpf || profile?.cpf || "").replace(/\D/g, "") || undefined,
+          mobilePhone: (phone || profile?.phone || "").replace(/\D/g, "") || undefined,
+          companyType: "MEI",
+          incomeValue: 1000,
+        };
+
+        const res = await fetch(`${asaasBaseUrl}/accounts`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            access_token: asaasApiKey,
+          },
+          body: JSON.stringify(accountPayload),
+        });
+
+        const accountResult = await res.json();
+
+        if (accountResult.walletId) {
+          await supabaseAdmin
+            .from("profiles")
+            .update({
+              asaas_wallet_id: accountResult.walletId,
+              asaas_account_id: accountResult.id,
+              asaas_account_key: accountResult.apiKey || null,
+            })
+            .eq("id", user.id);
+        } else {
+          console.warn("Asaas sub-account creation failed (non-blocking):", accountResult);
+        }
+      } catch (asaasErr) {
+        console.warn("Asaas error (non-blocking):", asaasErr);
+      }
     }
 
     return new Response(
-      JSON.stringify({ success: true, status: "pending" }),
+      JSON.stringify({ success: true, status: "approved" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
