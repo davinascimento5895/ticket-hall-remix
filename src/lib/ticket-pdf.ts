@@ -117,12 +117,12 @@ export async function generateTicketPDF(data: TicketDownloadData) {
     : [data.venueName, data.venueAddress, data.venueCity, data.venueState].filter(Boolean);
 
   if (locationParts.length > 0) {
-    doc.setTextColor(...PRIMARY_COLOR);
-    doc.text("📍", margin, y);
-    doc.setTextColor(...DARK_COLOR);
     doc.setFont("helvetica", "bold");
+    doc.setTextColor(...PRIMARY_COLOR);
+    doc.text("Local:", margin, y);
+    doc.setTextColor(...DARK_COLOR);
     const venueName = data.venueName || locationParts[0] || "";
-    doc.text(venueName, margin + 6, y);
+    doc.text(venueName, margin + 14, y);
     y += 5;
 
     const addressParts = data.isOnline
