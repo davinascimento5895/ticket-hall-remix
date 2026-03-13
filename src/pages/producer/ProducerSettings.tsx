@@ -19,8 +19,7 @@ export default function ProducerSettings() {
   const [form, setForm] = useState({
     full_name: profile?.full_name || "",
     phone: profile?.phone || "",
-    cpf: profile?.cpf || "",
-    cnpj: (profile as any)?.cnpj || "",
+    documento: (profile as any)?.cnpj || profile?.cpf || "",
   });
 
   const [bankForm, setBankForm] = useState({
@@ -47,7 +46,16 @@ export default function ProducerSettings() {
   });
 
   const saveMutation = useMutation({
-    mutationFn: () => updateProfile(user!.id, { full_name: form.full_name, phone: form.phone, cpf: form.cpf, cnpj: form.cnpj } as any),
+    mutationFn: () => {
+      const digits = form.documento.replace(/\D/g, "");
+      const isCNPJ = digits.length > 11;
+      return updateProfile(user!.id, {
+        full_name: form.full_name,
+        phone: form.phone,
+        cpf: isCNPJ ? null : form.documento || null,
+        cnpj: isCNPJ ? form.documento : null,
+      } as any);
+    },
     onSuccess: () => toast({ title: "Perfil atualizado!" }),
     onError: (err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
   });
@@ -171,10 +179,7 @@ export default function ProducerSettings() {
             <CardContent className="space-y-4">
               <div><Label>Nome completo</Label><Input value={form.full_name} onChange={(e) => setForm((p) => ({ ...p, full_name: e.target.value }))} /></div>
               <div><Label>Telefone</Label><Input value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} placeholder="(11) 99999-9999" /></div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div><Label>CPF</Label><Input value={form.cpf} onChange={(e) => setForm((p) => ({ ...p, cpf: e.target.value }))} placeholder="000.000.000-00" /></div>
-                <div><Label>CNPJ</Label><Input value={form.cnpj} onChange={(e) => setForm((p) => ({ ...p, cnpj: e.target.value }))} placeholder="00.000.000/0000-00" /></div>
-              </div>
+              <div><Label>CPF / CNPJ</Label><Input value={form.documento} onChange={(e) => setForm((p) => ({ ...p, documento: e.target.value }))} placeholder="000.000.000-00 ou 00.000.000/0000-00" /></div>
               <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>Salvar</Button>
             </CardContent>
           </Card>
