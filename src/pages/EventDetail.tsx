@@ -500,8 +500,8 @@ export default function EventDetail() {
                       {lowestPrice === 0 ? "Grátis" : fmt(lowestPrice)}
                     </span>
                   </p>
-                  <Button className="w-full" onClick={() => navigate(`/eventos/${slug}/comprar`)}>
-                    {lowestPrice === 0 ? "Inscrever-se" : "Comprar ingresso"}
+              <Button className="w-full" onClick={() => setActiveSection("tickets")}>
+                    {lowestPrice === 0 ? "Inscrever-se" : "Ver ingressos"}
                   </Button>
                 </>
               ) : (
