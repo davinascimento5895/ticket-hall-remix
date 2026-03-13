@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
+import { formatCPF } from "@/lib/validators";
 import { BookingDateStep } from "@/components/booking/BookingDateStep";
 import { BookingTicketStep } from "@/components/booking/BookingTicketStep";
 import { BookingSummaryStep } from "@/components/booking/BookingSummaryStep";
