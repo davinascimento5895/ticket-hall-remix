@@ -94,6 +94,8 @@ const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 // Staff pages — lazy loaded
 const StaffEventList = lazy(() => import("./pages/staff/StaffEventList"));
 const StaffCheckinScreen = lazy(() => import("./pages/staff/StaffCheckinScreen"));
+const StaffJoin = lazy(() => import("./pages/staff/StaffJoin"));
+const ProducerEventStaff = lazy(() => import("./pages/producer/ProducerEventStaff"));
 
 
 const LazyFallback = () => (

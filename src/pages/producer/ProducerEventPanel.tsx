@@ -17,6 +17,7 @@ const TABS = [
   { key: "participants", label: "Participantes", icon: Users, path: "/participants" },
   { key: "guestlist", label: "Guest List", icon: Users, path: "/guestlist" },
   { key: "checkin", label: "Check-in", icon: ScanLine, path: "/checkin" },
+  { key: "staff", label: "Equipe", icon: Users, path: "/staff" },
   { key: "financial", label: "Financeiro", icon: DollarSign, path: "/financial" },
   { key: "promoters", label: "Promoters", icon: Megaphone, path: "/promoters" },
   { key: "messages", label: "Mensagens", icon: Mail, path: "/messages" },
