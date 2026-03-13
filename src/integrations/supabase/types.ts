@@ -774,6 +774,10 @@ export type Database = {
           queue_capacity: number | null
           seat_map_config: Json | null
           slug: string
+          staff_access_code: string | null
+          staff_link_expires_at: string | null
+          staff_link_max_uses: number | null
+          staff_link_uses: number | null
           start_date: string
           status: string | null
           title: string
@@ -813,6 +817,10 @@ export type Database = {
           queue_capacity?: number | null
           seat_map_config?: Json | null
           slug: string
+          staff_access_code?: string | null
+          staff_link_expires_at?: string | null
+          staff_link_max_uses?: number | null
+          staff_link_uses?: number | null
           start_date: string
           status?: string | null
           title: string
@@ -852,6 +860,10 @@ export type Database = {
           queue_capacity?: number | null
           seat_map_config?: Json | null
           slug?: string
+          staff_access_code?: string | null
+          staff_link_expires_at?: string | null
+          staff_link_max_uses?: number | null
+          staff_link_uses?: number | null
           start_date?: string
           status?: string | null
           title?: string
@@ -2595,6 +2607,7 @@ export type Database = {
         Args: { p_promoter_event_id: string }
         Returns: undefined
       }
+      join_event_as_staff: { Args: { p_access_code: string }; Returns: Json }
       purchase_resale_atomic: {
         Args: {
           p_buyer_email: string

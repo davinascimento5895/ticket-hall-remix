@@ -94,6 +94,8 @@ const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 // Staff pages — lazy loaded
 const StaffEventList = lazy(() => import("./pages/staff/StaffEventList"));
 const StaffCheckinScreen = lazy(() => import("./pages/staff/StaffCheckinScreen"));
+const StaffJoin = lazy(() => import("./pages/staff/StaffJoin"));
+const ProducerEventStaff = lazy(() => import("./pages/producer/ProducerEventStaff"));
 
 
 const LazyFallback = () => (
@@ -164,6 +166,7 @@ const App = () => {
               {/* Staff Portal (standalone, no MainLayout) */}
               <Route path="/staff" element={<ProtectedRoute allowedRoles={["staff", "admin", "producer"]}><StaffEventList /></ProtectedRoute>} />
               <Route path="/staff/checkin/:eventId" element={<ProtectedRoute allowedRoles={["staff", "admin", "producer"]}><StaffCheckinScreen /></ProtectedRoute>} />
+              <Route path="/staff/join/:code" element={<StaffJoin />} />
 
               {/* Producer Panel */}
               <Route
@@ -190,6 +193,7 @@ const App = () => {
                   <Route path="messages" element={<ProducerEventMessages />} />
                   <Route path="coupons" element={<ProducerEventCoupons />} />
                   <Route path="promoters" element={<ProducerEventPromoters />} />
+                  <Route path="staff" element={<ProducerEventStaff />} />
                 </Route>
                 {/* Legacy direct routes (still work) */}
                 <Route path="events/:id/reports" element={<ProducerEventReports />} />
