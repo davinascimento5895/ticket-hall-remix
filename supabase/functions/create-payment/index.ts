@@ -20,7 +20,15 @@ const asaas = async (method: string, path: string, body?: unknown) => {
     },
     ...(body ? { body: JSON.stringify(body) } : {}),
   });
-  return res.json();
+
+  const text = await res.text();
+  if (!text) return { _empty: true, httpStatus: res.status };
+  try {
+    return JSON.parse(text);
+  } catch {
+    console.error("Asaas non-JSON response:", res.status, text.slice(0, 500));
+    return { errors: [{ description: `Gateway returned HTTP ${res.status}` }] };
+  }
 };
 
 /** Add N business days to a date */
