@@ -529,15 +529,6 @@ export default function EventDetail() {
         </div>
       </div>
 
-      {/* Booking Flow */}
-      {event && allTiers && (
-        <BookingFlow
-          open={bookingOpen}
-          onOpenChange={setBookingOpen}
-          event={event}
-          tiers={tiers}
-        />
-      )}
     </div>
   );
 }
