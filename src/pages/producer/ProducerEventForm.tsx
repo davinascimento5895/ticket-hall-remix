@@ -102,7 +102,6 @@ export default function ProducerEventForm() {
   const [tierDialogOpen, setTierDialogOpen] = useState(false);
   const [editingTierIndex, setEditingTierIndex] = useState<number | null>(null);
   const [tierDraft, setTierDraft] = useState<TierDraft>(emptyTier());
-  const [cropModalOpen, setCropModalOpen] = useState(false);
   const [cropImageSrc, setCropImageSrc] = useState("");
 
   const { data: capacityGroups = [] } = useQuery({
