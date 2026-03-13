@@ -52,6 +52,13 @@ export default function EventBooking() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [payerCpf, setPayerCpf] = useState("");
 
+  // Auto-fill CPF from profile
+  useEffect(() => {
+    if (profile?.cpf && !payerCpf) {
+      setPayerCpf(formatCPF(profile.cpf));
+    }
+  }, [profile]);
+
   // Initialize step once event loads
   if (event && step === null) {
     setStep(isMultiDay ? "date" : "tickets");
