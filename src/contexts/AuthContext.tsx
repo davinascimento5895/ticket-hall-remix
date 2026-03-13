@@ -26,6 +26,8 @@ interface AuthContextType {
     organizer_banner_url: string | null;
   } | null;
   role: AppRole | null;
+  allRoles: AppRole[];
+  switchRole: (role: AppRole) => void;
   loading: boolean;
   signOut: () => Promise<void>;
   refetchRole: () => Promise<void>;
