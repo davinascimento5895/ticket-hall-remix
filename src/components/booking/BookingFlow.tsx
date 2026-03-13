@@ -165,7 +165,11 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
         setStep("confirmation");
       } else {
         // Process payment
-        const payResult = await createPayment(newOrderId, method as "pix" | "credit_card" | "boleto", cardData, installments);
+        // Save CPF to profile
+        if (payerCpf) {
+          await supabaseAdmin.from("profiles").update({ cpf: payerCpf }).eq("id", user.id);
+        }
+        const payResult = await createPayment(newOrderId, method as "pix" | "credit_card" | "boleto", cardData, installments, payerCpf);
 
         if (!payResult.success) {
           toast({ title: "Erro no pagamento", description: payResult.error || "Tente novamente.", variant: "destructive" });
