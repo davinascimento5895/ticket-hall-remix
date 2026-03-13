@@ -21,12 +21,6 @@ export default function ProducerEventGuestlist() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", email: "", phone: "" });
 
-  const { data: event } = useQuery({
-    queryKey: ["producer-event", id],
-    queryFn: async () => { const { data } = await supabase.from("events").select("title").eq("id", id).single(); return data; },
-    enabled: !!id,
-    staleTime: 30_000,
-  });
 
   const { data: guests, isLoading } = useQuery({
     queryKey: ["event-guestlist", id],
