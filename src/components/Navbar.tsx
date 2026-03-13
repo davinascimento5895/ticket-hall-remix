@@ -166,6 +166,23 @@ export function Navbar() {
                       <Plus className="h-4 w-4 mr-2" />
                       Criar evento
                     </DropdownMenuItem>
+                    {switchableRoles.length > 0 && (
+                      <>
+                        <DropdownMenuSeparator />
+                        {switchableRoles.map((r) => (
+                          <DropdownMenuItem
+                            key={r}
+                            onClick={() => {
+                              switchRole(r);
+                              navigate(roleDashboardLinks[r]);
+                            }}
+                          >
+                            <ArrowRightLeft className="h-4 w-4 mr-2" />
+                            Alterar para {roleLabels[r]}
+                          </DropdownMenuItem>
+                        ))}
+                      </>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={signOut} className="text-destructive">
                       <LogOut className="h-4 w-4 mr-2" /> Sair
