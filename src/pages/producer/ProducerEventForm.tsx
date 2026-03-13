@@ -716,14 +716,6 @@ export default function ProducerEventForm() {
               capacityGroups={capacityGroups}
               hasSeatMap={form.has_seat_map}
             />
-
-            {/* Image Crop Modal */}
-            <ImageCropModal
-              open={cropModalOpen}
-              onOpenChange={setCropModalOpen}
-              imageSrc={cropImageSrc}
-              onCropDone={handleCropDone}
-            />
           </div>
         )}
 
