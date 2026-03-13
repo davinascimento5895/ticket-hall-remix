@@ -384,7 +384,7 @@ export default function StaffCheckinScreen() {
             <DrawerHeader><DrawerTitle>Busca Manual</DrawerTitle></DrawerHeader>
             <div className="px-4 pb-4 space-y-3">
               <div className="flex gap-2">
-                <Input placeholder="Nome do participante" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyDown={(e) => e.key === "Enter" && doSearch()} autoFocus />
+                <Input placeholder="Nome, e-mail ou código" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyDown={(e) => e.key === "Enter" && doSearch()} autoFocus />
                 <Button onClick={doSearch} disabled={searching} size="sm">{searching ? "..." : "Buscar"}</Button>
               </div>
 
