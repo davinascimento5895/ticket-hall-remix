@@ -51,10 +51,10 @@ Deno.serve(async (req) => {
   try {
     // C07: Mandatory webhook token validation
     const webhookToken = req.headers.get("asaas-access-token");
-    const expectedToken = Deno.env.get("ASAAS_API_KEY");
+    const expectedToken = Deno.env.get("ASAAS_WEBHOOK_TOKEN");
 
     if (!expectedToken) {
-      console.error("ASAAS_API_KEY not configured — rejecting webhook");
+      console.error("ASAAS_WEBHOOK_TOKEN not configured — rejecting webhook");
       return new Response("Server misconfigured", { status: 500, headers: corsHeaders });
     }
 
