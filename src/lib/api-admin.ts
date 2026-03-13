@@ -13,7 +13,7 @@ export async function getAdminDashboardStats(dateRange?: { from: string; to: str
   let ordersCountQuery = supabase.from("orders").select("id", { count: "exact", head: true });
   let eventStatusQuery = supabase.from("events").select("status");
   let orderStatusQuery = supabase.from("orders").select("status");
-  let revenueQuery = supabase.from("orders").select("total, created_at, payment_method").eq("status", "paid");
+  let revenueQuery = supabase.from("orders").select("total, platform_fee, created_at, payment_method").eq("status", "paid");
 
   if (fromDate) {
     eventsQuery = eventsQuery.gte("created_at", fromDate);
@@ -30,20 +30,31 @@ export async function getAdminDashboardStats(dateRange?: { from: string; to: str
     revenueQuery = revenueQuery.lte("created_at", toDate);
   }
 
-  const [eventsCountRes, ordersCountRes, usersCountRes, analyticsRes, eventStatusRes, orderStatusRes, revenueOrdersRes] = await Promise.all([
+  // Users query — also date-filtered
+  let usersQuery = supabase.from("profiles").select("id", { count: "exact", head: true });
+  if (fromDate) usersQuery = usersQuery.gte("created_at", fromDate);
+  if (toDate) usersQuery = usersQuery.lte("created_at", toDate);
+
+  // Tickets sold — date-filtered
+  let ticketsQuery = supabase.from("tickets").select("id", { count: "exact", head: true }).in("status", ["active", "used"]);
+  if (fromDate) ticketsQuery = ticketsQuery.gte("created_at", fromDate);
+  if (toDate) ticketsQuery = ticketsQuery.lte("created_at", toDate);
+
+  const [eventsCountRes, ordersCountRes, usersCountRes, ticketsCountRes, eventStatusRes, orderStatusRes, revenueOrdersRes] = await Promise.all([
     eventsQuery,
     ordersCountQuery,
-    supabase.from("profiles").select("id", { count: "exact", head: true }),
-    supabase.from("event_analytics").select("total_revenue, platform_revenue, tickets_sold"),
+    usersQuery,
+    ticketsQuery,
     eventStatusQuery,
     orderStatusQuery,
     revenueQuery,
   ]);
 
-  const analytics = analyticsRes.data || [];
-  const totalGMV = analytics.reduce((s, a) => s + (a.total_revenue || 0), 0);
-  const platformRevenue = analytics.reduce((s, a) => s + (a.platform_revenue || 0), 0);
-  const ticketsSold = analytics.reduce((s, a) => s + (a.tickets_sold || 0), 0);
+  // Compute GMV and platform revenue from the already-filtered paid orders
+  const revenueOrders0 = revenueOrdersRes.data || [];
+  const totalGMV = revenueOrders0.reduce((s, o) => s + (o.total || 0), 0);
+  const platformRevenue = revenueOrders0.reduce((s, o) => s + ((o as any).platform_fee || 0), 0);
+  const ticketsSold = ticketsCountRes.count || 0;
 
   const eventsByStatus: Record<string, number> = {};
   (eventStatusRes.data || []).forEach((e) => {
@@ -151,10 +162,14 @@ export async function getAllUsers(search?: string) {
   const userIds = profiles.map((p) => p.id);
   const { data: roles } = await supabase.from("user_roles").select("user_id, role").in("user_id", userIds);
 
-  const roleMap = new Map<string, string>();
-  (roles || []).forEach((r: any) => roleMap.set(r.user_id, r.role));
+  const roleMap = new Map<string, string[]>();
+  (roles || []).forEach((r: any) => {
+    const existing = roleMap.get(r.user_id) || [];
+    existing.push(r.role);
+    roleMap.set(r.user_id, existing);
+  });
 
-  return profiles.map((p) => ({ ...p, role: roleMap.get(p.id) || "buyer" }));
+  return profiles.map((p) => ({ ...p, roles: roleMap.get(p.id) || ["buyer"] }));
 }
 
 // ============================================================
@@ -219,12 +234,21 @@ export async function adminDeleteEvent(eventId: string) {
 export async function getAllOrders(filters?: { status?: string; search?: string }) {
   let query = supabase
     .from("orders")
-    .select("id, status, total, payment_method, created_at, events(title), profiles!orders_buyer_id_fkey(full_name)")
+    .select("id, status, total, platform_fee, payment_method, created_at, buyer_id, event_id, events(title), profiles!orders_buyer_id_fkey(full_name)")
     .order("created_at", { ascending: false });
   if (filters?.status && filters.status !== "all") query = query.eq("status", filters.status);
-  if (filters?.search) query = query.ilike("id", `%${filters.search}%`);
   const { data, error } = await query;
   if (error) throw error;
+
+  // Client-side search — Supabase doesn't support .or() across joined tables easily
+  if (filters?.search && data) {
+    const q = filters.search.toLowerCase();
+    return data.filter((o: any) =>
+      (o.profiles?.full_name || "").toLowerCase().includes(q) ||
+      (o.events?.title || "").toLowerCase().includes(q) ||
+      o.id.toLowerCase().includes(q)
+    );
+  }
   return data;
 }
 
