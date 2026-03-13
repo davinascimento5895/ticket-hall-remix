@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
     // Rate limit: max 10 payment attempts per hour per user
     const rlKey = `payment:${userId}`;
     const now = new Date();
-    const { data: rl } = await supabaseAdmin.from("rate_limits").select("count, expires_at").eq("key", rlKey).single();
+    const { data: rl } = await supabaseAdmin.from("rate_limits").select("count, expires_at").eq("key", rlKey).maybeSingle();
     if (rl && new Date(rl.expires_at) > now && rl.count >= 10) {
       return new Response(JSON.stringify({ error: "Muitas tentativas. Aguarde alguns minutos." }), {
         status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
