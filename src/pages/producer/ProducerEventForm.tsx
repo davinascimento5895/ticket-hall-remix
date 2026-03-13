@@ -561,11 +561,9 @@ export default function ProducerEventForm() {
                       <div className="relative">
                         <img src={coverPreview} alt="Capa do evento" className="w-full aspect-[1600/838] object-cover rounded-xl" />
                         <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
-                          <label className="cursor-pointer">
+                          <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-md bg-secondary text-secondary-foreground text-sm font-medium hover:bg-secondary/80 transition-colors">
                             <input type="file" accept="image/*" onChange={handleCoverSelect} className="hidden" />
-                            <Button variant="secondary" size="sm" className="gap-2" asChild>
-                              <span><Upload className="h-4 w-4" />Trocar imagem</span>
-                            </Button>
+                            <Upload className="h-4 w-4" />Trocar imagem
                           </label>
                         </div>
                       </div>
