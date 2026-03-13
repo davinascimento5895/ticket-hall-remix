@@ -236,7 +236,7 @@ export function CheckoutStepData({
             <div key={key} className="p-4 rounded-lg border border-border bg-card space-y-3">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium text-muted-foreground">
-                  Inscrição nº{qi + 1}: {item.tierName}
+                  Ingresso {qi + 1} de {item.quantity}: {item.tierName}
                 </p>
                 {buyerData && (
                   <Button
