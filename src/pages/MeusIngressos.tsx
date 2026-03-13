@@ -1,11 +1,11 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { SEOHead } from "@/components/SEOHead";
-import { Ticket, Calendar, MapPin, QrCode, Send, Clock, Search, Archive, Download, Repeat, XCircle, CalendarPlus, Mail } from "lucide-react";
+import { Ticket, Calendar, MapPin, QrCode, Send, Clock, Search, Archive, Download, Repeat, XCircle, CalendarPlus, Mail, ChevronRight, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
-import { QRCodeModal } from "@/components/QRCodeModal";
+import { TicketDetailModal } from "@/components/TicketDetailModal";
 import { TransferTicketModal } from "@/components/TransferTicketModal";
 import { ResaleListingModal } from "@/components/ResaleListingModal";
 import { EmptyState } from "@/components/EmptyState";
@@ -28,15 +28,10 @@ export default function MeusIngressos() {
   const [activeTab, setActiveTab] = useState<TabId>("active");
   const [searchQuery, setSearchQuery] = useState("");
   
-  const [qrModal, setQrModal] = useState<{
+  const [ticketDetailModal, setTicketDetailModal] = useState<{
     open: boolean;
-    ticketId: string;
-    qrCode: string;
-    qrCodeImageUrl?: string | null;
-    eventTitle: string;
-    tierName: string;
-    attendeeName?: string;
-  }>({ open: false, ticketId: "", qrCode: "", eventTitle: "", tierName: "" });
+    ticket: any;
+  }>({ open: false, ticket: null });
 
   const [transferModal, setTransferModal] = useState<{
     open: boolean;
@@ -242,40 +237,12 @@ export default function MeusIngressos() {
         <div className="flex flex-col gap-2 shrink-0">
           {ticket.status === "active" && (
             <Button
-              variant="outline"
+              variant="default"
               size="sm"
               className="gap-1.5"
-              onClick={() =>
-                setQrModal({
-                  open: true,
-                  ticketId: ticket.id,
-                  qrCode: ticket.qr_code,
-                  qrCodeImageUrl: ticket.qr_code_image_url,
-                  eventTitle: ticket.events?.title || "",
-                  tierName: ticket.ticket_tiers?.name || "",
-                  attendeeName: ticket.attendee_name || undefined,
-                })
-              }
+              onClick={() => setTicketDetailModal({ open: true, ticket })}
             >
-              <QrCode className="h-4 w-4" /> QR Code
-            </Button>
-          )}
-          {ticket.status === "active" && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-1.5 text-muted-foreground"
-              onClick={() => {
-                const imageUrl = ticket.qr_code_image_url ||
-                  `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(ticket.qr_code)}`;
-                const link = document.createElement("a");
-                link.href = imageUrl;
-                link.download = `ingresso-${ticket.id.slice(0, 8)}.png`;
-                link.target = "_blank";
-                link.click();
-              }}
-            >
-              <Download className="h-4 w-4" /> Baixar
+              <Eye className="h-4 w-4" /> Ver ingresso
             </Button>
           )}
           {ticket.status === "active" && ticket.events?.start_date && (
@@ -290,7 +257,7 @@ export default function MeusIngressos() {
                 const url = generateGoogleCalendarUrl({
                   title: ev.title,
                   startDate: ev.start_date,
-                  endDate: ev.start_date, // fallback
+                  endDate: ev.start_date,
                   location,
                 });
                 window.open(url, "_blank");
@@ -466,15 +433,10 @@ export default function MeusIngressos() {
         )}
       </div>
 
-      <QRCodeModal
-        open={qrModal.open}
-        onOpenChange={(open) => setQrModal((p) => ({ ...p, open }))}
-        ticketId={qrModal.ticketId}
-        qrCode={qrModal.qrCode}
-        qrCodeImageUrl={qrModal.qrCodeImageUrl}
-        eventTitle={qrModal.eventTitle}
-        tierName={qrModal.tierName}
-        attendeeName={qrModal.attendeeName}
+      <TicketDetailModal
+        open={ticketDetailModal.open}
+        onOpenChange={(open) => setTicketDetailModal((p) => ({ ...p, open }))}
+        ticket={ticketDetailModal.ticket}
       />
 
       <TransferTicketModal
