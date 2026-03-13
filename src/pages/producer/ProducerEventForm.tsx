@@ -580,7 +580,7 @@ export default function ProducerEventForm() {
                         </div>
                         <p className="text-xs text-muted-foreground mt-2 text-center px-4">
                           JPEG, PNG ou WebP • Máx. 5MB<br />
-                          A imagem será ajustada automaticamente no próximo passo.
+                          O recorte abre imediatamente após selecionar a imagem.
                         </p>
                       </label>
                     )}

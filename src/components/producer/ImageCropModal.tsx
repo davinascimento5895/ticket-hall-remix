@@ -89,10 +89,10 @@ export function ImageCropModal({ open, onOpenChange, imageSrc, onCropDone }: Ima
             <CropIcon className="h-5 w-5 text-primary" />
             Ajustar imagem de capa
           </DialogTitle>
-          <p className="text-sm text-muted-foreground">
+          <DialogDescription>
             Ajuste o recorte para garantir que a imagem fique perfeita no banner.
             Dimensão final: <span className="font-mono font-semibold text-foreground">{TARGET_W} × {TARGET_H}px</span> (proporção ~16:9)
-          </p>
+          </DialogDescription>
         </DialogHeader>
 
         <div className="relative rounded-lg overflow-hidden bg-muted/50 border border-border">
