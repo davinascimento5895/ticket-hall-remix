@@ -22,7 +22,12 @@ const asaas = async (method: string, path: string, body?: unknown) => {
   });
 
   const text = await res.text();
-  if (!text) return { _empty: true, httpStatus: res.status };
+  if (!text) {
+    if (!res.ok) {
+      return { errors: [{ description: `Gateway returned HTTP ${res.status}` }] };
+    }
+    return { _empty: true, httpStatus: res.status };
+  }
   try {
     return JSON.parse(text);
   } catch {
@@ -321,7 +326,7 @@ Deno.serve(async (req) => {
         );
       }
 
-      if (customerRes.errors) {
+      if (customerRes.errors || customerRes._empty) {
         // Try to find existing customer by CPF
         if (buyer?.cpf) {
           const existing = await asaas(
@@ -333,8 +338,8 @@ Deno.serve(async (req) => {
           } else {
             return new Response(
               JSON.stringify({
-                error: "Failed to create customer",
-                details: customerRes.errors,
+                error: "Falha ao criar cliente no gateway",
+                details: customerRes.errors || [{ description: "Resposta vazia do gateway" }],
               }),
               {
                 status: 400,
@@ -345,7 +350,29 @@ Deno.serve(async (req) => {
               }
             );
           }
+        } else {
+          return new Response(
+            JSON.stringify({
+              error: "Falha ao criar cliente no gateway",
+              details: customerRes.errors || [{ description: "Resposta vazia do gateway" }],
+            }),
+            {
+              status: 400,
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json",
+              },
+            }
+          );
         }
+      } else if (!customerRes.id) {
+        return new Response(
+          JSON.stringify({ error: "Gateway não retornou o ID do cliente." }),
+          {
+            status: 502,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
       } else {
         customerId = customerRes.id;
       }
@@ -390,19 +417,31 @@ Deno.serve(async (req) => {
       paymentPayload.dueDate = today;
 
       const charge = await asaas("POST", "/payments", paymentPayload);
-      if (charge.errors) {
+      if (charge.errors || charge._empty || !charge.id) {
         return new Response(
-          JSON.stringify({ error: "Payment creation failed", details: charge.errors }),
+          JSON.stringify({
+            error: "Não foi possível gerar cobrança PIX.",
+            details: charge.errors || [{ description: "Gateway não retornou o ID da cobrança." }],
+          }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
       // Fetch PIX QR Code (separate call)
       const pix = await asaas("GET", `/payments/${charge.id}/pixQrCode`);
+      if (pix.errors || pix._empty || !pix.payload) {
+        return new Response(
+          JSON.stringify({
+            error: "Cobrança PIX criada, mas o QR Code não foi retornado pelo gateway.",
+            details: pix.errors || [{ description: "Resposta vazia ao buscar QR Code." }],
+          }),
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
       updateData.asaas_payment_id = charge.id;
       updateData.payment_status = "pending";
-      updateData.pix_qr_code = pix.payload || null;
+      updateData.pix_qr_code = pix.payload;
       updateData.pix_qr_code_image = pix.encodedImage || null;
       updateData.expires_at = pix.expirationDate || new Date(Date.now() + 30 * 60 * 1000).toISOString();
 
@@ -443,9 +482,12 @@ Deno.serve(async (req) => {
       }
 
       const charge = await asaas("POST", "/payments", paymentPayload);
-      if (charge.errors) {
+      if (charge.errors || charge._empty || !charge.id) {
         return new Response(
-          JSON.stringify({ error: "Payment creation failed", details: charge.errors }),
+          JSON.stringify({
+            error: "Falha ao criar cobrança no cartão.",
+            details: charge.errors || [{ description: "Gateway não retornou o ID da cobrança." }],
+          }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -484,10 +526,23 @@ Deno.serve(async (req) => {
       paymentPayload.dueDate = addBusinessDays(new Date(), 3);
 
       const charge = await asaas("POST", "/payments", paymentPayload);
-      if (charge.errors) {
+      if (charge.errors || charge._empty || !charge.id) {
         return new Response(
-          JSON.stringify({ error: "Payment creation failed", details: charge.errors }),
+          JSON.stringify({
+            error: "Falha ao gerar boleto.",
+            details: charge.errors || [{ description: "Gateway não retornou o ID da cobrança." }],
+          }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (!charge.bankSlipUrl) {
+        return new Response(
+          JSON.stringify({
+            error: "Boleto criado sem link de pagamento.",
+            details: [{ description: "Tente novamente em instantes." }],
+          }),
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
@@ -518,7 +573,13 @@ Deno.serve(async (req) => {
     }
 
     // 4. Update order
-    await supabaseAdmin.from("orders").update(updateData).eq("id", orderId);
+    const { error: updateOrderError } = await supabaseAdmin.from("orders").update(updateData).eq("id", orderId);
+    if (updateOrderError) {
+      return new Response(
+        JSON.stringify({ error: "Falha ao atualizar pedido após criar pagamento.", details: updateOrderError.message }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     return new Response(JSON.stringify(responseData), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
