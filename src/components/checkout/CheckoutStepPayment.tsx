@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CreditCardData, getInstallmentOptions } from "@/lib/api-payment";
-import { formatCPF } from "@/lib/validators";
+import { validateCPF, formatCPF } from "@/lib/validators";
 import { formatCEP } from "@/lib/cep";
 import { toast } from "@/hooks/use-toast";
 
