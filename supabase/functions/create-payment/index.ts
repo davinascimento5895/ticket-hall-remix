@@ -482,9 +482,12 @@ Deno.serve(async (req) => {
       }
 
       const charge = await asaas("POST", "/payments", paymentPayload);
-      if (charge.errors) {
+      if (charge.errors || charge._empty || !charge.id) {
         return new Response(
-          JSON.stringify({ error: "Payment creation failed", details: charge.errors }),
+          JSON.stringify({
+            error: "Falha ao criar cobrança no cartão.",
+            details: charge.errors || [{ description: "Gateway não retornou o ID da cobrança." }],
+          }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
