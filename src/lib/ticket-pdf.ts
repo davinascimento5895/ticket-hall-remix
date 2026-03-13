@@ -103,11 +103,12 @@ export async function generateTicketPDF(data: TicketDownloadData) {
     : null;
 
   doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
+  doc.setFont("helvetica", "bold");
   doc.setTextColor(...PRIMARY_COLOR);
-  doc.text("📅", margin, y);
+  doc.text("Data:", margin, y);
+  doc.setFont("helvetica", "normal");
   doc.setTextColor(...DARK_COLOR);
-  doc.text(`${dateStr}  •  ${timeStr}${endTimeStr ? ` — ${endTimeStr}` : ""}`, margin + 6, y);
+  doc.text(`${dateStr}  •  ${timeStr}${endTimeStr ? ` — ${endTimeStr}` : ""}`, margin + 12, y);
   y += 6;
 
   // ── Venue ──
