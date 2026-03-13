@@ -2,7 +2,7 @@ import { useState, Suspense } from "react";
 import { EmbedSnippetGenerator } from "@/components/EmbedSnippetGenerator";
 import { useParams, useNavigate, useLocation, Link, Outlet } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, LayoutDashboard, Ticket, Users, ScanLine, DollarSign, Mail, Tag, ChevronDown, Globe, MapPin, Calendar, Megaphone, Code } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, Ticket, Users, ScanLine, DollarSign, Mail, Tag, ChevronDown, Globe, MapPin, Calendar, Megaphone, Code, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
