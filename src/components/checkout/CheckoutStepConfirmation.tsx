@@ -17,7 +17,7 @@ export function CheckoutStepConfirmation({ orderId }: CheckoutStepConfirmationPr
     queryFn: async () => {
       const { data } = await supabase
         .from("orders")
-        .select("*, events(title, start_date, end_date, venue_name, venue_address, venue_city, cover_image_url, slug, is_online, online_url)")
+        .select("*, events(title, start_date, end_date, venue_name, venue_address, venue_city, cover_image_url, slug, is_online, online_url, description)")
         .eq("id", orderId!)
         .single();
       return data;
