@@ -573,7 +573,13 @@ Deno.serve(async (req) => {
     }
 
     // 4. Update order
-    await supabaseAdmin.from("orders").update(updateData).eq("id", orderId);
+    const { error: updateOrderError } = await supabaseAdmin.from("orders").update(updateData).eq("id", orderId);
+    if (updateOrderError) {
+      return new Response(
+        JSON.stringify({ error: "Falha ao atualizar pedido após criar pagamento.", details: updateOrderError.message }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     return new Response(JSON.stringify(responseData), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
