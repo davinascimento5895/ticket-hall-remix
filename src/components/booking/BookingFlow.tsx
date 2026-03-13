@@ -167,7 +167,7 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
         // Process payment
         // Save CPF to profile
         if (payerCpf) {
-          await supabaseAdmin.from("profiles").update({ cpf: payerCpf }).eq("id", user.id);
+          await supabase.from("profiles").update({ cpf: payerCpf }).eq("id", user.id);
         }
         const payResult = await createPayment(newOrderId, method as "pix" | "credit_card" | "boleto", cardData, installments, payerCpf);
 
