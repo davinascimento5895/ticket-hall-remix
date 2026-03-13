@@ -22,7 +22,8 @@ const TABS = [
   { key: "promoters", label: "Promoters", icon: Megaphone, path: "/promoters" },
   { key: "messages", label: "Mensagens", icon: Mail, path: "/messages" },
   { key: "coupons", label: "Cupons", icon: Tag, path: "/coupons" },
-];
+  { key: "settings", label: "Editar Evento", icon: Settings, path: "/settings", isEdit: true },
+] as const;
 
 export default function ProducerEventPanel() {
   const { id } = useParams();
