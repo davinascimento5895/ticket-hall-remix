@@ -50,8 +50,10 @@ export default function Eventos() {
   useEffect(() => {
     const cat = searchParams.get("categoria");
     const cid = searchParams.get("cidade");
+    const q = searchParams.get("q");
     if (cat) setFilters((f) => ({ ...f, category: cat }));
     if (cid) setCityFilter(cid);
+    if (q) { setSearch(q); setDebouncedSearch(q); }
   }, [searchParams]);
 
   const [timer, setTimer] = useState<ReturnType<typeof setTimeout> | null>(null);

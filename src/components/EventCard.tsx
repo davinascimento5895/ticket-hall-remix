@@ -26,7 +26,7 @@ export function EventCard({ title, date, city, imageUrl, priceFrom, category, sl
     e.preventDefault();
     e.stopPropagation();
     if (slug) {
-      navigate(`/eventos/${slug}/comprar`);
+      navigate(`/eventos/${slug}?tab=tickets`);
     }
   };
 

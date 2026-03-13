@@ -14,7 +14,7 @@ interface NavItem {
 
 const baseNavItems: NavItem[] = [
   { id: "catalog", href: "/eventos", icon: LayoutGrid, label: "Catálogo" },
-  { id: "search", href: "/busca", icon: Search, label: "Pesquisar" },
+  { id: "search", href: "/eventos", icon: Search, label: "Pesquisar" },
   { id: "cart", href: "/carrinho", icon: ShoppingBag, label: "Carrinho", isCart: true },
   { id: "tickets", href: "/meus-ingressos", icon: Ticket, label: "Ingressos" },
   { id: "profile", href: "/meu-perfil", icon: User, label: "Perfil" },
