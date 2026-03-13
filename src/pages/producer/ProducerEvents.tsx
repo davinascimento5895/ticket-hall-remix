@@ -78,7 +78,7 @@ export default function ProducerEvents() {
             const totalCapacity = event.ticket_tiers?.reduce((s: number, t: any) => s + (t.quantity_total || 0), 0) || 0;
 
             return (
-              <div key={event.id} className="flex items-center gap-4 p-4 rounded-lg border border-border bg-card">
+              <div key={event.id} onClick={() => navigate(`/producer/events/${event.id}/panel`)} className="flex items-center gap-4 p-4 rounded-lg border border-border bg-card cursor-pointer hover:bg-muted/50 transition-colors">
                 {event.cover_image_url && (
                   <img src={event.cover_image_url} alt="" className="w-16 h-16 rounded object-cover hidden sm:block" />
                 )}
