@@ -236,6 +236,20 @@ export function CheckoutStepPayment({
     <div className="space-y-6">
       <h2 className="font-display text-xl font-bold">Pagamento</h2>
 
+      {/* CPF do pagador */}
+      <div className="p-4 rounded-lg border border-border bg-card space-y-2">
+        <Label className="text-xs font-medium">CPF do pagador <span className="text-destructive">*</span></Label>
+        <Input
+          value={payerCpf}
+          onChange={(e) => onPayerCpfChange(formatCPF(e.target.value))}
+          placeholder="000.000.000-00"
+          maxLength={14}
+        />
+        <p className="text-xs text-muted-foreground">
+          Caso queira pagar em nome de outra pessoa, altere o CPF acima.
+        </p>
+      </div>
+
       <div className="space-y-2">
         {[
           { id: "pix", label: "PIX", icon: QrCode, desc: "Pagamento instantâneo" },

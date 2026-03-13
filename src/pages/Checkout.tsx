@@ -423,6 +423,8 @@ export default function Checkout() {
                 paymentCreated={paymentCreated}
                 awaitingPayment={awaitingPayment}
                 expiresAt={orderExpiresAt}
+                payerCpf={buyerData.cpf}
+                onPayerCpfChange={(cpf) => setBuyerData((p) => ({ ...p, cpf }))}
               />
             )}
 
