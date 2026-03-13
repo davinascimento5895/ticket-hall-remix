@@ -321,16 +321,27 @@ export async function generateTicketPDF(data: TicketDownloadData) {
   y += 4;
   doc.text("Em caso de dúvidas, acesse tickethall.com.br/faq", margin, y);
 
-  y += 8;
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...PRIMARY_COLOR);
-  doc.text("TicketHall", pageW / 2, y, { align: "center" });
+  y += 10;
+
+  // Footer logo
+  try {
+    const footerLogoDataUrl = await loadImage(logoSvgUrl);
+    const fLogoH = 6;
+    const fLogoW = fLogoH * 3.35;
+    doc.addImage(footerLogoDataUrl, "PNG", pageW / 2 - fLogoW / 2, y, fLogoW, fLogoH);
+    y += fLogoH + 3;
+  } catch {
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...PRIMARY_COLOR);
+    doc.text("TicketHall", pageW / 2, y + 4, { align: "center" });
+    y += 8;
+  }
 
   doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...MUTED_COLOR);
-  doc.text("tickethall.com.br  •  Conectando você a experiências únicas", pageW / 2, y + 4, { align: "center" });
+  doc.text("Conectando você a experiências únicas", pageW / 2, y, { align: "center" });
 
   // Save
   const fileName = `ingresso-${data.ticketId.slice(0, 8)}.pdf`;
