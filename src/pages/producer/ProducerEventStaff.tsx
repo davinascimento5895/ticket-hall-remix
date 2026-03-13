@@ -374,7 +374,7 @@ export default function ProducerEventStaff() {
               onClick={() => inviteMutation.mutate()}
               disabled={!inviteEmail.includes("@") || inviteMutation.isPending}
             >
-              <Mail className="h-4 w-4 mr-1.5" /> Enviar Convite
+              <Mail className="h-4 w-4 mr-1.5" /> Registrar
             </Button>
           </DialogFooter>
         </DialogContent>

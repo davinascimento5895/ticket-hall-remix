@@ -61,6 +61,11 @@ export default function ProducerEventFinancial() {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-end">
+        <Button variant="link" size="sm" asChild className="text-muted-foreground">
+          <Link to="/producer/financial"><ExternalLink className="h-3.5 w-3.5 mr-1" /> Ver financeiro geral</Link>
+        </Button>
+      </div>
       {/* Summary cards */}
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

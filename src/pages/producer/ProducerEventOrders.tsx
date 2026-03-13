@@ -19,12 +19,6 @@ export default function ProducerEventOrders() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [refundOrder, setRefundOrder] = useState<any>(null);
 
-  const { data: event } = useQuery({
-    queryKey: ["producer-event", id],
-    queryFn: async () => { const { data } = await supabase.from("events").select("title").eq("id", id).single(); return data; },
-    enabled: !!id,
-  });
-
   const { data: orders, isLoading } = useQuery({
     queryKey: ["event-orders", id],
     queryFn: () => getEventOrders(id!),
