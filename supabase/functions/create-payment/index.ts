@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
     }
 
     // Parse body
-    const { orderId, paymentMethod, creditCard, installments } =
+    const { orderId, paymentMethod, creditCard, installments, payerCpf } =
       await req.json();
 
     if (!orderId || !paymentMethod) {
