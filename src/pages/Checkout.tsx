@@ -125,6 +125,15 @@ export default function Checkout() {
       const eventId = items[0]?.eventId;
       if (!eventId) throw new Error("No event in cart");
 
+      // Persist buyer CPF/phone to profile for payment gateway
+      if (buyerData.cpf || buyerData.phone) {
+        const profileUpdate: Record<string, string> = {};
+        if (buyerData.cpf) profileUpdate.cpf = buyerData.cpf;
+        if (buyerData.phone) profileUpdate.phone = buyerData.phone;
+        if (buyerData.fullName) profileUpdate.full_name = buyerData.fullName;
+        await supabase.from("profiles").update(profileUpdate).eq("id", user.id);
+      }
+
       // Resolve promoter_event_id from tracking code
       let promoterEventId: string | null = null;
       if (trackingCode) {
