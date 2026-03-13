@@ -1,10 +1,11 @@
-import { Check, CalendarPlus, Download, Share2, Video, Mail, HelpCircle, ExternalLink } from "lucide-react";
+import { Check, CalendarPlus, Download, Share2, Video, Mail, HelpCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { generateGoogleCalendarUrl, downloadICS } from "@/lib/calendar";
 import { ShareSheet } from "@/components/ShareSheet";
+import { TicketDownloadCard } from "./TicketDownloadCard";
 
 interface CheckoutStepConfirmationProps {
   orderId?: string | null;
@@ -29,7 +30,7 @@ export function CheckoutStepConfirmation({ orderId }: CheckoutStepConfirmationPr
     queryFn: async () => {
       const { data } = await supabase
         .from("tickets")
-        .select("id, qr_code, qr_code_image_url, ticket_tiers(name)")
+        .select("id, qr_code, qr_code_image_url, attendee_name, attendee_cpf, ticket_tiers(name)")
         .eq("order_id", orderId!);
       return data;
     },
@@ -56,9 +57,8 @@ export function CheckoutStepConfirmation({ orderId }: CheckoutStepConfirmationPr
   };
 
   const fmt = (v: number) => `R$ ${Number(v).toFixed(2).replace(".", ",")}`;
-  const orderCode = orderId?.slice(0, 8).toUpperCase();
+  const orderCode = orderId?.slice(0, 8).toUpperCase() || "";
   const eventUrl = event?.slug ? `${window.location.origin}/eventos/${event.slug}` : "";
-  const shareText = `Acabei de garantir meu ingresso na TicketHall 🙌\n\nTe vejo lá? ${eventUrl}`;
 
   return (
     <div className="space-y-8 py-8">
@@ -76,12 +76,11 @@ export function CheckoutStepConfirmation({ orderId }: CheckoutStepConfirmationPr
         )}
       </div>
 
-      {/* Event card with actions */}
       {order && event && (
         <div className="max-w-2xl mx-auto space-y-6">
+          {/* Event summary card */}
           <div className="p-5 rounded-xl border border-border bg-card">
             <div className="flex flex-col sm:flex-row gap-4">
-              {/* Event image */}
               {event.cover_image_url && (
                 <img
                   src={event.cover_image_url}
@@ -89,17 +88,11 @@ export function CheckoutStepConfirmation({ orderId }: CheckoutStepConfirmationPr
                   className="w-full sm:w-40 h-28 sm:h-24 rounded-lg object-cover shrink-0"
                 />
               )}
-
-              {/* Event info */}
               <div className="flex-1 min-w-0 space-y-1.5">
                 <p className="font-display font-semibold text-foreground text-lg leading-snug">{event.title}</p>
                 <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                   <CalendarPlus className="h-3.5 w-3.5 shrink-0" />
-                  {new Date(event.start_date).toLocaleDateString("pt-BR", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })}
+                  {new Date(event.start_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
                   {" • "}
                   {new Date(event.start_date).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                   {" > "}
@@ -116,8 +109,6 @@ export function CheckoutStepConfirmation({ orderId }: CheckoutStepConfirmationPr
                   </p>
                 ) : null}
               </div>
-
-              {/* Access button for online events */}
               {event.is_online && event.online_url && (
                 <div className="sm:self-center shrink-0">
                   <Button asChild className="gap-2 w-full sm:w-auto">
@@ -129,15 +120,13 @@ export function CheckoutStepConfirmation({ orderId }: CheckoutStepConfirmationPr
               )}
             </div>
 
-            {/* Share + Calendar row */}
             <div className="flex items-center gap-3 mt-4 pt-4 border-t border-border">
               <ShareSheet url={eventUrl} title={event.title}>
                 <Button variant="outline" size="sm" className="gap-2">
                   <Share2 className="h-4 w-4" />
-                  Compartilhe com seus amigos
+                  Compartilhar
                 </Button>
               </ShareSheet>
-
               <Button
                 variant="ghost"
                 size="sm"
@@ -150,28 +139,42 @@ export function CheckoutStepConfirmation({ orderId }: CheckoutStepConfirmationPr
             </div>
           </div>
 
-          {/* Tickets info */}
+          {/* Ticket cards with QR codes */}
           {tickets && tickets.length > 0 && (
-            <div className="p-4 rounded-xl border border-border bg-card space-y-2">
+            <div className="space-y-4">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Ingressos ({tickets.length})
+                Seus ingressos ({tickets.length})
               </p>
-              {tickets.map((t: any) => (
-                <p key={t.id} className="text-sm text-foreground">
-                  {(t.ticket_tiers as any)?.name || "Ingresso"} —{" "}
-                  <span className="font-mono text-xs text-muted-foreground">#{t.id.slice(0, 8)}</span>
-                </p>
-              ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {tickets.map((t: any, idx: number) => (
+                  <TicketDownloadCard
+                    key={t.id}
+                    ticketId={t.id}
+                    tierName={(t.ticket_tiers as any)?.name || "Ingresso"}
+                    attendeeName={t.attendee_name}
+                    attendeeCpf={t.attendee_cpf}
+                    qrCode={t.qr_code || t.id}
+                    qrCodeImageUrl={t.qr_code_image_url}
+                    eventTitle={event.title}
+                    eventDate={event.start_date}
+                    eventEndDate={event.end_date}
+                    venueName={event.venue_name}
+                    venueCity={event.venue_city}
+                    isOnline={event.is_online}
+                    coverImageUrl={event.cover_image_url}
+                    orderCode={orderCode}
+                    index={idx}
+                  />
+                ))}
+              </div>
             </div>
           )}
 
-          {/* How to access (online events) */}
+          {/* Online event access instructions */}
           {event.is_online && (
             <div className="rounded-xl border border-border bg-card overflow-hidden">
               <div className="p-5 text-center border-b border-border bg-muted/30">
-                <h3 className="font-display font-semibold text-foreground">
-                  Como acessar seu evento
-                </h3>
+                <h3 className="font-display font-semibold text-foreground">Como acessar seu evento</h3>
               </div>
               <div className="p-5 space-y-4">
                 <div className="flex items-start gap-3">
@@ -229,7 +232,7 @@ export function CheckoutStepConfirmation({ orderId }: CheckoutStepConfirmationPr
             </div>
           </div>
 
-          {/* Calendar download buttons */}
+          {/* Calendar buttons */}
           <div className="flex gap-2">
             <Button variant="outline" size="sm" className="flex-1 gap-1.5" onClick={() => handleAddToCalendar("google")}>
               <CalendarPlus className="h-4 w-4" /> Google Calendar
