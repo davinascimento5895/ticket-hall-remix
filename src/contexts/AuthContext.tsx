@@ -82,8 +82,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq("user_id", userId);
     if (data && data.length > 0) {
       const roles = data.map((r) => r.role as AppRole);
+      setAllRoles(roles);
       const best = ROLE_PRIORITY.find((r) => roles.includes(r)) ?? roles[0];
       setRole(best);
+    } else {
+      setAllRoles([]);
+    }
+  };
+
+  const switchRole = (newRole: AppRole) => {
+    if (allRoles.includes(newRole)) {
+      setRole(newRole);
     }
   };
 
