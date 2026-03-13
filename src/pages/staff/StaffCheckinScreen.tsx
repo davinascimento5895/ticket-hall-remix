@@ -216,12 +216,22 @@ export default function StaffCheckinScreen() {
     const q = searchQuery.trim();
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(q);
 
+    // Search by name, email, order_id, or ticket id
+    const orFilters = [
+      `attendee_name.ilike.%${q}%`,
+      `attendee_email.ilike.%${q}%`,
+    ];
+    if (isUuid) {
+      orFilters.push(`order_id.eq.${q}`);
+      orFilters.push(`id.eq.${q}`);
+    }
+
     const { data } = await supabase
       .from("tickets")
       .select("id, attendee_name, attendee_email, status, tier_id, order_id, ticket_tiers(name)")
       .eq("event_id", eventId)
       .in("status", ["active", "used"])
-      .or(`attendee_name.ilike.%${q}%${isUuid ? `,order_id.eq.${q}` : ""}`)
+      .or(orFilters.join(","))
       .limit(20);
 
     setSearchResults((data as any[]) || []);
