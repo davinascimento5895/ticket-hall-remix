@@ -18,7 +18,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/contexts/CartContext";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { getEventBySlug, getEventTiers } from "@/lib/api";
-import { getEventProducts } from "@/lib/api-checkout";
+import { getEventProducts } from "@/lib/api-products";
+import { EventProductCatalog } from "@/components/EventProductCatalog";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
