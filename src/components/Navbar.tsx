@@ -26,7 +26,7 @@ export function Navbar() {
   const [authTab, setAuthTab] = useState<"login" | "register">("login");
   const [navSearch, setNavSearch] = useState("");
   const [producerModalOpen, setProducerModalOpen] = useState(false);
-  const { user, profile, role, signOut } = useAuth();
+  const { user, profile, role, allRoles, switchRole, signOut } = useAuth();
   const { itemCount } = useCart();
   const [searchParams] = useSearchParams();
   const location = useLocation();
