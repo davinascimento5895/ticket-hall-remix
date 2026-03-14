@@ -12,8 +12,7 @@ import { SEOHead } from "@/components/SEOHead";
 import { BecomeProducerModal } from "@/components/BecomeProducerModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { EventFilterBar, defaultEventFilters, getDateRangeFromPreset, type EventFilters } from "@/components/EventFilterBar";
-
-import { getEvents } from "@/lib/api";
+import { sanitizePostgrestFilter } from "@/lib/search";
 import { RandomDiscoveryButton } from "@/components/RandomDiscoveryButton";
 import { useCityDetection } from "@/hooks/useCityDetection";
 import { isWithinInterval, endOfDay } from "date-fns";
@@ -67,27 +66,32 @@ export default function Eventos() {
   const { data: rawEvents, isLoading } = useQuery({
     queryKey: ["events", debouncedSearch, filters.category, cityFilter],
     queryFn: async () => {
-      const evts = await getEvents({
-        search: debouncedSearch || undefined,
-        category: filters.category || undefined,
-        city: cityFilter || undefined,
-        limit: 200,
+      // Query única: events + preço mínimo via ticket_tiers aninhado
+      // Elimina o segundo round-trip ao Supabase que existia antes
+      let query = supabase
+        .from("events")
+        .select("id, title, slug, start_date, end_date, venue_city, cover_image_url, category, is_online, views_count, ticket_tiers(price)")
+        .eq("status", "published")
+        .gte("end_date", new Date().toISOString())
+        .order("start_date", { ascending: true })
+        .limit(200);
+
+      if (debouncedSearch) {
+        const safe = sanitizePostgrestFilter(debouncedSearch);
+        query = query.or(`title.ilike.%${safe}%,description.ilike.%${safe}%,venue_name.ilike.%${safe}%`);
+      }
+      if (filters.category) query = query.eq("category", filters.category);
+      if (cityFilter) query = query.eq("venue_city", cityFilter);
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      return (data || []).map((e: any) => {
+        const prices = (e.ticket_tiers || []).map((t: any) => t.price ?? 0);
+        const _minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+        const { ticket_tiers, ...rest } = e;
+        return { ...rest, _minPrice };
       });
-      if (!evts || evts.length === 0) return [];
-      const eventIds = evts.map((e: any) => e.id);
-      const { data: tiers } = await supabase
-        .from("ticket_tiers")
-        .select("event_id, price")
-        .in("event_id", eventIds)
-        .eq("is_visible", true);
-      const minPriceMap: Record<string, number> = {};
-      (tiers || []).forEach((t: any) => {
-        const p = t.price ?? 0;
-        if (!(t.event_id in minPriceMap) || p < minPriceMap[t.event_id]) {
-          minPriceMap[t.event_id] = p;
-        }
-      });
-      return evts.map((e: any) => ({ ...e, _minPrice: minPriceMap[e.id] ?? 0 }));
     },
   });
 
@@ -270,7 +274,7 @@ export default function Eventos() {
           <div className="space-y-8">
             {/* Event grid */}
             <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-              {filteredEvents.slice(0, visibleCount).map((event: any) => (
+              {filteredEvents.slice(0, visibleCount).map((event: any, index: number) => (
                 <EventCard
                   key={event.id}
                   title={event.title}
@@ -285,6 +289,7 @@ export default function Eventos() {
                   category={event.category}
                   slug={event.slug}
                   eventId={event.id}
+                  priority={index < 4}
                 />
               ))}
             </div>
