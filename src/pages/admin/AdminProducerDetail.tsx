@@ -4,15 +4,8 @@ import { ArrowLeft, CalendarDays, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { OrderStatusBadge } from "@/components/OrderStatusBadge";
+import { EventStatusBadge } from "@/components/EventStatusBadge";
 import { getProducerDetail } from "@/lib/api-admin";
-
-const statusMap: Record<string, string> = {
-  draft: "pending",
-  published: "active",
-  cancelled: "cancelled",
-  ended: "used",
-};
 
 export default function AdminProducerDetail() {
   const { producerId } = useParams<{ producerId: string }>();
@@ -80,7 +73,7 @@ export default function AdminProducerDetail() {
                     <tr key={event.id} className="border-b border-border/50 hover:bg-muted/30">
                       <td className="p-3 font-medium max-w-[250px] truncate">{event.title}</td>
                       <td className="p-3">
-                        <OrderStatusBadge status={statusMap[event.status] || event.status} />
+                        <EventStatusBadge status={event.status} />
                       </td>
                       <td className="p-3 text-muted-foreground">
                         {new Date(event.start_date).toLocaleDateString("pt-BR")}

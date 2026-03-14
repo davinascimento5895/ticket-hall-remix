@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Plus, MoreHorizontal, Eye, BarChart3, Users, Edit, Trash2, ShoppingCart, ScanLine, UserPlus, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { OrderStatusBadge } from "@/components/OrderStatusBadge";
+import { EventStatusBadge } from "@/components/EventStatusBadge";
 import { EmptyState } from "@/components/EmptyState";
 import {
   DropdownMenu,
@@ -15,13 +15,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getProducerEvents } from "@/lib/api-producer";
 import { useNavigate } from "react-router-dom";
 
-const statusMap: Record<string, string> = {
-  draft: "pending",
-  published: "active",
-  cancelled: "cancelled",
-  ended: "used",
-};
-
 export default function ProducerEvents() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -32,13 +25,6 @@ export default function ProducerEvents() {
     enabled: !!user?.id,
     staleTime: 30_000,
   });
-
-  const statusLabel: Record<string, string> = {
-    draft: "Rascunho",
-    published: "Publicado",
-    cancelled: "Cancelado",
-    ended: "Encerrado",
-  };
 
   if (isLoading) {
     return (
@@ -85,7 +71,7 @@ export default function ProducerEvents() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-display font-semibold text-foreground truncate">{event.title}</h3>
-                    <OrderStatusBadge status={statusMap[event.status] || event.status} />
+                    <EventStatusBadge status={event.status} />
                   </div>
                   <p className="text-sm text-muted-foreground">
                     {new Date(event.start_date).toLocaleDateString("pt-BR")}

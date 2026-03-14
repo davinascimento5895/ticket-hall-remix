@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Printer, Download, Calendar, Clock, MapPin, Ticket, Hash, User, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { generateTicketPDF } from "@/lib/ticket-pdf";
+import { formatBRL } from "@/lib/utils";
 
 export interface TicketDownloadData {
   ticketId: string;
@@ -85,8 +86,6 @@ export function TicketDownloadCard(props: TicketDownloadData) {
       })
     : null;
 
-  const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
-
   const handleDownloadPDF = async () => {
     setDownloading(true);
     try {
@@ -141,7 +140,7 @@ export function TicketDownloadCard(props: TicketDownloadData) {
                 <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">Ingresso</p>
                 <p className="font-display font-bold text-foreground">{tierName}</p>
                 {tierPrice != null && tierPrice > 0 && (
-                  <p className="text-foreground font-semibold">{fmt(tierPrice)}</p>
+                  <p className="text-foreground font-semibold">{formatBRL(tierPrice)}</p>
                 )}
               </div>
 

@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { getFinanceData } from "@/lib/api-admin";
 import { format, subDays, startOfMonth, startOfYear } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { cn } from "@/lib/utils";
+import { cn, formatBRL } from "@/lib/utils";
 
 const presets = [
   { label: "Últimos 30 dias", days: 30 },
@@ -51,8 +51,6 @@ export default function AdminFinance() {
     }
   };
 
-  const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
-
   const methodLabels: Record<string, string> = {
     pix: "PIX",
     credit_card: "Cartão de Crédito",
@@ -63,10 +61,10 @@ export default function AdminFinance() {
   };
 
   const metrics = [
-    { label: "GMV Total", value: data ? fmt(data.totalGMV) : "—", icon: DollarSign },
-    { label: "Receita Plataforma", value: data ? fmt(data.totalPlatformFee) : "—", icon: TrendingUp },
-    { label: "Taxas de Gateway", value: data ? fmt(data.totalGatewayFee) : "—", icon: CreditCard },
-    { label: "Receita Líquida", value: data ? fmt(data.netRevenue) : "—", icon: Percent },
+    { label: "GMV Total", value: data ? formatBRL(data.totalGMV) : "—", icon: DollarSign },
+    { label: "Receita Plataforma", value: data ? formatBRL(data.totalPlatformFee) : "—", icon: TrendingUp },
+    { label: "Taxas de Gateway", value: data ? formatBRL(data.totalGatewayFee) : "—", icon: CreditCard },
+    { label: "Receita Líquida", value: data ? formatBRL(data.netRevenue) : "—", icon: Percent },
   ];
 
   return (
@@ -159,7 +157,7 @@ export default function AdminFinance() {
                     <tr key={method} className="border-b border-border/50">
                       <td className="p-3 font-medium">{methodLabels[method] || method}</td>
                       <td className="p-3 text-muted-foreground">{info.count}</td>
-                      <td className="p-3">{fmt(info.total)}</td>
+                      <td className="p-3">{formatBRL(info.total)}</td>
                       <td className="p-3 text-muted-foreground">{data.totalGMV > 0 ? ((info.total / data.totalGMV) * 100).toFixed(1) : 0}%</td>
                     </tr>
                   ))}

@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { formatBRL } from "@/lib/utils";
 
 export interface CreditCardData {
   holderName: string;
@@ -62,7 +63,6 @@ export interface InstallmentOption {
  * First 3 installments are interest-free, 4-12 have 1.99% monthly interest.
  */
 export const getInstallmentOptions = (total: number): InstallmentOption[] => {
-  const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
   const options: InstallmentOption[] = [];
 
   for (let n = 1; n <= 12; n++) {
@@ -71,7 +71,7 @@ export const getInstallmentOptions = (total: number): InstallmentOption[] => {
       const value = Number((total / n).toFixed(2));
       options.push({
         n,
-        label: `${n}x de ${fmt(value)} sem juros`,
+        label: `${n}x de ${formatBRL(value)} sem juros`,
         value,
         total,
         hasInterest: false,
@@ -85,7 +85,7 @@ export const getInstallmentOptions = (total: number): InstallmentOption[] => {
       const totalWithInterest = Number((installmentValue * n).toFixed(2));
       options.push({
         n,
-        label: `${n}x de ${fmt(installmentValue)} (${fmt(totalWithInterest)})`,
+        label: `${n}x de ${formatBRL(installmentValue)} (${formatBRL(totalWithInterest)})`,
         value: installmentValue,
         total: totalWithInterest,
         hasInterest: true,

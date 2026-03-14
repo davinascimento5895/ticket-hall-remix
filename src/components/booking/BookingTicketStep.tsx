@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, formatBRLOrFree } from "@/lib/utils";
 import { BookingSeatMap } from "./BookingSeatMap";
 
 interface Props {
@@ -11,8 +11,6 @@ interface Props {
   seatMapConfig?: { imageUrl?: string; tierColors?: Record<string, string> } | null;
   hasSeatMap?: boolean;
 }
-
-const fmt = (v: number) => v === 0 ? "Grátis" : `R$ ${Number(v).toFixed(2).replace(".", ",")}`;
 
 export function BookingTicketStep({ tiers, selectedDate, onSelectTier, seatMapConfig, hasSeatMap }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -94,9 +92,9 @@ export function BookingTicketStep({ tiers, selectedDate, onSelectTier, seatMapCo
                   </div>
                   <div className="text-right shrink-0 ml-3">
                     {tier.original_price && tier.original_price > (tier.price ?? 0) && (
-                      <p className="text-xs text-muted-foreground line-through">{fmt(tier.original_price)}</p>
+                      <p className="text-xs text-muted-foreground line-through">{formatBRLOrFree(tier.original_price)}</p>
                     )}
-                    <p className="font-bold text-foreground">{fmt(tier.price ?? 0)}</p>
+                    <p className="font-bold text-foreground">{formatBRLOrFree(tier.price ?? 0)}</p>
                   </div>
                 </div>
 
@@ -132,7 +130,7 @@ export function BookingTicketStep({ tiers, selectedDate, onSelectTier, seatMapCo
 
       {selectedId && (
         <Button className="w-full" size="lg" onClick={handleContinue}>
-          Continuar · {fmt((tiers.find((t) => t.id === selectedId)?.price ?? 0) * getQty(selectedId))}
+          Continuar · {formatBRLOrFree((tiers.find((t) => t.id === selectedId)?.price ?? 0) * getQty(selectedId))}
         </Button>
       )}
     </div>

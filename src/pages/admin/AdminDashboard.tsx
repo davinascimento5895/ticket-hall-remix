@@ -9,7 +9,7 @@ import { getAdminDashboardStats } from "@/lib/api-admin";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { format, subDays, startOfMonth, startOfYear } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { cn } from "@/lib/utils";
+import { cn, formatBRL } from "@/lib/utils";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(142 71% 45%)", "hsl(38 92% 50%)"];
 type ChartGranularity = "month" | "day";
@@ -57,14 +57,12 @@ export default function AdminDashboard() {
     }
   };
 
-  const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
-
   const avgTicket = stats && stats.totalOrders > 0 ? stats.totalGMV / stats.totalOrders : 0;
 
   const metrics = [
-    { label: "GMV Total", value: stats ? fmt(stats.totalGMV) : "—", icon: DollarSign, accent: "bg-primary/10 text-primary" },
-    { label: "Receita Plataforma", value: stats ? fmt(stats.platformRevenue) : "—", icon: TrendingUp, accent: "bg-accent/10 text-accent" },
-    { label: "Ticket Médio", value: stats ? fmt(avgTicket) : "—", icon: DollarSign, accent: "bg-primary/10 text-primary" },
+    { label: "GMV Total", value: stats ? formatBRL(stats.totalGMV) : "—", icon: DollarSign, accent: "bg-primary/10 text-primary" },
+    { label: "Receita Plataforma", value: stats ? formatBRL(stats.platformRevenue) : "—", icon: TrendingUp, accent: "bg-accent/10 text-accent" },
+    { label: "Ticket Médio", value: stats ? formatBRL(avgTicket) : "—", icon: DollarSign, accent: "bg-primary/10 text-primary" },
     { label: "Eventos", value: stats?.totalEvents?.toLocaleString("pt-BR") || "0", icon: CalendarDays, accent: "bg-accent/10 text-accent" },
     { label: "Usuários", value: stats?.totalUsers?.toLocaleString("pt-BR") || "0", icon: Users, accent: "bg-primary/10 text-primary" },
     { label: "Pedidos", value: stats?.totalOrders?.toLocaleString("pt-BR") || "0", icon: ShoppingCart, accent: "bg-accent/10 text-accent" },
@@ -186,7 +184,7 @@ export default function AdminDashboard() {
                       color: "hsl(var(--foreground))",
                       boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                     }}
-                    formatter={(v: number) => [fmt(v), "Receita"]}
+                    formatter={(v: number) => [formatBRL(v), "Receita"]}
                   />
                   <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
                 </BarChart>
@@ -210,7 +208,7 @@ export default function AdminDashboard() {
                   <Pie data={paymentPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
                     {paymentPieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                   </Pie>
-                  <Tooltip formatter={(value: number) => [fmt(value), "Total"]} />
+                  <Tooltip formatter={(value: number) => [formatBRL(value), "Total"]} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (

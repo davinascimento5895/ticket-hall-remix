@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getCheckoutQuestions, saveOrderProducts } from "@/lib/api-checkout";
 import { createPayment, CreditCardData } from "@/lib/api-payment";
 import { toast } from "@/hooks/use-toast";
+import { formatBRL } from "@/lib/utils";
 
 const steps = ["Comprador", "Participantes", "Pagamento", "Confirmação"];
 
@@ -345,8 +346,6 @@ export default function Checkout() {
   // Build summary sidebar info
   const eventTitle = items[0]?.eventTitle || "";
   const coverImage = items[0]?.coverImageUrl;
-  const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
-
   return (
     <>
       <SEOHead title="Checkout" description="Finalize sua compra de ingressos no TicketHall." />
@@ -455,7 +454,7 @@ export default function Checkout() {
                         <span className="font-medium">{item.quantity}</span> {item.tierName}
                       </span>
                       <span className="text-foreground font-medium shrink-0">
-                        {item.price === 0 ? "Grátis" : fmt(item.price * item.quantity)}
+                        {item.price === 0 ? "Grátis" : formatBRL(item.price * item.quantity)}
                       </span>
                     </div>
                   ))}
@@ -465,18 +464,18 @@ export default function Checkout() {
                     <>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Subtotal</span>
-                        <span>{fmt(subtotal)}</span>
+                        <span>{formatBRL(subtotal)}</span>
                       </div>
                       {platformFee > 0 && (
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Taxa</span>
-                          <span>{fmt(platformFee)}</span>
+                          <span>{formatBRL(platformFee)}</span>
                         </div>
                       )}
                       {discount > 0 && (
                         <div className="flex justify-between text-success">
                           <span>Desconto</span>
-                          <span>-{fmt(discount)}</span>
+                          <span>-{formatBRL(discount)}</span>
                         </div>
                       )}
                     </>
@@ -487,7 +486,7 @@ export default function Checkout() {
                       <p className="text-xs text-muted-foreground font-normal">({items.reduce((s, i) => s + i.quantity, 0)} {items.reduce((s, i) => s + i.quantity, 0) === 1 ? "item" : "itens"})</p>
                     </div>
                     <div className="text-right">
-                      <span>{fmt(finalTotal)}</span>
+                      <span>{formatBRL(finalTotal)}</span>
                       {finalTotal === 0 && <p className="text-xs text-muted-foreground font-normal">Evento gratuito</p>}
                     </div>
                   </div>

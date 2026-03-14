@@ -163,7 +163,7 @@ export default function OrganizerProfile() {
             title={event.title}
             date={new Date(event.start_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
             city={event.is_online ? "Evento Online" : (event.venue_city ? `${event.venue_name ? event.venue_name + " - " : ""}${event.venue_city}${event.venue_state ? ", " + event.venue_state : ""}` : "Online")}
-            imageUrl={event.cover_image_url || "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=600&q=80"}
+            imageUrl={event.cover_image_url}
             priceFrom={0}
             category={event.category}
             slug={event.slug}

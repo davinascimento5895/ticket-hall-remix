@@ -141,6 +141,27 @@ export async function getAllEvents(filters?: { status?: string; search?: string 
   return data;
 }
 
+export async function getAllEventsPaginated(
+  filters?: { status?: string; search?: string },
+  range?: { from: number; to: number }
+) {
+  let query = supabase
+    .from("events")
+    .select("id, title, slug, status, start_date, end_date, venue_city, producer_id, created_at, cover_image_url, profiles!events_producer_id_fkey(full_name)", { count: "exact" })
+    .order("created_at", { ascending: false });
+
+  if (filters?.status && filters.status !== "all") query = query.eq("status", filters.status);
+  if (filters?.search) {
+    const safeSearch = filters.search.replace(/[%_]/g, "");
+    query = query.or(`title.ilike.%${safeSearch}%,slug.ilike.%${safeSearch}%`);
+  }
+  if (range) query = query.range(range.from, range.to);
+
+  const { data, error, count } = await query;
+  if (error) throw error;
+  return { data: data || [], count: count ?? 0 };
+}
+
 export async function adminUpdateEvent(eventId: string, updates: Record<string, any>) {
   const { data, error } = await supabase.from("events").update(updates).eq("id", eventId).select().single();
   if (error) throw error;
@@ -150,6 +171,26 @@ export async function adminUpdateEvent(eventId: string, updates: Record<string, 
 // ============================================================
 // ADMIN — USERS
 // ============================================================
+
+export async function getAllUsersPaginated(
+  filters?: { role?: string; search?: string },
+  range?: { from: number; to: number }
+) {
+  let query = supabase
+    .from("profiles")
+    .select("id, full_name, email, phone, avatar_url, created_at", { count: "exact" })
+    .order("created_at", { ascending: false });
+
+  if (filters?.search) {
+    const safeSearch = filters.search.replace(/[%_]/g, "");
+    query = query.or(`full_name.ilike.%${safeSearch}%,email.ilike.%${safeSearch}%`);
+  }
+  if (range) query = query.range(range.from, range.to);
+
+  const { data, error, count } = await query;
+  if (error) throw error;
+  return { data: data || [], count: count ?? 0 };
+}
 
 export async function getAllUsers(search?: string) {
   let query = supabase.from("profiles").select("id, full_name, cpf, phone, created_at").order("created_at", { ascending: false });
@@ -230,6 +271,27 @@ export async function adminDeleteEvent(eventId: string) {
 // ============================================================
 // ADMIN — ORDERS
 // ============================================================
+
+export async function getAllOrdersPaginated(
+  filters?: { status?: string; search?: string },
+  range?: { from: number; to: number }
+) {
+  let query = supabase
+    .from("orders")
+    .select("id, status, total, platform_fee, payment_method, created_at, buyer_id, event_id, events(title), profiles!orders_buyer_id_fkey(full_name, email)", { count: "exact" })
+    .order("created_at", { ascending: false });
+
+  if (filters?.status && filters.status !== "all") query = query.eq("status", filters.status);
+  if (filters?.search) {
+    const safeSearch = filters.search.replace(/[%_]/g, "");
+    query = query.ilike("id", `%${safeSearch}%`);
+  }
+  if (range) query = query.range(range.from, range.to);
+
+  const { data, error, count } = await query;
+  if (error) throw error;
+  return { data: data || [], count: count ?? 0 };
+}
 
 export async function getAllOrders(filters?: { status?: string; search?: string }) {
   let query = supabase

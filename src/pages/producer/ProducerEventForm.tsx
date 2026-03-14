@@ -27,7 +27,7 @@ import { useIBGEStates, useIBGECities } from "@/hooks/useIBGELocations";
 import { fetchAddress } from "@/lib/cep";
 import { generateUniqueSlug } from "@/lib/slug";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { cn } from "@/lib/utils";
+import { cn, formatBRL } from "@/lib/utils";
 import { InlineImageCrop } from "@/components/producer/InlineImageCrop";
 
 const STEPS = [
@@ -759,7 +759,7 @@ export default function ProducerEventForm() {
                           <div className="min-w-0">
                             <p className="font-medium text-foreground truncate">{tier.name || `Lote ${i + 1}`}</p>
                             <p className="text-xs text-muted-foreground">
-                              {tier.tier_type === "free" ? "Gratuito" : `R$ ${tier.price.toFixed(2).replace(".", ",")}`}
+                              {tier.tier_type === "free" ? "Gratuito" : formatBRL(tier.price)}
                               {" · "}{tier.quantity_total} un.
                               {tier.is_half_price && " · Meia-entrada"}
                             </p>
@@ -957,7 +957,7 @@ export default function ProducerEventForm() {
                     <div key={i} className="flex justify-between p-3 rounded-lg bg-secondary text-sm">
                       <span className="font-medium">{t.name}{!t.is_visible ? " 🔒" : ""}</span>
                       <span className="text-muted-foreground">
-                        {t.tier_type === "free" ? "Grátis" : `R$ ${t.price.toFixed(2).replace(".", ",")}`} · {t.quantity_total} un.
+                        {t.tier_type === "free" ? "Grátis" : formatBRL(t.price)} · {t.quantity_total} un.
                       </span>
                     </div>
                   ))}

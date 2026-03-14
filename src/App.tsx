@@ -10,47 +10,52 @@ import { CartProvider } from "@/contexts/CartContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { MainLayout } from "@/components/MainLayout";
-import { OnboardingFlow } from "@/components/OnboardingFlow";
-import { SupportChat } from "@/components/SupportChat";
+// Public pages — lazy loaded
+const Index = lazy(() => import("./pages/Index"));
+const Produtores = lazy(() => import("./pages/Produtores"));
+const Eventos = lazy(() => import("./pages/Eventos"));
+const EventDetail = lazy(() => import("./pages/EventDetail"));
+const EventBooking = lazy(() => import("./pages/EventBooking"));
+const Carrinho = lazy(() => import("./pages/Carrinho"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const MeusIngressos = lazy(() => import("./pages/MeusIngressos"));
+const MeusPedidos = lazy(() => import("./pages/MeusPedidos"));
+const PublicCheckin = lazy(() => import("./pages/PublicCheckin"));
+const OrganizerProfile = lazy(() => import("./pages/OrganizerProfile"));
+const EmbedWidget = lazy(() => import("./pages/EmbedWidget"));
+const Privacidade = lazy(() => import("./pages/Privacidade"));
+const PoliticaPrivacidade = lazy(() => import("./pages/PoliticaPrivacidade"));
+const TermosDeUso = lazy(() => import("./pages/TermosDeUso"));
+const FilaVirtual = lazy(() => import("./pages/FilaVirtual"));
+const MeusCertificados = lazy(() => import("./pages/MeusCertificados"));
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogPost = lazy(() => import("./pages/BlogPost"));
+const Changelog = lazy(() => import("./pages/Changelog"));
+const NotificacoesConfig = lazy(() => import("./pages/NotificacoesConfig"));
+const Cidades = lazy(() => import("./pages/Cidades"));
+const Busca = lazy(() => import("./pages/Busca"));
+const MeuPerfil = lazy(() => import("./pages/MeuPerfil"));
+const EditarPerfil = lazy(() => import("./pages/EditarPerfil"));
+const AlterarSenha = lazy(() => import("./pages/AlterarSenha"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const PerfilCidade = lazy(() => import("./pages/PerfilCidade"));
+const MetodosPagamento = lazy(() => import("./pages/MetodosPagamento"));
+const PerfilNotificacoes = lazy(() => import("./pages/PerfilNotificacoes"));
+const PerfilSuporte = lazy(() => import("./pages/PerfilSuporte"));
+const Favoritos = lazy(() => import("./pages/Favoritos"));
+const Revenda = lazy(() => import("./pages/Revenda"));
+const RevendaCheckout = lazy(() => import("./pages/RevendaCheckout"));
+const RevendaSucesso = lazy(() => import("./pages/RevendaSucesso"));
+const PedidoRecuperacao = lazy(() => import("./pages/PedidoRecuperacao"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
-// Public pages — eager loaded
-import Index from "./pages/Index";
-import Produtores from "./pages/Produtores";
-import Eventos from "./pages/Eventos";
-import EventDetail from "./pages/EventDetail";
-import EventBooking from "./pages/EventBooking";
-import Carrinho from "./pages/Carrinho";
-import Checkout from "./pages/Checkout";
-import MeusIngressos from "./pages/MeusIngressos";
-import MeusPedidos from "./pages/MeusPedidos";
-import PublicCheckin from "./pages/PublicCheckin";
-import OrganizerProfile from "./pages/OrganizerProfile";
-import EmbedWidget from "./pages/EmbedWidget";
-import Privacidade from "./pages/Privacidade";
-import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
-import TermosDeUso from "./pages/TermosDeUso";
-import FilaVirtual from "./pages/FilaVirtual";
-import MeusCertificados from "./pages/MeusCertificados";
-import Blog from "./pages/Blog";
-import BlogPost from "./pages/BlogPost";
-import Changelog from "./pages/Changelog";
-import NotificacoesConfig from "./pages/NotificacoesConfig";
-import Cidades from "./pages/Cidades";
-import Busca from "./pages/Busca";
-import MeuPerfil from "./pages/MeuPerfil";
-import EditarPerfil from "./pages/EditarPerfil";
-import AlterarSenha from "./pages/AlterarSenha";
-import ResetPassword from "./pages/ResetPassword";
-import PerfilCidade from "./pages/PerfilCidade";
-import MetodosPagamento from "./pages/MetodosPagamento";
-import PerfilNotificacoes from "./pages/PerfilNotificacoes";
-import PerfilSuporte from "./pages/PerfilSuporte";
-import Favoritos from "./pages/Favoritos";
-import Revenda from "./pages/Revenda";
-import RevendaCheckout from "./pages/RevendaCheckout";
-import RevendaSucesso from "./pages/RevendaSucesso";
-import PedidoRecuperacao from "./pages/PedidoRecuperacao";
-import NotFound from "./pages/NotFound";
+// Global components — lazy loaded (import framer-motion)
+const OnboardingFlow = lazy(() =>
+  import("@/components/OnboardingFlow").then(m => ({ default: m.OnboardingFlow }))
+);
+const SupportChat = lazy(() =>
+  import("@/components/SupportChat").then(m => ({ default: m.SupportChat }))
+);
 
 // Producer pages — lazy loaded
 const ProducerLayout = lazy(() => import("./pages/producer/ProducerLayout"));
@@ -246,8 +251,12 @@ const App = () => {
             </Routes>
             </Suspense>
             <MobileBottomNav />
-            <OnboardingFlow />
-            <SupportChat />
+            <Suspense fallback={null}>
+              <OnboardingFlow />
+            </Suspense>
+            <Suspense fallback={null}>
+              <SupportChat />
+            </Suspense>
           </CartProvider>
         </AuthProvider>
       </BrowserRouter>

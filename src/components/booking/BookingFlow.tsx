@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { createPayment, type CreditCardData } from "@/lib/api-payment";
 import { formatCPF } from "@/lib/validators";
 import { toast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
+import { cn, formatBRL } from "@/lib/utils";
 
 interface BookingFlowProps {
   open: boolean;
@@ -290,7 +290,7 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
                         ? subtotal * (coupon.discount_value / 100)
                         : coupon.discount_value;
                     setDiscount(Math.min(discountAmount, subtotal));
-                    toast({ title: "Cupom aplicado!", description: `Desconto de R$ ${discountAmount.toFixed(2).replace(".", ",")}` });
+                    toast({ title: "Cupom aplicado!", description: `Desconto de ${formatBRL(discountAmount)}` });
                   }
                 } catch {
                   toast({ title: "Cupom inválido", description: "Verifique o código e tente novamente.", variant: "destructive" });

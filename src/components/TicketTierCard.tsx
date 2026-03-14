@@ -1,6 +1,6 @@
 import { Minus, Plus, AlertCircle, Bell, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, formatBRLOrFree } from "@/lib/utils";
 import { useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { joinWaitlist } from "@/lib/api";
@@ -47,9 +47,6 @@ export function TicketTierCard({
 
   const increment = () => setQuantity((q) => Math.min(q + 1, Math.min(maxPerOrder, available)));
   const decrement = () => setQuantity((q) => Math.max(q - 1, minPerOrder));
-
-  const formatPrice = (v: number) =>
-    v === 0 ? "Grátis" : `R$ ${v.toFixed(2).replace(".", ",")}`;
 
   const formatCountdown = (date: Date) => {
     const diff = date.getTime() - now.getTime();
@@ -111,9 +108,9 @@ export function TicketTierCard({
         {description && <p className="text-sm text-muted-foreground">{description}</p>}
         <div className="flex items-baseline gap-2">
           {originalPrice && originalPrice > price && (
-            <span className="text-sm text-muted-foreground line-through">{formatPrice(originalPrice)}</span>
+            <span className="text-sm text-muted-foreground line-through">{formatBRLOrFree(originalPrice)}</span>
           )}
-          <span className="font-display font-bold text-foreground">{formatPrice(price)}</span>
+          <span className="font-display font-bold text-foreground">{formatBRLOrFree(price)}</span>
           {tierType === "free" && <span className="text-xs text-muted-foreground">(Gratuito)</span>}
         </div>
         {isNotYetOnSale && salesStart && (

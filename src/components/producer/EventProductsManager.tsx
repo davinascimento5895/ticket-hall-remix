@@ -17,6 +17,7 @@ import {
 } from "@/lib/api-products";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { formatBRL } from "@/lib/utils";
 
 interface Props {
   eventId: string;
@@ -67,7 +68,6 @@ export function EventProductsManager({ eventId }: Props) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["event-products", eventId] }),
   });
 
-  const fmt = (v: number) => `R$ ${Number(v).toFixed(2).replace(".", ",")}`;
 
   return (
     <Card>
@@ -103,7 +103,7 @@ export function EventProductsManager({ eventId }: Props) {
                   )}
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{p.name}</p>
-                    <p className="text-xs text-muted-foreground">{fmt(p.price)}</p>
+                    <p className="text-xs text-muted-foreground">{formatBRL(p.price)}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">

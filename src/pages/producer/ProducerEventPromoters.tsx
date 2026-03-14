@@ -17,8 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { getPromoters, createPromoter, updatePromoter, deletePromoter } from "@/lib/api-promoters";
 import { toast } from "@/hooks/use-toast";
-
-const fmt = (v: number) => `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
+import { formatBRL } from "@/lib/utils";
 
 export default function ProducerEventPromoters() {
   const { id: eventId } = useParams();
@@ -162,12 +161,12 @@ function EventPromoterLinks({ eventId, userId }: { eventId: string; userId: stri
                     </div>
                     <div className="text-xs text-muted-foreground space-y-0.5">
                       <p className="flex items-center gap-1"><LinkIcon className="h-3 w-3" /> Código: <code className="bg-muted px-1 rounded">{a.tracking_code}</code></p>
-                      <p>Comissão: {a.commission_type === "percentage" ? `${a.commission_value}%` : fmt(a.commission_value)}</p>
+                      <p>Comissão: {a.commission_type === "percentage" ? `${a.commission_value}%` : formatBRL(a.commission_value)}</p>
                       <div className="flex gap-4 mt-1">
-                        <span>Receita: {fmt(a.revenue_generated)}</span>
+                        <span>Receita: {formatBRL(a.revenue_generated)}</span>
                         <span>Conversões: {a.conversions || 0}</span>
                         <span>Cliques: {a.clicks || 0}</span>
-                        <span>Comissão Total: {fmt(a.commission_total)}</span>
+                        <span>Comissão Total: {formatBRL(a.commission_total)}</span>
                       </div>
                     </div>
                   </div>
@@ -348,9 +347,9 @@ function PromoterManager({ producerId }: { producerId: string }) {
                       {p.email && <p>{p.email}</p>}
                       {p.phone && <p>{p.phone}</p>}
                       <div className="flex gap-4 mt-1">
-                        <span>Vendas: {fmt(p.total_sales || 0)}</span>
-                        <span>Comissão: {fmt(p.total_commission_earned || 0)}</span>
-                        <span>Pago: {fmt(p.total_commission_paid || 0)}</span>
+                        <span>Vendas: {formatBRL(p.total_sales || 0)}</span>
+                        <span>Comissão: {formatBRL(p.total_commission_earned || 0)}</span>
+                        <span>Pago: {formatBRL(p.total_commission_paid || 0)}</span>
                       </div>
                     </div>
                   </div>

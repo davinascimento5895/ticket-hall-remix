@@ -1,5 +1,6 @@
 import jsPDF from "jspdf";
 import type { TicketDownloadData } from "@/components/checkout/TicketDownloadCard";
+import { formatBRL } from "@/lib/utils";
 import logoSvgUrl from "@/assets/logo-full-black.svg";
 
 const PRIMARY_COLOR: [number, number, number] = [234, 88, 12];
@@ -37,10 +38,6 @@ function dashedLine(doc: jsPDF, x1: number, y: number, x2: number) {
     doc.line(x, y, end, y);
     x = end + gapLen;
   }
-}
-
-function fmtCurrency(v: number) {
-  return `R$ ${v.toFixed(2).replace(".", ",")}`;
 }
 
 export async function generateTicketPDF(data: TicketDownloadData) {
@@ -169,7 +166,7 @@ export async function generateTicketPDF(data: TicketDownloadData) {
   if (data.tierPrice != null && data.tierPrice > 0) {
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text(fmtCurrency(data.tierPrice), boxX + 4, y + 20);
+    doc.text(formatBRL(data.tierPrice), boxX + 4, y + 20);
   }
 
   // QR code on the right
@@ -269,7 +266,7 @@ export async function generateTicketPDF(data: TicketDownloadData) {
     detailRows.push(["Pagamento", methodLabels[data.paymentMethod] || data.paymentMethod]);
   }
   if (data.tierPrice != null) {
-    detailRows.push(["Valor do ingresso", fmtCurrency(data.tierPrice)]);
+    detailRows.push(["Valor do ingresso", formatBRL(data.tierPrice)]);
   }
 
   doc.setFontSize(9);

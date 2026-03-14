@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
+import { formatBRL } from "@/lib/utils";
 
 export default function ProducerEventTicketsTab() {
   const { id } = useParams();
@@ -41,8 +42,6 @@ export default function ProducerEventTicketsTab() {
     enabled: !!id,
     staleTime: 30_000,
   });
-
-  const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
 
   return (
     <div className="space-y-6">
@@ -113,7 +112,7 @@ export default function ProducerEventTicketsTab() {
                         <span className="text-foreground font-medium">{tier.quantity_sold || 0}</span>
                         <span className="text-muted-foreground">/{tier.quantity_total}</span>
                       </td>
-                       <td className="p-3">{tier.tier_type === "free" ? "Grátis" : fmt(tier.price || 0)}</td>
+                       <td className="p-3">{tier.tier_type === "free" ? "Grátis" : formatBRL(tier.price || 0)}</td>
                        <td className="p-3">
                         {tier.is_visible !== false ? (
                           <span className="inline-flex items-center gap-1 text-xs text-primary"><Eye className="h-3.5 w-3.5" />Visível</span>

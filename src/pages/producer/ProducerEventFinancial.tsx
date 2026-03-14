@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { exportToCSV, orderCSVColumns } from "@/lib/csv-export";
 import { useState } from "react";
+import { formatBRL } from "@/lib/utils";
 
 export default function ProducerEventFinancial() {
   const { id } = useParams();
@@ -27,8 +28,6 @@ export default function ProducerEventFinancial() {
     },
     enabled: !!id,
   });
-
-  const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
 
   const paid = orders?.filter((o) => o.status === "paid") || [];
   const pending = orders?.filter((o) => o.status === "pending") || [];
@@ -81,7 +80,7 @@ export default function ProducerEventFinancial() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground uppercase font-medium">Vendas Totais</p>
-                  <p className="text-xl font-display font-bold">{fmt(totalSold)}</p>
+                  <p className="text-xl font-display font-bold">{formatBRL(totalSold)}</p>
                 </div>
               </div>
             </CardContent>
@@ -95,7 +94,7 @@ export default function ProducerEventFinancial() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground uppercase font-medium">Em Processamento</p>
-                  <p className="text-xl font-display font-bold">{fmt(totalPending)}</p>
+                  <p className="text-xl font-display font-bold">{formatBRL(totalPending)}</p>
                 </div>
               </div>
             </CardContent>
@@ -109,7 +108,7 @@ export default function ProducerEventFinancial() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground uppercase font-medium">Canceladas</p>
-                  <p className="text-xl font-display font-bold">{fmt(totalCancelled)}</p>
+                  <p className="text-xl font-display font-bold">{formatBRL(totalCancelled)}</p>
                 </div>
               </div>
             </CardContent>
@@ -123,8 +122,8 @@ export default function ProducerEventFinancial() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground uppercase font-medium">Repasse</p>
-                  <p className="text-xl font-display font-bold">{fmt(totalPayout)}</p>
-                  <p className="text-xs text-muted-foreground">Taxa: {fmt(totalFees)}</p>
+                  <p className="text-xl font-display font-bold">{formatBRL(totalPayout)}</p>
+                  <p className="text-xs text-muted-foreground">Taxa: {formatBRL(totalFees)}</p>
                 </div>
               </div>
             </CardContent>
@@ -178,11 +177,11 @@ export default function ProducerEventFinancial() {
                        <td className="p-3 font-mono text-xs">{order.id.slice(0, 8)}</td>
                        <td className="p-3">{order.profiles?.full_name || "—"}</td>
                        <td className="p-3 text-muted-foreground">{new Date(order.created_at).toLocaleDateString("pt-BR")}</td>
-                       <td className="p-3">{fmt(order.subtotal || 0)}</td>
-                       <td className="p-3 text-muted-foreground">{order.discount_amount > 0 ? `-${fmt(order.discount_amount)}` : "—"}</td>
-                       <td className="p-3">{fmt(order.total || 0)}</td>
-                       <td className="p-3 text-muted-foreground">{fmt(order.platform_fee || 0)}</td>
-                       <td className="p-3 font-medium">{fmt((order.total || 0) - (order.platform_fee || 0))}</td>
+                       <td className="p-3">{formatBRL(order.subtotal || 0)}</td>
+                       <td className="p-3 text-muted-foreground">{order.discount_amount > 0 ? `-${formatBRL(order.discount_amount)}` : "—"}</td>
+                       <td className="p-3">{formatBRL(order.total || 0)}</td>
+                       <td className="p-3 text-muted-foreground">{formatBRL(order.platform_fee || 0)}</td>
+                       <td className="p-3 font-medium">{formatBRL((order.total || 0) - (order.platform_fee || 0))}</td>
                        <td className="p-3">{statusBadge(order.status)}</td>
                     </tr>
                   ))}
@@ -190,11 +189,11 @@ export default function ProducerEventFinancial() {
                 <tfoot>
                    <tr className="border-t border-border font-medium">
                      <td colSpan={3} className="p-3 text-right text-muted-foreground">Total</td>
-                     <td className="p-3">{fmt(filteredOrders.reduce((s: number, o: any) => s + (o.subtotal || 0), 0))}</td>
-                     <td className="p-3 text-muted-foreground">{fmt(filteredOrders.reduce((s: number, o: any) => s + (o.discount_amount || 0), 0))}</td>
-                     <td className="p-3">{fmt(filteredOrders.reduce((s: number, o: any) => s + (o.total || 0), 0))}</td>
-                     <td className="p-3 text-muted-foreground">{fmt(filteredOrders.reduce((s: number, o: any) => s + (o.platform_fee || 0), 0))}</td>
-                     <td className="p-3">{fmt(filteredOrders.reduce((s: number, o: any) => s + ((o.total || 0) - (o.platform_fee || 0)), 0))}</td>
+                     <td className="p-3">{formatBRL(filteredOrders.reduce((s: number, o: any) => s + (o.subtotal || 0), 0))}</td>
+                     <td className="p-3 text-muted-foreground">{formatBRL(filteredOrders.reduce((s: number, o: any) => s + (o.discount_amount || 0), 0))}</td>
+                     <td className="p-3">{formatBRL(filteredOrders.reduce((s: number, o: any) => s + (o.total || 0), 0))}</td>
+                     <td className="p-3 text-muted-foreground">{formatBRL(filteredOrders.reduce((s: number, o: any) => s + (o.platform_fee || 0), 0))}</td>
+                     <td className="p-3">{formatBRL(filteredOrders.reduce((s: number, o: any) => s + ((o.total || 0) - (o.platform_fee || 0)), 0))}</td>
                      <td className="p-3"></td>
                    </tr>
                 </tfoot>

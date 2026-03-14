@@ -1,5 +1,4 @@
 import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { Search, RotateCcw, Download, FileText } from "lucide-react";
 import { exportToCSV, orderCSVColumns } from "@/lib/csv-export";
 import { toast } from "@/hooks/use-toast";
@@ -9,9 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { RefundDialog } from "@/components/RefundDialog";
-import { getEventOrders } from "@/lib/api-producer";
+import { getEventOrdersPaginated } from "@/lib/api-producer";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { formatBRL } from "@/lib/utils";
+import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
 
 export default function ProducerEventOrders() {
   const { id } = useParams();
@@ -19,22 +20,31 @@ export default function ProducerEventOrders() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [refundOrder, setRefundOrder] = useState<any>(null);
 
-  const { data: orders, isLoading } = useQuery({
-    queryKey: ["event-orders", id],
-    queryFn: () => getEventOrders(id!),
+  const {
+    items: orders,
+    totalCount,
+    page,
+    totalPages,
+    setPage,
+    resetPage,
+    isLoading,
+    isFetching,
+  } = usePaginatedQuery({
+    queryKey: ["event-orders", id, statusFilter, search],
+    queryFn: (range) =>
+      getEventOrdersPaginated(
+        id!,
+        { status: statusFilter, search },
+        range
+      ),
+    pageSize: 20,
     enabled: !!id,
   });
 
-  const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
-
-  const filtered = orders?.filter((o: any) => {
-    if (statusFilter !== "all" && o.status !== statusFilter) return false;
-    if (search) {
-      const s = search.toLowerCase();
-      return o.profiles?.full_name?.toLowerCase().includes(s) || o.id.includes(s);
-    }
-    return true;
-  }) || [];
+  // Reset page when filters change
+  useEffect(() => {
+    resetPage();
+  }, [statusFilter, search, resetPage]);
 
   const statuses = [
     { value: "all", label: "Todos" },
@@ -47,7 +57,7 @@ export default function ProducerEventOrders() {
   return (
     <div className="space-y-6">
       <div className="flex justify-end">
-        <Button variant="outline" size="sm" onClick={() => filtered.length && exportToCSV(filtered, orderCSVColumns, `pedidos_${id}`)} disabled={!filtered.length}>
+        <Button variant="outline" size="sm" onClick={() => orders.length && exportToCSV(orders, orderCSVColumns, `pedidos_${id}`)} disabled={!orders.length}>
           <Download className="h-4 w-4 mr-1" /> CSV
         </Button>
       </div>
@@ -74,7 +84,7 @@ export default function ProducerEventOrders() {
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-4 space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
-          ) : filtered.length === 0 ? (
+          ) : orders.length === 0 ? (
             <p className="text-sm text-muted-foreground py-8 text-center">Nenhum pedido encontrado.</p>
           ) : (
             <div className="overflow-x-auto">
@@ -91,11 +101,11 @@ export default function ProducerEventOrders() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((order: any) => (
+                  {orders.map((order: any) => (
                     <tr key={order.id} className="border-b border-border/50 hover:bg-muted/30">
                       <td className="p-3 font-mono text-xs">{order.id.slice(0, 8)}</td>
                       <td className="p-3">{order.profiles?.full_name || "—"}</td>
-                      <td className="p-3">{fmt(order.total)}</td>
+                      <td className="p-3">{formatBRL(order.total)}</td>
                       <td className="p-3 text-muted-foreground">{order.payment_method || "—"}</td>
                       <td className="p-3"><OrderStatusBadge status={order.status} /></td>
                       <td className="p-3 text-muted-foreground">{new Date(order.created_at).toLocaleDateString("pt-BR")}</td>
@@ -134,6 +144,23 @@ export default function ProducerEventOrders() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* Pagination controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 pt-4 pb-4">
+              <p className="text-sm text-muted-foreground">
+                Página {page} de {totalPages} ({totalCount} registros)
+              </p>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}>
+                  Anterior
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>
+                  Próximo
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>

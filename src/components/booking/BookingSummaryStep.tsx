@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
+import { cn, formatBRL } from "@/lib/utils";
 import { type CreditCardData, getInstallmentOptions } from "@/lib/api-payment";
 import { validateCPF, formatCPF } from "@/lib/validators";
 import { toast } from "@/hooks/use-toast";
@@ -36,8 +36,6 @@ interface Props {
   payerCpf: string;
   onPayerCpfChange: (cpf: string) => void;
 }
-
-const fmt = (v: number) => `R$ ${Number(v).toFixed(2).replace(".", ",")}`;
 
 const paymentMethods = [
   { id: "pix", label: "PIX", icon: QrCode, desc: "Aprovação instantânea" },
@@ -111,7 +109,7 @@ export function BookingSummaryStep({
           <Separator className="my-1.5" />
           <div className="flex justify-between text-sm">
             <span>{quantity}x {selectedTier?.name}</span>
-            <span className="font-medium">{fmt(subtotal)}</span>
+            <span className="font-medium">{formatBRL(subtotal)}</span>
           </div>
           {selectedSeat && (
             <p className="text-xs text-muted-foreground">
@@ -121,19 +119,19 @@ export function BookingSummaryStep({
           {platformFee > 0 && (
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>Taxa de serviço</span>
-              <span>{fmt(platformFee)}</span>
+              <span>{formatBRL(platformFee)}</span>
             </div>
           )}
           {discount > 0 && (
             <div className="flex justify-between text-xs text-primary">
               <span>Desconto</span>
-              <span>-{fmt(discount)}</span>
+              <span>-{formatBRL(discount)}</span>
             </div>
           )}
           <Separator className="my-1.5" />
           <div className="flex justify-between font-bold">
             <span>Total</span>
-            <span>{fmt(total)}</span>
+            <span>{formatBRL(total)}</span>
           </div>
         </div>
       </div>
@@ -272,7 +270,7 @@ export function BookingSummaryStep({
 
       {/* Confirm button */}
       <Button className="w-full" size="lg" onClick={handleConfirm} disabled={isProcessing}>
-        {isProcessing ? "Processando..." : isFree ? "Confirmar inscrição" : `Pagar ${fmt(total)}`}
+        {isProcessing ? "Processando..." : isFree ? "Confirmar inscrição" : `Pagar ${formatBRL(total)}`}
       </Button>
     </div>
   );

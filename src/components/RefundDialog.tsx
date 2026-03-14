@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { formatBRL } from "@/lib/utils";
 
 interface Props {
   open: boolean;
@@ -120,8 +121,6 @@ export function RefundDialog({ open, onOpenChange, order }: Props) {
     onError: (err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
   });
 
-  const fmt = (v: number) => `R$ ${Number(v).toFixed(2).replace(".", ",")}`;
-
   const toggleTicket = (ticketId: string) => {
     setSelectedTicketIds((prev) =>
       prev.includes(ticketId) ? prev.filter((id) => id !== ticketId) : [...prev, ticketId]
@@ -135,7 +134,7 @@ export function RefundDialog({ open, onOpenChange, order }: Props) {
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Reembolsar pedido</DialogTitle>
-          <DialogDescription>Pedido #{order.id.slice(0, 8)} · Total: {fmt(order.total)}</DialogDescription>
+          <DialogDescription>Pedido #{order.id.slice(0, 8)} · Total: {formatBRL(order.total)}</DialogDescription>
         </DialogHeader>
 
         {/* Existing refunds */}
@@ -145,14 +144,14 @@ export function RefundDialog({ open, onOpenChange, order }: Props) {
             {existingRefunds.map((r: any) => (
               <div key={r.id} className="flex items-center justify-between text-sm p-2 rounded bg-secondary">
                 <div>
-                  <span className="font-medium">{fmt(r.amount)}</span>
+                  <span className="font-medium">{formatBRL(r.amount)}</span>
                   {r.reason && <span className="text-muted-foreground ml-2">— {r.reason}</span>}
                 </div>
                 <Badge variant="outline">{r.status}</Badge>
               </div>
             ))}
             <p className="text-xs text-muted-foreground">
-              Total reembolsado: {fmt(totalRefunded)} · Restante: {fmt(maxRefundable)}
+              Total reembolsado: {formatBRL(totalRefunded)} · Restante: {formatBRL(maxRefundable)}
             </p>
           </div>
         )}
@@ -168,7 +167,7 @@ export function RefundDialog({ open, onOpenChange, order }: Props) {
                 size="sm"
                 onClick={() => setRefundType("full")}
               >
-                Reembolso total ({fmt(maxRefundable)})
+                Reembolso total ({formatBRL(maxRefundable)})
               </Button>
               <Button
                 variant={refundType === "partial" ? "default" : "outline"}
@@ -210,7 +209,7 @@ export function RefundDialog({ open, onOpenChange, order }: Props) {
                             <div className="flex-1 min-w-0">
                               <p className="text-sm">{ticket.attendee_name || "Sem nome"}</p>
                               <p className="text-xs text-muted-foreground">
-                                {ticket.ticket_tiers?.name} · {fmt(ticket.ticket_tiers?.price || 0)}
+                                {ticket.ticket_tiers?.name} · {formatBRL(ticket.ticket_tiers?.price || 0)}
                               </p>
                             </div>
                           </label>

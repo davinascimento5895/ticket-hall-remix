@@ -38,25 +38,16 @@ export async function getEvents(filters?: {
   return data;
 }
 
-/** Get event by slug. Published events are public; producers can also see their own drafts. */
+/** Get event by slug. RLS controls visibility — published for everyone, own events for producers. */
 export async function getEventBySlug(slug: string) {
-  // First try published
   const { data, error } = await supabase
     .from("events")
     .select("*")
     .eq("slug", slug)
-    .eq("status", "published")
-    .single();
-  if (!error && data) return data;
-
-  // If not found as published, try as the producer's own event (RLS allows producers to see their own)
-  const { data: ownEvent, error: ownError } = await supabase
-    .from("events")
-    .select("*")
-    .eq("slug", slug)
-    .single();
-  if (ownError) throw ownError;
-  return ownEvent;
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error("Evento não encontrado");
+  return data;
 }
 
 /** Get ticket tiers for an event */

@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { createPayment, type CreditCardData } from "@/lib/api-payment";
 import { getEventBySlug, getEventTiers } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
+import { cn, formatBRL } from "@/lib/utils";
 import { SEOHead } from "@/components/SEOHead";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -314,7 +314,7 @@ export default function EventBooking() {
                           ? subtotal * (coupon.discount_value / 100)
                           : coupon.discount_value;
                       setDiscount(Math.min(discountAmount, subtotal));
-                      toast({ title: "Cupom aplicado!", description: `Desconto de R$ ${discountAmount.toFixed(2).replace(".", ",")}` });
+                      toast({ title: "Cupom aplicado!", description: `Desconto de ${formatBRL(discountAmount)}` });
                     }
                   } catch {
                     toast({ title: "Cupom inválido", description: "Verifique o código e tente novamente.", variant: "destructive" });

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { CalendarDays, MapPin, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatBRL } from "@/lib/utils";
 
 /**
  * Embeddable widget for external sites.
@@ -43,7 +44,6 @@ export default function EmbedWidget() {
     enabled: !!event?.id,
   });
 
-  const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
   const isDark = theme === "dark";
 
   const bgClass = isDark ? "bg-[hsl(240,6%,7%)] text-[hsl(240,5%,96%)]" : "bg-white text-gray-900";
@@ -108,7 +108,7 @@ export default function EmbedWidget() {
                 return (
                   <div key={t.id} className={`flex justify-between text-sm py-1 px-2 rounded ${isDark ? "bg-[hsl(240,5%,15%)]" : "bg-gray-100"}`}>
                     <span className={soldOut ? "line-through opacity-60" : ""}>{t.name}</span>
-                    <span className="font-medium">{soldOut ? "Esgotado" : t.price ? fmt(t.price) : "Grátis"}</span>
+                    <span className="font-medium">{soldOut ? "Esgotado" : t.price ? formatBRL(t.price) : "Grátis"}</span>
                   </div>
                 );
               })}

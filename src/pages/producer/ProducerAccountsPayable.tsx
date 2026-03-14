@@ -11,8 +11,7 @@ import { DataTable, DataTableColumn } from "@/components/DataTable";
 import { getFinancialTransactions, createFinancialTransaction, updateFinancialTransaction, deleteFinancialTransaction } from "@/lib/api-financial";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-
-const fmt = (v: number) => `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
+import { formatBRL } from "@/lib/utils";
 
 const statusLabels: Record<string, string> = { pending: "Pendente", confirmed: "Confirmado", paid: "Pago", cancelled: "Cancelado" };
 const statusVariants: Record<string, string> = { pending: "secondary", confirmed: "default", paid: "default", cancelled: "destructive" };
@@ -73,7 +72,7 @@ export default function ProducerAccountsPayable({ producerId }: { producerId: st
   const columns: DataTableColumn<any>[] = [
     { key: "description", header: "Descrição", render: (row) => <span className="font-medium">{row.description}</span> },
     { key: "category", header: "Categoria", render: (row) => <span className="text-sm capitalize">{row.category?.replace("_", " ")}</span> },
-    { key: "amount", header: "Valor", render: (row) => <span className="font-semibold text-red-600">{fmt(row.amount)}</span> },
+    { key: "amount", header: "Valor", render: (row) => <span className="font-semibold text-red-600">{formatBRL(row.amount)}</span> },
     { key: "due_date", header: "Vencimento", render: (row) => row.due_date ? format(new Date(row.due_date), "dd/MM/yyyy") : "—" },
     { key: "status", header: "Status", render: (row) => <Badge variant={statusVariants[row.status] as any}>{statusLabels[row.status] || row.status}</Badge> },
     {
@@ -108,7 +107,7 @@ export default function ProducerAccountsPayable({ producerId }: { producerId: st
               <SelectItem value="cancelled">Cancelado</SelectItem>
             </SelectContent>
           </Select>
-          <span className="text-sm text-muted-foreground">Total: <strong className="text-red-600">{fmt(total)}</strong></span>
+          <span className="text-sm text-muted-foreground">Total: <strong className="text-red-600">{formatBRL(total)}</strong></span>
         </div>
         <Button size="sm" onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-1" /> Nova despesa</Button>
       </div>

@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Shield } from "lucide-react";
+import { formatBRL } from "@/lib/utils";
 
 interface InsuranceToggleProps {
   enabled: boolean;
@@ -25,7 +26,7 @@ export function InsuranceToggle({ enabled, onEnabledChange, price }: InsuranceTo
         </div>
         <div className="text-right shrink-0">
           <p className="text-sm font-semibold text-foreground">
-            R$ {price.toFixed(2).replace(".", ",")}
+            {formatBRL(price)}
           </p>
           <Switch checked={enabled} onCheckedChange={onEnabledChange} />
         </div>

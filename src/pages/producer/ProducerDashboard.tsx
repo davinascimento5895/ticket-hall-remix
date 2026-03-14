@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { useAuth } from "@/contexts/AuthContext";
 import { getProducerDashboardStats } from "@/lib/api-producer";
+import { formatBRL } from "@/lib/utils";
 
 export default function ProducerDashboard() {
   const { user } = useAuth();
@@ -18,10 +19,8 @@ export default function ProducerDashboard() {
     staleTime: 30_000,
   });
 
-  const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
-
   const metrics = [
-    { label: "Receita Total", value: stats ? fmt(stats.totalRevenue) : "—", icon: DollarSign, accent: "bg-primary/10 text-primary" },
+    { label: "Receita Total", value: stats ? formatBRL(stats.totalRevenue) : "—", icon: DollarSign, accent: "bg-primary/10 text-primary" },
     { label: "Ingressos Vendidos", value: stats?.ticketsSold?.toLocaleString("pt-BR") || "0", icon: Ticket, accent: "bg-accent/10 text-accent" },
     { label: "Total de Eventos", value: stats?.totalEvents?.toString() || "0", icon: CalendarDays, accent: "bg-info/10 text-info" },
     { label: "Eventos Próximos", value: stats?.upcomingEvents?.toString() || "0", icon: TrendingUp, accent: "bg-primary/10 text-primary" },
@@ -89,7 +88,7 @@ export default function ProducerDashboard() {
                     <tr key={order.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                       <td className="px-6 py-3 text-foreground">{order.profiles?.full_name || "—"}</td>
                       <td className="px-6 py-3 text-muted-foreground max-w-[160px] truncate">{order.events?.title || "—"}</td>
-                      <td className="px-6 py-3 text-foreground font-medium">{fmt(order.total)}</td>
+                      <td className="px-6 py-3 text-foreground font-medium">{formatBRL(order.total)}</td>
                       <td className="px-6 py-3"><OrderStatusBadge status={order.status} /></td>
                       <td className="px-6 py-3 text-muted-foreground">{new Date(order.created_at).toLocaleDateString("pt-BR")}</td>
                     </tr>

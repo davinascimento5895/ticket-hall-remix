@@ -9,6 +9,7 @@ import { getEventAnalytics } from "@/lib/api-producer";
 import { supabase } from "@/integrations/supabase/client";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { useState, useEffect } from "react";
+import { formatBRL } from "@/lib/utils";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(142 71% 45%)", "hsl(38 92% 50%)"];
 
@@ -101,8 +102,6 @@ export default function ProducerEventDashboardTab() {
     return () => clearInterval(interval);
   }, [event?.start_date]);
 
-  const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
-
   // Computed metrics
   const paidOrders = orders?.filter((o) => o.status === "paid") || [];
   const totalRevenue = paidOrders.reduce((s, o) => s + (o.total || 0), 0);
@@ -177,7 +176,7 @@ export default function ProducerEventDashboardTab() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Vendas Líquidas</p>
-                  <p className="text-2xl font-display font-bold">{fmt(netRevenue)}</p>
+                  <p className="text-2xl font-display font-bold">{formatBRL(netRevenue)}</p>
                 </div>
               </div>
             </CardContent>
@@ -206,7 +205,7 @@ export default function ProducerEventDashboardTab() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Ticket Médio</p>
-                  <p className="text-2xl font-display font-bold">{fmt(avgTicket)}</p>
+                  <p className="text-2xl font-display font-bold">{formatBRL(avgTicket)}</p>
                 </div>
               </div>
             </CardContent>
@@ -308,7 +307,7 @@ export default function ProducerEventDashboardTab() {
                   <Pie data={paymentPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
                     {paymentPieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                   </Pie>
-                  <Tooltip formatter={(value: number) => fmt(value)} />
+                  <Tooltip formatter={(value: number) => formatBRL(value)} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
@@ -386,8 +385,8 @@ export default function ProducerEventDashboardTab() {
                     <tr key={i} className="border-b border-border/50">
                       <td className="p-3 font-medium text-foreground">{t.name}</td>
                       <td className="p-3 text-muted-foreground">{t.quantity_sold || 0}/{t.quantity_total}</td>
-                      <td className="p-3">{t.tier_type === "free" ? "Grátis" : fmt(t.price || 0)}</td>
-                      <td className="p-3 font-medium">{fmt((t.quantity_sold || 0) * (t.price || 0))}</td>
+                      <td className="p-3">{t.tier_type === "free" ? "Grátis" : formatBRL(t.price || 0)}</td>
+                      <td className="p-3 font-medium">{formatBRL((t.quantity_sold || 0) * (t.price || 0))}</td>
                     </tr>
                   ))}
                 </tbody>

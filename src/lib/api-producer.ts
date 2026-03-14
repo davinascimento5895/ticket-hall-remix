@@ -120,6 +120,57 @@ export async function getEventOrders(eventId: string) {
   return data;
 }
 
+export async function getEventOrdersPaginated(
+  eventId: string,
+  filters?: { status?: string; search?: string },
+  range?: { from: number; to: number }
+) {
+  let query = supabase
+    .from("orders")
+    .select("id, status, total, platform_fee, payment_method, created_at, buyer_id, profiles!orders_buyer_id_fkey(full_name, email)", { count: "exact" })
+    .eq("event_id", eventId)
+    .order("created_at", { ascending: false });
+
+  if (filters?.status && filters.status !== "all") query = query.eq("status", filters.status);
+  if (filters?.search) {
+    const safeSearch = filters.search.replace(/[%_]/g, "");
+    query = query.ilike("id", `%${safeSearch}%`);
+  }
+  if (range) query = query.range(range.from, range.to);
+
+  const { data, error, count } = await query;
+  if (error) throw error;
+  return { data: data || [], count: count ?? 0 };
+}
+
+// ============================================================
+// PRODUCER — TICKETS (PAGINATED)
+// ============================================================
+
+export async function getEventTicketsPaginated(
+  eventId: string,
+  filters?: { status?: string; tierId?: string; search?: string },
+  range?: { from: number; to: number }
+) {
+  let query = supabase
+    .from("tickets")
+    .select("id, status, attendee_name, attendee_email, checked_in_at, created_at, tier_id, owner_id, ticket_tiers(name), profiles!tickets_owner_id_fkey(full_name, email)", { count: "exact" })
+    .eq("event_id", eventId)
+    .order("created_at", { ascending: false });
+
+  if (filters?.status && filters.status !== "all") query = query.eq("status", filters.status);
+  if (filters?.tierId && filters.tierId !== "all") query = query.eq("tier_id", filters.tierId);
+  if (filters?.search) {
+    const safeSearch = filters.search.replace(/[%_]/g, "");
+    query = query.or(`attendee_name.ilike.%${safeSearch}%,attendee_email.ilike.%${safeSearch}%`);
+  }
+  if (range) query = query.range(range.from, range.to);
+
+  const { data, error, count } = await query;
+  if (error) throw error;
+  return { data: data || [], count: count ?? 0 };
+}
+
 // ============================================================
 // PRODUCER — ANALYTICS
 // ============================================================

@@ -17,6 +17,7 @@ import { getEventCoupons, createCoupon, updateCoupon, deleteCoupon, getEventTier
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { formatBRL } from "@/lib/utils";
 import { useState } from "react";
 
 export default function ProducerEventCoupons() {
@@ -175,7 +176,7 @@ export default function ProducerEventCoupons() {
                   {coupons.map((coupon: any) => (
                     <tr key={coupon.id} className="border-b border-border/50">
                       <td className="p-3 font-mono font-medium">{coupon.code}</td>
-                      <td className="p-3">{coupon.discount_type === "percentage" ? `${coupon.discount_value}%` : `R$ ${coupon.discount_value.toFixed(2).replace(".", ",")}`}</td>
+                      <td className="p-3">{coupon.discount_type === "percentage" ? `${coupon.discount_value}%` : formatBRL(coupon.discount_value)}</td>
                       <td className="p-3 text-muted-foreground">{coupon.uses_count || 0}{coupon.max_uses ? ` / ${coupon.max_uses}` : ""}</td>
                       <td className="p-3 text-muted-foreground text-xs">
                         {coupon.valid_from ? new Date(coupon.valid_from).toLocaleDateString("pt-BR") : "—"}

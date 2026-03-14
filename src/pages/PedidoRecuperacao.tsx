@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { createPayment } from "@/lib/api-payment";
 import { toast } from "@/hooks/use-toast";
+import { formatBRL } from "@/lib/utils";
 
 export default function PedidoRecuperacao() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -55,8 +56,6 @@ export default function PedidoRecuperacao() {
 
     return () => { supabase.removeChannel(channel); };
   }, [orderId, navigate]);
-
-  const fmt = (v: number) => `R$ ${Number(v).toFixed(2).replace(".", ",")}`;
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -164,7 +163,7 @@ export default function PedidoRecuperacao() {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Total</span>
-              <span className="font-semibold">{fmt(order.total)}</span>
+              <span className="font-semibold">{formatBRL(order.total)}</span>
             </div>
             {isPending && order.expires_at && (
               <div className="flex items-center justify-between">
