@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Search, X, LayoutGrid, List, Ticket, MapPin, Plus } from "lucide-react";
+import { Search, X, LayoutGrid, List, Ticket, MapPin, Plus, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/EventCard";
@@ -17,10 +17,10 @@ import { EventFilterBar, defaultEventFilters, getDateRangeFromPreset, type Event
 import { getEvents } from "@/lib/api";
 import { RandomDiscoveryButton } from "@/components/RandomDiscoveryButton";
 import { useCityDetection } from "@/hooks/useCityDetection";
-import { cn } from "@/lib/utils";
+import { cn, formatBRLOrFree } from "@/lib/utils";
 import { isSameDay, isWithinInterval, format, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CATEGORY_OPTIONS } from "@/lib/categories";
+import { CATEGORY_OPTIONS, getCategoryLabel } from "@/lib/categories";
 
 export default function Eventos() {
   const [searchParams] = useSearchParams();
@@ -309,15 +309,14 @@ export default function Eventos() {
                   alt={featuredEvent.title}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-4">
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent">
                   {featuredEvent.category && (
                     <span className="inline-block px-2 py-0.5 text-[10px] font-medium rounded-full bg-primary/90 text-primary-foreground mb-2">
                       {CATEGORY_OPTIONS.find(c => c.value === featuredEvent.category)?.label || featuredEvent.category}
                     </span>
                   )}
-                  <h2 className="font-display text-xl md:text-2xl font-bold text-foreground mb-1">{featuredEvent.title}</h2>
-                  <p className="text-sm text-muted-foreground">
+                  <h2 className="font-display text-xl md:text-2xl font-bold text-white mb-1">{featuredEvent.title}</h2>
+                  <p className="text-sm text-white/80">
                     {new Date(featuredEvent.start_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
                     {featuredEvent.venue_city ? ` · ${featuredEvent.venue_city}` : ""}
                   </p>
@@ -325,31 +324,69 @@ export default function Eventos() {
               </a>
             )}
 
-            {/* Event grid */}
-            <div className={cn(
-              "grid gap-4",
-              gridView
-                ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
-                : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"
-            )}>
-              {(gridView ? filteredEvents : restEvents).slice(0, visibleCount).map((event: any) => (
-                <EventCard
-                  key={event.id}
-                  title={event.title}
-                  date={new Date(event.start_date).toLocaleDateString("pt-BR", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                  city={event.venue_city || "Online"}
-                  imageUrl={event.cover_image_url}
-                  priceFrom={event._minPrice ?? 0}
-                  category={event.category}
-                  slug={event.slug}
-                  eventId={event.id}
-                />
-              ))}
-            </div>
+            {/* Event grid / list */}
+            {gridView ? (
+              <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                {filteredEvents.slice(0, visibleCount).map((event: any) => (
+                  <EventCard
+                    key={event.id}
+                    title={event.title}
+                    date={new Date(event.start_date).toLocaleDateString("pt-BR", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                    city={event.venue_city || "Online"}
+                    imageUrl={event.cover_image_url}
+                    priceFrom={event._minPrice ?? 0}
+                    category={event.category}
+                    slug={event.slug}
+                    eventId={event.id}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {restEvents.slice(0, visibleCount).map((event: any) => (
+                  <a
+                    key={event.id}
+                    href={`/eventos/${event.slug}`}
+                    className="group flex items-center gap-3 rounded-lg border border-border bg-card p-2 hover:border-muted-foreground/30 transition-colors"
+                  >
+                    <div className="h-14 w-20 shrink-0 rounded-md overflow-hidden">
+                      <EventImage
+                        src={event.cover_image_url}
+                        alt={event.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-semibold text-foreground truncate">{event.title}</h3>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {new Date(event.start_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          <span className="truncate">{event.venue_city || "Online"}</span>
+                        </span>
+                        {event.category && (
+                          <span className="hidden sm:inline px-1.5 py-0.5 text-[10px] rounded-full bg-primary/10 text-primary">
+                            {getCategoryLabel(event.category)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="shrink-0 text-right pr-1">
+                      <span className="text-xs text-muted-foreground">
+                        A partir de <span className="text-foreground font-semibold">{formatBRLOrFree(event._minPrice ?? 0)}</span>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
 
             {/* Load more */}
             {(gridView ? filteredEvents : restEvents).length > visibleCount && (
