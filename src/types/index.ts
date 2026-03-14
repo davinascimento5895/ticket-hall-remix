@@ -2,7 +2,7 @@
 // TicketHall — Core TypeScript Types
 // ============================================================
 
-export type UserRole = 'admin' | 'producer' | 'buyer';
+export type UserRole = 'admin' | 'producer' | 'buyer' | 'staff';
 export type ProducerStatus = 'pending' | 'approved' | 'rejected' | 'suspended';
 export type EventStatus = 'draft' | 'published' | 'cancelled' | 'ended';
 export type EventCategory = 'music' | 'sports' | 'theater' | 'festival' | 'corporate' | 'education' | 'other';
@@ -177,7 +177,7 @@ export interface Notification {
 export type CheckoutFieldType = 'text' | 'textarea' | 'select' | 'checkbox' | 'radio' | 'date';
 export type CheckoutAppliesTo = 'order' | 'attendee';
 export type FeeType = 'percentage' | 'fixed';
-export type CheckinResult = 'success' | 'already_used' | 'invalid' | 'wrong_list' | 'not_found';
+export type CheckinResult = 'success' | 'already_used' | 'invalid' | 'invalid_qr' | 'wrong_list' | 'not_found' | 'inactive' | 'race_condition' | 'list_inactive';
 export type WebhookEventType = 'order.paid' | 'order.cancelled' | 'order.refunded' | 'ticket.checked_in' | 'ticket.transferred' | 'event.published' | 'event.cancelled';
 export type BulkMessageStatus = 'draft' | 'sending' | 'sent' | 'failed';
 export type RefundStatus = 'pending' | 'processing' | 'completed' | 'failed';
