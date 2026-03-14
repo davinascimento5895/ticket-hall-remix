@@ -63,7 +63,7 @@ export function TicketTierCard({
     if (isAdding) return;
     setIsAdding(true);
     onAdd(id, quantity);
-    setTimeout(() => setIsAdding(false), 1000);
+    setTimeout(() => setIsAdding(false), 300);
   }, [isAdding, id, quantity, onAdd]);
 
   const handleJoinWaitlist = async () => {

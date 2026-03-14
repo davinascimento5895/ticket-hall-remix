@@ -16,9 +16,11 @@ interface EventCardProps {
   slug?: string;
   eventId?: string;
   className?: string;
+  /** Prioridade de carregamento da imagem — use true APENAS no primeiro card visível */
+  priority?: boolean;
 }
 
-export function EventCard({ title, date, city, imageUrl, priceFrom, category, slug, eventId, className }: EventCardProps) {
+export function EventCard({ title, date, city, imageUrl, priceFrom, category, slug, eventId, className, priority }: EventCardProps) {
   const navigate = useNavigate();
   const Wrapper = slug ? Link : "div";
   const wrapperProps = slug ? { to: `/eventos/${slug}` } : {};
@@ -44,6 +46,7 @@ export function EventCard({ title, date, city, imageUrl, priceFrom, category, sl
           src={imageUrl}
           alt={title}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          priority={priority}
         />
         {category && (
           <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-medium rounded-full bg-primary/90 text-primary-foreground">
