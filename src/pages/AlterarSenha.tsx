@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SEOHead } from "@/components/SEOHead";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,13 +11,19 @@ import { toast } from "sonner";
 
 export default function AlterarSenha() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [sendingReset, setSendingReset] = useState(false);
 
   const handleSave = async () => {
+    if (!currentPassword) {
+      toast.error("Informe a senha atual");
+      return;
+    }
     if (!newPassword || newPassword.length < 6) {
       toast.error("A nova senha deve ter pelo menos 6 caracteres");
       return;
@@ -26,6 +33,18 @@ export default function AlterarSenha() {
       return;
     }
     setSaving(true);
+
+    // Verify current password by re-authenticating
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user?.email || "",
+      password: currentPassword,
+    });
+    if (signInError) {
+      setSaving(false);
+      toast.error("Senha atual incorreta");
+      return;
+    }
+
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     setSaving(false);
     if (error) {
@@ -33,6 +52,20 @@ export default function AlterarSenha() {
     } else {
       toast.success("Senha alterada com sucesso!");
       navigate("/meu-perfil");
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!user?.email) return;
+    setSendingReset(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setSendingReset(false);
+    if (error) {
+      toast.error("Erro ao enviar e-mail de redefinição");
+    } else {
+      toast.success("Enviamos um link de redefinição para " + user.email);
     }
   };
 
@@ -52,6 +85,30 @@ export default function AlterarSenha() {
         </div>
 
         <div className="max-w-lg mx-auto px-4 py-6 md:py-12 space-y-6">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="currentPassword" className="text-xs text-muted-foreground uppercase tracking-wider">
+                Senha atual
+              </Label>
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                disabled={sendingReset}
+                className="text-xs text-primary hover:underline disabled:opacity-50"
+              >
+                {sendingReset ? "Enviando..." : "Esqueci minha senha"}
+              </button>
+            </div>
+            <Input
+              id="currentPassword"
+              type={showPassword ? "text" : "password"}
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="Digite sua senha atual"
+              className="bg-muted/50 border-0 focus-visible:ring-1"
+            />
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="newPassword" className="text-xs text-muted-foreground uppercase tracking-wider">
               Nova senha

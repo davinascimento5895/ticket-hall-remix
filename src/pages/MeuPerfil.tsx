@@ -9,7 +9,6 @@ import { BecomeProducerModal } from "@/components/BecomeProducerModal";
 import {
   Pencil,
   Lock,
-  MapPin,
   CreditCard,
   Bell,
   HelpCircle,
@@ -51,7 +50,6 @@ export default function MeuPerfil() {
 
   const menuItems: MenuItem[] = [
     { id: "password", icon: Lock, label: "Alterar senha", href: "/meu-perfil/alterar-senha" },
-    { id: "city", icon: MapPin, label: "Cidade", href: "/meu-perfil/cidade" },
     { id: "payment", icon: CreditCard, label: "Métodos de pagamento", href: "/meu-perfil/pagamento" },
     { id: "notifications", icon: Bell, label: "Notificações", href: "/meu-perfil/notificacoes" },
     { id: "support", icon: HelpCircle, label: "Suporte", href: "/meu-perfil/suporte" },

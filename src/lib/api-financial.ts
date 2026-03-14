@@ -200,18 +200,24 @@ export async function getEventReconciliation(producerId: string) {
     const refundedOrders = eventOrders.filter(o => o.status === "refunded");
     const eventAnalytics = (analytics || []).find(a => a.event_id === event.id);
 
-    const grossRevenue = paidOrders.reduce((s, o) => s + Number(o.total), 0);
+    // Platform fee is paid BY THE BUYER on top of the ticket price.
+    // Producer receives 100% of the ticket face value (order.total - order.platform_fee).
     const platformFees = paidOrders.reduce((s, o) => s + Number(o.platform_fee || 0), 0);
     const gatewayFees = paidOrders.reduce((s, o) => s + Number(o.payment_gateway_fee || 0), 0);
     const refunds = refundedOrders.reduce((s, o) => s + Number(o.refunded_amount || 0), 0);
-    const netRevenue = grossRevenue - platformFees - gatewayFees - refunds;
+
+    // ticketRevenue = what the producer is entitled to (ticket face value, excluding platform fee)
+    const ticketRevenue = paidOrders.reduce((s, o) => s + Number(o.total) - Number(o.platform_fee || 0), 0);
+
+    // netRevenue = producer's net after gateway costs and refunds
+    const netRevenue = ticketRevenue - gatewayFees - refunds;
 
     return {
       ...event,
       ordersCount: paidOrders.length,
       ticketsSold: eventAnalytics?.tickets_sold || 0,
       ticketsCheckedIn: eventAnalytics?.tickets_checked_in || 0,
-      grossRevenue,
+      ticketRevenue,
       platformFees,
       gatewayFees,
       refunds,

@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { SEOHead } from "@/components/SEOHead";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { Bell, Mail, Smartphone, MessageSquare } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,13 +33,36 @@ export default function NotificacoesConfig() {
   // Load preferences from DB on mount
   useEffect(() => {
     if (!user?.id) return;
-    // notification_preferences table doesn't exist yet — use local defaults
-    setLoaded(true);
+    (async () => {
+      const { data, error } = await supabase
+        .from("notification_preferences" as any)
+        .select("category, email, push, sms")
+        .eq("user_id", user.id);
+      if (!error && data && (data as any[]).length > 0) {
+        const dbMap = new Map((data as any[]).map((r: any) => [r.category, r]));
+        setPrefs((prev) =>
+          prev.map((p) => {
+            const row = dbMap.get(p.id);
+            return row ? { ...p, email: row.email, push: row.push, sms: row.sms } : p;
+          })
+        );
+      }
+      setLoaded(true);
+    })();
   }, [user?.id]);
 
-  const persistPref = useCallback(async (_id: string, _channel: "email" | "push" | "sms", _value: boolean) => {
-    // TODO: persist when notification_preferences table is created
-  }, []);
+  const persistPref = useCallback(async (category: string, channel: "email" | "push" | "sms", value: boolean) => {
+    if (!user?.id) return;
+    const pref = prefs.find((p) => p.id === category);
+    if (!pref) return;
+    const row = { user_id: user.id, category, email: pref.email, push: pref.push, sms: pref.sms, [channel]: value };
+    const { error } = await supabase
+      .from("notification_preferences" as any)
+      .upsert(row as any, { onConflict: "user_id,category" });
+    if (error) {
+      toast.error("Erro ao salvar preferência");
+    }
+  }, [user?.id, prefs]);
 
   const toggle = (id: string, channel: "email" | "push" | "sms") => {
     const pref = prefs.find((p) => p.id === id);
@@ -69,36 +92,41 @@ export default function NotificacoesConfig() {
           <span className="flex items-center gap-1.5"><MessageSquare className="h-3.5 w-3.5" /> SMS</span>
         </div>
 
-        <div className="space-y-3">
-          {prefs.map((pref) => (
-            <Card key={pref.id} className="bg-card border-border">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">{pref.label}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{pref.description}</p>
+        {!loaded ? (
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20 w-full" />)}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {prefs.map((pref) => (
+              <Card key={pref.id} className="bg-card border-border">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">{pref.label}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{pref.description}</p>
+                    </div>
+                    <div className="flex items-center gap-4 shrink-0">
+                      <div className="flex flex-col items-center gap-1">
+                        <Switch checked={pref.email} onCheckedChange={() => toggle(pref.id, "email")} />
+                        <span className="text-[9px] text-muted-foreground">Email</span>
+                      </div>
+                      <div className="flex flex-col items-center gap-1">
+                        <Switch checked={pref.push} onCheckedChange={() => toggle(pref.id, "push")} />
+                        <span className="text-[9px] text-muted-foreground">Push</span>
+                      </div>
+                      <div className="flex flex-col items-center gap-1">
+                        <Switch checked={pref.sms} onCheckedChange={() => toggle(pref.id, "sms")} />
+                        <span className="text-[9px] text-muted-foreground">SMS</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-4 shrink-0">
-                    <div className="flex flex-col items-center gap-1">
-                      <Switch checked={pref.email} onCheckedChange={() => toggle(pref.id, "email")} />
-                      <span className="text-[9px] text-muted-foreground">Email</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-1">
-                      <Switch checked={pref.push} onCheckedChange={() => toggle(pref.id, "push")} />
-                      <span className="text-[9px] text-muted-foreground">Push</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-1">
-                      <Switch checked={pref.sms} onCheckedChange={() => toggle(pref.id, "sms")} />
-                      <span className="text-[9px] text-muted-foreground">SMS</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
-
     </>
   );
 }

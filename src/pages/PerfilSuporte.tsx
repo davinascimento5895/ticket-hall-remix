@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { SEOHead } from "@/components/SEOHead";
-import { ArrowLeft, Mail, MessageSquare, ExternalLink } from "lucide-react";
+import { ArrowLeft, Mail, ExternalLink } from "lucide-react";
 
 export default function PerfilSuporte() {
   const navigate = useNavigate();
@@ -14,18 +14,11 @@ export default function PerfilSuporte() {
       action: () => window.open("mailto:suporte@tickethall.com.br"),
     },
     {
-      id: "chat",
-      icon: MessageSquare,
-      label: "Chat de suporte",
-      description: "Fale com nosso assistente",
-      action: () => navigate("/"),
-    },
-    {
       id: "faq",
       icon: ExternalLink,
       label: "Perguntas frequentes",
       description: "Central de ajuda",
-      action: () => navigate("/"),
+      action: () => navigate("/faq"),
     },
   ];
 
