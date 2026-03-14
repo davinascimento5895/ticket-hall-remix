@@ -1,10 +1,13 @@
+import { useCallback } from "react";
 import { Calendar, MapPin } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { EventImage } from "@/components/EventImage";
 import { cn, formatBRLOrFree } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/categories";
+import { getEventBySlug } from "@/lib/api";
 
 interface EventCardProps {
   title: string;
@@ -22,8 +25,20 @@ interface EventCardProps {
 
 export function EventCard({ title, date, city, imageUrl, priceFrom, category, slug, eventId, className, priority }: EventCardProps) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const Wrapper = slug ? Link : "div";
   const wrapperProps = slug ? { to: `/eventos/${slug}` } : {};
+
+  // Ao hover: pré-carrega o chunk JS do EventDetail + dados do evento
+  const handlePrefetch = useCallback(() => {
+    if (!slug) return;
+    import("@/pages/EventDetail");
+    queryClient.prefetchQuery({
+      queryKey: ["event", slug],
+      queryFn: () => getEventBySlug(slug),
+      staleTime: 5 * 60 * 1000,
+    });
+  }, [slug, queryClient]);
 
   const handleBuyClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -36,6 +51,7 @@ export function EventCard({ title, date, city, imageUrl, priceFrom, category, sl
   return (
     <Wrapper
       {...wrapperProps as any}
+      onMouseEnter={handlePrefetch}
       className={cn(
         "group relative rounded-xl overflow-hidden border border-border bg-card transition-colors duration-150 hover:border-muted-foreground/30 cursor-pointer block",
         className
