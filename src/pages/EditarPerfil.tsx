@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { SEOHead } from "@/components/SEOHead";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,10 +16,9 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Camera, Lock } from "lucide-react";
+import { ArrowLeft, Camera, Lock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { EVENT_CATEGORIES } from "@/lib/categories";
-import { format } from "date-fns";
 
 const BRAZILIAN_STATES = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG",
@@ -41,6 +40,8 @@ export default function EditarPerfil() {
   );
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const email = user?.email || "";
 
@@ -58,6 +59,33 @@ export default function EditarPerfil() {
     setPreferredCategories((prev) =>
       prev.includes(value) ? prev.filter((c) => c !== value) : [...prev, value]
     );
+  };
+
+  const handleAvatarUpload = async (file: File) => {
+    if (!user) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Imagem deve ter até 5MB");
+      return;
+    }
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      toast.error("Use JPG, PNG ou WebP");
+      return;
+    }
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("event-images").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data } = supabase.storage.from("event-images").getPublicUrl(path);
+      await supabase.from("profiles").update({ avatar_url: data.publicUrl }).eq("id", user.id);
+      toast.success("Foto atualizada!");
+      await refetchRole();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao enviar imagem");
+    } finally {
+      setUploadingAvatar(false);
+    }
   };
 
   const handleSave = async () => {
@@ -138,12 +166,28 @@ export default function EditarPerfil() {
                 <AvatarImage src={profile?.avatar_url || undefined} />
                 <AvatarFallback className="bg-muted text-muted-foreground text-2xl font-semibold">{initials}</AvatarFallback>
               </Avatar>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleAvatarUpload(f);
+                  e.target.value = "";
+                }}
+              />
               <button
                 className="absolute bottom-0 right-0 flex items-center justify-center w-8 h-8 rounded-full bg-muted border-2 border-background active:scale-95 transition-transform"
                 aria-label="Alterar foto"
-                onClick={() => toast.info("Em breve: upload de foto de perfil")}
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={uploadingAvatar}
               >
-                <Camera className="h-4 w-4 text-muted-foreground" />
+                {uploadingAvatar ? (
+                  <Loader2 className="h-4 w-4 text-muted-foreground animate-spin" />
+                ) : (
+                  <Camera className="h-4 w-4 text-muted-foreground" />
+                )}
               </button>
             </div>
           </div>

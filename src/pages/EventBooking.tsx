@@ -182,6 +182,9 @@ export default function EventBooking() {
         }
 
         if (payResult.immediateConfirmation || payResult.stub) {
+          if (payResult.stub) {
+            toast({ title: "Modo de teste", description: "Gateway de pagamento não configurado. Pagamento simulado." });
+          }
           toast({ title: "Pagamento confirmado!", description: "Seus ingressos foram gerados." });
           setStep("confirmation");
         } else {

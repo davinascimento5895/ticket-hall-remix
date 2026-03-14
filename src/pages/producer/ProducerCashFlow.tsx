@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TrendingUp, TrendingDown, Wallet, Clock } from "lucide-react";
+import { TrendingUp, TrendingDown, Wallet, Clock, Info } from "lucide-react";
 import { getCashFlowSummary } from "@/lib/api-financial";
 
 const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",").replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`;
@@ -36,6 +36,15 @@ export default function ProducerCashFlow({ producerId }: { producerId: string })
 
   return (
     <div className="space-y-6">
+      {/* Fee model clarification */}
+      <div className="flex items-start gap-2 px-4 py-3 rounded-lg bg-primary/5 border border-primary/20 text-sm">
+        <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+        <span className="text-muted-foreground">
+          A taxa de plataforma é cobrada <strong className="text-foreground">diretamente do comprador</strong> no ato da compra.
+          Ao lançar receitas de ingressos, utilize o <strong className="text-foreground">valor integral do ingresso</strong> — sem descontar a taxa.
+        </span>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map((card) => (
           <Card key={card.title}>
