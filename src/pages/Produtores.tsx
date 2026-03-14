@@ -30,6 +30,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { producerFAQItems } from "@/data/faq-data";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -93,56 +94,6 @@ const securityItems = [
   },
 ];
 
-const faqItems = [
-  {
-    id: "faq-1",
-    question: "Quanto custa usar a plataforma para vender ingressos?",
-    answer:
-      "A cobrança é percentual sobre as vendas realizadas. Não há mensalidade obrigatória para começar, e você acompanha os valores com transparência no painel do produtor.",
-  },
-  {
-    id: "faq-2",
-    question: "Como funciona o repasse dos valores das vendas?",
-    answer:
-      "Os repasses seguem o fluxo configurado para o seu evento e ficam visíveis no financeiro. Você acompanha o status de cada venda e tem previsibilidade para planejar caixa e fornecedores.",
-  },
-  {
-    id: "faq-3",
-    question: "Posso criar eventos gratuitos e pagos na mesma conta?",
-    answer:
-      "Sim. Você pode publicar eventos gratuitos, pagos ou mistos, criar diferentes tipos de ingressos e organizar lotes com regras específicas conforme a estratégia do seu evento.",
-  },
-  {
-    id: "faq-4",
-    question: "Consigo personalizar lotes, viradas e cupons de desconto?",
-    answer:
-      "Sim. É possível configurar lotes com quantidades e preços diferentes, controlar viradas por data e horário e aplicar cupons por valor fixo ou percentual com limite e validade.",
-  },
-  {
-    id: "faq-5",
-    question: "Como funciona o check-in no dia do evento?",
-    answer:
-      "O check-in é feito por leitura de QR Code, com validação rápida para evitar filas. Você também pode acompanhar entradas em tempo real para ter visão clara da operação na porta.",
-  },
-  {
-    id: "faq-6",
-    question: "Dá para ter equipe com acessos diferentes para operar o evento?",
-    answer:
-      "Sim. Você pode organizar a operação com membros de equipe e permissões por função, separando responsabilidades como check-in, atendimento e gestão do evento.",
-  },
-  {
-    id: "faq-7",
-    question: "Consigo vender itens extras além do ingresso?",
-    answer:
-      "Sim. Você pode adicionar produtos e serviços complementares para aumentar o ticket médio, como experiências, itens promocionais e outros adicionais do evento.",
-  },
-  {
-    id: "faq-8",
-    question: "A plataforma oferece suporte para quem está começando?",
-    answer:
-      "Sim. O fluxo de criação é guiado, com recursos pensados para facilitar publicação, gestão e acompanhamento das vendas mesmo para quem está organizando o primeiro evento.",
-  },
-];
 
 const steps = [
   { step: "01", title: "Crie sua conta", desc: "Cadastro rápido e gratuito. Sem cartão de crédito." },
@@ -392,7 +343,7 @@ export default function Produtores() {
           </motion.div>
 
           <Accordion type="single" collapsible className="w-full rounded-xl border border-border bg-card px-6">
-            {faqItems.map((item) => (
+            {producerFAQItems.map((item) => (
               <AccordionItem key={item.id} value={item.id}>
                 <AccordionTrigger className="text-left font-display text-base">{item.question}</AccordionTrigger>
                 <AccordionContent className="text-sm leading-relaxed text-muted-foreground">

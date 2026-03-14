@@ -185,7 +185,7 @@ export default function OrganizerProfile() {
         {profile.organizer_banner_url && (
           <img
             src={profile.organizer_banner_url}
-            alt=""
+            alt={`Banner de ${profile.full_name}`}
             className="absolute inset-0 w-full h-full object-cover"
           />
         )}

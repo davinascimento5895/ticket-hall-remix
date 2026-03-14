@@ -97,7 +97,7 @@ export default function ProducerDashboard() {
               </table>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground py-6 text-center">Nenhum pedido ainda.</p>
+            <p className="text-sm text-muted-foreground py-6 text-center">Nenhum pedido recente.</p>
           )}
         </CardContent>
       </Card>

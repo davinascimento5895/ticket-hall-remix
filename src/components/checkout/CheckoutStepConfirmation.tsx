@@ -84,7 +84,7 @@ export function CheckoutStepConfirmation({ orderId }: CheckoutStepConfirmationPr
               {event.cover_image_url && (
                 <img
                   src={event.cover_image_url}
-                  alt=""
+                  alt={event.title}
                   className="w-full sm:w-40 h-28 sm:h-24 rounded-lg object-cover shrink-0"
                 />
               )}

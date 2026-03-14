@@ -131,7 +131,7 @@ export default function StaffEventList() {
                     {evt.cover_image_url && (
                       <img
                         src={evt.cover_image_url}
-                        alt=""
+                        alt={evt.title}
                         className="w-20 h-20 object-cover flex-shrink-0"
                         loading="lazy"
                       />

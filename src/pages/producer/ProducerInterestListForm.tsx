@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ArrowLeft, Plus, ChevronUp, ChevronDown, Pencil, Trash2, ImageIcon, Upload, CalendarIcon, Clock, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -119,15 +119,15 @@ export default function ProducerInterestListForm() {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
-    if (file.size > 5 * 1024 * 1024) { toast.error("Imagem deve ter até 5MB"); return; }
-    if (!["image/jpeg", "image/png"].includes(file.type)) { toast.error("Use JPG ou PNG"); return; }
+    if (file.size > 5 * 1024 * 1024) { toast({ title: "Imagem deve ter até 5MB", variant: "destructive" }); return; }
+    if (!["image/jpeg", "image/png"].includes(file.type)) { toast({ title: "Use JPG ou PNG", variant: "destructive" }); return; }
     setUploading(true);
     try {
       const url = await uploadListImage(file, user.id);
       setImageUrl(url);
-      toast.success("Imagem carregada!");
+      toast({ title: "Imagem carregada!" });
     } catch {
-      toast.error("Erro ao carregar imagem");
+      toast({ title: "Erro ao carregar imagem", variant: "destructive" });
     } finally {
       setUploading(false);
     }
@@ -166,8 +166,8 @@ export default function ProducerInterestListForm() {
   };
 
   const saveField = () => {
-    if (!newFieldName.trim()) { toast.error("Nome do campo é obrigatório"); return; }
-    if (newFieldType === "select" && newFieldOptions.length < 2) { toast.error("Adicione pelo menos 2 opções para o campo de seleção"); return; }
+    if (!newFieldName.trim()) { toast({ title: "Nome do campo é obrigatório", variant: "destructive" }); return; }
+    if (newFieldType === "select" && newFieldOptions.length < 2) { toast({ title: "Adicione pelo menos 2 opções para o campo de seleção", variant: "destructive" }); return; }
     const field: InterestListField = {
       field_name: newFieldName.trim(),
       field_type: newFieldType,
@@ -192,7 +192,7 @@ export default function ProducerInterestListForm() {
 
   // Submit
   const handleSubmit = async (status: string = "published") => {
-    if (!name.trim()) { toast.error("Nome da lista é obrigatório"); return; }
+    if (!name.trim()) { toast({ title: "Nome da lista é obrigatório", variant: "destructive" }); return; }
     if (!user) return;
     setSaving(true);
     try {
@@ -220,15 +220,15 @@ export default function ProducerInterestListForm() {
 
       if (isEdit) {
         await updateList(id!, payload, fields);
-        toast.success("Lista atualizada!");
+        toast({ title: "Lista atualizada!" });
       } else {
         const slug = await generateUniqueSlug();
         await createList({ ...payload, slug }, fields);
-        toast.success("Lista criada!");
+        toast({ title: "Lista criada!" });
       }
       navigate("/producer/interest-lists");
     } catch (err: any) {
-      toast.error(err.message || "Erro ao salvar");
+      toast({ title: err.message || "Erro ao salvar", variant: "destructive" });
     } finally {
       setSaving(false);
     }

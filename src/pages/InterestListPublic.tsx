@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TicketHallLogo } from "@/components/TicketHallLogo";
 import { SEOHead } from "@/components/SEOHead";
 import { Tag, MapPin, CalendarDays, Clock, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -65,9 +65,9 @@ export default function InterestListPublic() {
       setSuccess(true);
     } catch (err: any) {
       if (err.message === "DUPLICATE_EMAIL") {
-        toast.error("Este e-mail já está inscrito nesta lista.");
+        toast({ title: "Este e-mail já está inscrito nesta lista.", variant: "destructive" });
       } else {
-        toast.error("Erro ao enviar inscrição. Tente novamente.");
+        toast({ title: "Erro ao enviar inscrição. Tente novamente.", variant: "destructive" });
       }
     } finally {
       setSubmitting(false);

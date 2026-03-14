@@ -2,7 +2,7 @@ import { Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 
 interface FavoriteButtonProps {
   eventId: string;
@@ -19,7 +19,7 @@ export function FavoriteButton({ eventId, className, size = "sm" }: FavoriteButt
     e.preventDefault();
     e.stopPropagation();
     if (!user) {
-      toast.error("Faça login para favoritar eventos");
+      toast({ title: "Faça login para favoritar eventos", variant: "destructive" });
       return;
     }
     toggleFavorite(eventId);

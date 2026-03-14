@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Bell, Mail, Smartphone, MessageSquare } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -60,7 +60,7 @@ export default function NotificacoesConfig() {
       .from("notification_preferences" as any)
       .upsert(row as any, { onConflict: "user_id,category" });
     if (error) {
-      toast.error("Erro ao salvar preferência");
+      toast({ title: "Erro ao salvar preferência", variant: "destructive" });
     }
   }, [user?.id, prefs]);
 
@@ -72,7 +72,7 @@ export default function NotificacoesConfig() {
       prev.map((p) => (p.id === id ? { ...p, [channel]: newValue } : p))
     );
     persistPref(id, channel, newValue);
-    toast.success("Preferência atualizada");
+    toast({ title: "Preferência atualizada" });
   };
 
   return (

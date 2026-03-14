@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -33,20 +33,20 @@ export default function ResetPassword() {
 
   const handleSave = async () => {
     if (!newPassword || newPassword.length < 6) {
-      toast.error("A nova senha deve ter pelo menos 6 caracteres");
+      toast({ title: "A nova senha deve ter pelo menos 6 caracteres", variant: "destructive" });
       return;
     }
     if (newPassword !== confirmPassword) {
-      toast.error("As senhas não coincidem");
+      toast({ title: "As senhas não coincidem", variant: "destructive" });
       return;
     }
     setSaving(true);
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     setSaving(false);
     if (error) {
-      toast.error("Erro ao alterar senha: " + error.message);
+      toast({ title: "Erro ao alterar senha: " + error.message, variant: "destructive" });
     } else {
-      toast.success("Senha alterada com sucesso!");
+      toast({ title: "Senha alterada com sucesso!" });
       navigate("/");
     }
   };

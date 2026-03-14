@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -85,12 +85,12 @@ export function EventReviews({ eventId, isPastEvent }: EventReviewsProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["event-reviews", eventId] });
-      toast.success("Avaliação enviada!");
+      toast({ title: "Avaliação enviada!" });
       setShowForm(false);
       setRating(0);
       setComment("");
     },
-    onError: () => toast.error("Erro ao enviar avaliação"),
+    onError: () => toast({ title: "Erro ao enviar avaliação", variant: "destructive" }),
   });
 
   const canReview = isPastEvent && user && !userReview;

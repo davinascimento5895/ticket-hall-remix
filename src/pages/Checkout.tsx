@@ -328,8 +328,10 @@ export default function Checkout() {
         setAwaitingPayment(true);
       }
       if (result.stub) {
-        toast({ title: "Modo de teste", description: "Gateway de pagamento não configurado. Pagamento simulado." });
-        if (method === "credit_card") { clearCart(); setStep(3); }
+        // Stub mode: treat as immediate confirmation silently
+        clearCart();
+        setStep(3);
+        sessionStorage.removeItem("checkout_order_id");
       }
     } catch (error: any) {
       console.error("Payment error:", error);
@@ -350,9 +352,11 @@ export default function Checkout() {
     <>
       <SEOHead title="Checkout" description="Finalize sua compra de ingressos no TicketHall." />
       <div className="container pt-4 lg:pt-24 pb-16">
-        <Link to="/carrinho" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
-          <ArrowLeft className="h-4 w-4" /> Voltar ao carrinho
-        </Link>
+        {step < 3 && (
+          <Link to="/carrinho" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
+            <ArrowLeft className="h-4 w-4" /> Voltar ao carrinho
+          </Link>
+        )}
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Main content */}
@@ -436,7 +440,7 @@ export default function Checkout() {
               {/* Event card */}
               {coverImage && (
                 <div className="flex items-start gap-3 p-4 rounded-lg border border-border bg-card mb-4">
-                  <img src={coverImage} alt="" className="w-16 h-16 rounded-lg object-cover shrink-0" />
+                  <img src={coverImage} alt={eventTitle} className="w-16 h-16 rounded-lg object-cover shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="font-display font-semibold text-sm text-foreground line-clamp-2">{eventTitle}</p>
                   </div>

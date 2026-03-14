@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 
 export function useFavorites() {
   const { user } = useAuth();
@@ -42,10 +42,10 @@ export function useFavorites() {
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["favorites", user?.id] });
-      toast.success(result.added ? "Adicionado aos favoritos" : "Removido dos favoritos");
+      toast({ title: result.added ? "Adicionado aos favoritos" : "Removido dos favoritos" });
     },
     onError: () => {
-      toast.error("Erro ao atualizar favoritos");
+      toast({ title: "Erro ao atualizar favoritos", variant: "destructive" });
     },
   });
 

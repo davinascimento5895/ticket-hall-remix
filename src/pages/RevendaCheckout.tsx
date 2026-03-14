@@ -86,7 +86,7 @@ export default function RevendaCheckout() {
         {/* Event info */}
         <div className="flex items-start gap-4 p-4 rounded-xl border border-border bg-card mb-6">
           {listing.events?.cover_image_url && (
-            <img src={listing.events.cover_image_url} alt="" className="w-20 h-20 rounded-lg object-cover shrink-0" />
+            <img src={listing.events.cover_image_url} alt={listing.events?.title || "Evento"} className="w-20 h-20 rounded-lg object-cover shrink-0" />
           )}
           <div className="min-w-0">
             <Link to={`/eventos/${listing.events?.slug}`} className="font-display font-semibold text-foreground hover:text-primary transition-colors">

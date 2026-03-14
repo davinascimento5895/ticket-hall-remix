@@ -130,7 +130,7 @@ export default function PedidoRecuperacao() {
           <Card className="mb-6">
             <CardContent className="flex items-center gap-4 p-4">
               {event.cover_image_url && (
-                <img src={event.cover_image_url} alt="" className="w-16 h-16 rounded-lg object-cover" />
+                <img src={event.cover_image_url} alt={event.title} className="w-16 h-16 rounded-lg object-cover" />
               )}
               <div>
                 <p className="font-display font-semibold">{event.title}</p>

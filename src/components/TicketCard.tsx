@@ -31,7 +31,7 @@ export function TicketCard({
   return (
     <div className={cn("flex items-start gap-4 p-4 rounded-lg border border-border bg-card", className)}>
       {coverImageUrl && (
-        <img src={coverImageUrl} alt="" className="w-20 h-20 rounded object-cover hidden sm:block" />
+        <img src={coverImageUrl} alt={eventTitle} className="w-20 h-20 rounded object-cover hidden sm:block" />
       )}
       <div className="flex-1 min-w-0 space-y-1">
         <div className="flex items-center gap-2">

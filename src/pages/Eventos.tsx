@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { Search, X, Ticket, MapPin, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -170,7 +170,7 @@ export default function Eventos() {
       <div className="container pt-4 lg:pt-24 pb-16">
         {/* Breadcrumb */}
         <nav className="text-xs text-muted-foreground mb-4 hidden lg:flex items-center gap-1.5">
-          <a href="/" className="hover:text-foreground transition-colors">Página inicial</a>
+          <Link to="/" className="hover:text-foreground transition-colors">Página inicial</Link>
           <span>›</span>
           <span className="text-foreground font-medium">Encontre eventos</span>
         </nav>

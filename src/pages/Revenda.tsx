@@ -216,7 +216,7 @@ export default function Revenda() {
                 {/* Event header */}
                 <div className="flex items-center gap-4 mb-4">
                   {event.cover_image_url && (
-                    <img src={event.cover_image_url} alt="" className="w-16 h-16 rounded-lg object-cover shrink-0" />
+                    <img src={event.cover_image_url} alt={event.title} className="w-16 h-16 rounded-lg object-cover shrink-0" />
                   )}
                   <div className="min-w-0">
                     <Link to={`/eventos/${event.slug}`} className="font-display font-semibold text-foreground hover:text-primary transition-colors truncate block">

@@ -13,7 +13,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 
 interface ShareSheetProps {
   url: string;
@@ -27,7 +27,7 @@ function ShareOptions({ url, title }: { url: string; title: string }) {
 
   const copyLink = async () => {
     await navigator.clipboard.writeText(url);
-    toast.success("Link copiado!");
+    toast({ title: "Link copiado!" });
   };
 
   const options = [

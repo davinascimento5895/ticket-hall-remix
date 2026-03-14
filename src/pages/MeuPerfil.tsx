@@ -15,8 +15,9 @@ import {
   ChevronRight,
   Briefcase,
   CheckCircle2,
+  Heart,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 
 interface MenuItem {
   id: string;
@@ -32,7 +33,7 @@ export default function MeuPerfil() {
 
   const handleLogout = async () => {
     await signOut();
-    toast.success("Você saiu da sua conta");
+    toast({ title: "Você saiu da sua conta" });
     navigate("/");
   };
 
@@ -53,6 +54,7 @@ export default function MeuPerfil() {
     { id: "payment", icon: CreditCard, label: "Métodos de pagamento", href: "/meu-perfil/pagamento" },
     { id: "notifications", icon: Bell, label: "Notificações", href: "/meu-perfil/notificacoes" },
     { id: "support", icon: HelpCircle, label: "Suporte", href: "/meu-perfil/suporte" },
+    { id: "favoritos", icon: Heart, label: "Favoritos", href: "/favoritos" },
   ];
 
   const renderProducerCard = () => {

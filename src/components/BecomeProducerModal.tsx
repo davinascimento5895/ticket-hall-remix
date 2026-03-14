@@ -4,7 +4,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatCPF, validateCPF, formatPhone } from "@/lib/validators";
@@ -78,7 +78,7 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
     });
     setLoading(false);
     if (error) {
-      toast.error(error.message);
+      toast({ title: error.message, variant: "destructive" });
     }
     // onAuthStateChange in AuthContext will update `user`, triggering auto-advance
   };
@@ -86,11 +86,11 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (regPassword !== regConfirm) {
-      toast.error("As senhas não coincidem");
+      toast({ title: "As senhas não coincidem", variant: "destructive" });
       return;
     }
     if (regPassword.length < 6) {
-      toast.error("A senha deve ter pelo menos 6 caracteres");
+      toast({ title: "A senha deve ter pelo menos 6 caracteres", variant: "destructive" });
       return;
     }
     setLoading(true);
@@ -104,7 +104,7 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
     });
     setLoading(false);
     if (error) {
-      toast.error(error.message);
+      toast({ title: error.message, variant: "destructive" });
     }
   };
 
@@ -113,7 +113,7 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
       provider: "google",
       options: { redirectTo: window.location.origin },
     });
-    if (error) toast.error(error.message);
+    if (error) toast({ title: error.message, variant: "destructive" });
   };
 
   // --- Producer handler ---
@@ -121,12 +121,12 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
     e.preventDefault();
     const cleanCpf = cpf.replace(/\D/g, "");
     if (!validateCPF(cleanCpf)) {
-      toast.error("CPF inválido");
+      toast({ title: "CPF inválido", variant: "destructive" });
       return;
     }
     const cleanPhone = phone.replace(/\D/g, "");
     if (cleanPhone.length < 10) {
-      toast.error("Telefone inválido");
+      toast({ title: "Telefone inválido", variant: "destructive" });
       return;
     }
     setLoading(true);
@@ -137,15 +137,15 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
       if (result.error) throw result.error;
       const data = result.data as any;
       if (data?.alreadyProducer) {
-        toast.success("Você já é produtor!");
+        toast({ title: "Você já é produtor!" });
       } else {
-        toast.success("Conta de produtor ativada! Bem-vindo!");
+        toast({ title: "Conta de produtor ativada! Bem-vindo!" });
       }
       await refetchRole();
       onOpenChange(false);
       navigate("/producer/events/new");
     } catch {
-      toast.error("Erro ao ativar conta de produtor");
+      toast({ title: "Erro ao ativar conta de produtor", variant: "destructive" });
     } finally {
       setLoading(false);
     }
