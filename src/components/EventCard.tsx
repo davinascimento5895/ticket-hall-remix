@@ -45,7 +45,6 @@ export function EventCard({ title, date, city, imageUrl, priceFrom, category, sl
           alt={title}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
         {category && (
           <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-medium rounded-full bg-primary/90 text-primary-foreground">
             {getCategoryLabel(category)}
