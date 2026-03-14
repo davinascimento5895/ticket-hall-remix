@@ -17,18 +17,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { getEventBySlug } from "@/lib/api";
 import { getEventProducts } from "@/lib/api-products";
 import { EventProductCatalog } from "@/components/EventProductCatalog";
 import { toast } from "@/hooks/use-toast";
 import { cn, formatBRL } from "@/lib/utils";
+import { ContactProducerModal } from "@/components/ContactProducerModal";
 
 export default function EventDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [unlockCode, setUnlockCode] = useState("");
+  const [contactOpen, setContactOpen] = useState(false);
   const [showUnlockInput, setShowUnlockInput] = useState(false);
   const initialTab = new URLSearchParams(window.location.search).get("tab");
   const [activeSection, setActiveSection] = useState<"description" | "tickets" | "venue">(
@@ -42,6 +45,7 @@ export default function EventDetail() {
   });
 
   const { setTrackingCode } = useCart();
+  const { user } = useAuth();
 
   // Track promoter click from ?ref=CODE (M03: atomic increment)
   useEffect(() => {
@@ -287,11 +291,11 @@ export default function EventDetail() {
             </div>
 
             {/* Section tabs - underline style */}
-            <div className="flex border-b border-border gap-6">
+            <div className="flex border-b border-border gap-6" role="tablist">
               {sections.map((s) => (
                 <button
                   key={s.id}
-                  onClick={() => setActiveSection(s.id)}
+                  role="tab" aria-selected={activeSection === s.id} onClick={() => setActiveSection(s.id)}
                   className={cn(
                     "pb-3 text-sm font-medium transition-colors border-b-2",
                     activeSection === s.id
@@ -343,6 +347,14 @@ export default function EventDetail() {
                             Mais eventos do produtor <ExternalLink className="h-3 w-3" />
                           </Link>
                         )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-2"
+                          onClick={() => setContactOpen(true)}
+                        >
+                          Contatar organizador
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -440,7 +452,7 @@ export default function EventDetail() {
                     )}
                     {event.venue_name && (
                       <Link
-                        to={`/eventos?local=${encodeURIComponent(event.venue_name)}`}
+                        to={`/eventos?q=${encodeURIComponent(event.venue_name)}`}
                         className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-2"
                       >
                         Mais eventos neste local <ExternalLink className="h-3 w-3" />
@@ -487,7 +499,7 @@ export default function EventDetail() {
 
       {/* Cart CTA bar — shown after adding to cart */}
       {showCartCTA && (
-        <div className="fixed bottom-[72px] lg:bottom-0 left-0 right-0 z-40 bg-primary text-primary-foreground p-4 animate-fade-in shadow-lg">
+        <div className={`fixed ${user ? "bottom-[72px]" : "bottom-0"} lg:bottom-0 left-0 right-0 z-40 bg-primary text-primary-foreground p-4 animate-fade-in shadow-lg`}>
           <div className="container flex items-center justify-between gap-4 max-w-lg mx-auto">
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">✓ {lastAddedTierName} adicionado</p>
@@ -507,7 +519,7 @@ export default function EventDetail() {
 
       {/* Mobile sticky CTA - above bottom nav */}
       {!showCartCTA && activeSection !== "tickets" && (
-        <div className="lg:hidden fixed bottom-[72px] left-0 right-0 z-40 bg-card/95 backdrop-blur-lg border-t border-border p-4 safe-area-bottom">
+        <div className={`lg:hidden fixed ${user ? "bottom-[72px]" : "bottom-0"} left-0 right-0 z-40 bg-card/95 backdrop-blur-lg border-t border-border p-4 safe-area-bottom`}>
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-xs text-muted-foreground">A partir de</p>
@@ -522,6 +534,15 @@ export default function EventDetail() {
         </div>
       )}
 
+      {/* Contact Producer Modal */}
+      {producer && (
+        <ContactProducerModal
+          open={contactOpen}
+          onOpenChange={setContactOpen}
+          producerId={producer.id}
+          producerName={producer.full_name || "Produtor"}
+        />
+      )}
     </div>
   );
 }

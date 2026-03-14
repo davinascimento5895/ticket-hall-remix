@@ -1,6 +1,5 @@
 import { lazy, Suspense, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
@@ -10,6 +9,7 @@ import { CartProvider } from "@/contexts/CartContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { MainLayout } from "@/components/MainLayout";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 // Public pages — lazy loaded
 const Index = lazy(() => import("./pages/Index"));
 const Produtores = lazy(() => import("./pages/Produtores"));
@@ -126,11 +126,11 @@ const App = () => {
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
-      <Sonner />
       <BrowserRouter>
         <ScrollToTop />
         <AuthProvider>
           <CartProvider>
+            <ErrorBoundary>
             <Suspense fallback={<LazyFallback />}>
             <Routes>
               {/* Pages with shared Navbar + Footer */}
@@ -210,14 +210,6 @@ const App = () => {
                   <Route path="promoters" element={<ProducerEventPromoters />} />
                   <Route path="staff" element={<ProducerEventStaff />} />
                 </Route>
-                {/* Legacy direct routes (still work) */}
-                <Route path="events/:id/reports" element={<ProducerEventReports />} />
-                <Route path="events/:id/orders" element={<ProducerEventOrders />} />
-                <Route path="events/:id/checkin" element={<ProducerEventCheckin />} />
-                <Route path="events/:id/guestlist" element={<ProducerEventGuestlist />} />
-                <Route path="events/:id/coupons" element={<ProducerEventCoupons />} />
-                <Route path="events/:id/affiliates" element={<ProducerEventAffiliates />} />
-                <Route path="events/:id/messages" element={<ProducerEventMessages />} />
                 <Route path="inbox" element={<ProducerInbox />} />
                 <Route path="interest-lists" element={<ProducerInterestLists />} />
                 <Route path="interest-lists/new" element={<ProducerInterestListForm />} />
@@ -250,6 +242,7 @@ const App = () => {
               <Route path="*" element={<NotFound />} />
             </Routes>
             </Suspense>
+            </ErrorBoundary>
             <MobileBottomNav />
             <Suspense fallback={null}>
               <OnboardingFlow />

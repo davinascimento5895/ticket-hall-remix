@@ -56,7 +56,33 @@ export default function Carrinho() {
           toast({ title: "Disponibilidade alterada", description: "Alguns ingressos no carrinho podem não estar mais disponíveis.", variant: "destructive" });
         }
       });
-  }, []);
+  }, [items.length]);
+
+  // Re-check availability every 30 seconds
+  useEffect(() => {
+    if (items.length === 0) return;
+    const interval = setInterval(() => {
+      const tierIds = items.map(i => i.tierId).filter(id => !id.startsWith("product-"));
+      if (tierIds.length === 0) return;
+      supabase
+        .from("ticket_tiers")
+        .select("id, quantity_total, quantity_sold, quantity_reserved")
+        .in("id", tierIds)
+        .then(({ data }) => {
+          if (!data) return;
+          const unavailable: string[] = [];
+          for (const item of items) {
+            if (item.tierId.startsWith("product-")) continue;
+            const tier = data.find(t => t.id === item.tierId);
+            if (!tier) { unavailable.push(item.tierId); continue; }
+            const available = tier.quantity_total - (tier.quantity_sold ?? 0) - (tier.quantity_reserved ?? 0);
+            if (available < item.quantity) unavailable.push(item.tierId);
+          }
+          setUnavailableItems(unavailable);
+        });
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [items]);
 
   // A11: Block checkout when items are unavailable
   const handleCheckout = () => {
@@ -146,7 +172,7 @@ export default function Carrinho() {
             <div key={item.tierId} className={`flex items-center gap-4 p-4 rounded-lg border bg-card ${unavailableItems.includes(item.tierId) ? "border-destructive/50" : "border-border"}`}>
               {unavailableItems.includes(item.tierId) && <AlertTriangle className="h-5 w-5 text-destructive shrink-0" />}
               {item.coverImageUrl && !unavailableItems.includes(item.tierId) && (
-                <img src={item.coverImageUrl} alt="" className="w-16 h-16 rounded object-cover hidden sm:block" />
+                <img src={item.coverImageUrl} alt={item.eventTitle} className="w-16 h-16 rounded object-cover hidden sm:block" />
               )}
               <div className="flex-1 min-w-0">
                 <Link to={`/eventos/${item.eventSlug}`} className="font-display font-semibold text-foreground truncate hover:text-primary transition-colors block" onClick={(e) => e.stopPropagation()}>{item.eventTitle}</Link>
@@ -168,7 +194,7 @@ export default function Carrinho() {
                 </select>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <button className="p-2 text-muted-foreground hover:text-destructive transition-colors">
+                    <button className="p-2 text-muted-foreground hover:text-destructive transition-colors" aria-label="Remover item do carrinho">
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </AlertDialogTrigger>

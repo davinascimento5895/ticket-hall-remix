@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Heart, Calendar, MapPin } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { SEOHead } from "@/components/SEOHead";
@@ -13,6 +13,7 @@ import { ptBR } from "date-fns/locale";
 
 export default function Favoritos() {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const { data: events = [], isLoading } = useQuery({
     queryKey: ["favorite-events", user?.id],
@@ -47,11 +48,13 @@ export default function Favoritos() {
             {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-64 w-full rounded-xl" />)}
           </div>
         ) : events.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <Heart className="h-12 w-12 text-muted-foreground/30 mb-4" />
-            <p className="text-muted-foreground mb-6">Você ainda não favoritou nenhum evento.</p>
-            <Button asChild><Link to="/eventos">Explorar eventos</Link></Button>
-          </div>
+          <EmptyState
+            icon={<Heart className="h-12 w-12" />}
+            title="Nenhum evento favoritado"
+            description="Você ainda não favoritou nenhum evento."
+            actionLabel="Explorar eventos"
+            onAction={() => navigate("/eventos")}
+          />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {events.map((event: any) => (

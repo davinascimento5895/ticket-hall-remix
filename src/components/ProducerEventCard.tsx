@@ -38,7 +38,7 @@ export function ProducerEventCard({
   return (
     <div className={cn("flex items-start gap-4 p-4 rounded-lg border border-border bg-card", className)}>
       <div className="w-24 h-16 rounded bg-muted overflow-hidden shrink-0 hidden sm:block">
-        <EventImage src={coverImageUrl} alt="" className="w-full h-full" />
+        <EventImage src={coverImageUrl} alt={title} className="w-full h-full" />
       </div>
 
       <div className="flex-1 min-w-0 space-y-1">

@@ -5,7 +5,7 @@ import { SEOHead } from "@/components/SEOHead";
 import { motion } from "framer-motion";
 import { blogPosts } from "@/data/blog-posts";
 import { Calendar, Clock, ArrowLeft, Share2 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 
 function formatDate(dateStr: string) {
   return new Date(dateStr + "T12:00:00").toLocaleDateString("pt-BR", {
@@ -169,7 +169,7 @@ export default function BlogPost() {
       await navigator.share({ title: post.title, url });
     } else {
       await navigator.clipboard.writeText(url);
-      toast.success("Link copiado!");
+      toast({ title: "Link copiado!" });
     }
   };
 

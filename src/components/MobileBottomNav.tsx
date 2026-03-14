@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutGrid, Search, Ticket, User, ShoppingBag } from "lucide-react";
+import { LayoutGrid, Heart, Ticket, User, ShoppingBag } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { cn } from "@/lib/utils";
@@ -14,18 +14,18 @@ interface NavItem {
 
 const baseNavItems: NavItem[] = [
   { id: "catalog", href: "/eventos", icon: LayoutGrid, label: "Catálogo" },
-  { id: "search", href: "/eventos", icon: Search, label: "Pesquisar" },
+  { id: "favorites", href: "/favoritos", icon: Heart, label: "Favoritos" },
   { id: "cart", href: "/carrinho", icon: ShoppingBag, label: "Carrinho", isCart: true },
   { id: "tickets", href: "/meus-ingressos", icon: Ticket, label: "Ingressos" },
   { id: "profile", href: "/meu-perfil", icon: User, label: "Perfil" },
 ];
 
 function getActiveId(pathname: string): string | null {
-  if (pathname.startsWith("/busca")) return "search";
+  if (pathname.startsWith("/favoritos")) return "favorites";
   if (pathname.startsWith("/meus-ingressos") || pathname.startsWith("/meus-certificados")) return "tickets";
   if (pathname.startsWith("/carrinho")) return "cart";
   if (pathname.startsWith("/meu-perfil") || pathname.startsWith("/notificacoes")) return "profile";
-  if (pathname.startsWith("/eventos") || pathname.startsWith("/evento/") || pathname.startsWith("/cidades")) return "catalog";
+  if (pathname.startsWith("/eventos") || pathname.startsWith("/cidades")) return "catalog";
   return null;
 }
 

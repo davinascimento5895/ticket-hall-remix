@@ -275,7 +275,7 @@ function ProductEditDialog({ product, onClose, userId }: { product: any; onClose
               <div className="grid grid-cols-5 gap-2">
                 {images.map((img: any) => (
                   <div key={img.id} className="relative group">
-                    <img src={img.image_url} alt="" className="w-full aspect-square rounded object-cover" />
+                    <img src={img.image_url} alt={product.name} className="w-full aspect-square rounded object-cover" />
                     <button
                       onClick={() => deleteImgMut.mutate(img.id)}
                       className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"

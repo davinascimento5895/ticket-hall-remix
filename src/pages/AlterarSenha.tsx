@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 
 export default function AlterarSenha() {
   const navigate = useNavigate();
@@ -21,15 +21,15 @@ export default function AlterarSenha() {
 
   const handleSave = async () => {
     if (!currentPassword) {
-      toast.error("Informe a senha atual");
+      toast({ title: "Informe a senha atual", variant: "destructive" });
       return;
     }
     if (!newPassword || newPassword.length < 6) {
-      toast.error("A nova senha deve ter pelo menos 6 caracteres");
+      toast({ title: "A nova senha deve ter pelo menos 6 caracteres", variant: "destructive" });
       return;
     }
     if (newPassword !== confirmPassword) {
-      toast.error("As senhas não coincidem");
+      toast({ title: "As senhas não coincidem", variant: "destructive" });
       return;
     }
     setSaving(true);
@@ -41,16 +41,16 @@ export default function AlterarSenha() {
     });
     if (signInError) {
       setSaving(false);
-      toast.error("Senha atual incorreta");
+      toast({ title: "Senha atual incorreta", variant: "destructive" });
       return;
     }
 
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     setSaving(false);
     if (error) {
-      toast.error("Erro ao alterar senha: " + error.message);
+      toast({ title: "Erro ao alterar senha: " + error.message, variant: "destructive" });
     } else {
-      toast.success("Senha alterada com sucesso!");
+      toast({ title: "Senha alterada com sucesso!" });
       navigate("/meu-perfil");
     }
   };
@@ -63,9 +63,9 @@ export default function AlterarSenha() {
     });
     setSendingReset(false);
     if (error) {
-      toast.error("Erro ao enviar e-mail de redefinição");
+      toast({ title: "Erro ao enviar e-mail de redefinição", variant: "destructive" });
     } else {
-      toast.success("Enviamos um link de redefinição para " + user.email);
+      toast({ title: "Enviamos um link de redefinição para " + user.email });
     }
   };
 

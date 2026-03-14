@@ -10,7 +10,7 @@ interface LoadingSkeletonProps {
 export function LoadingSkeleton({ variant = "card", count = 3, className }: LoadingSkeletonProps) {
   if (variant === "card") {
     return (
-      <div className={cn("grid md:grid-cols-2 lg:grid-cols-3 gap-6", className)}>
+      <div className={cn("grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5", className)}>
         {Array.from({ length: count }).map((_, i) => (
           <div key={i} className="rounded-xl border border-border bg-card overflow-hidden">
             <Skeleton className="aspect-video w-full" />

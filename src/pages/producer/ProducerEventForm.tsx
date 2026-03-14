@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Check, Plus, Trash2, ArrowLeft, ArrowRight, Upload, MapPin, Globe, Video, Link2, Image as ImageIcon, Calendar, Ticket, FileText, Settings, Eye, ChevronDown, ChevronUp, Clock, Users, EyeOff } from "lucide-react";
+import { Check, Plus, Trash2, ArrowLeft, ArrowRight, Upload, MapPin, Globe, Video, Link2, Image as ImageIcon, Calendar, Ticket, FileText, Settings, Eye, ChevronDown, ChevronUp, Clock, Users, EyeOff, ClipboardList, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,8 +35,8 @@ const STEPS = [
   { key: "info", label: "Informações", icon: FileText },
   { key: "venue", label: "Local", icon: MapPin },
   { key: "tickets", label: "Ingressos", icon: Ticket },
-  { key: "form", label: "Formulário", icon: FileText },
-  { key: "products", label: "Produtos", icon: Settings },
+  { key: "form", label: "Formulário", icon: ClipboardList },
+  { key: "products", label: "Produtos", icon: Package },
   { key: "settings", label: "Configurações", icon: Settings },
   { key: "review", label: "Revisão", icon: Eye },
 ];

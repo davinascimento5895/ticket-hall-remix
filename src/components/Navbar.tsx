@@ -249,7 +249,7 @@ export function Navbar() {
             )}
 
             {/* Hamburger menu — always visible on mobile */}
-            <button className="lg:hidden text-foreground p-2" onClick={() => setMobileOpen(!mobileOpen)}>
+            <button className="lg:hidden text-foreground p-2" onClick={() => setMobileOpen(!mobileOpen)} aria-label={mobileOpen ? "Fechar menu" : "Abrir menu"}>
               {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>

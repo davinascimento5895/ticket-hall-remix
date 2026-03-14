@@ -230,7 +230,7 @@ export default function ProducerEventStaff() {
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                       {m.profiles?.avatar_url ? (
-                        <img src={m.profiles.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
+                        <img src={m.profiles.avatar_url} alt={m.profiles?.full_name || "Staff"} className="h-8 w-8 rounded-full object-cover" />
                       ) : (
                         <UsersIcon className="h-4 w-4 text-muted-foreground" />
                       )}

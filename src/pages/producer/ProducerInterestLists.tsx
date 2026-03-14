@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Plus, MoreVertical, Copy, Pencil, Download, EyeOff, Eye, Trash2, Users, ClipboardList } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -36,31 +36,31 @@ export default function ProducerInterestLists() {
     mutationFn: (id: string) => deleteList(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["interest-lists"] });
-      toast.success("Lista excluída");
+      toast({ title: "Lista excluída" });
       setDeleteTarget(null);
     },
-    onError: () => toast.error("Erro ao excluir lista"),
+    onError: () => toast({ title: "Erro ao excluir lista", variant: "destructive" }),
   });
 
   const statusMut = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) => updateListStatus(id, status),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["interest-lists"] });
-      toast.success("Status atualizado");
+      toast({ title: "Status atualizado" });
     },
   });
 
   const copyLink = (slug: string) => {
     const url = `${window.location.origin}/lista/${slug}`;
     navigator.clipboard.writeText(url);
-    toast.success("Link copiado!");
+    toast({ title: "Link copiado!" });
   };
 
   const handleExport = async (list: InterestList) => {
     try {
       const fields = await getListFields(list.id);
       const csv = await exportSubmissionsCSV(list.id, fields);
-      if (!csv) { toast.info("Nenhuma inscrição para exportar"); return; }
+      if (!csv) { toast({ title: "Nenhuma inscrição para exportar" }); return; }
       const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -68,9 +68,9 @@ export default function ProducerInterestLists() {
       a.download = `${list.name.replace(/\s+/g, "-").toLowerCase()}-inscritos.csv`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success("CSV exportado!");
+      toast({ title: "CSV exportado!" });
     } catch {
-      toast.error("Erro ao exportar");
+      toast({ title: "Erro ao exportar", variant: "destructive" });
     }
   };
 

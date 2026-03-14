@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,24 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+function translateAuthError(message: string): string {
+  const translations: Record<string, string> = {
+    "Invalid login credentials": "E-mail ou senha incorretos",
+    "Email not confirmed": "E-mail ainda não foi confirmado. Verifique sua caixa de entrada.",
+    "User already registered": "Este e-mail já está cadastrado",
+    "Signup requires a valid password": "Informe uma senha válida",
+    "Password should be at least 6 characters": "A senha deve ter pelo menos 6 caracteres",
+    "Email rate limit exceeded": "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
+    "For security purposes, you can only request this after": "Por segurança, aguarde alguns segundos antes de tentar novamente.",
+    "Unable to validate email address: invalid format": "Formato de e-mail inválido",
+    "New password should be different from the old password": "A nova senha deve ser diferente da senha atual",
+    "Auth session missing!": "Sessão expirada. Faça login novamente.",
+  };
+  for (const [key, value] of Object.entries(translations)) {
+    if (message.includes(key)) return value;
+  }
+  return message;
+}
 
 interface AuthModalProps {
   open: boolean;
@@ -53,7 +71,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login", redirectTo
     });
     setLoading(false);
     if (error) {
-      toast({ title: "Erro ao entrar", description: error.message, variant: "destructive" });
+      toast({ title: "Erro ao entrar", description: translateAuthError(error.message), variant: "destructive" });
     } else {
       toast({ title: "Bem-vindo de volta!" });
       onOpenChange(false);
@@ -86,9 +104,9 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login", redirectTo
     });
     setLoading(false);
     if (error) {
-      toast({ title: "Erro ao criar conta", description: error.message, variant: "destructive" });
+      toast({ title: "Erro ao criar conta", description: translateAuthError(error.message), variant: "destructive" });
     } else {
-      toast({ title: "Conta criada com sucesso!" });
+      toast({ title: "Conta criada com sucesso!", description: "Verifique seu e-mail para confirmar sua conta antes de entrar." });
       onOpenChange(false);
       const from = redirectTo || (location.state as any)?.from?.pathname;
       if (from && from !== "/" && from !== location.pathname) {
@@ -105,7 +123,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login", redirectTo
     });
     setLoading(false);
     if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      toast({ title: "Erro", description: translateAuthError(error.message), variant: "destructive" });
     } else {
       toast({ title: "E-mail enviado!", description: "Verifique sua caixa de entrada para redefinir a senha." });
       setForgotMode(false);
@@ -123,7 +141,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login", redirectTo
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
     if (error) {
-      toast({ title: "Erro ao entrar", description: error.message, variant: "destructive" });
+      toast({ title: "Erro ao entrar", description: translateAuthError(error.message), variant: "destructive" });
     }
   };
 
@@ -185,10 +203,10 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login", redirectTo
           </div>
 
           {/* Tab toggle */}
-          <div className="flex border-b border-border">
+          <div className="flex border-b border-border" role="tablist">
             <button
               type="button"
-              onClick={() => setTab("login")}
+              role="tab" aria-selected={tab === "login"} onClick={() => setTab("login")}
               className={`flex-1 pb-3 text-sm font-medium transition-colors border-b-2 ${
                 tab === "login"
                   ? "border-primary text-foreground"
@@ -199,7 +217,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login", redirectTo
             </button>
             <button
               type="button"
-              onClick={() => setTab("register")}
+              role="tab" aria-selected={tab === "register"} onClick={() => setTab("register")}
               className={`flex-1 pb-3 text-sm font-medium transition-colors border-b-2 ${
                 tab === "register"
                   ? "border-primary text-foreground"
@@ -238,7 +256,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login", redirectTo
                   <button
                     type="button"
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -310,9 +328,9 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login", redirectTo
               </Button>
               <p className="text-[11px] text-muted-foreground text-center">
                 Ao criar sua conta, você concorda com os{" "}
-                <a href="/termos-de-uso" className="text-primary hover:underline">Termos de Uso</a>
+                <Link to="/termos-de-uso" className="text-primary hover:underline" onClick={() => onOpenChange(false)}>Termos de Uso</Link>
                 {" "}e{" "}
-                <a href="/politica-de-privacidade" className="text-primary hover:underline">Política de Privacidade</a>.
+                <Link to="/politica-de-privacidade" className="text-primary hover:underline" onClick={() => onOpenChange(false)}>Política de Privacidade</Link>.
               </p>
             </form>
           )}

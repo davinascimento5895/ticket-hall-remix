@@ -8,6 +8,7 @@ import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { TicketDetailModal } from "@/components/TicketDetailModal";
 import { TransferTicketModal } from "@/components/TransferTicketModal";
 import { ResaleListingModal } from "@/components/ResaleListingModal";
+import { RefundDialog } from "@/components/RefundDialog";
 import { EmptyState } from "@/components/EmptyState";
 import { useAuth } from "@/contexts/AuthContext";
 import { getMyTickets } from "@/lib/api";
@@ -44,6 +45,7 @@ export default function MeusIngressos() {
     open: boolean;
     ticket: any;
   }>({ open: false, ticket: null });
+  const [refundModal, setRefundModal] = useState<{open: boolean; order: any}>({ open: false, order: null });
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -180,7 +182,7 @@ export default function MeusIngressos() {
           isPast && "grayscale"
         )}>
           {ticket.events?.cover_image_url ? (
-            <img src={ticket.events.cover_image_url} alt="" className="w-full h-full object-cover" />
+            <img src={ticket.events.cover_image_url} alt={ticket.events?.title || "Evento"} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full bg-secondary flex items-center justify-center">
               <Ticket className="h-6 w-6 text-muted-foreground" />
@@ -328,6 +330,25 @@ export default function MeusIngressos() {
               <XCircle className="h-4 w-4" /> Cancelar Revenda
             </Button>
           )}
+          {ticket.status === "active" && eventDate && (eventDate.getTime() - now.getTime()) > 7 * 24 * 60 * 60 * 1000 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-muted-foreground"
+              onClick={async () => {
+                const { data: order } = await supabase
+                  .from("orders")
+                  .select("*")
+                  .eq("id", ticket.order_id)
+                  .single();
+                if (order) {
+                  setRefundModal({ open: true, order });
+                }
+              }}
+            >
+              <XCircle className="h-4 w-4" /> Solicitar reembolso
+            </Button>
+          )}
           {(activeTab === "past" || activeTab === "archived") && (
             <Button
               variant="ghost"
@@ -374,26 +395,18 @@ export default function MeusIngressos() {
               placeholder="Buscar pelo nome, email, ingresso ou pedido"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pr-16 bg-muted/50 border-border"
+              className="pr-10 bg-muted/50 border-border"
             />
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="absolute right-1 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground hover:text-foreground"
-              onClick={() => {/* Search is automatic */}}
-            >
-              BUSCAR
-            </Button>
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           </div>
         </div>
 
         {/* Tabs - contained scroll */}
-        <div className="flex border-b border-border mb-6 overflow-x-auto scrollbar-hide">
+        <div className="flex border-b border-border mb-6 overflow-x-auto scrollbar-hide" role="tablist">
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              role="tab" aria-selected={activeTab === tab.id} onClick={() => setActiveTab(tab.id)}
               className={cn(
                 "pb-3 px-1 mr-6 text-sm font-medium transition-colors border-b-2 whitespace-nowrap",
                 activeTab === tab.id
@@ -424,12 +437,13 @@ export default function MeusIngressos() {
             {filteredTickets.map(renderTicket)}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <p className="text-muted-foreground mb-6">{getEmptyMessage()}</p>
-            <Button onClick={() => navigate("/eventos")}>
-              ENCONTRAR EVENTOS
-            </Button>
-          </div>
+          <EmptyState
+            icon={<Ticket className="h-12 w-12" />}
+            title={getEmptyMessage()}
+            description="Explore os eventos disponíveis e garanta seus ingressos."
+            actionLabel="Encontrar eventos"
+            onAction={() => navigate("/eventos")}
+          />
         )}
       </div>
 
@@ -454,6 +468,12 @@ export default function MeusIngressos() {
           ticket={resaleModal.ticket}
         />
       )}
+
+      <RefundDialog
+        open={refundModal.open}
+        onOpenChange={(open) => setRefundModal((p) => ({ ...p, open }))}
+        order={refundModal.order}
+      />
     </>
   );
 }

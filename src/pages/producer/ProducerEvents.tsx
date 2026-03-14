@@ -66,7 +66,7 @@ export default function ProducerEvents() {
             return (
               <div key={event.id} onClick={() => navigate(`/producer/events/${event.id}/panel`)} className="flex items-center gap-4 p-4 rounded-lg border border-border bg-card cursor-pointer hover:bg-muted/50 transition-colors">
                 {event.cover_image_url && (
-                  <img src={event.cover_image_url} alt="" className="w-16 h-16 rounded object-cover hidden sm:block" />
+                  <img src={event.cover_image_url} alt={event.title} className="w-16 h-16 rounded object-cover hidden sm:block" />
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">

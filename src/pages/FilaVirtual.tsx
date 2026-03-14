@@ -8,14 +8,16 @@ import { Progress } from "@/components/ui/progress";
 import { getEventForQueue, manageQueue } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { AuthModal } from "@/components/AuthModal";
 
 export default function FilaVirtual() {
   const { slug } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [joining, setJoining] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
 
-  const { data: event } = useQuery({
+  const { data: event, isLoading: loadingEvent, isError } = useQuery({
     queryKey: ["event-queue", slug],
     queryFn: () => getEventForQueue(slug!),
     enabled: !!slug,
@@ -75,12 +77,29 @@ export default function FilaVirtual() {
     return () => clearInterval(interval);
   }, [isAdmitted, queueStatus?.expires_at]);
 
+  if (loadingEvent) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  if (isError || !event) {
+    return (
+      <div className="container pt-4 lg:pt-24 pb-16 text-center">
+        <h1 className="font-display text-2xl font-bold mb-2">Evento não encontrado</h1>
+        <p className="text-muted-foreground mb-6">O evento que você procura não existe ou foi removido.</p>
+      </div>
+    );
+  }
+
   return (
     <>
-      <div className="container pt-24 pb-16 max-w-lg mx-auto">
+      <div className="container pt-4 lg:pt-24 pb-16 max-w-lg mx-auto">
         <div className="text-center space-y-4">
           {event?.cover_image_url && (
-            <img src={event.cover_image_url} alt="" className="w-full h-48 object-cover rounded-lg" />
+            <img src={event.cover_image_url} alt={event?.title || "Evento"} className="w-full h-48 object-cover rounded-lg" />
           )}
           <h1 className="font-display text-2xl font-bold">{event?.title || "..."}</h1>
           <p className="text-muted-foreground">Fila Virtual</p>
@@ -99,7 +118,12 @@ export default function FilaVirtual() {
                   {joining ? "Entrando..." : "Entrar na fila"}
                 </Button>
                 {!user && (
-                  <p className="text-xs text-muted-foreground">Faça login para entrar na fila.</p>
+                  <div className="space-y-2">
+                    <Button variant="outline" onClick={() => setAuthOpen(true)} className="w-full">
+                      Fazer login para entrar na fila
+                    </Button>
+                    <AuthModal open={authOpen} onOpenChange={setAuthOpen} />
+                  </div>
                 )}
               </div>
             ) : isWaiting ? (

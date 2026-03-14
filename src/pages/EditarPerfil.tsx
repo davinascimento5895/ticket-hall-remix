@@ -17,7 +17,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { ArrowLeft, Camera, Lock, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { EVENT_CATEGORIES } from "@/lib/categories";
 
 const BRAZILIAN_STATES = [
@@ -64,11 +64,11 @@ export default function EditarPerfil() {
   const handleAvatarUpload = async (file: File) => {
     if (!user) return;
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Imagem deve ter até 5MB");
+      toast({ title: "Imagem deve ter até 5MB", variant: "destructive" });
       return;
     }
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-      toast.error("Use JPG, PNG ou WebP");
+      toast({ title: "Use JPG, PNG ou WebP", variant: "destructive" });
       return;
     }
     setUploadingAvatar(true);
@@ -79,10 +79,10 @@ export default function EditarPerfil() {
       if (upErr) throw upErr;
       const { data } = supabase.storage.from("event-images").getPublicUrl(path);
       await supabase.from("profiles").update({ avatar_url: data.publicUrl }).eq("id", user.id);
-      toast.success("Foto atualizada!");
+      toast({ title: "Foto atualizada!" });
       await refetchRole();
     } catch (err: any) {
-      toast.error(err.message || "Erro ao enviar imagem");
+      toast({ title: err.message || "Erro ao enviar imagem", variant: "destructive" });
     } finally {
       setUploadingAvatar(false);
     }
@@ -91,7 +91,7 @@ export default function EditarPerfil() {
   const handleSave = async () => {
     if (!user) return;
     if (!firstName.trim()) {
-      toast.error("O nome é obrigatório");
+      toast({ title: "O nome é obrigatório", variant: "destructive" });
       return;
     }
     setSaving(true);
@@ -108,10 +108,10 @@ export default function EditarPerfil() {
       .eq("id", user.id);
     setSaving(false);
     if (error) {
-      toast.error("Erro ao salvar perfil");
+      toast({ title: "Erro ao salvar perfil", variant: "destructive" });
     } else {
       await refetchRole();
-      toast.success("Perfil atualizado!");
+      toast({ title: "Perfil atualizado!" });
       navigate("/meu-perfil");
     }
   };
@@ -123,15 +123,15 @@ export default function EditarPerfil() {
       const { data, error } = await supabase.functions.invoke("delete-account");
       if (error) throw error;
       if (data?.error) {
-        toast.error(data.error);
+        toast({ title: data.error, variant: "destructive" });
         setDeleting(false);
         return;
       }
       await signOut();
-      toast.success("Sua conta foi excluída com sucesso.");
+      toast({ title: "Sua conta foi excluída com sucesso." });
       navigate("/");
     } catch (err: any) {
-      toast.error(err.message || "Erro ao excluir conta");
+      toast({ title: err.message || "Erro ao excluir conta", variant: "destructive" });
       setDeleting(false);
     }
   };
