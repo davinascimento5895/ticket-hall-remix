@@ -9,7 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { exportToCSV, ticketCSVColumns } from "@/lib/csv-export";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
+import { getEventTicketsPaginated } from "@/lib/api-producer";
 
 export default function ProducerEventParticipants() {
   const { id } = useParams();
@@ -17,21 +19,56 @@ export default function ProducerEventParticipants() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [tierFilter, setTierFilter] = useState("all");
 
-  const { data: tickets, isLoading } = useQuery({
-    queryKey: ["event-participants", id],
+  // Map UI filter values to database status values
+  const dbStatus = statusFilter === "confirmed" ? "active"
+    : statusFilter === "pending" ? "reserved"
+    : statusFilter === "used" ? "used"
+    : statusFilter === "cancelled" ? "cancelled"
+    : "all";
+
+  const {
+    items: tickets,
+    totalCount,
+    page,
+    totalPages,
+    setPage,
+    resetPage,
+    isLoading,
+    isFetching,
+  } = usePaginatedQuery({
+    queryKey: ["event-participants", id, dbStatus, tierFilter, search],
+    queryFn: (range) =>
+      getEventTicketsPaginated(
+        id!,
+        { status: dbStatus, tierId: tierFilter, search },
+        range
+      ),
+    pageSize: 20,
+    enabled: !!id,
+  });
+
+  // Reset page when filters change
+  useEffect(() => {
+    resetPage();
+  }, [statusFilter, tierFilter, search, resetPage]);
+
+  // Separate lightweight query for summary counts (no range, just status column)
+  const { data: statusCounts } = useQuery({
+    queryKey: ["event-participants-counts", id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tickets")
-        .select(`
-          id, attendee_name, attendee_email, attendee_cpf, status, created_at,
-          checked_in_at, is_half_price,
-          tier:ticket_tiers(name, price, tier_type),
-          order:orders(id, buyer_id, status, profiles:buyer_id(full_name))
-        `)
-        .eq("event_id", id!)
-        .order("created_at", { ascending: false });
+        .select("status")
+        .eq("event_id", id!);
       if (error) throw error;
-      return data;
+      const counts = { active: 0, reserved: 0, cancelled: 0, total: 0 };
+      (data || []).forEach((t: any) => {
+        counts.total++;
+        if (t.status === "active") counts.active++;
+        else if (t.status === "reserved") counts.reserved++;
+        else if (t.status === "cancelled") counts.cancelled++;
+      });
+      return counts;
     },
     enabled: !!id,
   });
@@ -45,28 +82,10 @@ export default function ProducerEventParticipants() {
     enabled: !!id,
   });
 
-  const filtered = tickets?.filter((t: any) => {
-    // Status filter
-    if (statusFilter === "confirmed" && t.status !== "active") return false;
-    if (statusFilter === "pending" && t.status !== "reserved") return false;
-    if (statusFilter === "cancelled" && t.status !== "cancelled") return false;
-    if (statusFilter === "used" && t.status !== "used") return false;
-
-    // Tier filter
-    if (tierFilter !== "all" && t.tier?.name !== tierFilter) return false;
-
-    // Search
-    if (search) {
-      const s = search.toLowerCase();
-      return (
-        t.attendee_name?.toLowerCase().includes(s) ||
-        t.attendee_email?.toLowerCase().includes(s) ||
-        t.order?.profiles?.full_name?.toLowerCase().includes(s) ||
-        t.id.includes(s)
-      );
-    }
-    return true;
-  }) || [];
+  const confirmed = statusCounts?.active || 0;
+  const pending = statusCounts?.reserved || 0;
+  const cancelled = statusCounts?.cancelled || 0;
+  const total = statusCounts?.total || 0;
 
   const statusLabel = (s: string) => {
     const map: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -78,10 +97,6 @@ export default function ProducerEventParticipants() {
     const m = map[s] || { label: s, variant: "secondary" as const };
     return <Badge variant={m.variant}>{m.label}</Badge>;
   };
-
-  const confirmed = tickets?.filter((t: any) => t.status === "active").length || 0;
-  const pending = tickets?.filter((t: any) => t.status === "reserved").length || 0;
-  const cancelled = tickets?.filter((t: any) => t.status === "cancelled").length || 0;
 
   return (
     <div className="space-y-6">
@@ -107,7 +122,7 @@ export default function ProducerEventParticipants() {
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-display font-bold">{tickets?.length || 0}</p>
+            <p className="text-2xl font-display font-bold">{total}</p>
             <p className="text-xs text-muted-foreground">Total</p>
           </CardContent>
         </Card>
@@ -134,11 +149,11 @@ export default function ProducerEventParticipants() {
             <SelectTrigger className="w-full sm:w-48"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os ingressos</SelectItem>
-              {tiers.map((t: any) => <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>)}
+              {tiers.map((t: any) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
             </SelectContent>
           </Select>
         )}
-        <Button variant="outline" size="icon" onClick={() => filtered.length && exportToCSV(filtered as any, ticketCSVColumns, `participantes_${id}`)} disabled={!filtered.length} title="Exportar CSV">
+        <Button variant="outline" size="icon" onClick={() => tickets.length && exportToCSV(tickets as any, ticketCSVColumns, `participantes_${id}`)} disabled={!tickets.length} title="Exportar CSV">
           <Download className="h-4 w-4" />
         </Button>
       </div>
@@ -148,7 +163,7 @@ export default function ProducerEventParticipants() {
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-4 space-y-3">{[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
-          ) : filtered.length === 0 ? (
+          ) : tickets.length === 0 ? (
             <div className="py-12 text-center">
               <Users className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
               <p className="text-sm text-muted-foreground">Nenhum participante encontrado.</p>
@@ -168,7 +183,7 @@ export default function ProducerEventParticipants() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((ticket: any) => (
+                  {tickets.map((ticket: any) => (
                     <tr key={ticket.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                       <td className="p-3">{statusLabel(ticket.status)}</td>
                       <td className="p-3">
@@ -176,8 +191,8 @@ export default function ProducerEventParticipants() {
                         <p className="text-xs text-muted-foreground">{ticket.attendee_email || ""}</p>
                       </td>
                       <td className="p-3 font-mono text-xs">{ticket.id.slice(0, 8)}</td>
-                      <td className="p-3 text-muted-foreground">{ticket.tier?.name || "—"}</td>
-                      <td className="p-3 text-muted-foreground">{ticket.order?.profiles?.full_name || "—"}</td>
+                      <td className="p-3 text-muted-foreground">{ticket.ticket_tiers?.name || "—"}</td>
+                      <td className="p-3 text-muted-foreground">{ticket.profiles?.full_name || "—"}</td>
                       <td className="p-3 text-muted-foreground">{new Date(ticket.created_at).toLocaleDateString("pt-BR")}</td>
                       <td className="p-3 text-muted-foreground">
                         {ticket.checked_in_at ? new Date(ticket.checked_in_at).toLocaleString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "—"}
@@ -186,6 +201,23 @@ export default function ProducerEventParticipants() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* Pagination controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 pt-4 pb-4">
+              <p className="text-sm text-muted-foreground">
+                Página {page} de {totalPages} ({totalCount} registros)
+              </p>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}>
+                  Anterior
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>
+                  Próximo
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>

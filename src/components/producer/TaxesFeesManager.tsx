@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTicketTaxesFees, createTicketTaxFee, deleteTicketTaxFee } from "@/lib/api-checkout";
 import { toast } from "@/hooks/use-toast";
+import { formatBRL } from "@/lib/utils";
 
 interface Props {
   eventId: string;
@@ -66,7 +67,7 @@ export function TaxesFeesManager({ eventId }: Props) {
                 <div>
                   <p className="text-sm font-medium text-foreground">{f.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {f.fee_type === "percentage" ? `${f.amount}%` : `R$ ${Number(f.amount).toFixed(2).replace(".", ",")}`}
+                    {f.fee_type === "percentage" ? `${f.amount}%` : formatBRL(Number(f.amount))}
                     {" · "}
                     {f.is_passed_to_buyer ? "Repassado ao comprador" : "Absorvido pelo produtor"}
                   </p>

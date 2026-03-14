@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { useAuth } from "@/contexts/AuthContext";
 import { getMyOrders } from "@/lib/api";
 import { useNavigate, Link } from "react-router-dom";
+import { formatBRL } from "@/lib/utils";
 
 export default function MeusPedidos() {
   const { user } = useAuth();
@@ -18,8 +19,6 @@ export default function MeusPedidos() {
     queryFn: () => getMyOrders(user!.id),
     enabled: !!user?.id,
   });
-
-  const fmt = (v: number) => `R$ ${Number(v).toFixed(2).replace(".", ",")}`;
 
   const paymentMethodLabel = (method: string | null) => {
     switch (method) {
@@ -96,10 +95,10 @@ export default function MeusPedidos() {
                     </div>
 
                     <p className="text-sm font-medium text-foreground">
-                      {fmt(order.total)}
+                      {formatBRL(order.total)}
                       {order.installments && order.installments > 1 && (
                         <span className="text-xs text-muted-foreground ml-1">
-                          ({order.installments}x de {fmt(order.installment_value || order.total / order.installments)})
+                          ({order.installments}x de {formatBRL(order.installment_value || order.total / order.installments)})
                         </span>
                       )}
                     </p>

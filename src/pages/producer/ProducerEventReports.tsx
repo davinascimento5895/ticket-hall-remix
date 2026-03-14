@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { getEventAnalytics } from "@/lib/api-producer";
 import { supabase } from "@/integrations/supabase/client";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { formatBRL } from "@/lib/utils";
 
 const COLORS = ["hsl(243 75% 59%)", "hsl(38 92% 50%)", "hsl(142 71% 45%)", "hsl(217 91% 60%)"];
 
@@ -48,8 +49,6 @@ export default function ProducerEventReports() {
     enabled: !!id,
   });
 
-  const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
-
   const tierChartData = tiers?.map((t) => ({ name: t.name, vendidos: t.quantity_sold || 0, total: t.quantity_total })) || [];
   const tierPieData = tiers?.filter((t) => (t.quantity_sold || 0) > 0).map((t) => ({ name: t.name, value: t.quantity_sold || 0 })) || [];
 
@@ -69,8 +68,8 @@ export default function ProducerEventReports() {
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Receita Total</CardTitle></CardHeader><CardContent><p className="text-2xl font-display font-bold">{fmt(analytics?.total_revenue || 0)}</p></CardContent></Card>
-            <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Receita do Produtor</CardTitle></CardHeader><CardContent><p className="text-2xl font-display font-bold">{fmt(analytics?.producer_revenue || 0)}</p></CardContent></Card>
+            <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Receita Total</CardTitle></CardHeader><CardContent><p className="text-2xl font-display font-bold">{formatBRL(analytics?.total_revenue || 0)}</p></CardContent></Card>
+            <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Receita do Produtor</CardTitle></CardHeader><CardContent><p className="text-2xl font-display font-bold">{formatBRL(analytics?.producer_revenue || 0)}</p></CardContent></Card>
             <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Ingressos Vendidos</CardTitle></CardHeader><CardContent><p className="text-2xl font-display font-bold">{analytics?.tickets_sold || 0}</p></CardContent></Card>
           </div>
 

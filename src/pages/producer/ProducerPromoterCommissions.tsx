@@ -10,8 +10,7 @@ import { getPromoters } from "@/lib/api-promoters";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { CheckCircle, DollarSign } from "lucide-react";
-
-const fmt = (v: number) => `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
+import { formatBRL } from "@/lib/utils";
 
 const statusLabels: Record<string, string> = { pending: "Pendente", approved: "Aprovada", paid: "Paga", cancelled: "Cancelada" };
 const statusVariants: Record<string, string> = { pending: "secondary", approved: "default", paid: "default", cancelled: "destructive" };
@@ -73,8 +72,8 @@ export default function ProducerPromoterCommissions({ producerId }: { producerId
     },
     { key: "promoter", header: "Promoter", render: (row) => <span className="font-medium">{row.promoters?.name || "—"}</span> },
     { key: "event", header: "Evento", render: (row) => <span className="text-sm">{row.events?.title || "—"}</span> },
-    { key: "order_amount", header: "Valor Pedido", render: (row) => fmt(row.order_amount) },
-    { key: "commission_amount", header: "Comissão", render: (row) => <span className="font-semibold">{fmt(row.commission_amount)}</span> },
+    { key: "order_amount", header: "Valor Pedido", render: (row) => formatBRL(row.order_amount) },
+    { key: "commission_amount", header: "Comissão", render: (row) => <span className="font-semibold">{formatBRL(row.commission_amount)}</span> },
     { key: "status", header: "Status", render: (row) => <Badge variant={statusVariants[row.status] as any}>{statusLabels[row.status] || row.status}</Badge> },
     { key: "created_at", header: "Data", render: (row) => row.created_at ? format(new Date(row.created_at), "dd/MM/yyyy") : "—" },
     {
@@ -121,7 +120,7 @@ export default function ProducerPromoterCommissions({ producerId }: { producerId
             </SelectContent>
           </Select>
           <span className="text-sm text-muted-foreground">
-            Total: <strong>{fmt(totalCommission)}</strong> · {pendingCount} pendente(s)
+            Total: <strong>{formatBRL(totalCommission)}</strong> · {pendingCount} pendente(s)
           </span>
         </div>
         {selected.size > 0 && (

@@ -22,6 +22,7 @@ import { useState, useEffect } from "react";
 import { validateCoupon } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { formatBRL } from "@/lib/utils";
 
 export default function Carrinho() {
   const { items, removeItem, updateQuantity, clearCart, subtotal, platformFee, total, expiresAt, couponCode, setCouponCode, discount, setDiscount, setAppliedCouponId, finalTotal } = useCart();
@@ -75,7 +76,7 @@ export default function Carrinho() {
       const coupon = await validateCoupon(eventId, couponCode);
       if (coupon) {
         if (coupon.min_order_value && subtotal < coupon.min_order_value) {
-          toast({ title: "Valor mínimo não atingido", description: `Este cupom requer pedido mínimo de R$ ${Number(coupon.min_order_value).toFixed(2).replace(".", ",")}.`, variant: "destructive" });
+          toast({ title: "Valor mínimo não atingido", description: `Este cupom requer pedido mínimo de ${formatBRL(Number(coupon.min_order_value))}.`, variant: "destructive" });
           setValidatingCoupon(false);
           return;
         }
@@ -103,7 +104,7 @@ export default function Carrinho() {
             : coupon.discount_value;
         setDiscount(Math.min(discountAmount, applicableSubtotal));
         setAppliedCouponId(coupon.id);
-        toast({ title: "Cupom aplicado!", description: `Desconto de R$ ${Math.min(discountAmount, applicableSubtotal).toFixed(2).replace(".", ",")}` });
+        toast({ title: "Cupom aplicado!", description: `Desconto de ${formatBRL(Math.min(discountAmount, applicableSubtotal))}` });
       }
     } catch (err: any) {
       toast({ title: "Cupom inválido", description: err?.message || "Verifique o código e tente novamente.", variant: "destructive" });
@@ -113,8 +114,6 @@ export default function Carrinho() {
       setValidatingCoupon(false);
     }
   };
-
-  const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
 
   if (items.length === 0) {
     return (
@@ -152,7 +151,7 @@ export default function Carrinho() {
               <div className="flex-1 min-w-0">
                 <Link to={`/eventos/${item.eventSlug}`} className="font-display font-semibold text-foreground truncate hover:text-primary transition-colors block" onClick={(e) => e.stopPropagation()}>{item.eventTitle}</Link>
                 <p className="text-sm text-muted-foreground">{item.tierName}</p>
-                <p className="text-sm font-medium text-foreground">{fmt(item.price)} × {item.quantity}</p>
+                <p className="text-sm font-medium text-foreground">{formatBRL(item.price)} × {item.quantity}</p>
                 {unavailableItems.includes(item.tierId) && (
                   <p className="text-xs text-destructive mt-1">Disponibilidade insuficiente — remova ou reduza a quantidade</p>
                 )}
@@ -201,12 +200,12 @@ export default function Carrinho() {
               <Button variant="outline" size="sm" onClick={handleValidateCoupon} disabled={validatingCoupon}>Aplicar</Button>
             </div>
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="text-foreground">{fmt(subtotal)}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Taxa de serviço ({items[0]?.platformFeePercent ?? 7}%)</span><span className="text-foreground">{fmt(platformFee)}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="text-foreground">{formatBRL(subtotal)}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Taxa de serviço ({items[0]?.platformFeePercent ?? 7}%)</span><span className="text-foreground">{formatBRL(platformFee)}</span></div>
               {discount > 0 && (
-                <div className="flex justify-between text-success"><span>Desconto</span><span>-{fmt(discount)}</span></div>
+                <div className="flex justify-between text-success"><span>Desconto</span><span>-{formatBRL(discount)}</span></div>
               )}
-              <div className="border-t border-border pt-2 flex justify-between font-semibold"><span>Total</span><span>{fmt(finalTotal)}</span></div>
+              <div className="border-t border-border pt-2 flex justify-between font-semibold"><span>Total</span><span>{formatBRL(finalTotal)}</span></div>
             </div>
             {!user && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground bg-secondary rounded-lg px-3 py-2">

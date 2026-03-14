@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { Download, Search, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { exportToCSV, orderCSVColumns } from "@/lib/csv-export";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,11 +12,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { getAllOrders } from "@/lib/api-admin";
-import { useState } from "react";
+import { getAllOrdersPaginated } from "@/lib/api-admin";
+import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
+import { useState, useEffect } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
-
-const fmt = (v: number) => `R$ ${(v ?? 0).toFixed(2).replace(".", ",")}`;
+import { formatBRL } from "@/lib/utils";
 
 const methodLabels: Record<string, string> = {
   pix: "PIX",
@@ -62,15 +61,15 @@ function OrderDetail({ order }: { order: any }) {
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Total</span>
-            <span className="font-medium">{fmt(order.total)}</span>
+            <span className="font-medium">{formatBRL(order.total)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Taxa Plataforma</span>
-            <span className="font-medium">{fmt(order.platform_fee)}</span>
+            <span className="font-medium">{formatBRL(order.platform_fee)}</span>
           </div>
           <div className="flex justify-between border-t border-border pt-2">
             <span className="font-medium">Valor Líquido</span>
-            <span className="font-bold">{fmt(net)}</span>
+            <span className="font-bold">{formatBRL(net)}</span>
           </div>
         </div>
       </div>
@@ -82,22 +81,27 @@ export default function AdminOrders() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 400);
-  const [page, setPage] = useState(1);
-  const perPage = 20;
 
-  const { data: orders, isLoading } = useQuery({
+  const {
+    items: orders,
+    totalCount,
+    page,
+    totalPages,
+    pageSize,
+    setPage,
+    resetPage,
+    isLoading,
+  } = usePaginatedQuery({
     queryKey: ["admin-orders", statusFilter, debouncedSearch],
-    queryFn: () => getAllOrders({ status: statusFilter, search: debouncedSearch || undefined }),
+    queryFn: (range) => getAllOrdersPaginated({ status: statusFilter, search: debouncedSearch || undefined }, range),
+    pageSize: 20,
     staleTime: 30_000,
   });
 
-  // Pagination
-  const allOrders = orders || [];
-  const totalPages = Math.max(1, Math.ceil(allOrders.length / perPage));
-  const paginatedOrders = allOrders.slice((page - 1) * perPage, page * perPage);
-  const currentFilterKey = `${statusFilter}-${debouncedSearch}`;
-  const [lastFilterKey, setLastFilterKey] = useState(currentFilterKey);
-  if (currentFilterKey !== lastFilterKey) { setLastFilterKey(currentFilterKey); setPage(1); }
+  // Reset page when filters change
+  useEffect(() => {
+    resetPage();
+  }, [statusFilter, debouncedSearch, resetPage]);
 
   const statuses = [
     { value: "all", label: "Todos" },
@@ -111,7 +115,7 @@ export default function AdminOrders() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="font-display text-2xl font-bold">Todos os Pedidos</h1>
-        <Button variant="outline" size="sm" onClick={() => orders && exportToCSV(orders, orderCSVColumns, "pedidos")} disabled={!orders?.length}>
+        <Button variant="outline" size="sm" onClick={() => orders.length && exportToCSV(orders, orderCSVColumns, "pedidos")} disabled={!orders.length}>
           <Download className="h-4 w-4 mr-1" /> Exportar CSV
         </Button>
       </div>
@@ -120,7 +124,7 @@ export default function AdminOrders() {
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por comprador, evento ou ID..."
+            placeholder="Buscar por ID do pedido..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10"
@@ -147,7 +151,7 @@ export default function AdminOrders() {
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-4 space-y-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
-          ) : !orders || orders.length === 0 ? (
+          ) : orders.length === 0 ? (
             <p className="text-sm text-muted-foreground py-8 text-center">Nenhum pedido encontrado.</p>
           ) : (
             <div className="overflow-x-auto">
@@ -166,13 +170,13 @@ export default function AdminOrders() {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedOrders.map((order: any) => (
+                  {orders.map((order: any) => (
                     <tr key={order.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                       <td className="p-3 font-mono text-xs text-muted-foreground">{order.id.slice(0, 8)}</td>
                       <td className="p-3">{order.profiles?.full_name || "—"}</td>
                       <td className="p-3 text-muted-foreground max-w-[150px] truncate">{order.events?.title || "—"}</td>
-                      <td className="p-3 font-medium">{fmt(order.total)}</td>
-                      <td className="p-3 text-muted-foreground">{fmt(order.platform_fee)}</td>
+                      <td className="p-3 font-medium">{formatBRL(order.total)}</td>
+                      <td className="p-3 text-muted-foreground">{formatBRL(order.platform_fee)}</td>
                       <td className="p-3 text-muted-foreground">{methodLabels[order.payment_method] || order.payment_method || "—"}</td>
                       <td className="p-3"><OrderStatusBadge status={order.status} /></td>
                       <td className="p-3 text-muted-foreground">{new Date(order.created_at).toLocaleDateString("pt-BR")}</td>
@@ -202,9 +206,9 @@ export default function AdminOrders() {
       </Card>
 
       {/* Pagination */}
-      {allOrders.length > perPage && (
+      {totalCount > pageSize && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>{allOrders.length} pedido(s) · Página {page} de {totalPages}</span>
+          <span>{totalCount} pedido(s) · Página {page} de {totalPages}</span>
           <div className="flex items-center gap-1">
             <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
               <ChevronLeft className="h-4 w-4" />

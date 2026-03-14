@@ -4,8 +4,7 @@ import { DataTable, DataTableColumn } from "@/components/DataTable";
 import { getEventReconciliation } from "@/lib/api-financial";
 import { format } from "date-fns";
 import { Info } from "lucide-react";
-
-const fmt = (v: number) => `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
+import { formatBRL } from "@/lib/utils";
 
 export default function ProducerEventReconciliation({ producerId }: { producerId: string }) {
   const { data: events = [], isLoading } = useQuery({
@@ -38,7 +37,7 @@ export default function ProducerEventReconciliation({ producerId }: { producerId
       header: "Valor dos Ingressos",
       render: (row) => (
         <div>
-          <span className="font-semibold">{fmt(row.ticketRevenue)}</span>
+          <span className="font-semibold">{formatBRL(row.ticketRevenue)}</span>
           <p className="text-[10px] text-muted-foreground">100% do produtor</p>
         </div>
       ),
@@ -48,17 +47,17 @@ export default function ProducerEventReconciliation({ producerId }: { producerId
       header: "Taxa Plataforma",
       render: (row) => (
         <div>
-          <span className="text-muted-foreground">{fmt(row.platformFees)}</span>
+          <span className="text-muted-foreground">{formatBRL(row.platformFees)}</span>
           <p className="text-[10px] text-muted-foreground">pago pelo comprador</p>
         </div>
       ),
     },
-    { key: "gatewayFees", header: "Gateway", render: (row) => <span className="text-muted-foreground">{fmt(row.gatewayFees)}</span> },
-    { key: "refunds", header: "Reembolsos", render: (row) => <span className="text-red-600">{fmt(row.refunds)}</span> },
+    { key: "gatewayFees", header: "Gateway", render: (row) => <span className="text-muted-foreground">{formatBRL(row.gatewayFees)}</span> },
+    { key: "refunds", header: "Reembolsos", render: (row) => <span className="text-red-600">{formatBRL(row.refunds)}</span> },
     {
       key: "netRevenue",
       header: "Líquido",
-      render: (row) => <span className={`font-bold ${row.netRevenue >= 0 ? "text-green-600" : "text-red-600"}`}>{fmt(row.netRevenue)}</span>,
+      render: (row) => <span className={`font-bold ${row.netRevenue >= 0 ? "text-green-600" : "text-red-600"}`}>{formatBRL(row.netRevenue)}</span>,
     },
   ];
 
@@ -78,9 +77,9 @@ export default function ProducerEventReconciliation({ producerId }: { producerId
       </div>
 
       <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-        <span>Valor dos ingressos: <strong className="text-foreground">{fmt(totalTicketRevenue)}</strong></span>
-        <span>Taxa plataforma (comprador): <strong className="text-muted-foreground">{fmt(totalPlatformFees)}</strong></span>
-        <span>Líquido: <strong className="text-green-600">{fmt(totalNet)}</strong></span>
+        <span>Valor dos ingressos: <strong className="text-foreground">{formatBRL(totalTicketRevenue)}</strong></span>
+        <span>Taxa plataforma (comprador): <strong className="text-muted-foreground">{formatBRL(totalPlatformFees)}</strong></span>
+        <span>Líquido: <strong className="text-green-600">{formatBRL(totalNet)}</strong></span>
         <span>{events.length} evento(s)</span>
       </div>
 

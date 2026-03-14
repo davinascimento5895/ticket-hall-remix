@@ -15,10 +15,11 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { getAllUsers } from "@/lib/api-admin";
+import { getAllUsersPaginated } from "@/lib/api-admin";
+import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
 import { supabase } from "@/integrations/supabase/client";
 import { maskCPF } from "@/lib/validators";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { toast } from "@/hooks/use-toast";
 
@@ -63,14 +64,60 @@ export default function AdminUsers() {
   const debouncedSearch = useDebounce(search, 400);
   const queryClient = useQueryClient();
   const [editingUser, setEditingUser] = useState<any>(null);
-  const [page, setPage] = useState(1);
-  const perPage = 20;
 
-  const { data: users, isLoading } = useQuery({
+  const {
+    items: users,
+    totalCount,
+    page,
+    totalPages,
+    pageSize,
+    setPage,
+    resetPage,
+    isLoading,
+  } = usePaginatedQuery({
     queryKey: ["admin-users", debouncedSearch],
-    queryFn: () => getAllUsers(debouncedSearch || undefined),
+    queryFn: (range) => getAllUsersPaginated({ search: debouncedSearch || undefined }, range),
+    pageSize: 20,
     staleTime: 30_000,
   });
+
+  // Reset page when search changes
+  useEffect(() => {
+    resetPage();
+  }, [debouncedSearch, resetPage]);
+
+  // Fetch all user_roles separately (small table) and build a role map
+  const userIds = useMemo(() => users.map((u: any) => u.id), [users]);
+  const { data: rolesData } = useQuery({
+    queryKey: ["admin-user-roles", userIds],
+    queryFn: async () => {
+      if (userIds.length === 0) return [];
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("user_id", userIds);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: userIds.length > 0,
+    staleTime: 30_000,
+  });
+
+  const roleMap = useMemo(() => {
+    const map = new Map<string, string[]>();
+    (rolesData || []).forEach((r: any) => {
+      const existing = map.get(r.user_id) || [];
+      existing.push(r.role);
+      map.set(r.user_id, existing);
+    });
+    return map;
+  }, [rolesData]);
+
+  // Merge roles into users for display
+  const usersWithRoles = useMemo(
+    () => users.map((u: any) => ({ ...u, roles: roleMap.get(u.id) || ["buyer"] })),
+    [users, roleMap]
+  );
 
   const toggleRoleMutation = useMutation({
     mutationFn: async ({ userId, role, enabled }: { userId: string; role: string; enabled: boolean }) => {
@@ -83,6 +130,7 @@ export default function AdminUsers() {
     onSuccess: () => {
       toast({ title: "Papel atualizado com sucesso!" });
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-user-roles"] });
     },
     onError: (err: any) => {
       toast({ title: "Erro ao atualizar papel", description: err.message, variant: "destructive" });
@@ -99,14 +147,6 @@ export default function AdminUsers() {
     },
   ];
 
-  // Pagination
-  const allUsers = users || [];
-  const totalPages = Math.max(1, Math.ceil(allUsers.length / perPage));
-  const paginatedUsers = allUsers.slice((page - 1) * perPage, page * perPage);
-  // Reset page when search changes
-  const [lastSearch, setLastSearch] = useState(debouncedSearch);
-  if (debouncedSearch !== lastSearch) { setLastSearch(debouncedSearch); setPage(1); }
-
   return (
     <div className="space-y-6">
       <h1 className="font-display text-2xl font-bold">Usuários</h1>
@@ -116,7 +156,7 @@ export default function AdminUsers() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Buscar por nome..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
         </div>
-        <Button variant="outline" size="sm" onClick={() => users && exportToCSV(users, csvColumnsWithRole, "usuarios")} disabled={!users?.length}>
+        <Button variant="outline" size="sm" onClick={() => usersWithRoles.length && exportToCSV(usersWithRoles, csvColumnsWithRole, "usuarios")} disabled={!usersWithRoles.length}>
           <Download className="h-4 w-4 mr-1" /> Exportar CSV
         </Button>
       </div>
@@ -125,7 +165,7 @@ export default function AdminUsers() {
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-4 space-y-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
-          ) : !users || users.length === 0 ? (
+          ) : usersWithRoles.length === 0 ? (
             <p className="text-sm text-muted-foreground py-8 text-center">Nenhum usuário encontrado.</p>
           ) : (
             <div className="overflow-x-auto">
@@ -141,7 +181,7 @@ export default function AdminUsers() {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedUsers.map((user: any) => {
+                  {usersWithRoles.map((user: any) => {
                     const roles: string[] = user.roles || ["buyer"];
                     return (
                       <tr key={user.id} className="border-b border-border/50 hover:bg-muted/30">
@@ -227,9 +267,9 @@ export default function AdminUsers() {
       </Card>
 
       {/* Pagination */}
-      {allUsers.length > perPage && (
+      {totalCount > pageSize && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>{allUsers.length} usuário(s) · Página {page} de {totalPages}</span>
+          <span>{totalCount} usuário(s) · Página {page} de {totalPages}</span>
           <div className="flex items-center gap-1">
             <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
               <ChevronLeft className="h-4 w-4" />

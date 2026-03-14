@@ -8,8 +8,7 @@ import { Trophy, Medal, Award, Users } from "lucide-react";
 import { getPromoterRanking } from "@/lib/api-promoters";
 import { getProducerEvents } from "@/lib/api-producer";
 import { useAuth } from "@/contexts/AuthContext";
-
-const fmt = (v: number) => `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
+import { formatBRL } from "@/lib/utils";
 
 const rankIcons = [Trophy, Medal, Award];
 const rankColors = ["text-yellow-500", "text-gray-400", "text-amber-600"];
@@ -80,8 +79,8 @@ export default function ProducerPromoterRanking({ producerId }: { producerId: st
                     </div>
 
                     <div className="text-right shrink-0">
-                      <p className="text-lg font-display font-bold">{fmt(p.totalRevenue)}</p>
-                      <p className="text-xs text-muted-foreground">Comissão: {fmt(p.totalCommission)}</p>
+                      <p className="text-lg font-display font-bold">{formatBRL(p.totalRevenue)}</p>
+                      <p className="text-xs text-muted-foreground">Comissão: {formatBRL(p.totalCommission)}</p>
                     </div>
                   </div>
                 </CardContent>

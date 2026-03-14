@@ -6,6 +6,7 @@ import { Search, X, LayoutGrid, List, Ticket, MapPin, Plus } from "lucide-react"
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/EventCard";
+import { EventImage } from "@/components/EventImage";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { SEOHead } from "@/components/SEOHead";
@@ -303,8 +304,8 @@ export default function Eventos() {
                 href={`/eventos/${featuredEvent.slug}`}
                 className="group relative block rounded-2xl overflow-hidden border border-border bg-card h-[280px] md:h-[340px]"
               >
-                <img
-                  src={featuredEvent.cover_image_url || "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=1200&q=80"}
+                <EventImage
+                  src={featuredEvent.cover_image_url}
                   alt={featuredEvent.title}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
@@ -341,7 +342,7 @@ export default function Eventos() {
                     year: "numeric",
                   })}
                   city={event.venue_city || "Online"}
-                  imageUrl={event.cover_image_url || "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=600&q=80"}
+                  imageUrl={event.cover_image_url}
                   priceFrom={event._minPrice ?? 0}
                   category={event.category}
                   slug={event.slug}

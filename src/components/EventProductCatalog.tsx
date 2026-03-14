@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Package, ChevronLeft, ChevronRight, Info } from "lucide-react";
 import { getEventProducts, getProductImages, getProductVariations } from "@/lib/api-products";
 import { Badge } from "@/components/ui/badge";
+import { formatBRL } from "@/lib/utils";
 
 interface Props {
   eventId: string;
@@ -59,8 +60,6 @@ function ProductCatalogCard({ product }: { product: any }) {
       ? [product.image_url]
       : [];
 
-  const fmt = (v: number) => `R$ ${Number(v).toFixed(2).replace(".", ",")}`;
-
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
       {/* Image carousel */}
@@ -112,7 +111,7 @@ function ProductCatalogCard({ product }: { product: any }) {
         {product.description && (
           <p className="text-xs text-muted-foreground line-clamp-3">{product.description}</p>
         )}
-        <p className="text-sm font-bold text-foreground">{fmt(product.price)}</p>
+        <p className="text-sm font-bold text-foreground">{formatBRL(product.price)}</p>
 
         {/* Variations */}
         {variations.length > 0 && (

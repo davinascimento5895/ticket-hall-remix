@@ -2,14 +2,15 @@ import { Calendar, MapPin } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { FavoriteButton } from "@/components/FavoriteButton";
-import { cn } from "@/lib/utils";
+import { EventImage } from "@/components/EventImage";
+import { cn, formatBRLOrFree } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/categories";
 
 interface EventCardProps {
   title: string;
   date: string;
   city: string;
-  imageUrl: string;
+  imageUrl: string | null | undefined;
   priceFrom: number;
   category?: string;
   slug?: string;
@@ -39,11 +40,10 @@ export function EventCard({ title, date, city, imageUrl, priceFrom, category, sl
       )}
     >
       <div className="aspect-video relative overflow-hidden">
-        <img
+        <EventImage
           src={imageUrl}
           alt={title}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-          loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
         {category && (
@@ -69,7 +69,7 @@ export function EventCard({ title, date, city, imageUrl, priceFrom, category, sl
           <span className="text-sm text-muted-foreground">
             A partir de{" "}
             <span className="text-foreground font-semibold">
-              {priceFrom === 0 ? "Grátis" : `R$ ${priceFrom.toFixed(2).replace(".", ",")}`}
+              {formatBRLOrFree(priceFrom)}
             </span>
           </span>
           <Button size="sm" variant="default" className="text-xs" onClick={handleBuyClick}>

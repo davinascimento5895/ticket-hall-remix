@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { generateGoogleCalendarUrl, downloadICS } from "@/lib/calendar";
 import { ShareSheet } from "@/components/ShareSheet";
 import { TicketDownloadCard } from "./TicketDownloadCard";
+import { formatBRL } from "@/lib/utils";
 
 interface CheckoutStepConfirmationProps {
   orderId?: string | null;
@@ -56,7 +57,6 @@ export function CheckoutStepConfirmation({ orderId }: CheckoutStepConfirmationPr
     }
   };
 
-  const fmt = (v: number) => `R$ ${Number(v).toFixed(2).replace(".", ",")}`;
   const orderCode = orderId?.slice(0, 8).toUpperCase() || "";
   const eventUrl = event?.slug ? `${window.location.origin}/eventos/${event.slug}` : "";
 
@@ -217,23 +217,23 @@ export function CheckoutStepConfirmation({ orderId }: CheckoutStepConfirmationPr
           <div className="p-4 rounded-xl border border-border bg-card space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Subtotal</span>
-              <span>{fmt(order.subtotal)}</span>
+              <span>{formatBRL(order.subtotal)}</span>
             </div>
             {order.platform_fee > 0 && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Taxa</span>
-                <span>{fmt(order.platform_fee)}</span>
+                <span>{formatBRL(order.platform_fee)}</span>
               </div>
             )}
             {(order.discount_amount ?? 0) > 0 && (
               <div className="flex justify-between text-success">
                 <span>Desconto</span>
-                <span>-{fmt(order.discount_amount!)}</span>
+                <span>-{formatBRL(order.discount_amount!)}</span>
               </div>
             )}
             <div className="flex justify-between font-semibold border-t border-border pt-2">
               <span>Total</span>
-              <span>{fmt(order.total)}</span>
+              <span>{formatBRL(order.total)}</span>
             </div>
           </div>
 

@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CreditCardData, getInstallmentOptions } from "@/lib/api-payment";
 import { validateCPF, formatCPF } from "@/lib/validators";
 import { formatCEP } from "@/lib/cep";
+import { formatBRL } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
 interface CheckoutStepPaymentProps {
@@ -26,8 +27,6 @@ interface CheckoutStepPaymentProps {
   payerCpf: string;
   onPayerCpfChange: (cpf: string) => void;
 }
-
-const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
 
 // M09: Luhn algorithm for card validation
 function luhnCheck(num: string): boolean {
@@ -193,7 +192,7 @@ export function CheckoutStepPayment({
             {expirationWarning}
           </div>
           <div className="p-4 rounded-lg border border-border bg-card space-y-2 text-sm">
-            <div className="flex justify-between font-semibold"><span>Total</span><span>{fmt(total)}</span></div>
+            <div className="flex justify-between font-semibold"><span>Total</span><span>{formatBRL(total)}</span></div>
           </div>
         </div>
       );
@@ -322,17 +321,17 @@ export function CheckoutStepPayment({
       )}
 
       <div className="p-4 rounded-lg border border-border bg-card space-y-2 text-sm">
-        <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{fmt(subtotal)}</span></div>
-        <div className="flex justify-between"><span className="text-muted-foreground">Taxa (7%)</span><span>{fmt(platformFee)}</span></div>
+        <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatBRL(subtotal)}</span></div>
+        <div className="flex justify-between"><span className="text-muted-foreground">Taxa (7%)</span><span>{formatBRL(platformFee)}</span></div>
         {paymentMethod === "credit_card" && installments > 3 && (
           <div className="flex justify-between">
             <span className="text-muted-foreground">Juros</span>
-            <span>{fmt(installmentOptions.find((o) => o.n === installments)?.total! - total)}</span>
+            <span>{formatBRL(installmentOptions.find((o) => o.n === installments)?.total! - total)}</span>
           </div>
         )}
         <div className="flex justify-between font-semibold border-t border-border pt-2">
           <span>Total</span>
-          <span>{fmt(paymentMethod === "credit_card" && installments > 3 ? installmentOptions.find((o) => o.n === installments)?.total || total : total)}</span>
+          <span>{formatBRL(paymentMethod === "credit_card" && installments > 3 ? installmentOptions.find((o) => o.n === installments)?.total || total : total)}</span>
         </div>
       </div>
 

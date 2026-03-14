@@ -3,8 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp, TrendingDown, Wallet, Clock, Info } from "lucide-react";
 import { getCashFlowSummary } from "@/lib/api-financial";
-
-const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",").replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`;
+import { formatBRL } from "@/lib/utils";
 
 export default function ProducerCashFlow({ producerId }: { producerId: string }) {
   const { data, isLoading } = useQuery({
@@ -28,10 +27,10 @@ export default function ProducerCashFlow({ producerId }: { producerId: string })
   };
 
   const cards = [
-    { title: "Saldo Líquido", value: fmt(summary.balance), icon: Wallet, color: summary.balance >= 0 ? "text-green-600" : "text-red-600" },
-    { title: "Total a Receber", value: fmt(summary.totalReceivable), icon: TrendingUp, color: "text-green-600", sub: `${fmt(summary.pendingReceivable)} pendente` },
-    { title: "Total a Pagar", value: fmt(summary.totalPayable), icon: TrendingDown, color: "text-red-600", sub: `${fmt(summary.pendingPayable)} pendente` },
-    { title: "Confirmado", value: fmt(summary.confirmedReceivable - summary.confirmedPayable), icon: Clock, color: "text-primary" },
+    { title: "Saldo Líquido", value: formatBRL(summary.balance), icon: Wallet, color: summary.balance >= 0 ? "text-green-600" : "text-red-600" },
+    { title: "Total a Receber", value: formatBRL(summary.totalReceivable), icon: TrendingUp, color: "text-green-600", sub: `${formatBRL(summary.pendingReceivable)} pendente` },
+    { title: "Total a Pagar", value: formatBRL(summary.totalPayable), icon: TrendingDown, color: "text-red-600", sub: `${formatBRL(summary.pendingPayable)} pendente` },
+    { title: "Confirmado", value: formatBRL(summary.confirmedReceivable - summary.confirmedPayable), icon: Clock, color: "text-primary" },
   ];
 
   return (
@@ -70,23 +69,23 @@ export default function ProducerCashFlow({ producerId }: { producerId: string })
           <div className="space-y-3">
             <div className="flex justify-between py-2 border-b border-border">
               <span className="text-sm text-muted-foreground">Receitas confirmadas</span>
-              <span className="text-sm font-medium text-green-600">{fmt(summary.confirmedReceivable)}</span>
+              <span className="text-sm font-medium text-green-600">{formatBRL(summary.confirmedReceivable)}</span>
             </div>
             <div className="flex justify-between py-2 border-b border-border">
               <span className="text-sm text-muted-foreground">Receitas pendentes</span>
-              <span className="text-sm font-medium text-muted-foreground">{fmt(summary.pendingReceivable)}</span>
+              <span className="text-sm font-medium text-muted-foreground">{formatBRL(summary.pendingReceivable)}</span>
             </div>
             <div className="flex justify-between py-2 border-b border-border">
               <span className="text-sm text-muted-foreground">Despesas confirmadas</span>
-              <span className="text-sm font-medium text-red-600">-{fmt(summary.confirmedPayable)}</span>
+              <span className="text-sm font-medium text-red-600">-{formatBRL(summary.confirmedPayable)}</span>
             </div>
             <div className="flex justify-between py-2 border-b border-border">
               <span className="text-sm text-muted-foreground">Despesas pendentes</span>
-              <span className="text-sm font-medium text-muted-foreground">-{fmt(summary.pendingPayable)}</span>
+              <span className="text-sm font-medium text-muted-foreground">-{formatBRL(summary.pendingPayable)}</span>
             </div>
             <div className="flex justify-between py-2 font-semibold">
               <span>Saldo projetado</span>
-              <span className={summary.balance >= 0 ? "text-green-600" : "text-red-600"}>{fmt(summary.balance)}</span>
+              <span className={summary.balance >= 0 ? "text-green-600" : "text-red-600"}>{formatBRL(summary.balance)}</span>
             </div>
           </div>
         </CardContent>

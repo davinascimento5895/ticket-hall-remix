@@ -12,8 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Trash2, Edit2, Users, Ban, CheckCircle } from "lucide-react";
 import { getPromoters, createPromoter, updatePromoter, deletePromoter } from "@/lib/api-promoters";
 import { toast } from "@/hooks/use-toast";
-
-const fmt = (v: number) => `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
+import { formatBRL } from "@/lib/utils";
 
 export default function ProducerPromotersList({ producerId }: { producerId: string }) {
   const queryClient = useQueryClient();
@@ -110,9 +109,9 @@ export default function ProducerPromotersList({ producerId }: { producerId: stri
                       {p.email && <p>{p.email}</p>}
                       {p.phone && <p>{p.phone}</p>}
                       <div className="flex gap-4 mt-1">
-                        <span>Vendas: {fmt(p.total_sales || 0)}</span>
-                        <span>Comissão: {fmt(p.total_commission_earned || 0)}</span>
-                        <span>Pago: {fmt(p.total_commission_paid || 0)}</span>
+                        <span>Vendas: {formatBRL(p.total_sales || 0)}</span>
+                        <span>Comissão: {formatBRL(p.total_commission_earned || 0)}</span>
+                        <span>Pago: {formatBRL(p.total_commission_paid || 0)}</span>
                       </div>
                     </div>
                   </div>

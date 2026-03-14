@@ -7,6 +7,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { EventImage } from "@/components/EventImage";
+import { EventStatusBadge } from "@/components/EventStatusBadge";
 import { cn } from "@/lib/utils";
 
 interface ProducerEventCardProps {
@@ -22,13 +24,6 @@ interface ProducerEventCardProps {
   className?: string;
 }
 
-const statusMap: Record<string, { label: string; classes: string }> = {
-  draft: { label: "Rascunho", classes: "bg-muted text-muted-foreground" },
-  published: { label: "Publicado", classes: "bg-success/15 text-success" },
-  cancelled: { label: "Cancelado", classes: "bg-destructive/15 text-destructive" },
-  completed: { label: "Encerrado", classes: "bg-muted text-muted-foreground" },
-};
-
 export function ProducerEventCard({
   id,
   title,
@@ -40,22 +35,16 @@ export function ProducerEventCard({
   totalCapacity,
   className,
 }: ProducerEventCardProps) {
-  const st = statusMap[status] || statusMap.draft;
-
   return (
     <div className={cn("flex items-start gap-4 p-4 rounded-lg border border-border bg-card", className)}>
       <div className="w-24 h-16 rounded bg-muted overflow-hidden shrink-0 hidden sm:block">
-        {coverImageUrl ? (
-          <img src={coverImageUrl} alt="" className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full bg-secondary" />
-        )}
+        <EventImage src={coverImageUrl} alt="" className="w-full h-full" />
       </div>
 
       <div className="flex-1 min-w-0 space-y-1">
         <div className="flex items-center gap-2">
           <h3 className="font-display font-semibold text-foreground truncate">{title}</h3>
-          <span className={cn("px-2 py-0.5 text-xs font-medium rounded-full", st.classes)}>{st.label}</span>
+          <EventStatusBadge status={status} />
         </div>
         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">

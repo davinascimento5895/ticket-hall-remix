@@ -12,16 +12,17 @@ import { SEOHead } from "@/components/SEOHead";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { ShareSheet } from "@/components/ShareSheet";
 import { EventReviews } from "@/components/EventReviews";
+import { EventImage } from "@/components/EventImage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/contexts/CartContext";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
-import { getEventBySlug, getEventTiers } from "@/lib/api";
+import { getEventBySlug } from "@/lib/api";
 import { getEventProducts } from "@/lib/api-products";
 import { EventProductCatalog } from "@/components/EventProductCatalog";
 import { toast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
+import { cn, formatBRL } from "@/lib/utils";
 
 export default function EventDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -64,46 +65,51 @@ export default function EventDetail() {
       });
   }, [event?.id, searchParams, setTrackingCode]);
 
-  const { data: allTiers, isLoading: loadingTiers } = useQuery({
-    queryKey: ["event-tiers-all", event?.id],
+  // Fetch tiers, products, and producer in parallel once event is loaded
+  const { data: eventDetails, isLoading: loadingDetails } = useQuery({
+    queryKey: ["event-details", event?.id],
     queryFn: async () => {
-      const { data, error } = await (await import("@/integrations/supabase/client")).supabase
-        .from("ticket_tiers")
-        .select("*")
-        .eq("event_id", event!.id)
-        .order("sort_order", { ascending: true });
-      if (error) throw error;
-      return data;
+      const eventId = event!.id;
+      const producerId = event!.producer_id;
+
+      const [tiersResult, productsResult, producerResult] = await Promise.all([
+        supabase
+          .from("ticket_tiers")
+          .select("*")
+          .eq("event_id", eventId)
+          .order("sort_order", { ascending: true }),
+        getEventProducts(eventId),
+        producerId
+          ? supabase
+              .from("profiles")
+              .select("id, full_name, organizer_slug, organizer_logo_url, organizer_bio")
+              .eq("id", producerId)
+              .single()
+          : Promise.resolve({ data: null, error: null }),
+      ]);
+
+      if (tiersResult.error) throw tiersResult.error;
+
+      return {
+        allTiers: tiersResult.data,
+        products: productsResult ?? [],
+        producer: producerResult.data,
+      };
     },
     enabled: !!event?.id,
   });
 
-  const { data: products = [] } = useQuery({
-    queryKey: ["event-products", event?.id],
-    queryFn: () => getEventProducts(event!.id),
-    enabled: !!event?.id,
-  });
-
-  // Fetch producer profile
-  const { data: producer } = useQuery({
-    queryKey: ["producer-profile", event?.producer_id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("id, full_name, organizer_slug, organizer_logo_url, organizer_bio")
-        .eq("id", event!.producer_id)
-        .single();
-      return data;
-    },
-    enabled: !!event?.producer_id,
-  });
+  const allTiers = eventDetails?.allTiers;
+  const products = eventDetails?.products ?? [];
+  const producer = eventDetails?.producer;
+  const loadingTiers = loadingDetails;
 
   const { addItem, itemCount } = useCart();
 
   useRealtimeSubscription({
     table: "tickets",
     filter: event?.id ? `event_id=eq.${event.id}` : undefined,
-    queryKey: ["event-tiers-all", event?.id || ""],
+    queryKey: ["event-details", event?.id || ""],
     enabled: !!event?.id,
   });
 
@@ -177,8 +183,6 @@ export default function EventDetail() {
 
   const isPastEvent = event ? new Date(event.end_date) < new Date() : false;
 
-  const fmt = (v: number) => `R$ ${Number(v).toFixed(2).replace(".", ",")}`;
-
   if (loadingEvent) {
     return (
       <>
@@ -232,11 +236,7 @@ export default function EventDetail() {
 
       {/* Cover image - full banner */}
       <div className="relative w-full flex justify-center bg-secondary overflow-hidden">
-        {event.cover_image_url ? (
-          <img src={event.cover_image_url} alt={event.title} className="w-auto max-w-full max-h-[380px] object-contain" />
-        ) : (
-          <div className="w-full h-[380px] bg-secondary" />
-        )}
+        <EventImage src={event.cover_image_url} alt={event.title} className="w-auto max-w-full max-h-[380px] object-contain" />
         <FavoriteButton eventId={event.id} size="md" className="absolute top-4 right-4" />
       </div>
 
@@ -465,7 +465,7 @@ export default function EventDetail() {
                   <p className="text-sm text-muted-foreground">
                     A partir de{" "}
                     <span className="text-foreground font-semibold">
-                      {lowestPrice === 0 ? "Grátis" : fmt(lowestPrice)}
+                      {lowestPrice === 0 ? "Grátis" : formatBRL(lowestPrice)}
                     </span>
                   </p>
               <Button className="w-full" onClick={() => setActiveSection("tickets")}>
@@ -512,7 +512,7 @@ export default function EventDetail() {
             <div>
               <p className="text-xs text-muted-foreground">A partir de</p>
               <p className="font-display font-bold text-foreground">
-                {lowestPrice !== null ? (lowestPrice === 0 ? "Grátis" : fmt(lowestPrice)) : "—"}
+                {lowestPrice !== null ? (lowestPrice === 0 ? "Grátis" : formatBRL(lowestPrice)) : "—"}
               </p>
             </div>
             <Button onClick={() => setActiveSection("tickets")}>

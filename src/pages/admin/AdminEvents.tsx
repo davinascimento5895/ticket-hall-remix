@@ -1,10 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Search, Star, StarOff, Percent, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { OrderStatusBadge } from "@/components/OrderStatusBadge";
+import { EventStatusBadge } from "@/components/EventStatusBadge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   AlertDialog,
@@ -17,12 +17,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { getAllEvents, adminUpdateEvent, adminDeleteEvent } from "@/lib/api-admin";
+import { getAllEventsPaginated, adminUpdateEvent, adminDeleteEvent } from "@/lib/api-admin";
+import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
 import { toast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
-
-const statusMap: Record<string, string> = { draft: "pending", published: "active", cancelled: "cancelled", ended: "used" };
 
 function FeeEditor({ eventId, currentFee, onSave }: { eventId: string; currentFee: number; onSave: (id: string, fee: number) => void }) {
   const [fee, setFee] = useState(currentFee);
@@ -59,14 +58,27 @@ export default function AdminEvents() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 400);
   const [statusFilter, setStatusFilter] = useState("all");
-  const [page, setPage] = useState(1);
-  const perPage = 20;
 
-  const { data: events, isLoading } = useQuery({
+  const {
+    items: events,
+    totalCount,
+    page,
+    totalPages,
+    pageSize,
+    setPage,
+    resetPage,
+    isLoading,
+  } = usePaginatedQuery({
     queryKey: ["admin-events", statusFilter, debouncedSearch],
-    queryFn: () => getAllEvents({ status: statusFilter, search: debouncedSearch }),
+    queryFn: (range) => getAllEventsPaginated({ status: statusFilter, search: debouncedSearch }, range),
+    pageSize: 20,
     staleTime: 2 * 60_000,
   });
+
+  // Reset page when filters change
+  useEffect(() => {
+    resetPage();
+  }, [statusFilter, debouncedSearch, resetPage]);
 
   const updateMutation = useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: Record<string, any> }) => adminUpdateEvent(id, updates),
@@ -85,15 +97,6 @@ export default function AdminEvents() {
   const handleFeeUpdate = (id: string, fee: number) => {
     updateMutation.mutate({ id, updates: { platform_fee_percent: fee } });
   };
-
-  // Pagination
-  const allEvents = events || [];
-  const totalPages = Math.max(1, Math.ceil(allEvents.length / perPage));
-  const paginatedEvents = allEvents.slice((page - 1) * perPage, page * perPage);
-  // Reset page when filters change
-  const currentFilterKey = `${statusFilter}-${debouncedSearch}`;
-  const [lastFilterKey, setLastFilterKey] = useState(currentFilterKey);
-  if (currentFilterKey !== lastFilterKey) { setLastFilterKey(currentFilterKey); setPage(1); }
 
   const statuses = [
     { value: "all", label: "Todos" },
@@ -125,7 +128,7 @@ export default function AdminEvents() {
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-4 space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
-          ) : !events || events.length === 0 ? (
+          ) : events.length === 0 ? (
             <p className="text-sm text-muted-foreground py-8 text-center">Nenhum evento encontrado.</p>
           ) : (
             <div className="overflow-x-auto">
@@ -142,11 +145,11 @@ export default function AdminEvents() {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedEvents.map((event: any) => (
+                  {events.map((event: any) => (
                     <tr key={event.id} className="border-b border-border/50 hover:bg-muted/30">
                       <td className="p-3 font-medium max-w-[200px] truncate">{event.title}</td>
                       <td className="p-3 text-muted-foreground">{event.profiles?.full_name || "—"}</td>
-                      <td className="p-3"><OrderStatusBadge status={statusMap[event.status] || event.status} /></td>
+                      <td className="p-3"><EventStatusBadge status={event.status} /></td>
                       <td className="p-3">
                         <FeeEditor eventId={event.id} currentFee={event.platform_fee_percent ?? 7} onSave={handleFeeUpdate} />
                       </td>
@@ -192,9 +195,9 @@ export default function AdminEvents() {
       </Card>
 
       {/* Pagination */}
-      {allEvents.length > perPage && (
+      {totalCount > pageSize && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>{allEvents.length} evento(s) · Página {page} de {totalPages}</span>
+          <span>{totalCount} evento(s) · Página {page} de {totalPages}</span>
           <div className="flex items-center gap-1">
             <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
               <ChevronLeft className="h-4 w-4" />
