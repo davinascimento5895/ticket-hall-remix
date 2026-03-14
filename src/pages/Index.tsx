@@ -75,9 +75,9 @@ export default function Index() {
         <Spotlight size={500} className="z-0" />
         <div className="container relative z-10 text-center space-y-6 py-20">
           <motion.h1
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.3 }}
             className="font-display text-4xl lg:text-6xl xl:text-7xl font-bold leading-tight"
           >
             Seus ingressos para{" "}
@@ -88,9 +88,9 @@ export default function Index() {
             />
           </motion.h1>
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.15 }}
+            transition={{ duration: 0.3, delay: 0.05 }}
             className="text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto"
           >
             Compre, transfira e gerencie seus ingressos com segurança. A plataforma completa para produtores e compradores.
@@ -98,18 +98,18 @@ export default function Index() {
 
           {/* Hero Search Bar */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.25 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
             className="max-w-2xl mx-auto w-full"
           >
             <SearchBar variant="hero" placeholder="Buscar eventos, shows, cidades..." />
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.35 }}
+            transition={{ duration: 0.3, delay: 0.15 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <Button variant="default" size="lg" asChild>

@@ -103,10 +103,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        ensureProfile(session.user.id).then(() => {
-          fetchProfile(session.user.id);
-          fetchRole(session.user.id);
-        });
+        // ensureProfile é fire-and-forget: não bloqueia o carregamento do perfil/role.
+        // Para usuários recorrentes o profile já existe — não faz sentido esperar a Edge Function.
+        ensureProfile(session.user.id);
+        fetchProfile(session.user.id);
+        fetchRole(session.user.id);
       } else {
         setProfile(null);
         setRole(null);
