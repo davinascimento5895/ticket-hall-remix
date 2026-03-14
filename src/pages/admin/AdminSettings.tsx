@@ -18,15 +18,14 @@ import { Star, StarOff, Loader2 } from "lucide-react";
 // ---------------------------------------------------------------------------
 async function getSetting(key: string): Promise<any> {
   try {
-    const { data, error } = await supabase
-      .from("platform_settings" as any)
+    const { data, error } = await (supabase as any)
+      .from("platform_settings")
       .select("value")
       .eq("key", key)
       .maybeSingle();
     if (error) throw error;
-    return data?.value ?? null;
+    return (data as any)?.value ?? null;
   } catch {
-    // Table doesn't exist yet — fall back to localStorage
     const stored = localStorage.getItem(`ps_${key}`);
     return stored ? JSON.parse(stored) : null;
   }
