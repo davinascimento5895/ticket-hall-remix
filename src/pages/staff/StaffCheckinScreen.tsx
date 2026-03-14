@@ -60,6 +60,7 @@ export default function StaffCheckinScreen() {
 
   // Event info
   const [event, setEvent] = useState<{ title: string } | null>(null);
+  const [staffCheckinListId, setStaffCheckinListId] = useState<string | null>(null);
 
   // Counters
   const [checkedInCount, setCheckedInCount] = useState(0);
@@ -106,6 +107,18 @@ export default function StaffCheckinScreen() {
     if (loading || !user || !eventId) return;
 
     supabase.from("events").select("title").eq("id", eventId).single().then(({ data }) => setEvent(data));
+
+    // Fetch staff assignment to get assigned checkin_list_id
+    if (user?.id) {
+      supabase
+        .from("event_staff")
+        .select("checkin_list_id")
+        .eq("event_id", eventId)
+        .eq("user_id", user.id)
+        .maybeSingle()
+        .then(({ data }) => setStaffCheckinListId(data?.checkin_list_id || null));
+    }
+
     fetchCounters();
 
     const channel = supabase
@@ -156,7 +169,7 @@ export default function StaffCheckinScreen() {
     try { scannerRef.current?.pause(true); } catch {}
 
     try {
-      const result = await validateCheckin({ qrCode, scannedBy: user?.id });
+      const result = await validateCheckin({ qrCode, scannedBy: user?.id, checkinListId: staffCheckinListId || undefined });
       showFeedback(result.result as ScanResult, result.message, result.attendeeName, result.tierName, result.checkedInAt);
     } catch (err: any) {
       showFeedback("error", err?.message || "Erro desconhecido");
@@ -246,7 +259,7 @@ export default function StaffCheckinScreen() {
         showFeedback("error", "QR code não encontrado para este ingresso");
         return;
       }
-      const result = await validateCheckin({ qrCode: t.qr_code, scannedBy: user?.id });
+      const result = await validateCheckin({ qrCode: t.qr_code, scannedBy: user?.id, checkinListId: staffCheckinListId || undefined });
       showFeedback(result.result as ScanResult, result.message, result.attendeeName, result.tierName, result.checkedInAt);
     } catch (err: any) {
       showFeedback("error", err?.message || "Erro ao validar ingresso");

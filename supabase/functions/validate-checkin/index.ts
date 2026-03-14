@@ -100,6 +100,29 @@ serve(async (req) => {
       return jsonResponse({ success: false, result: "not_found", message: "Ingresso não encontrado" }, 404);
     }
 
+    // 2b. Authorize operator: must be event producer, event staff, or service call
+    if (operatorId) {
+      const { data: event } = await supabase
+        .from("events")
+        .select("producer_id")
+        .eq("id", ticket.event_id)
+        .single();
+      const isProducer = event?.producer_id === operatorId;
+
+      if (!isProducer) {
+        const { data: staffRecord } = await supabase
+          .from("event_staff")
+          .select("id")
+          .eq("event_id", ticket.event_id)
+          .eq("user_id", operatorId)
+          .maybeSingle();
+
+        if (!staffRecord) {
+          return jsonResponse({ success: false, result: "unauthorized", message: "Você não tem permissão para fazer check-in neste evento" }, 403);
+        }
+      }
+    }
+
     // 3. Check if QR matches (detects old QR after transfer)
     if (ticket.qr_code !== qrCode) {
       await logScan(supabase, { checkinListId, ticketId, qrCode, result: "invalid_qr", deviceId, scannedBy: effectiveScannedBy });
