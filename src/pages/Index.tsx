@@ -144,7 +144,7 @@ export default function Index() {
             <LoadingSkeleton variant="card" count={3} />
           ) : featuredEvents.length > 0 ? (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featuredEvents.map((event: any) => (
+              {featuredEvents.map((event: any, index: number) => (
                 <EventCard
                   key={event.id}
                   title={event.title}
@@ -155,6 +155,7 @@ export default function Index() {
                   category={event.category}
                   slug={event.slug}
                   eventId={event.id}
+                  priority={index === 0}
                 />
               ))}
             </div>

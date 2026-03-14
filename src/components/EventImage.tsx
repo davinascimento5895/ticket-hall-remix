@@ -6,9 +6,11 @@ interface EventImageProps {
   src: string | null | undefined;
   alt: string;
   className?: string;
+  /** true para o primeiro card visível da página (LCP) — desativa lazy e prioriza fetch */
+  priority?: boolean;
 }
 
-export function EventImage({ src, alt, className }: EventImageProps) {
+export function EventImage({ src, alt, className, priority = false }: EventImageProps) {
   const [hasError, setHasError] = useState(false);
   const imgSrc = src && !hasError ? src : null;
 
@@ -25,7 +27,8 @@ export function EventImage({ src, alt, className }: EventImageProps) {
       src={imgSrc}
       alt={alt}
       className={cn("w-full h-full object-cover", className)}
-      loading="lazy"
+      loading={priority ? "eager" : "lazy"}
+      fetchPriority={priority ? "high" : "auto"}
       onError={() => setHasError(true)}
     />
   );

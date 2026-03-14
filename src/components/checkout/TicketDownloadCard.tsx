@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Printer, Download, Calendar, Clock, MapPin, Ticket, Hash, User, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { generateTicketPDF } from "@/lib/ticket-pdf";
 import { formatBRL } from "@/lib/utils";
 
 export interface TicketDownloadData {
@@ -89,6 +88,8 @@ export function TicketDownloadCard(props: TicketDownloadData) {
   const handleDownloadPDF = async () => {
     setDownloading(true);
     try {
+      // jsPDF é pesado (~250KB) — importar só quando o usuário realmente clicar
+      const { generateTicketPDF } = await import("@/lib/ticket-pdf");
       await generateTicketPDF(props);
     } catch (err) {
       console.error("PDF generation error:", err);

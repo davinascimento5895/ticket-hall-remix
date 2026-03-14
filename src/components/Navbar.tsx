@@ -19,6 +19,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+// Prefetch do chunk JS da rota ao hover — elimina o download no momento do clique
+const routePrefetchMap: Record<string, () => Promise<unknown>> = {
+  "/eventos":   () => import("@/pages/Eventos"),
+  "/revenda":   () => import("@/pages/Revenda"),
+  "/produtores":() => import("@/pages/Produtores"),
+  "/blog":      () => import("@/pages/Blog"),
+  "/":          () => import("@/pages/Index"),
+};
+const prefetched = new Set<string>();
+function prefetchRoute(href: string) {
+  if (prefetched.has(href) || !routePrefetchMap[href]) return;
+  prefetched.add(href);
+  routePrefetchMap[href]();
+}
+
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -100,7 +115,7 @@ export function Navbar() {
         )}
       >
         <div className="container flex h-14 lg:h-16 items-center justify-between">
-          <Link to="/" className="shrink-0">
+          <Link to="/" onMouseEnter={() => prefetchRoute("/")} className="shrink-0">
             <TicketHallLogo size="md" className="hidden lg:block" />
             <TicketHallLogo size="sm" className="lg:hidden" />
           </Link>
@@ -120,7 +135,12 @@ export function Navbar() {
               </form>
             )}
             {links.map((l) => (
-              <Link key={l.href} to={l.href} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+              <Link
+                key={l.href}
+                to={l.href}
+                onMouseEnter={() => prefetchRoute(l.href)}
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
                 {l.label}
               </Link>
             ))}
@@ -270,6 +290,7 @@ export function Navbar() {
                 <Link
                   key={l.href}
                   to={l.href}
+                  onMouseEnter={() => prefetchRoute(l.href)}
                   className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 transition-colors"
                   onClick={() => setMobileOpen(false)}
                 >
@@ -297,7 +318,7 @@ export function Navbar() {
           <div className="lg:hidden bg-background/95 backdrop-blur-xl border-b border-border animate-fade-in">
             <div className="container py-4 space-y-1">
               {links.map((l) => (
-                <Link key={l.href} to={l.href} className="block text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 transition-colors" onClick={() => setMobileOpen(false)}>
+                <Link key={l.href} to={l.href} onMouseEnter={() => prefetchRoute(l.href)} className="block text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 transition-colors" onClick={() => setMobileOpen(false)}>
                   {l.label}
                 </Link>
               ))}
