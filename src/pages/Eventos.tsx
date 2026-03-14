@@ -27,7 +27,7 @@ export default function Eventos() {
   const navigate = useNavigate();
   const { user, role } = useAuth();
   const [search, setSearch] = useState("");
-  const [gridView, setGridView] = useState(false);
+  const [gridView, setGridView] = useState(true);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const { city, loading: cityLoading, requestLocation } = useCityDetection();
   const [producerModalOpen, setProducerModalOpen] = useState(false);
@@ -302,7 +302,7 @@ export default function Eventos() {
             {featuredEvent && !gridView && (
               <a
                 href={`/eventos/${featuredEvent.slug}`}
-                className="group relative block rounded-2xl overflow-hidden border border-border bg-card h-[280px] md:h-[340px]"
+                className="group relative block rounded-2xl overflow-hidden border border-border bg-card h-[200px] md:h-[240px]"
               >
                 <EventImage
                   src={featuredEvent.cover_image_url}
@@ -310,13 +310,13 @@ export default function Eventos() {
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-6">
+                <div className="absolute bottom-0 left-0 right-0 p-4">
                   {featuredEvent.category && (
-                    <span className="inline-block px-2.5 py-1 text-xs font-medium rounded-full bg-primary/90 text-primary-foreground mb-3">
+                    <span className="inline-block px-2 py-0.5 text-[10px] font-medium rounded-full bg-primary/90 text-primary-foreground mb-2">
                       {CATEGORY_OPTIONS.find(c => c.value === featuredEvent.category)?.label || featuredEvent.category}
                     </span>
                   )}
-                  <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-1">{featuredEvent.title}</h2>
+                  <h2 className="font-display text-xl md:text-2xl font-bold text-foreground mb-1">{featuredEvent.title}</h2>
                   <p className="text-sm text-muted-foreground">
                     {new Date(featuredEvent.start_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
                     {featuredEvent.venue_city ? ` · ${featuredEvent.venue_city}` : ""}
@@ -327,10 +327,10 @@ export default function Eventos() {
 
             {/* Event grid */}
             <div className={cn(
-              "grid gap-5",
+              "grid gap-4",
               gridView
-                ? "grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                : "sm:grid-cols-2 lg:grid-cols-3"
+                ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+                : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"
             )}>
               {(gridView ? filteredEvents : restEvents).slice(0, visibleCount).map((event: any) => (
                 <EventCard
