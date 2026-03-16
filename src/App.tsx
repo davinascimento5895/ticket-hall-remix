@@ -13,6 +13,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 // Public pages — lazy loaded
 const Index = lazy(() => import("./pages/Index"));
 const Produtores = lazy(() => import("./pages/Produtores"));
+const ProdutoresFuncionalidades = lazy(() => import("./pages/ProdutoresFuncionalidades"));
 const Eventos = lazy(() => import("./pages/Eventos"));
 const EventDetail = lazy(() => import("./pages/EventDetail"));
 const EventBooking = lazy(() => import("./pages/EventBooking"));
@@ -137,6 +138,7 @@ const App = () => {
               <Route element={<MainLayout />}>
                 <Route path="/" element={<Index />} />
                 <Route path="/produtores" element={<Produtores />} />
+                <Route path="/produtores/funcionalidades" element={<ProdutoresFuncionalidades />} />
                 <Route path="/eventos" element={<Eventos />} />
                 <Route path="/eventos/:slug" element={<EventDetail />} />
                 <Route path="/eventos/:slug/comprar" element={<EventBooking />} />
