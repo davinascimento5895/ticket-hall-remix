@@ -3,8 +3,9 @@ import { ChevronDown, X, Calendar as CalendarIcon, Flame, ArrowUpDown } from "lu
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, type RangeValue } from "@/components/ui/calendar";
+import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import type { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { CATEGORY_OPTIONS } from "@/lib/categories";
 import {
@@ -21,13 +22,14 @@ import {
   nextSunday,
   format,
 } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 // ─── Types ───────────────────────────────────────────────
 
 export interface EventFilters {
   category: string;
   datePreset: DatePreset;
-  dateRange: RangeValue | null;
+  dateRange: DateRange | undefined;
   priceMin: string;
   priceMax: string;
   modality: "all" | "presential" | "online";
@@ -37,7 +39,7 @@ export interface EventFilters {
 export const defaultEventFilters: EventFilters = {
   category: "",
   datePreset: null,
-  dateRange: null,
+  dateRange: undefined,
   priceMin: "",
   priceMax: "",
   modality: "all",
@@ -183,17 +185,17 @@ export function EventFilterBar({ filters, onChange }: Props) {
     if (filters.datePreset) {
       return DATE_PRESETS.find((p) => p.value === filters.datePreset)?.label;
     }
-    if (filters.dateRange?.start) {
-      if (filters.dateRange.end) {
-        return `${format(filters.dateRange.start, "dd/MM")} – ${format(filters.dateRange.end, "dd/MM")}`;
+    if (filters.dateRange?.from) {
+      if (filters.dateRange.to) {
+        return `${format(filters.dateRange.from, "dd/MM")} – ${format(filters.dateRange.to, "dd/MM")}`;
       }
-      return format(filters.dateRange.start, "dd/MM/yyyy");
+      return format(filters.dateRange.from, "dd/MM/yyyy");
     }
     return undefined;
   };
 
   const dateLabel = getDateLabel();
-  const hasDateFilter = !!filters.datePreset || !!filters.dateRange?.start;
+  const hasDateFilter = !!filters.datePreset || !!filters.dateRange?.from;
   const hasPriceFilter = !!filters.priceMin || !!filters.priceMax;
 
   const priceLabel = hasPriceFilter
@@ -249,7 +251,7 @@ export function EventFilterBar({ filters, onChange }: Props) {
           label="Data"
           active={!!hasDateFilter}
           activeLabel={dateLabel}
-          onClear={() => update({ datePreset: null, dateRange: null })}
+          onClear={() => update({ datePreset: null, dateRange: undefined })}
           className="w-auto"
         >
           <div className="min-w-[300px] sm:min-w-[580px]">
@@ -265,13 +267,13 @@ export function EventFilterBar({ filters, onChange }: Props) {
                   active={filters.datePreset === p.value}
                   onClick={() => {
                     if (filters.datePreset === p.value) {
-                      update({ datePreset: null, dateRange: null });
+                      update({ datePreset: null, dateRange: undefined });
                     } else {
                       // Set preset and also set dateRange for calendar visual
                       const range = getDateRangeFromPreset(p.value);
                       update({
                         datePreset: p.value,
-                        dateRange: range ? { start: range.start, end: range.end } : null,
+                        dateRange: range ? { from: range.start, to: range.end } : undefined,
                       });
                     }
                   }}
@@ -281,11 +283,15 @@ export function EventFilterBar({ filters, onChange }: Props) {
 
             {/* Calendar */}
             <Calendar
-              value={filters.dateRange}
-              onChange={(range) =>
+              mode="range"
+              selected={filters.dateRange}
+              onSelect={(range) =>
                 update({ dateRange: range, datePreset: null })
               }
-              minValue={startOfToday()}
+              numberOfMonths={2}
+              locale={ptBR}
+              disabled={(date) => date < startOfToday()}
+              className="p-3 pointer-events-auto"
             />
 
             {/* Actions */}
@@ -293,7 +299,7 @@ export function EventFilterBar({ filters, onChange }: Props) {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => update({ datePreset: null, dateRange: null })}
+                onClick={() => update({ datePreset: null, dateRange: undefined })}
               >
                 Limpar
               </Button>

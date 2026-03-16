@@ -1,11 +1,13 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { DollarSign, TrendingUp, CreditCard, Percent, Download } from "lucide-react";
+import { DollarSign, TrendingUp, CreditCard, Percent, Download, CalendarIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, RangeValue } from "@/components/ui/calendar";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { getFinanceData } from "@/lib/api-admin";
-import { subDays, startOfMonth, startOfYear } from "date-fns";
+import { format, subDays, startOfMonth, startOfYear } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { cn, formatBRL } from "@/lib/utils";
 
 const presets = [
@@ -17,14 +19,17 @@ const presets = [
 ];
 
 export default function AdminFinance() {
-  const [dateRange, setDateRange] = useState<RangeValue | null>(null);
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+    from: undefined,
+    to: undefined,
+  });
   const [activePreset, setActivePreset] = useState("Todo o período");
 
   const queryDateRange = useMemo(() => {
-    if (!dateRange?.start) return undefined;
+    if (!dateRange.from) return undefined;
     return {
-      from: dateRange.start.toISOString(),
-      to: dateRange.end ? dateRange.end.toISOString() : new Date().toISOString(),
+      from: dateRange.from.toISOString(),
+      to: dateRange.to ? dateRange.to.toISOString() : new Date().toISOString(),
     };
   }, [dateRange]);
 
@@ -37,12 +42,12 @@ export default function AdminFinance() {
   const handlePreset = (preset: typeof presets[number]) => {
     setActivePreset(preset.label);
     if (preset.days === 0) {
-      setDateRange(null);
+      setDateRange({ from: undefined, to: undefined });
     } else if (preset.getRange) {
       const range = preset.getRange();
-      setDateRange({ start: range.from, end: range.to });
+      setDateRange({ from: range.from, to: range.to });
     } else {
-      setDateRange({ start: subDays(new Date(), preset.days), end: new Date() });
+      setDateRange({ from: subDays(new Date(), preset.days), to: new Date() });
     }
   };
 
@@ -81,11 +86,29 @@ export default function AdminFinance() {
               {p.label}
             </button>
           ))}
-          <Calendar
-            value={dateRange}
-            onChange={(range) => { setDateRange(range); setActivePreset(""); }}
-            allowClear
-          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs h-7">
+                <CalendarIcon className="h-3.5 w-3.5" />
+                {dateRange.from
+                  ? `${format(dateRange.from, "dd/MM/yy")} — ${dateRange.to ? format(dateRange.to, "dd/MM/yy") : "hoje"}`
+                  : "Personalizado"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="range"
+                selected={dateRange.from ? { from: dateRange.from, to: dateRange.to } : undefined}
+                onSelect={(range) => {
+                  setDateRange({ from: range?.from, to: range?.to });
+                  setActivePreset("");
+                }}
+                numberOfMonths={2}
+                locale={ptBR}
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
