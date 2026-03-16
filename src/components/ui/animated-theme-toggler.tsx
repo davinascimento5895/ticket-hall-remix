@@ -12,7 +12,10 @@ export const AnimatedThemeToggler = ({
   duration = 400,
   ...props
 }: AnimatedThemeTogglerProps) => {
-  const [isDark, setIsDark] = useState(true)
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof document === "undefined") return false
+    return document.documentElement.classList.contains("dark")
+  })
   const buttonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {

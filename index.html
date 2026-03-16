@@ -20,8 +20,8 @@
     <script>
       (function() {
         var stored = localStorage.getItem('theme');
-        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        if (stored === 'dark' || (!stored && prefersDark)) {
+        // Prioritize light mode by default. Only apply dark if the user previously selected it.
+        if (stored === 'dark') {
           document.documentElement.classList.add('dark');
         } else {
           document.documentElement.classList.remove('dark');
