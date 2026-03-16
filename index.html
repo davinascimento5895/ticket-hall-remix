@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR" class="dark">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" href="/favicon.png" type="image/png" />
@@ -19,8 +19,11 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" />
     <script>
       (function() {
-        var theme = localStorage.getItem('theme');
-        if (theme === 'light') {
+        var stored = localStorage.getItem('theme');
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (stored === 'dark' || (!stored && prefersDark)) {
+          document.documentElement.classList.add('dark');
+        } else {
           document.documentElement.classList.remove('dark');
         }
       })();
@@ -30,13 +33,13 @@
   <body>
     <!-- App shell: visível em T=0 enquanto React carrega. Substituído automaticamente por createRoot().render() -->
     <div id="root">
-      <div style="min-height:100vh;background:hsl(0 0% 6%)">
+      <div style="min-height:100vh;background:hsl(0 0% 98%)">
         <header style="position:fixed;top:0;left:0;right:0;z-index:50;height:3.5rem;display:flex;align-items:center;padding:0 1.5rem">
-          <span style="font-size:1.125rem;font-weight:700;letter-spacing:-0.025em;color:hsl(0 0% 96%)">TicketHall</span>
+          <span style="font-size:1.125rem;font-weight:700;letter-spacing:-0.025em;color:hsl(0 0% 8%)">TicketHall</span>
         </header>
         <section style="min-height:85vh;display:flex;align-items:center;justify-content:center">
           <div style="text-align:center;padding:5rem 1rem">
-            <h1 style="font-family:'Sora',sans-serif;font-size:2.25rem;font-weight:700;line-height:1.1;color:hsl(0 0% 96%)">
+            <h1 style="font-family:'Sora',sans-serif;font-size:2.25rem;font-weight:700;line-height:1.1;color:hsl(0 0% 8%)">
               Seus ingressos para eventos
             </h1>
             <p style="margin-top:1.5rem;font-size:1.125rem;line-height:1.75;color:hsl(0 0% 64%);max-width:36rem;margin-left:auto;margin-right:auto">
