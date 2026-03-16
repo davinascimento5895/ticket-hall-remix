@@ -16,7 +16,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Camera, Lock, Loader2 } from "lucide-react";
+import { ArrowLeft, Camera, Lock, Loader2, User, MapPin, Mail, Lock as LockIcon } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { EVENT_CATEGORIES } from "@/lib/categories";
 import { validateCPF, formatCPF, formatPhone } from "@/lib/validators";
@@ -166,6 +166,7 @@ export default function EditarPerfil() {
 
     setSaving(false);
     if (error) {
+      console.error("Save error:", error);
       toast({ title: "Erro ao salvar perfil", variant: "destructive" });
     } else {
       await refetchRole();
@@ -194,229 +195,454 @@ export default function EditarPerfil() {
     }
   };
 
-  const inputClass = "bg-muted/50 border-0 focus-visible:ring-1";
-  const labelClass = "text-xs text-muted-foreground uppercase tracking-wider";
-  const sectionTitleClass = "text-xs text-muted-foreground uppercase tracking-wider font-medium";
-
   return (
     <>
       <SEOHead title="Editar Perfil | TicketHall" description="Edite seu perfil no TicketHall" />
 
       <div className="min-h-screen bg-background">
-        {/* Mobile Header */}
-        <div className="sticky top-0 z-10 bg-background border-b border-border px-4 py-4 flex items-center gap-3 md:hidden">
-          <button onClick={() => navigate("/meu-perfil")} className="p-2 -ml-1 active:scale-95" aria-label="Voltar">
-            <ArrowLeft className="h-5 w-5 text-foreground" />
-          </button>
-          <h1 className="text-center flex-1 text-lg font-semibold font-[var(--font-display)]">Editar Perfil</h1>
-          <div className="w-8" />
-        </div>
-
-        {/* Desktop Header */}
-        <div className="hidden md:flex items-center gap-3 pt-8 pb-4 max-w-lg mx-auto px-4">
-          <button onClick={() => navigate("/meu-perfil")} className="p-2 -ml-2 hover:bg-muted rounded-lg" aria-label="Voltar">
-            <ArrowLeft className="h-5 w-5 text-foreground" />
-          </button>
-          <h1 className="text-2xl font-bold text-foreground font-[var(--font-display)]">Editar Perfil</h1>
-        </div>
-
-        <div className="max-w-lg mx-auto px-4 py-6 md:py-4 space-y-8">
-          {/* Avatar */}
-          <div className="flex justify-center">
-            <div className="relative">
-              <Avatar className="h-24 w-24 border-2 border-border">
-                <AvatarImage src={profile?.avatar_url || undefined} />
-                <AvatarFallback className="bg-muted text-muted-foreground text-2xl font-semibold">{initials}</AvatarFallback>
-              </Avatar>
-              <input
-                ref={avatarInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) handleAvatarUpload(f);
-                  e.target.value = "";
-                }}
-              />
-              <button
-                className="absolute bottom-0 right-0 flex items-center justify-center w-8 h-8 rounded-full bg-muted border-2 border-background active:scale-95 transition-transform"
-                aria-label="Alterar foto"
-                onClick={() => avatarInputRef.current?.click()}
-                disabled={uploadingAvatar}
-              >
-                {uploadingAvatar ? (
-                  <Loader2 className="h-4 w-4 text-muted-foreground animate-spin" />
-                ) : (
-                  <Camera className="h-4 w-4 text-muted-foreground" />
-                )}
-              </button>
-            </div>
+        {/* ═── MOBILE LAYOUT ───═ */}
+        <div className="md:hidden min-h-screen flex flex-col">
+          {/* Mobile Header */}
+          <div className="sticky top-0 z-20 bg-background border-b border-border px-4 py-4 flex items-center gap-3">
+            <button onClick={() => navigate("/meu-perfil")} className="p-2 -ml-1 active:scale-95">
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <h1 className="flex-1 text-center text-lg font-semibold">Editar Perfil</h1>
+            <div className="w-9" />
           </div>
 
-          {/* ── Dados pessoais ── */}
-          <div className="space-y-4">
-            <h3 className={sectionTitleClass}>Dados pessoais</h3>
-            <div className="space-y-2">
-              <Label htmlFor="fullName" className={labelClass}>Nome completo</Label>
-              <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Seu nome completo" className={inputClass} />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="cpf" className={labelClass}>CPF</Label>
-                <Input id="cpf" value={cpf} onChange={(e) => setCpf(formatCPF(e.target.value))} placeholder="000.000.000-00" maxLength={14} className={inputClass} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="birthDate" className={labelClass}>Data de nascimento</Label>
-                <Input id="birthDate" type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} className={inputClass} />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone" className={labelClass}>Telefone</Label>
-              <Input id="phone" value={phone} onChange={(e) => setPhone(formatPhone(e.target.value))} placeholder="(00) 00000-0000" maxLength={15} className={inputClass} />
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* ── Endereço ── */}
-          <div className="space-y-4">
-            <h3 className={sectionTitleClass}>Endereço</h3>
-            <div className="max-w-xs space-y-2">
-              <Label htmlFor="cep" className={labelClass}>CEP</Label>
-              <div className="relative">
-                <Input id="cep" value={cep} onChange={(e) => handleCepChange(e.target.value)} placeholder="00000-000" maxLength={9} className={inputClass} />
-                {loadingCep && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-[1fr_100px] gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="street" className={labelClass}>Endereço</Label>
-                <Input id="street" value={street} onChange={(e) => setStreet(e.target.value)} placeholder="Rua / Avenida" className={inputClass} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="addressNumber" className={labelClass}>Número</Label>
-                <Input id="addressNumber" value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder="123" className={inputClass} />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="complement" className={labelClass}>Complemento</Label>
-                <Input id="complement" value={complement} onChange={(e) => setComplement(e.target.value)} placeholder="Apto, Bloco..." className={inputClass} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="neighborhood" className={labelClass}>Bairro</Label>
-                <Input id="neighborhood" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Bairro" className={inputClass} />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="city" className={labelClass}>Cidade</Label>
-                <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Sua cidade" className={inputClass} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="state" className={labelClass}>Estado</Label>
-                <Select value={state} onValueChange={setState}>
-                  <SelectTrigger className="bg-muted/50 border-0 focus:ring-1">
-                    <SelectValue placeholder="UF" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {states.map((s) => (
-                      <SelectItem key={s.sigla} value={s.sigla}>{s.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* ── E-mail (read-only) ── */}
-          <div className="space-y-3">
-            <h3 className={sectionTitleClass}>E-mail</h3>
-            <div className="flex items-center gap-3 px-3 py-3 rounded-xl bg-muted/30 border border-border/50">
-              <span className="flex-1 text-sm text-muted-foreground truncate">{email}</span>
-              <Lock className="h-4 w-4 text-muted-foreground/50" />
-            </div>
-            <p className="text-xs text-muted-foreground">O e-mail não pode ser alterado por segurança.</p>
-          </div>
-
-          <Separator />
-
-          {/* ── Categorias preferidas ── */}
-          <div className="space-y-3">
-            <h3 className={sectionTitleClass}>Categorias preferidas</h3>
-            <div className="flex flex-wrap gap-2">
-              {EVENT_CATEGORIES.map((cat) => (
-                <button
-                  key={cat.value}
-                  type="button"
-                  onClick={() => toggleCategory(cat.value)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                    preferredCategories.includes(cat.value)
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-background text-foreground border-border hover:bg-muted"
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* ── Contas vinculadas ── */}
-          <div className="space-y-3">
-            <h3 className={sectionTitleClass}>Contas vinculadas</h3>
-            <div className="space-y-2">
-              {linkedAccounts.map((account) => (
-                <div key={account.id} className="flex items-center gap-3 px-3 py-3 rounded-xl bg-muted/30 border border-border/50">
-                  <span className="flex-1 text-sm text-foreground">{account.label}</span>
-                  <Badge variant={account.linked ? "default" : "secondary"} className="text-[10px]">
-                    {account.linked ? "Vinculada" : "Não vinculada"}
-                  </Badge>
+          {/* Scroll Container */}
+          <div className="flex-1 overflow-y-auto pb-6">
+            <div className="px-4 py-6 space-y-6">
+              {/* Avatar Section */}
+              <div className="flex justify-center">
+                <div className="relative">
+                  <Avatar className="h-28 w-28 border-4 border-primary/10">
+                    <AvatarImage src={profile?.avatar_url || undefined} />
+                    <AvatarFallback className="bg-muted text-muted-foreground text-3xl font-bold">{initials}</AvatarFallback>
+                  </Avatar>
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAvatarUpload(f); e.target.value = ""; }}
+                  />
+                  <button
+                    className="absolute bottom-0 right-0 flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground border-4 border-background active:scale-95"
+                    onClick={() => avatarInputRef.current?.click()}
+                    disabled={uploadingAvatar}
+                  >
+                    {uploadingAvatar ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <Camera className="h-5 w-5" />
+                    )}
+                  </button>
                 </div>
-              ))}
+              </div>
+
+              {/* Dados Pessoais Card */}
+              <div className="bg-card border border-border rounded-2xl p-4 space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <User className="h-5 w-5 text-primary" />
+                  <h3 className="font-semibold text-sm">Dados Pessoais</h3>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-xs font-medium">Nome completo</Label>
+                    <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Seu nome" className="mt-1" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs font-medium">CPF</Label>
+                      <Input value={cpf} onChange={(e) => setCpf(formatCPF(e.target.value))} placeholder="000.000.000-00" maxLength={14} className="mt-1" />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-medium">Nascimento</Label>
+                      <Input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} className="mt-1" />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium">Telefone</Label>
+                    <Input value={phone} onChange={(e) => setPhone(formatPhone(e.target.value))} placeholder="(11) 99999-9999" maxLength={15} className="mt-1" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Endereço Card */}
+              <div className="bg-card border border-border rounded-2xl p-4 space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <MapPin className="h-5 w-5 text-primary" />
+                  <h3 className="font-semibold text-sm">Endereço</h3>
+                </div>
+                <div className="space-y-3">
+                  <div className="relative">
+                    <Label className="text-xs font-medium">CEP</Label>
+                    <Input value={cep} onChange={(e) => handleCepChange(e.target.value)} placeholder="00000-000" maxLength={9} className="mt-1" />
+                    {loadingCep && <Loader2 className="absolute right-3 top-8 h-4 w-4 animate-spin text-muted-foreground" />}
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium">Endereço</Label>
+                    <Input value={street} onChange={(e) => setStreet(e.target.value)} placeholder="Rua/Avenida" className="mt-1" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs font-medium">Número</Label>
+                      <Input value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder="123" className="mt-1" />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-medium">Complemento</Label>
+                      <Input value={complement} onChange={(e) => setComplement(e.target.value)} placeholder="Apto..." className="mt-1" />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium">Bairro</Label>
+                    <Input value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Bairro" className="mt-1" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs font-medium">Cidade</Label>
+                      <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Cidade" className="mt-1" />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-medium">Estado</Label>
+                      <Select value={state} onValueChange={setState}>
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder="UF" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {states.map((s) => (
+                            <SelectItem key={s.sigla} value={s.sigla}>{s.nome}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* E-mail Card */}
+              <div className="bg-card border border-border rounded-2xl p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Mail className="h-5 w-5 text-muted-foreground" />
+                  <h3 className="font-semibold text-sm">E-mail</h3>
+                </div>
+                <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-muted/30 border border-border/50">
+                  <span className="flex-1 text-sm truncate">{email}</span>
+                  <LockIcon className="h-4 w-4 text-muted-foreground/50" />
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">Não pode ser alterado por segurança.</p>
+              </div>
+
+              {/* Categorias Card */}
+              <div className="bg-card border border-border rounded-2xl p-4 space-y-3">
+                <h3 className="font-semibold text-sm">Categorias Preferidas</h3>
+                <div className="flex flex-wrap gap-2">
+                  {EVENT_CATEGORIES.map((cat) => (
+                    <button
+                      key={cat.value}
+                      onClick={() => toggleCategory(cat.value)}
+                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                        preferredCategories.includes(cat.value)
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-background border-border hover:bg-muted"
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Contas Vinculadas Card */}
+              <div className="bg-card border border-border rounded-2xl p-4 space-y-3">
+                <h3 className="font-semibold text-sm">Contas Vinculadas</h3>
+                <div className="space-y-2">
+                  {linkedAccounts.map((acc) => (
+                    <div key={acc.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-border/50">
+                      <span className="text-sm">{acc.label}</span>
+                      <Badge variant={acc.linked ? "default" : "secondary"} className="text-xs">
+                        {acc.linked ? "Ativo" : "Inativo"}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <Button onClick={handleSave} disabled={saving} size="lg" className="w-full">
+                {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Salvando...</> : "Salvar Alterações"}
+              </Button>
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" className="w-full text-destructive hover:text-destructive hover:bg-destructive/10">
+                    Excluir Conta Permanentemente
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Excluir conta</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Esta ação é irreversível. Todos os seus dados, ingressos e histórico serão apagados permanentemente.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteAccount} disabled={deleting} className="bg-destructive hover:bg-destructive/90">
+                      {deleting ? "Excluindo..." : "Excluir"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
+        </div>
 
-          <Separator />
-
-          {/* Save Button */}
-          <Button onClick={handleSave} disabled={saving} className="w-full">
-            {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Salvando...</> : "Salvar alterações"}
-          </Button>
-
-          {/* Delete Account */}
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <button className="w-full py-3 text-center text-destructive font-medium text-sm hover:underline active:opacity-70">
-                Excluir conta permanentemente
+        {/* ═── DESKTOP LAYOUT ───═ */}
+        <div className="hidden md:flex h-screen">
+          {/* Left Sidebar */}
+          <div className="w-56 bg-card border-r border-border flex flex-col p-6 space-y-4 overflow-y-auto">
+            <div className="flex items-center gap-2 pb-4 border-b border-border">
+              <button onClick={() => navigate("/meu-perfil")} className="p-2 -ml-2 hover:bg-muted rounded-lg">
+                <ArrowLeft className="h-5 w-5" />
               </button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Excluir conta</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Tem certeza que deseja excluir sua conta? Todos os seus dados, ingressos e histórico serão removidos permanentemente. Esta ação não pode ser desfeita.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDeleteAccount} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                  {deleting ? "Excluindo..." : "Excluir minha conta"}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+              <h1 className="text-xl font-bold flex-1">Editar Perfil</h1>
+            </div>
+            <nav className="space-y-1 flex-1">
+              <NavItem icon={<User className="h-4 w-4" />} label="Dados Pessoais" href="#personal" />
+              <NavItem icon={<MapPin className="h-4 w-4" />} label="Endereço" href="#address" />
+              <NavItem icon={<Mail className="h-4 w-4" />} label="E-mail" href="#email" />
+              <NavItem icon={<Lock className="h-4 w-4" />} label="Categorias" href="#categories" />
+            </nav>
+          </div>
+
+          {/* Main Content */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="max-w-4xl mx-auto p-8 space-y-8">
+              {/* Avatar Section */}
+              <div className="flex justify-between items-start">
+                <div>
+                  <h2 className="text-2xl font-bold mb-2">Perfil da Conta</h2>
+                  <p className="text-muted-foreground">Gerenciar suas informações pessoais e de endereço</p>
+                </div>
+                <div className="relative">
+                  <Avatar className="h-32 w-32 border-4 border-primary/10">
+                    <AvatarImage src={profile?.avatar_url || undefined} />
+                    <AvatarFallback className="bg-muted text-muted-foreground text-4xl font-bold">{initials}</AvatarFallback>
+                  </Avatar>
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAvatarUpload(f); e.target.value = ""; }}
+                  />
+                  <button
+                    className="absolute bottom-0 right-0 flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground border-4 border-background hover:bg-primary/90"
+                    onClick={() => avatarInputRef.current?.click()}
+                    disabled={uploadingAvatar}
+                  >
+                    {uploadingAvatar ? (
+                      <Loader2 className="h-6 w-6 animate-spin" />
+                    ) : (
+                      <Camera className="h-6 w-6" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Dados Pessoais Section */}
+              <div id="personal" className="space-y-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <User className="h-5 w-5 text-primary" />
+                  Dados Pessoais
+                </h3>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="font-medium">Nome Completo</Label>
+                    <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Seu nome completo" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="font-medium">CPF</Label>
+                    <Input value={cpf} onChange={(e) => setCpf(formatCPF(e.target.value))} placeholder="000.000.000-00" maxLength={14} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="font-medium">Data de Nascimento</Label>
+                    <Input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="font-medium">Telefone</Label>
+                    <Input value={phone} onChange={(e) => setPhone(formatPhone(e.target.value))} placeholder="(11) 99999-9999" maxLength={15} />
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Endereço Section */}
+              <div id="address" className="space-y-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-primary" />
+                  Endereço
+                </h3>
+                <div className="grid grid-cols-3 gap-6">
+                  <div className="col-span-1 space-y-2 relative">
+                    <Label className="font-medium">CEP</Label>
+                    <Input value={cep} onChange={(e) => handleCepChange(e.target.value)} placeholder="00000-000" maxLength={9} />
+                    {loadingCep && <Loader2 className="absolute right-3 top-9 h-4 w-4 animate-spin text-muted-foreground" />}
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-6">
+                  <div className="col-span-2 space-y-2">
+                    <Label className="font-medium">Endereço (Rua/Avenida)</Label>
+                    <Input value={street} onChange={(e) => setStreet(e.target.value)} placeholder="Nome da rua" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="font-medium">Número</Label>
+                    <Input value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder="123" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="font-medium">Complemento</Label>
+                    <Input value={complement} onChange={(e) => setComplement(e.target.value)} placeholder="Apto, Bloco..." />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="font-medium">Bairro</Label>
+                    <Input value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Bairro" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="font-medium">Cidade</Label>
+                    <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Cidade" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="font-medium">Estado</Label>
+                    <Select value={state} onValueChange={setState}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o estado" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {states.map((s) => (
+                          <SelectItem key={s.sigla} value={s.sigla}>{s.nome}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* E-mail Section */}
+              <div id="email" className="space-y-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Mail className="h-5 w-5 text-primary" />
+                  Informações de Conta
+                </h3>
+                <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/30 border border-border">
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground">E-mail</p>
+                    <p className="font-medium">{email}</p>
+                  </div>
+                  <LockIcon className="h-5 w-5 text-muted-foreground/50" />
+                </div>
+                <p className="text-sm text-muted-foreground">O e-mail não pode ser alterado por segurança.</p>
+              </div>
+
+              <Separator />
+
+              {/* Categorias Section */}
+              <div id="categories" className="space-y-4">
+                <h3 className="text-lg font-semibold">Categorias Preferidas</h3>
+                <div className="flex flex-wrap gap-2">
+                  {EVENT_CATEGORIES.map((cat) => (
+                    <button
+                      key={cat.value}
+                      onClick={() => toggleCategory(cat.value)}
+                      className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
+                        preferredCategories.includes(cat.value)
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-background border-border hover:bg-muted"
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Contas Vinculadas Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Contas Vinculadas</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {linkedAccounts.map((acc) => (
+                    <div key={acc.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
+                      <span className="font-medium">{acc.label}</span>
+                      <Badge variant={acc.linked ? "default" : "secondary"}>
+                        {acc.linked ? "Vinculada" : "Não vinculada"}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <Button onClick={handleSave} disabled={saving} size="lg" className="flex-1">
+                  {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Salvando...</> : "Salvar Alterações"}
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" size="lg" className="text-destructive hover:text-destructive">
+                      Excluir Conta
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Excluir Conta Permanentemente</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta ação é irreversível. Todos os seus dados, ingressos, pedidos e histórico serão apagados permanentemente do sistema.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDeleteAccount} disabled={deleting} className="bg-destructive hover:bg-destructive/90">
+                        {deleting ? "Excluindo..." : "Confirmar Exclusão"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </>
+  );
+}
+
+function NavItem({ icon, label, href }: { icon: React.ReactNode; label: string; href: string }) {
+  return (
+    <a
+      href={href}
+      onClick={(e) => {
+        e.preventDefault();
+        document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
+      }}
+      className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+    >
+      {icon}
+      <span className="text-sm font-medium">{label}</span>
+    </a>
   );
 }
