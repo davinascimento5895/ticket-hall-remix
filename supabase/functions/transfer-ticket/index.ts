@@ -68,8 +68,9 @@ serve(async (req) => {
     if (callerEmail?.toLowerCase() === recipientEmail.toLowerCase()) return jsonResponse({ error: "Você não pode transferir para si mesmo" }, 400);
 
     let recipientId: string | null = null;
-    const { data: recipientData, error: recipientError } = await supabase.auth.admin.getUserByEmail(recipientEmail);
-    if (!recipientError && recipientData?.user) recipientId = recipientData.user.id;
+    const serviceClient = createClient(supabaseUrl, serviceKey);
+    const { data: userId } = await serviceClient.rpc("get_user_id_by_email" as any, { p_email: recipientEmail });
+    if (userId) recipientId = userId as string;
     if (!recipientId) return jsonResponse({ error: "Destinatário não encontrado. O email precisa estar cadastrado na plataforma." }, 404);
 
     const newPayload = { tid: ticket.id, eid: ticket.event_id, oid: ticket.order_id, uid: recipientId, v: 1, iat: Math.floor(Date.now() / 1000) };
