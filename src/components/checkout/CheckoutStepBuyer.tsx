@@ -49,6 +49,11 @@ export function CheckoutStepBuyer({ buyerData, setBuyerData, onNext }: CheckoutS
         cpf: prev.cpf || (profile.cpf ? formatCPF(profile.cpf) : ""),
         phone: prev.phone || (profile.phone ? formatPhone(profile.phone) : ""),
         birthDate: prev.birthDate || profile.birth_date || "",
+        cep: prev.cep || (profile.cep ? formatCEP(profile.cep) : ""),
+        street: prev.street || profile.street || "",
+        addressNumber: prev.addressNumber || profile.address_number || "",
+        complement: prev.complement || profile.complement || "",
+        neighborhood: prev.neighborhood || profile.neighborhood || "",
         city: prev.city || profile.city || "",
         state: prev.state || profile.state || "",
       }));
