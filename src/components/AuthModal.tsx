@@ -73,7 +73,6 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login", redirectTo
     if (error) {
       toast({ title: "Erro ao entrar", description: translateAuthError(error.message), variant: "destructive" });
     } else {
-      toast({ title: "Bem-vindo de volta!" });
       onOpenChange(false);
       // Redirect to the page the user was trying to access
       const from = redirectTo || (location.state as any)?.from?.pathname;

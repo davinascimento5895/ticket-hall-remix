@@ -54,9 +54,6 @@ export function useFavorites() {
       }
       toast({ title: "Erro ao atualizar favoritos", variant: "destructive" });
     },
-    onSuccess: (result) => {
-      toast({ title: result.added ? "Adicionado aos favoritos" : "Removido dos favoritos" });
-    },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["favorites", user?.id] });
       // Invalidate then force refetch of favorite-events for this user (including inactive queries)

@@ -78,7 +78,8 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
     });
     setLoading(false);
     if (error) {
-      toast({ title: error.message, variant: "destructive" });
+      console.error("BecomeProducer login error:", error);
+      toast({ title: "Erro ao entrar", variant: "destructive" });
     }
     // onAuthStateChange in AuthContext will update `user`, triggering auto-advance
   };
@@ -104,7 +105,8 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
     });
     setLoading(false);
     if (error) {
-      toast({ title: error.message, variant: "destructive" });
+      console.error("BecomeProducer register error:", error);
+      toast({ title: "Erro ao criar conta", variant: "destructive" });
     }
   };
 
@@ -113,7 +115,10 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
       provider: "google",
       options: { redirectTo: window.location.origin },
     });
-    if (error) toast({ title: error.message, variant: "destructive" });
+    if (error) {
+      console.error("BecomeProducer google login error:", error);
+      toast({ title: "Erro ao entrar", variant: "destructive" });
+    }
   };
 
   // --- Producer handler ---
