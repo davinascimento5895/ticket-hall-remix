@@ -2,7 +2,7 @@ import { Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "@/hooks/use-toast";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface FavoriteButtonProps {
   eventId: string;
@@ -14,12 +14,15 @@ export function FavoriteButton({ eventId, className, size = "sm" }: FavoriteButt
   const { user } = useAuth();
   const { isFavorite, toggleFavorite } = useFavorites();
   const active = isFavorite(eventId);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (!user) {
-      toast({ title: "Faça login para favoritar eventos", variant: "destructive" });
+      // Open global auth modal via navbar's login query param (keeps existing logic)
+      navigate("/?login=true", { state: { from: location } });
       return;
     }
     toggleFavorite(eventId);
