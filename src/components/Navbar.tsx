@@ -187,6 +187,9 @@ export function Navbar() {
                     <DropdownMenuItem asChild>
                       <Link to="/notificacoes">Notificações</Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/meu-perfil">Meu Perfil</Link>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleCreateEvent}>
                       <Plus className="h-4 w-4 mr-2" />
