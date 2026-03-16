@@ -16,12 +16,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ArrowLeft, Plus, ChevronUp, ChevronDown, Pencil, Trash2, ImageIcon, Upload, CalendarIcon, Clock, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, ChevronUp, ChevronDown, Pencil, Trash2, ImageIcon, Upload, Clock, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { cn } from "@/lib/utils";
 
 const DEFAULT_FIELDS: InterestListField[] = [
   { field_name: "Nome", field_type: "text", placeholder: "Digite seu nome", is_required: true, sort_order: 0 },
@@ -287,17 +283,11 @@ export default function ProducerInterestListForm() {
               <span className="text-sm text-foreground">Definir uma data para encerrar a lista</span>
             </div>
             {hasExpiry && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn("mt-2 max-w-[240px] justify-start text-left font-normal", !expiresAt && "text-muted-foreground")}>
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {expiresAt ? format(expiresAt, "dd/MM/yyyy", { locale: ptBR }) : "Selecione uma data"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={expiresAt} onSelect={setExpiresAt} disabled={(d) => d < new Date()} />
-                </PopoverContent>
-              </Popover>
+              <Calendar
+                value={expiresAt ? { start: expiresAt, end: expiresAt } : null}
+                onChange={(range) => setExpiresAt(range?.start ?? undefined)}
+                minValue={new Date()}
+              />
             )}
             <p className="text-xs text-muted-foreground">Sem data, a lista continua aberta até você decidir fechar.</p>
           </div>
@@ -326,17 +316,10 @@ export default function ProducerInterestListForm() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Data de Início</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !startDate && "text-muted-foreground")}>
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {startDate ? format(startDate, "dd/MM/yyyy", { locale: ptBR }) : "Selecione uma data"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={startDate} onSelect={setStartDate} />
-                </PopoverContent>
-              </Popover>
+              <Calendar
+                value={startDate ? { start: startDate, end: startDate } : null}
+                onChange={(range) => setStartDate(range?.start ?? undefined)}
+              />
             </div>
             <div className="space-y-2">
               <Label>Hora de Início</Label>

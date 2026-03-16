@@ -1,11 +1,9 @@
-import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, ChevronDown } from "lucide-react";
+import { Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Calendar as CalendarWidget } from "@/components/ui/calendar";
+import { Calendar } from "@/components/ui/calendar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { cn } from "@/lib/utils";
 
 interface Props {
   event: {
@@ -72,7 +70,7 @@ export function BookingDateStep({ event, selectedDate, onSelectDate }: Props) {
               }}
               className="w-full h-12 px-4 rounded-xl border border-border bg-background text-foreground text-base appearance-none"
             />
-            <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+            <CalendarIcon className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
           </div>
           <p className="text-center text-sm text-muted-foreground">
             {format(selectedDate, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
@@ -84,13 +82,13 @@ export function BookingDateStep({ event, selectedDate, onSelectDate }: Props) {
       ) : (
         /* Visual calendar on desktop */
         <div className="flex flex-col items-center space-y-4">
-          <CalendarWidget
-            mode="single"
-            selected={selectedDate}
-            onSelect={(d) => d && onSelectDate(d)}
-            disabled={(date) => date < startDate || date > endDate}
-            className={cn("p-3 pointer-events-auto rounded-xl border border-border")}
-            locale={ptBR}
+          <Calendar
+            value={selectedDate ? { start: selectedDate, end: selectedDate } : null}
+            onChange={(range) => {
+              if (range?.start) onSelectDate(range.start);
+            }}
+            minValue={startDate}
+            maxValue={endDate}
           />
           <p className="text-sm text-muted-foreground">
             Selecionado: {format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}
