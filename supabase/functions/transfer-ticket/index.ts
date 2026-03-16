@@ -68,25 +68,9 @@ serve(async (req) => {
     if (callerEmail?.toLowerCase() === recipientEmail.toLowerCase()) return jsonResponse({ error: "Você não pode transferir para si mesmo" }, 400);
 
     let recipientId: string | null = null;
-    // Look up user by email using listUsers filter
-    const { data: listData, error: listError } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1 });
-    // listUsers doesn't support email filter in this SDK version; query profiles instead
-    const { data: recipientProfile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("id", (
-        await (async () => {
-          // Use raw SQL via service role to find user by email
-          const serviceClient = createClient(
-            Deno.env.get("SUPABASE_URL")!,
-            Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-          );
-          const { data } = await serviceClient.rpc("get_user_id_by_email" as any, { p_email: recipientEmail });
-          return data || "00000000-0000-0000-0000-000000000000";
-        })()
-      ))
-      .single();
-    if (recipientProfile) recipientId = recipientProfile.id;
+    const serviceClient = createClient(supabaseUrl, serviceKey);
+    const { data: userId } = await serviceClient.rpc("get_user_id_by_email" as any, { p_email: recipientEmail });
+    if (userId) recipientId = userId as string;
     if (!recipientId) return jsonResponse({ error: "Destinatário não encontrado. O email precisa estar cadastrado na plataforma." }, 404);
 
     const newPayload = { tid: ticket.id, eid: ticket.event_id, oid: ticket.order_id, uid: recipientId, v: 1, iat: Math.floor(Date.now() / 1000) };

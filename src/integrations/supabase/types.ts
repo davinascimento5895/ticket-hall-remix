@@ -2670,6 +2670,7 @@ export type Database = {
         }
         Returns: Json
       }
+      get_user_id_by_email: { Args: { p_email: string }; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
