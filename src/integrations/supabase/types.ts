@@ -1700,11 +1700,14 @@ export type Database = {
           asaas_wallet_id: string | null
           avatar_url: string | null
           birth_date: string | null
+          cep: string | null
           city: string | null
+          complement: string | null
           cpf: string | null
           created_at: string | null
           full_name: string | null
           id: string
+          neighborhood: string | null
           organizer_banner_url: string | null
           organizer_bio: string | null
           organizer_facebook: string | null
@@ -1716,6 +1719,8 @@ export type Database = {
           preferred_categories: string[] | null
           producer_status: Database["public"]["Enums"]["producer_status"] | null
           state: string | null
+          street: string | null
+          address_number: string | null
           updated_at: string | null
         }
         Insert: {
@@ -1724,11 +1729,14 @@ export type Database = {
           asaas_wallet_id?: string | null
           avatar_url?: string | null
           birth_date?: string | null
+          cep?: string | null
           city?: string | null
+          complement?: string | null
           cpf?: string | null
           created_at?: string | null
           full_name?: string | null
           id: string
+          neighborhood?: string | null
           organizer_banner_url?: string | null
           organizer_bio?: string | null
           organizer_facebook?: string | null
@@ -1742,6 +1750,8 @@ export type Database = {
             | Database["public"]["Enums"]["producer_status"]
             | null
           state?: string | null
+          street?: string | null
+          address_number?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -1750,11 +1760,14 @@ export type Database = {
           asaas_wallet_id?: string | null
           avatar_url?: string | null
           birth_date?: string | null
+          cep?: string | null
           city?: string | null
+          complement?: string | null
           cpf?: string | null
           created_at?: string | null
           full_name?: string | null
           id?: string
+          neighborhood?: string | null
           organizer_banner_url?: string | null
           organizer_bio?: string | null
           organizer_facebook?: string | null
@@ -1768,6 +1781,8 @@ export type Database = {
             | Database["public"]["Enums"]["producer_status"]
             | null
           state?: string | null
+          street?: string | null
+          address_number?: string | null
           updated_at?: string | null
         }
         Relationships: []
