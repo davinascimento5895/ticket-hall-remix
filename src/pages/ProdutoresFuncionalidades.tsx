@@ -2,14 +2,14 @@ import { motion } from "framer-motion";
 import { SEOHead } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 
-const ListItem = ({ title, desc }: { title: string; desc?: string }) => (
+const ListItem = ({ title, desc, href }: { title: string; desc?: string; href: string }) => (
   <li className="py-3 border-b border-border last:border-b-0">
     <div className="flex justify-between items-start gap-4">
       <div className="min-w-0">
         <p className="font-semibold text-foreground">{title}</p>
         {desc && <p className="text-sm text-muted-foreground mt-1">{desc}</p>}
       </div>
-      <a className="text-primary text-sm font-medium ml-4" href="#">Saiba mais →</a>
+      <a className="text-primary text-sm font-medium ml-4" href={href}>Saiba mais →</a>
     </div>
   </li>
 );
@@ -44,11 +44,11 @@ export default function ProdutoresFuncionalidades() {
           <section className="mb-12">
             <h3 className="font-display text-xl font-semibold mb-4">Navegação geral (painel do produtor)</h3>
             <ul className="bg-card rounded-xl border border-border p-4">
-              <ListItem title="Dashboard do produtor" desc="Painel principal com métricas, pedidos recentes e botão para criar evento." />
-              <ListItem title="Meus eventos" desc="Listagem de eventos com ações rápidas: abrir painel, ver página pública, editar, deletar." />
-              <ListItem title="Financeiro (nível produtor)" desc="Acesso ao painel financeiro consolidado com sub-abas." />
-              <ListItem title="Mensagens (Inbox)" desc="Caixa de entrada com mensagens de compradores e sistema de resposta." />
-              <ListItem title="Configurações" desc="Perfil, página pública do organizador, contas bancárias e integrações/webhooks." />
+              <ListItem title="Dashboard do produtor" desc="Painel principal com métricas, pedidos recentes e botão para criar evento." href="/produtores/funcionalidades/dashboard" />
+              <ListItem title="Meus eventos" desc="Listagem de eventos com ações rápidas: abrir painel, ver página pública, editar, deletar." href="/produtores/funcionalidades/vendas" />
+              <ListItem title="Financeiro (nível produtor)" desc="Acesso ao painel financeiro consolidado com sub-abas." href="/produtores/funcionalidades/relatorios" />
+              <ListItem title="Mensagens (Inbox)" desc="Caixa de entrada com mensagens de compradores e sistema de resposta." href="/produtores/funcionalidades/relatorios" />
+              <ListItem title="Configurações" desc="Perfil, página pública do organizador, contas bancárias e integrações/webhooks." href="/produtores/funcionalidades/vendas" />
             </ul>
           </section>
 
@@ -56,11 +56,11 @@ export default function ProdutoresFuncionalidades() {
           <section className="mb-12">
             <h3 className="font-display text-xl font-semibold mb-4">Vendas e Ingressos</h3>
             <ul className="bg-card rounded-xl border border-border p-4">
-              <ListItem title="Configuração de ingressos e lotes (tiers)" desc="Crie diferentes tipos de ingresso, preços, visibilidade e limites por lote." />
-              <ListItem title="Ingressos gratuitos e pagos" desc="Suporte a ingressos gratuitos, pagos e mistos com gestão de estoque." />
-              <ListItem title="Revenda oficial (marketplace)" desc="Marketplace integrado para revenda de ingressos quando permitido pelo produtor." />
-              <ListItem title="Transferência e revenda por usuário" desc="Transferência de titularidade e listagem para revenda quando habilitado." />
-              <ListItem title="Cupons e promoções" desc="Criação de cupons com regras de uso, validade e restrições por evento." />
+              <ListItem title="Configuração de ingressos e lotes (tiers)" desc="Crie diferentes tipos de ingresso, preços, visibilidade e limites por lote." href="/produtores/funcionalidades/tiers" />
+              <ListItem title="Ingressos gratuitos e pagos" desc="Suporte a ingressos gratuitos, pagos e mistos com gestão de estoque." href="/produtores/funcionalidades/free-paid" />
+              <ListItem title="Revenda oficial (marketplace)" desc="Marketplace integrado para revenda de ingressos quando permitido pelo produtor." href="/produtores/funcionalidades/revenda-oficial" />
+              <ListItem title="Transferência e revenda por usuário" desc="Transferência de titularidade e listagem para revenda quando habilitado." href="/produtores/funcionalidades/transferencia-revenda" />
+              <ListItem title="Cupons e promoções" desc="Criação de cupons com regras de uso, validade e restrições por evento." href="/produtores/funcionalidades/cupons" />
             </ul>
           </section>
 
@@ -68,10 +68,10 @@ export default function ProdutoresFuncionalidades() {
           <section className="mb-12">
             <h3 className="font-display text-xl font-semibold mb-4">Operação e Credenciamento</h3>
             <ul className="bg-card rounded-xl border border-border p-4">
-              <ListItem title="Check-in por QR Code" desc="Scanner com suporte offline/online para check-in rápido." />
-              <ListItem title="Listas de acesso e guestlist" desc="Gerencie listas de convidados e listas de credenciamento separadas." />
-              <ListItem title="Gerenciamento de staff" desc="Perfis e permissões para equipes de operação do evento." />
-              <ListItem title="App/Interface organizador" desc="Acesso móvel e ferramentas para operar o evento na palma da mão." />
+              <ListItem title="Check-in por QR Code" desc="Scanner com suporte offline/online para check-in rápido." href="/produtores/funcionalidades/checkin" />
+              <ListItem title="Listas de acesso e guestlist" desc="Gerencie listas de convidados e listas de credenciamento separadas." href="/produtores/funcionalidades/guestlist" />
+              <ListItem title="Gerenciamento de staff" desc="Perfis e permissões para equipes de operação do evento." href="/produtores/funcionalidades/staff" />
+              <ListItem title="App/Interface organizador" desc="Acesso móvel e ferramentas para operar o evento na palma da mão." href="/produtores/funcionalidades/app-organizador" />
             </ul>
           </section>
 
@@ -79,9 +79,9 @@ export default function ProdutoresFuncionalidades() {
           <section className="mb-12">
             <h3 className="font-display text-xl font-semibold mb-4">Marketing e Distribuição</h3>
             <ul className="bg-card rounded-xl border border-border p-4">
-              <ListItem title="Promoters e afiliados" desc="Vincule promoters, gere códigos de tracking e monitore comissões e conversões." />
-              <ListItem title="Listas de interesse" desc="Colete inscrições de interessados antes do evento e exporte os contatos." />
-              <ListItem title="Widgets e embed" desc="Venda ingressos através de widgets embutidos em sites externos." />
+              <ListItem title="Promoters e afiliados" desc="Vincule promoters, gere códigos de tracking e monitore comissões e conversões." href="/produtores/funcionalidades/promoters" />
+              <ListItem title="Listas de interesse" desc="Colete inscrições de interessados antes do evento e exporte os contatos." href="/produtores/funcionalidades/listas-interesse" />
+              <ListItem title="Widgets e embed" desc="Venda ingressos através de widgets embutidos em sites externos." href="/produtores/funcionalidades/widgets" />
             </ul>
           </section>
 
@@ -89,9 +89,9 @@ export default function ProdutoresFuncionalidades() {
           <section className="mb-12">
             <h3 className="font-display text-xl font-semibold mb-4">Financeiro e Relatórios</h3>
             <ul className="bg-card rounded-xl border border-border p-4">
-              <ListItem title="Fluxo de caixa e conciliação" desc="Painel financeiro com fluxo de caixa, contas a pagar/receber e conciliação por evento." />
-              <ListItem title="Repasses e contas bancárias" desc="Configuração de contas bancárias e acompanhamento de repasses." />
-              <ListItem title="Relatórios e exportações" desc="Relatórios por evento e exportação de dados para contabilidade." />
+              <ListItem title="Fluxo de caixa e conciliação" desc="Painel financeiro com fluxo de caixa, contas a pagar/receber e conciliação por evento." href="/produtores/funcionalidades/fluxo-de-caixa" />
+              <ListItem title="Repasses e contas bancárias" desc="Configuração de contas bancárias e acompanhamento de repasses." href="/produtores/funcionalidades/repasses" />
+              <ListItem title="Relatórios e exportações" desc="Relatórios por evento e exportação de dados para contabilidade." href="/produtores/funcionalidades/relatorios" />
             </ul>
           </section>
 
@@ -101,7 +101,7 @@ export default function ProdutoresFuncionalidades() {
           <section className="mb-12">
             <h3 className="font-display text-xl font-semibold mb-4">Marketplace</h3>
             <ul className="bg-card rounded-xl border border-border p-4">
-              <ListItem title="Marketplace de revenda" desc="Espaço seguro para revenda quando permitido pelo produtor." />
+              <ListItem title="Marketplace de revenda" desc="Espaço seguro para revenda quando permitido pelo produtor." href="/produtores/funcionalidades/marketplace-revenda" />
             </ul>
           </section>
 

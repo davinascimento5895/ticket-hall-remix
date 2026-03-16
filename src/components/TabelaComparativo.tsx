@@ -13,6 +13,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 type FeatureKey =
   | "pix" | "debito" | "googleApplePay"
@@ -374,6 +376,12 @@ export function TabelaComparativo() {
       <p className="text-xs text-muted-foreground text-center">
         Dados baseados em pesquisa pública de março de 2025. Funcionalidades e taxas dos concorrentes podem variar. Confirme nas respectivas plataformas.
       </p>
+
+      <div className="flex justify-center">
+        <Button asChild variant="hero" size="lg" className="mt-4 w-full max-w-sm md:w-auto">
+          <Link to="/produtores/funcionalidades">Ver todas as funcionalidades</Link>
+        </Button>
+      </div>
     </div>
   );
 }
