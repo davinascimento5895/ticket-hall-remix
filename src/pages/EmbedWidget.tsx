@@ -12,7 +12,7 @@ import { formatBRL } from "@/lib/utils";
 export default function EmbedWidget() {
   const [params] = useSearchParams();
   const slug = params.get("event");
-  const theme = params.get("theme") || "dark";
+  const theme = params.get("theme") || "light";
 
   const { data: event, isLoading } = useQuery({
     queryKey: ["embed-event", slug],
