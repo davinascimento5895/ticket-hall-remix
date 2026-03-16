@@ -1695,6 +1695,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address_number: string | null
           asaas_account_id: string | null
           asaas_account_key: string | null
           asaas_wallet_id: string | null
@@ -1724,6 +1725,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          address_number?: string | null
           asaas_account_id?: string | null
           asaas_account_key?: string | null
           asaas_wallet_id?: string | null
@@ -1755,6 +1757,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          address_number?: string | null
           asaas_account_id?: string | null
           asaas_account_key?: string | null
           asaas_wallet_id?: string | null
@@ -2670,6 +2673,7 @@ export type Database = {
         }
         Returns: Json
       }
+      get_user_id_by_email: { Args: { p_email: string }; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]

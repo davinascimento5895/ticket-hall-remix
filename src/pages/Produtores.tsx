@@ -343,8 +343,8 @@ export default function Produtores() {
           </motion.div>
 
           <Accordion type="single" collapsible className="w-full rounded-xl border border-border bg-card px-6">
-            {producerFAQItems.map((item) => (
-              <AccordionItem key={item.id} value={item.id}>
+            {producerFAQItems.map((item, index) => (
+              <AccordionItem key={`faq-${index}`} value={`faq-${index}`}>
                 <AccordionTrigger className="text-left font-display text-base">{item.question}</AccordionTrigger>
                 <AccordionContent className="text-sm leading-relaxed text-muted-foreground">
                   {item.answer}
