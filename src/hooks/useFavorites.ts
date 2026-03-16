@@ -40,12 +40,26 @@ export function useFavorites() {
         return { added: true };
       }
     },
+    onMutate: async (eventId: string) => {
+      await queryClient.cancelQueries({ queryKey: ["favorites", user?.id] });
+      const previous = queryClient.getQueryData<string[]>(["favorites", user?.id]) ?? [];
+      const isFav = previous.includes(eventId);
+      const next = isFav ? previous.filter((id) => id !== eventId) : [...previous, eventId];
+      queryClient.setQueryData(["favorites", user?.id], next);
+      return { previous };
+    },
+    onError: (_err, _variables, context: any) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["favorites", user?.id], context.previous);
+      }
+      toast({ title: "Erro ao atualizar favoritos", variant: "destructive" });
+    },
     onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ["favorites", user?.id] });
       toast({ title: result.added ? "Adicionado aos favoritos" : "Removido dos favoritos" });
     },
-    onError: () => {
-      toast({ title: "Erro ao atualizar favoritos", variant: "destructive" });
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["favorites", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["favorite-events", user?.id] });
     },
   });
 

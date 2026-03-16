@@ -14,6 +14,24 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 const Index = lazy(() => import("./pages/Index"));
 const Produtores = lazy(() => import("./pages/Produtores"));
 const ProdutoresFuncionalidades = lazy(() => import("./pages/ProdutoresFuncionalidades"));
+const ProdFuncDashboard = lazy(() => import("./pages/produtores/funcionalidades/Dashboard"));
+const ProdFuncReports = lazy(() => import("./pages/produtores/funcionalidades/Reports"));
+const ProdFuncSales = lazy(() => import("./pages/produtores/funcionalidades/Sales"));
+const ProdFuncCheckin = lazy(() => import("./pages/produtores/funcionalidades/Checkin"));
+const ProdFuncCoupons = lazy(() => import("./pages/produtores/funcionalidades/Coupons"));
+const ProdFuncTiers = lazy(() => import("./pages/produtores/funcionalidades/Tiers"));
+const ProdFuncFreePaid = lazy(() => import("./pages/produtores/funcionalidades/FreePaid"));
+const ProdFuncResaleOfficial = lazy(() => import("./pages/produtores/funcionalidades/ResaleOfficial"));
+const ProdFuncTransferResale = lazy(() => import("./pages/produtores/funcionalidades/TransferResale"));
+const ProdFuncGuestlist = lazy(() => import("./pages/produtores/funcionalidades/Guestlist"));
+const ProdFuncStaff = lazy(() => import("./pages/produtores/funcionalidades/Staff"));
+const ProdFuncOrganizerApp = lazy(() => import("./pages/produtores/funcionalidades/OrganizerApp"));
+const ProdFuncPromoters = lazy(() => import("./pages/produtores/funcionalidades/Promoters"));
+const ProdFuncInterestLists = lazy(() => import("./pages/produtores/funcionalidades/InterestLists"));
+const ProdFuncWidgets = lazy(() => import("./pages/produtores/funcionalidades/Widgets"));
+const ProdFuncCashflow = lazy(() => import("./pages/produtores/funcionalidades/Cashflow"));
+const ProdFuncPayouts = lazy(() => import("./pages/produtores/funcionalidades/Payouts"));
+const ProdFuncResaleMarket = lazy(() => import("./pages/produtores/funcionalidades/ResaleMarket"));
 const Eventos = lazy(() => import("./pages/Eventos"));
 const EventDetail = lazy(() => import("./pages/EventDetail"));
 const EventBooking = lazy(() => import("./pages/EventBooking"));
@@ -139,6 +157,24 @@ const App = () => {
                 <Route path="/" element={<Index />} />
                 <Route path="/produtores" element={<Produtores />} />
                 <Route path="/produtores/funcionalidades" element={<ProdutoresFuncionalidades />} />
+                <Route path="/produtores/funcionalidades/dashboard" element={<ProdFuncDashboard />} />
+                <Route path="/produtores/funcionalidades/relatorios" element={<ProdFuncReports />} />
+                <Route path="/produtores/funcionalidades/vendas" element={<ProdFuncSales />} />
+                <Route path="/produtores/funcionalidades/checkin" element={<ProdFuncCheckin />} />
+                <Route path="/produtores/funcionalidades/cupons" element={<ProdFuncCoupons />} />
+                <Route path="/produtores/funcionalidades/tiers" element={<ProdFuncTiers />} />
+                <Route path="/produtores/funcionalidades/free-paid" element={<ProdFuncFreePaid />} />
+                <Route path="/produtores/funcionalidades/revenda-oficial" element={<ProdFuncResaleOfficial />} />
+                <Route path="/produtores/funcionalidades/transferencia-revenda" element={<ProdFuncTransferResale />} />
+                <Route path="/produtores/funcionalidades/guestlist" element={<ProdFuncGuestlist />} />
+                <Route path="/produtores/funcionalidades/staff" element={<ProdFuncStaff />} />
+                <Route path="/produtores/funcionalidades/app-organizador" element={<ProdFuncOrganizerApp />} />
+                <Route path="/produtores/funcionalidades/promoters" element={<ProdFuncPromoters />} />
+                <Route path="/produtores/funcionalidades/listas-interesse" element={<ProdFuncInterestLists />} />
+                <Route path="/produtores/funcionalidades/widgets" element={<ProdFuncWidgets />} />
+                <Route path="/produtores/funcionalidades/fluxo-de-caixa" element={<ProdFuncCashflow />} />
+                <Route path="/produtores/funcionalidades/repasses" element={<ProdFuncPayouts />} />
+                <Route path="/produtores/funcionalidades/marketplace-revenda" element={<ProdFuncResaleMarket />} />
                 <Route path="/eventos" element={<Eventos />} />
                 <Route path="/eventos/:slug" element={<EventDetail />} />
                 <Route path="/eventos/:slug/comprar" element={<EventBooking />} />
