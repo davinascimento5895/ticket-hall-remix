@@ -1695,16 +1695,20 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address_number: string | null
           asaas_account_id: string | null
           asaas_account_key: string | null
           asaas_wallet_id: string | null
           avatar_url: string | null
           birth_date: string | null
+          cep: string | null
           city: string | null
+          complement: string | null
           cpf: string | null
           created_at: string | null
           full_name: string | null
           id: string
+          neighborhood: string | null
           organizer_banner_url: string | null
           organizer_bio: string | null
           organizer_facebook: string | null
@@ -1716,19 +1720,24 @@ export type Database = {
           preferred_categories: string[] | null
           producer_status: Database["public"]["Enums"]["producer_status"] | null
           state: string | null
+          street: string | null
           updated_at: string | null
         }
         Insert: {
+          address_number?: string | null
           asaas_account_id?: string | null
           asaas_account_key?: string | null
           asaas_wallet_id?: string | null
           avatar_url?: string | null
           birth_date?: string | null
+          cep?: string | null
           city?: string | null
+          complement?: string | null
           cpf?: string | null
           created_at?: string | null
           full_name?: string | null
           id: string
+          neighborhood?: string | null
           organizer_banner_url?: string | null
           organizer_bio?: string | null
           organizer_facebook?: string | null
@@ -1742,19 +1751,24 @@ export type Database = {
             | Database["public"]["Enums"]["producer_status"]
             | null
           state?: string | null
+          street?: string | null
           updated_at?: string | null
         }
         Update: {
+          address_number?: string | null
           asaas_account_id?: string | null
           asaas_account_key?: string | null
           asaas_wallet_id?: string | null
           avatar_url?: string | null
           birth_date?: string | null
+          cep?: string | null
           city?: string | null
+          complement?: string | null
           cpf?: string | null
           created_at?: string | null
           full_name?: string | null
           id?: string
+          neighborhood?: string | null
           organizer_banner_url?: string | null
           organizer_bio?: string | null
           organizer_facebook?: string | null
@@ -1768,6 +1782,7 @@ export type Database = {
             | Database["public"]["Enums"]["producer_status"]
             | null
           state?: string | null
+          street?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -2655,6 +2670,7 @@ export type Database = {
         }
         Returns: Json
       }
+      get_user_id_by_email: { Args: { p_email: string }; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
