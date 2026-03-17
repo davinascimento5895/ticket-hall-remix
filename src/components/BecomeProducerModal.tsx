@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,6 +49,7 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
   useEffect(() => {
     if (open) {
       if (user && role === "producer") {
+        sessionStorage.removeItem("become_producer_flow");
         onOpenChange(false);
         navigate("/producer/events/new");
         return;
@@ -56,12 +57,15 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
       setStep(getInitialStep());
       setCpf(profile?.cpf || "");
       setPhone(profile?.phone || "");
+    } else {
+      // Clean up session storage when modal closes
+      sessionStorage.removeItem("become_producer_flow");
     }
   }, [open, user, role]);
 
-  // Auto-advance when user logs in while modal is open
+  // Handle OAuth callback completing the flow
   useEffect(() => {
-    if (open && user && step === "auth") {
+    if (open && user && step === "auth" && sessionStorage.getItem("become_producer_flow")) {
       setStep("producer-data");
       setCpf(profile?.cpf || "");
       setPhone(profile?.phone || "");
@@ -111,13 +115,16 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
   };
 
   const handleGoogleLogin = async () => {
+    // Save state before OAuth flow (user will be redirected away)
+    sessionStorage.setItem("become_producer_flow", "true");
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
     if (error) {
       console.error("BecomeProducer google login error:", error);
       toast({ title: "Erro ao entrar", variant: "destructive" });
+      sessionStorage.removeItem("become_producer_flow");
     }
   };
 
@@ -311,9 +318,9 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
                   </Button>
                   <p className="text-[11px] text-muted-foreground text-center">
                     Ao criar sua conta, você concorda com os{" "}
-                    <a href="/termos-de-uso" className="text-primary hover:underline">Termos de Uso</a>
+                    <Link to="/termos-de-uso" className="text-primary hover:underline">Termos de Uso</Link>
                     {" "}e{" "}
-                    <a href="/politica-de-privacidade" className="text-primary hover:underline">Política de Privacidade</a>.
+                    <Link to="/politica-de-privacidade" className="text-primary hover:underline">Política de Privacidade</Link>.
                   </p>
                 </form>
               )}

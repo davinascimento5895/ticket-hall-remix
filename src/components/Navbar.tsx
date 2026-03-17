@@ -62,8 +62,10 @@ export function Navbar() {
   useEffect(() => {
     if (searchParams.get("login") === "true") {
       setAuthOpen(true);
+      // Clean up query param
+      navigate(location.pathname, { replace: true });
     }
-  }, [searchParams]);
+  }, [searchParams, navigate, location.pathname]);
 
   useEffect(() => {
     const handle = () => setScrolled(window.scrollY > 20);
@@ -105,7 +107,6 @@ export function Navbar() {
 
   const switchableRoles = allRoles.filter((r) => r !== role);
 
-  const dashboardLink = role ? roleDashboardLinks[role] : "/meus-ingressos";
   const initials = profile?.full_name
     ? profile.full_name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
     : "?";
