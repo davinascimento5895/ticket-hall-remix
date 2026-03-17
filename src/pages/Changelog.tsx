@@ -19,6 +19,26 @@ type ChangelogEntry = {
 
 const changelog: ChangelogEntry[] = [
   {
+    date: "17 Mar 2026",
+    version: "1.3",
+    title: "Revenda, Pagamentos e Melhorias de UX",
+    tags: [
+      { label: "Marketplace", variant: "default" },
+      { label: "Pagamentos", variant: "secondary" },
+      { label: "UX", variant: "outline" },
+    ],
+    highlights: [
+      "Marketplace de Revenda: compre e venda ingressos entre usuários com proteção antifraude e processamento seguro",
+      "Anunciar ingressos para revenda: novo diálogo para listar ingressos com cálculo automático de taxas",
+      "Pagamentos: melhorias no fluxo — suporte a PIX, cartão e boleto e opções de parcelamento",
+      "Check-in público com scanner QR para entrada rápida e validação em tempo real",
+      "Favoritos em tempo real: marque eventos e receba atualizações instantâneas",
+      "Listas de interesse públicas: inscreva-se para ser avisado sobre vagas e novos eventos",
+      "Widget incorporável: gere e copie um snippet para incorporar eventos em outros sites",
+      "Melhorias de infraestrutura e segurança com Supabase e edge functions",
+    ],
+  },
+  {
     date: "9 Mar 2026",
     version: "1.2",
     title: "Gestão Avançada & Produtividade",
