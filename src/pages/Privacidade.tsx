@@ -234,7 +234,7 @@ export default function Privacidade() {
                         {req.request_type === "export" ? "Exportação de dados" : "Exclusão de conta"}
                       </span>
                       <span className="text-muted-foreground ml-2">
-                        {new Date(req.created_at).toLocaleDateString("pt-BR")}
+                        {new Date(req.created_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}
                       </span>
                     </div>
                     <Badge variant="outline" className={

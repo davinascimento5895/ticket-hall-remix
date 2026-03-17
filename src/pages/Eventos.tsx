@@ -282,6 +282,7 @@ export default function Eventos() {
                     day: "2-digit",
                     month: "short",
                     year: "numeric",
+                    timeZone: "America/Sao_Paulo",
                   })}
                   city={event.venue_city || "Online"}
                   imageUrl={event.cover_image_url}

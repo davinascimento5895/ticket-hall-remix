@@ -228,7 +228,7 @@ export function WebhooksManager() {
                       {d.response_status || "pendente"}
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground">{new Date(d.created_at).toLocaleString("pt-BR")} · {d.attempts} tentativa(s)</p>
+                  <p className="text-xs text-muted-foreground">{new Date(d.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} · {d.attempts} tentativa(s)</p>
                 </div>
               ))}
             </div>

@@ -53,7 +53,7 @@ function OrderDetail({ order }: { order: any }) {
         </div>
         <div>
           <p className="text-muted-foreground text-xs mb-0.5">Data</p>
-          <p>{new Date(order.created_at).toLocaleString("pt-BR")}</p>
+          <p>{new Date(order.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</p>
         </div>
       </div>
 
@@ -179,7 +179,7 @@ export default function AdminOrders() {
                       <td className="p-3 text-muted-foreground">{formatBRL(order.platform_fee)}</td>
                       <td className="p-3 text-muted-foreground">{methodLabels[order.payment_method] || order.payment_method || "—"}</td>
                       <td className="p-3"><OrderStatusBadge status={order.status} /></td>
-                      <td className="p-3 text-muted-foreground">{new Date(order.created_at).toLocaleDateString("pt-BR")}</td>
+                      <td className="p-3 text-muted-foreground">{new Date(order.created_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</td>
                       <td className="p-3">
                         <Dialog>
                           <DialogTrigger asChild>

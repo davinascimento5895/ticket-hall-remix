@@ -43,7 +43,7 @@ export function TicketCard({
           {startDate && (
             <span className="inline-flex items-center gap-1">
               <Calendar className="h-3 w-3" />
-              {new Date(startDate).toLocaleDateString("pt-BR")}
+              {new Date(startDate).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}
             </span>
           )}
           {venueCity && (

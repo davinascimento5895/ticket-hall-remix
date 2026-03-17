@@ -135,7 +135,7 @@ export default function PedidoRecuperacao() {
               <div>
                 <p className="font-display font-semibold">{event.title}</p>
                 <p className="text-sm text-muted-foreground">
-                  {event.start_date && new Date(event.start_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
+                  {event.start_date && new Date(event.start_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric", timeZone: "America/Sao_Paulo" })}
                   {event.venue_name && ` • ${event.venue_name}`}
                 </p>
               </div>
