@@ -116,19 +116,6 @@ export function CheckoutStepData({
   // M07: Filter out product items from attendee form
   const ticketItems = items.filter((item) => !item.tierId.startsWith("product-"));
 
-  const handleCopyBuyerData = (key: string) => {
-    if (!buyerData) return;
-    setAttendeeData((prev) => ({
-      ...prev,
-      [key]: {
-        name: buyerData.fullName,
-        email: buyerData.email,
-        cpf: buyerData.cpf,
-      },
-    }));
-    toast({ title: "Dados copiados", description: "Os dados do comprador foram preenchidos." });
-  };
-
   const handleValidateAndNext = () => {
     // Validate attendee data for ticket items only
     for (const item of ticketItems) {

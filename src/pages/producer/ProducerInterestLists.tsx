@@ -167,7 +167,7 @@ export default function ProducerInterestLists() {
                   </div>
 
                   <p className="text-xs text-muted-foreground mt-2">
-                    Criada em {new Date(list.created_at).toLocaleDateString("pt-BR")}
+                    Criada em {new Date(list.created_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}
                   </p>
                 </CardContent>
               </Card>

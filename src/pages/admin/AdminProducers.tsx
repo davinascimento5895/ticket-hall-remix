@@ -57,7 +57,7 @@ export default function AdminProducers() {
                       {p.phone && <span>{p.phone}</span>}
                       <span className="flex items-center gap-1">
                         <CalendarDays className="h-3 w-3" />
-                        {new Date(p.created_at).toLocaleDateString("pt-BR")}
+                        {new Date(p.created_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}
                       </span>
                       <span>{p.events_count ?? 0} evento(s)</span>
                     </div>

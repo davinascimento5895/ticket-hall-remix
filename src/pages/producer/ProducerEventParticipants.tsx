@@ -193,9 +193,9 @@ export default function ProducerEventParticipants() {
                       <td className="p-3 font-mono text-xs">{ticket.id.slice(0, 8)}</td>
                       <td className="p-3 text-muted-foreground">{ticket.ticket_tiers?.name || "—"}</td>
                       <td className="p-3 text-muted-foreground">{ticket.profiles?.full_name || "—"}</td>
-                      <td className="p-3 text-muted-foreground">{new Date(ticket.created_at).toLocaleDateString("pt-BR")}</td>
+                      <td className="p-3 text-muted-foreground">{new Date(ticket.created_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</td>
                       <td className="p-3 text-muted-foreground">
-                        {ticket.checked_in_at ? new Date(ticket.checked_in_at).toLocaleString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "—"}
+                        {ticket.checked_in_at ? new Date(ticket.checked_in_at).toLocaleString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }) : "—"}
                       </td>
                     </tr>
                   ))}

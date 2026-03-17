@@ -1,3 +1,11 @@
+# Local Node installation and common ignores
+.local/
+node_modules/
+.env
+
+# Editor directories
+.vscode/
+
 # Logs
 logs
 *.log

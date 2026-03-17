@@ -74,7 +74,7 @@ export default function ProducerEvents() {
                     <EventStatusBadge status={event.status} />
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {new Date(event.start_date).toLocaleDateString("pt-BR")}
+                    {new Date(event.start_date).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}
                     {event.venue_city ? ` · ${event.venue_city}` : ""}
                     {` · ${totalSold}/${totalCapacity} vendidos`}
                   </p>

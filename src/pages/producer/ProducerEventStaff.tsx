@@ -240,7 +240,7 @@ export default function ProducerEventStaff() {
                         {m.profiles?.full_name || "Usuário"}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Desde {new Date(m.assigned_at).toLocaleDateString("pt-BR")}
+                        Desde {new Date(m.assigned_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}
                       </p>
                     </div>
                   </div>
