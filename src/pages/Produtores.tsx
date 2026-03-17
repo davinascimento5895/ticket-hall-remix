@@ -217,6 +217,7 @@ export default function Produtores() {
             </p>
           </motion.div>
           <TabelaComparativo />
+          <div className="h-6 md:h-8" />
         </div>
       </section>
 
@@ -238,6 +239,7 @@ export default function Produtores() {
             </p>
           </motion.div>
           <CalculadoraComparador />
+          <div className="h-6 md:h-8" />
         </div>
       </section>
 
