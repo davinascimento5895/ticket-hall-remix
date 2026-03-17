@@ -60,21 +60,21 @@ export default function Eventos() {
   };
 
   const PAGE_SIZE = 24;
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const [page, setPage] = useState(1);
 
   const { data: rawEvents, isLoading } = useQuery({
-    queryKey: ["events", debouncedSearch, filters.category, cityFilter],
+    queryKey: ["events", debouncedSearch, filters.category, cityFilter, page],
     queryFn: async () => {
       // Query única: events + preço mínimo via ticket_tiers aninhado
       // Elimina o segundo round-trip ao Supabase que existia antes
+      const offset = (page - 1) * PAGE_SIZE;
       let query = supabase
         .from("events")
-        .select("id, title, slug, start_date, end_date, venue_city, cover_image_url, category, is_online, views_count, ticket_tiers(price)")
+        .select("id, title, slug, start_date, end_date, venue_city, cover_image_url, category, is_online, views_count, ticket_tiers(price)", { count: "exact" })
         .eq("status", "published")
         .gte("end_date", new Date().toISOString())
         .order("start_date", { ascending: true })
-        .limit(200);
+        .range(offset, offset + PAGE_SIZE - 1);
 
       if (debouncedSearch) {
         const safe = sanitizePostgrestFilter(debouncedSearch);
@@ -83,27 +83,56 @@ export default function Eventos() {
       if (filters.category) query = query.eq("category", filters.category);
       if (cityFilter) query = query.eq("venue_city", cityFilter);
 
-      const { data, error } = await query;
+      const t0 = typeof performance !== "undefined" ? performance.now() : Date.now();
+      const res = await query;
+      const t1 = typeof performance !== "undefined" ? performance.now() : Date.now();
+      const { data, error, count } = res;
       if (error) throw error;
 
-      return (data || []).map((e: any) => {
+      // Log timing and payload size for diagnostics (temporary)
+      try {
+        const itemCount = (data || []).length;
+        let byteSize = 0;
+        try {
+          byteSize = typeof TextEncoder !== "undefined" ? new TextEncoder().encode(JSON.stringify(data || [])).length : JSON.stringify(data || []).length;
+        } catch (e) {
+          byteSize = JSON.stringify(data || []).length;
+        }
+        // eslint-disable-next-line no-console
+        console.debug(`Events query: ${Math.round(t1 - t0)}ms, items=${itemCount}, bytes=${byteSize}`);
+      } catch (err) {
+        // ignore logging errors
+      }
+
+      const mapStart = typeof performance !== "undefined" ? performance.now() : Date.now();
+      const mapped = (data || []).map((e: any) => {
         const prices = (e.ticket_tiers || []).map((t: any) => t.price ?? 0);
         const _minPrice = prices.length > 0 ? Math.min(...prices) : 0;
         const { ticket_tiers, ...rest } = e;
         return { ...rest, _minPrice };
       });
+      const mapEnd = typeof performance !== "undefined" ? performance.now() : Date.now();
+      try {
+        // eslint-disable-next-line no-console
+        console.debug(`Mapping events: ${Math.round(mapEnd - mapStart)}ms`);
+      } catch (e) {
+        /* ignore */
+      }
+
+      return { items: mapped, count: typeof count === "number" ? count : (mapped || []).length };
     },
   });
 
-  // Reset visible count when filters change
+  // Reset to first page when filters/search change
   useEffect(() => {
-    setVisibleCount(PAGE_SIZE);
+    setPage(1);
   }, [debouncedSearch, filters, cityFilter]);
 
   // Apply all client-side filters
   const filteredEvents = useMemo(() => {
-    if (!rawEvents) return [];
-    let result = [...rawEvents];
+    const pageItems = rawEvents?.items || [];
+    if (!pageItems) return [];
+    let result = [...pageItems];
 
     // Date preset filter
     if (filters.datePreset) {
@@ -273,8 +302,8 @@ export default function Eventos() {
         ) : (
           <div className="space-y-8">
             {/* Event grid */}
-            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-              {filteredEvents.slice(0, visibleCount).map((event: any, index: number) => (
+              <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                {filteredEvents.map((event: any, index: number) => (
                 <EventCard
                   key={event.id}
                   title={event.title}
@@ -293,21 +322,72 @@ export default function Eventos() {
                 />
               ))}
             </div>
-
-            {/* Load more */}
-            {filteredEvents.length > visibleCount && (
-              <div className="flex justify-center pt-8" ref={loadMoreRef}>
-                <Button
-                  variant="outline"
-                  onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-                >
-                  Carregar mais eventos
-                </Button>
-              </div>
-            )}
+            {/* Pagination */}
+            <div className="flex justify-center pt-6">
+              <Pagination
+                current={page}
+                total={Math.ceil((rawEvents?.count || 0) / PAGE_SIZE)}
+                onChange={(p) => setPage(p)}
+              />
+            </div>
           </div>
         )}
       </div>
     </>
+  );
+}
+
+function Pagination({ current, total, onChange }: { current: number; total: number; onChange: (p: number) => void }) {
+  if (total <= 1) return null;
+  const siblings = 1;
+  const pages: number[] = [];
+  const start = Math.max(1, current - siblings);
+  const end = Math.min(total, current + siblings);
+  for (let i = start; i <= end; i++) pages.push(i);
+
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        disabled={current === 1}
+        onClick={() => onChange(1)}
+        className="px-3 py-1 rounded-md border text-sm"
+      >
+        Início
+      </button>
+      <button
+        disabled={current === 1}
+        onClick={() => onChange(current - 1)}
+        className="px-3 py-1 rounded-md border text-sm"
+      >
+        ‹
+      </button>
+
+      {start > 1 && <span className="px-2 text-sm">…</span>}
+      {pages.map((p) => (
+        <button
+          key={p}
+          onClick={() => onChange(p)}
+          className={`px-3 py-1 rounded-md border text-sm ${p === current ? "bg-gray-200" : ""}`}
+        >
+          {p}
+        </button>
+      ))}
+      {end < total && <span className="px-2 text-sm">…</span>}
+
+      <button
+        disabled={current === total}
+        onClick={() => onChange(current + 1)}
+        className="px-3 py-1 rounded-md border text-sm"
+      >
+        ›
+      </button>
+      <button
+        disabled={current === total}
+        onClick={() => onChange(total)}
+        className="px-3 py-1 rounded-md border text-sm"
+      >
+        Última
+      </button>
+    </div>
   );
 }
