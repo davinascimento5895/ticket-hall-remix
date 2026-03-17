@@ -180,7 +180,7 @@ export default function MeusPedidos() {
                           <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
                             <span className="inline-flex items-center gap-1">
                               <Calendar className="h-3 w-3 text-primary" />
-                              {new Date(order.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
+                              {new Date(order.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric", timeZone: "America/Sao_Paulo" })}
                             </span>
                             {order.payment_method && (
                               <span className="inline-flex items-center gap-1">

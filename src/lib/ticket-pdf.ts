@@ -89,14 +89,12 @@ export async function generateTicketPDF(data: TicketDownloadData) {
 
   // ── Date & Time ──
   const startDate = new Date(data.eventDate);
-  const dateStr = startDate.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-  const timeStr = startDate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const localeDateOpts = { day: "2-digit", month: "long", year: "numeric", timeZone: "America/Sao_Paulo" } as const;
+  const localeTimeOpts = { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" } as const;
+  const dateStr = startDate.toLocaleDateString("pt-BR", localeDateOpts);
+  const timeStr = startDate.toLocaleTimeString("pt-BR", localeTimeOpts);
   const endTimeStr = data.eventEndDate
-    ? new Date(data.eventEndDate).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+    ? new Date(data.eventEndDate).toLocaleTimeString("pt-BR", localeTimeOpts)
     : null;
 
   doc.setFontSize(10);
@@ -203,6 +201,7 @@ export async function generateTicketPDF(data: TicketDownloadData) {
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      timeZone: "America/Sao_Paulo",
     });
     doc.setFontSize(8);
     doc.setTextColor(...PRIMARY_COLOR);

@@ -213,13 +213,13 @@ export default function MeusIngressos() {
             {eventDate && (
               <span className="inline-flex items-center gap-1">
                 <Calendar className="h-3 w-3 text-primary" />
-                {eventDate.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
+                {eventDate.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric", timeZone: "America/Sao_Paulo" })}
               </span>
             )}
             {eventDate && (
               <span className="inline-flex items-center gap-1">
                 <Clock className="h-3 w-3 text-primary" />
-                {eventDate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                {eventDate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" })}
               </span>
             )}
             {ticket.events?.venue_city && (

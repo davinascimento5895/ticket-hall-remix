@@ -115,7 +115,7 @@ export function TicketTierCard({
         </div>
         {isNotYetOnSale && salesStart && (
           <p className="text-xs text-muted-foreground">
-            Vendas iniciam em {salesStart.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+            Vendas iniciam em {salesStart.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" })}
           </p>
         )}
       </div>
