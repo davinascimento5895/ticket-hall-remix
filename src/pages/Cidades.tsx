@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Search, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { SearchInput } from "@/components/ui/search-input";
 import { SEOHead } from "@/components/SEOHead";
 import { SearchBar } from "@/components/SearchBar";
 import { MAIN_CAPITALS, BRAZILIAN_CAPITALS } from "@/lib/cities";
@@ -81,12 +80,14 @@ export default function Cidades() {
             </Select>
 
             {selectedUF && (
-              <div>
-                  <SearchInput
-                    placeholder="Pesquisar cidade..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Pesquisar cidade..."
+                  className="pl-10"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
 
                 {/* Combobox dropdown */}
                 {ibgeCities && ibgeCities.length > 0 && (
@@ -118,10 +119,11 @@ export default function Cidades() {
         {/* All capitals */}
         <section>
           <h2 className="font-display text-lg font-semibold mb-4 text-foreground">Todas as capitais</h2>
-          <div className="mb-4">
-            <SearchInput
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
               placeholder="Buscar capital..."
-              className="max-w-sm"
+              className="pl-10 max-w-sm"
               value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setSelectedUF(""); }}
             />

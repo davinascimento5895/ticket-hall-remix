@@ -3,7 +3,6 @@ import { SEOHead } from "@/components/SEOHead";
 import { Ticket, Calendar, MapPin, QrCode, Send, Clock, Search, Archive, Download, Repeat, XCircle, CalendarPlus, Mail, ChevronRight, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SearchInput } from "@/components/ui/search-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { TicketDetailModal } from "@/components/TicketDetailModal";
@@ -390,14 +389,15 @@ export default function MeusIngressos() {
           <h1 className="font-display text-2xl lg:text-3xl font-bold">Ingressos</h1>
           
           {/* Search bar */}
-          <div className="w-full lg:w-80">
-            <SearchInput
+          <div className="relative w-full lg:w-80">
+            <Input
               type="text"
               placeholder="Buscar pelo nome, email, ingresso ou pedido"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pr-10 bg-muted/50 border-border"
             />
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           </div>
         </div>
 

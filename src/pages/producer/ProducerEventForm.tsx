@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SearchInput } from "@/components/ui/search-input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -1327,7 +1326,7 @@ function VenueStep({ form, updateField }: { form: any; updateField: (f: string, 
                 <SelectTrigger><SelectValue placeholder="Selecione a cidade" /></SelectTrigger>
                 <SelectContent>
                   <div className="px-2 pb-2">
-                    <SearchInput placeholder="Buscar cidade..." value={citySearch} onChange={(e) => setCitySearch(e.target.value)} className="h-8 text-sm" onClick={(e) => e.stopPropagation()} />
+                    <Input placeholder="Buscar cidade..." value={citySearch} onChange={(e) => setCitySearch(e.target.value)} className="h-8 text-sm" onClick={(e) => e.stopPropagation()} />
                   </div>
                   {filteredCities.slice(0, 100).map((c) => (
                     <SelectItem key={c.id} value={c.nome}>{c.nome}</SelectItem>
