@@ -49,7 +49,7 @@ export function ProducerEventCard({
         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <Calendar className="h-3 w-3" />
-            {new Date(startDate).toLocaleDateString("pt-BR")}
+            {new Date(startDate).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}
           </span>
           {venueCity && (
             <span className="inline-flex items-center gap-1">

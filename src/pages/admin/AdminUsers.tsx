@@ -200,7 +200,7 @@ export default function AdminUsers() {
                             ))}
                           </div>
                         </td>
-                        <td className="p-3 text-muted-foreground">{new Date(user.created_at).toLocaleDateString("pt-BR")}</td>
+                        <td className="p-3 text-muted-foreground">{new Date(user.created_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</td>
                         <td className="p-3">
                           <Dialog>
                             <DialogTrigger asChild>

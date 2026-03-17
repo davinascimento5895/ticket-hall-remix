@@ -226,7 +226,7 @@ export default function Revenda() {
                       {event.start_date && (
                         <span className="inline-flex items-center gap-1">
                           <Calendar className="h-3 w-3 text-primary" />
-                          {new Date(event.start_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
+                          {new Date(event.start_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric", timeZone: "America/Sao_Paulo" })}
                         </span>
                       )}
                       {event.venue_city && (
@@ -260,7 +260,7 @@ export default function Revenda() {
                           <div>
                             <p className="font-medium text-foreground text-sm">{listing.ticket_tiers?.name}</p>
                             <p className="text-xs text-muted-foreground mt-0.5">
-                              Expira: {new Date(listing.expires_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                              Expira: {new Date(listing.expires_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" })}
                             </p>
                           </div>
                           {discount > 0 && (

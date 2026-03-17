@@ -53,7 +53,7 @@ function generateCertificatePdf(cert: any) {
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(12);
-    const eventDate = new Date(cert.events?.start_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+    const eventDate = new Date(cert.events?.start_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric", timeZone: "America/Sao_Paulo" });
     doc.text(`realizado em ${eventDate}`, w / 2, 128, { align: "center" });
 
     // Code
@@ -62,7 +62,7 @@ function generateCertificatePdf(cert: any) {
     doc.text(`Código de verificação: ${cert.certificate_code}`, w / 2, 155, { align: "center" });
 
     // Issue date
-    const issuedDate = new Date(cert.issued_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+    const issuedDate = new Date(cert.issued_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric", timeZone: "America/Sao_Paulo" });
     doc.text(`Emitido em ${issuedDate}`, w / 2, 162, { align: "center" });
 
     // Footer
@@ -115,7 +115,7 @@ export default function MeusCertificados() {
                       {cert.events?.title}
                     </h3>
                     <p className="text-xs text-muted-foreground">
-                      {cert.attendee_name} · {new Date(cert.events?.start_date).toLocaleDateString("pt-BR")}
+                      {cert.attendee_name} · {new Date(cert.events?.start_date).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}
                     </p>
                     <p className="text-xs text-muted-foreground font-mono">
                       {cert.certificate_code}

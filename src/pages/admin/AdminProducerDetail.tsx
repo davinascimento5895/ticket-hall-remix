@@ -36,9 +36,9 @@ export default function AdminProducerDetail() {
                   {data.profile.phone}
                 </span>
               )}
-              <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1">
                 <CalendarDays className="h-3 w-3" />
-                Cadastro: {new Date(data.profile.created_at).toLocaleDateString("pt-BR")}
+                Cadastro: {new Date(data.profile.created_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}
               </span>
             </div>
           )}
@@ -76,10 +76,10 @@ export default function AdminProducerDetail() {
                         <EventStatusBadge status={event.status} />
                       </td>
                       <td className="p-3 text-muted-foreground">
-                        {new Date(event.start_date).toLocaleDateString("pt-BR")}
+                        {new Date(event.start_date).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}
                       </td>
                       <td className="p-3 text-muted-foreground">
-                        {new Date(event.created_at).toLocaleDateString("pt-BR")}
+                        {new Date(event.created_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}
                       </td>
                     </tr>
                   ))}

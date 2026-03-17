@@ -161,7 +161,7 @@ export default function OrganizerProfile() {
           <EventCard
             key={event.id}
             title={event.title}
-            date={new Date(event.start_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
+            date={new Date(event.start_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric", timeZone: "America/Sao_Paulo" })}
             city={event.is_online ? "Evento Online" : (event.venue_city ? `${event.venue_name ? event.venue_name + " - " : ""}${event.venue_city}${event.venue_state ? ", " + event.venue_state : ""}` : "Online")}
             imageUrl={event.cover_image_url}
             priceFrom={0}
