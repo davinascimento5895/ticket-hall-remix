@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, XCircle, ChevronDown, Info } from "lucide-react";
 import {
@@ -116,20 +116,20 @@ interface FeatureRow {
 
 const featureRows: FeatureRow[] = [
   // Pagamentos
-  { key: "pix", label: "PIX", tooltip: "Pagamento instantâneo via PIX com confirmação em segundos.", category: "💳 Pagamentos" },
-  { key: "debito", label: "Cartão de débito", tooltip: "Aceita cartão de débito como forma de pagamento no checkout.", category: "💳 Pagamentos" },
-  { key: "googleApplePay", label: "Google Pay / Apple Pay", tooltip: "Pagamento com carteiras digitais para checkout rápido.", category: "💳 Pagamentos" },
+  { key: "pix", label: "PIX", tooltip: "Pagamento instantâneo via PIX com confirmação em segundos.", category: "Pagamentos" },
+  { key: "debito", label: "Cartão de débito", tooltip: "Aceita cartão de débito como forma de pagamento no checkout.", category: "Pagamentos" },
+  { key: "googleApplePay", label: "Google Pay / Apple Pay", tooltip: "Pagamento com carteiras digitais para checkout rápido.", category: "Pagamentos" },
   // Ingressos
-  { key: "lotes", label: "Lotes com virada automática", tooltip: "Os lotes avançam automaticamente quando esgotam ou pela data configurada.", category: "🎫 Ingressos" },
-  { key: "gratuitos", label: "Ingressos gratuitos", tooltip: "Crie e distribua ingressos de cortesia sem custo adicional.", category: "🎫 Ingressos" },
-  { key: "cupons", label: "Cupons de desconto", tooltip: "Crie cupons com valor fixo ou percentual, validade e limite de uso.", category: "🎫 Ingressos" },
-  { key: "transferencia", label: "Transferência de ingresso", tooltip: "O comprador pode transferir o ingresso para outra pessoa pela plataforma.", category: "🎫 Ingressos" },
-  { key: "listaEspera", label: "Lista de espera (sold out)", tooltip: "Avisa automaticamente quando surgem ingressos para um evento esgotado.", category: "🎫 Ingressos" },
-  { key: "revenda", label: "Revenda oficial", tooltip: "Marketplace integrado para revenda segura de ingressos pelo preço original.", category: "🎫 Ingressos" },
+  { key: "lotes", label: "Lotes com virada automática", tooltip: "Os lotes avançam automaticamente quando esgotam ou pela data configurada.", category: "Ingressos" },
+  { key: "gratuitos", label: "Ingressos gratuitos", tooltip: "Crie e distribua ingressos de cortesia sem custo adicional.", category: "Ingressos" },
+  { key: "cupons", label: "Cupons de desconto", tooltip: "Crie cupons com valor fixo ou percentual, validade e limite de uso.", category: "Ingressos" },
+  { key: "transferencia", label: "Transferência de ingresso", tooltip: "O comprador pode transferir o ingresso para outra pessoa pela plataforma.", category: "Ingressos" },
+  { key: "listaEspera", label: "Lista de espera (sold out)", tooltip: "Avisa automaticamente quando surgem ingressos para um evento esgotado.", category: "Ingressos" },
+  { key: "revenda", label: "Revenda oficial", tooltip: "Marketplace integrado para revenda segura de ingressos pelo preço original.", category: "Ingressos" },
   // Operações
-  { key: "checkinOffline", label: "Check-in offline", tooltip: "Faça check-in mesmo sem internet. Os dados sincronizam quando a conexão volta.", category: "⚙️ Operações" },
-  { key: "relatorios", label: "Relatórios em tempo real", tooltip: "Dashboard com vendas, receita e check-ins atualizando ao vivo.", category: "⚙️ Operações" },
-  { key: "widget", label: "Widget incorporável", tooltip: "Embed de venda de ingressos para colocar em qualquer site externo.", category: "⚙️ Operações" },
+  { key: "checkinOffline", label: "Check-in offline", tooltip: "Faça check-in mesmo sem internet. Os dados sincronizam quando a conexão volta.", category: "Operações" },
+  { key: "relatorios", label: "Relatórios em tempo real", tooltip: "Dashboard com vendas, receita e check-ins atualizando ao vivo.", category: "Operações" },
+  { key: "widget", label: "Widget incorporável", tooltip: "Embed de venda de ingressos para colocar em qualquer site externo.", category: "Operações" },
 ];
 
 function FeatureCell({ has, isHighlight }: { has: boolean; isHighlight: boolean }) {
@@ -196,7 +196,7 @@ function DesktopTable() {
           {/* Fee row */}
           <tr className="border-b border-border bg-muted/30">
             <td className="p-4 text-sm font-medium text-muted-foreground sticky left-0 bg-muted/30 z-10">
-              💰 Taxa de serviço
+              Taxa de serviço
             </td>
             {platforms.map((p) => (
               <td
@@ -366,15 +366,95 @@ function MobileAccordion() {
   );
 }
 
+// Mobile: compact table that drops platforms to fit the screen
+function MobileTable() {
+  const [maxPlatforms, setMaxPlatforms] = useState(platforms.length);
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    function update() {
+      const w = typeof window !== "undefined" ? window.innerWidth : 1024;
+      let max = platforms.length;
+      if (w < 360) max = 2;
+      else if (w < 420) max = 3;
+      else if (w < 560) max = 4;
+      else if (w < 768) max = 5;
+      else max = Math.min(platforms.length, 6);
+      setMaxPlatforms(max);
+    }
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  // ensure TicketHall (first platform) always included
+  const others = platforms.slice(1);
+  const visible = expanded
+    ? platforms
+    : [platforms[0], ...others.slice(0, Math.max(0, maxPlatforms - 1))];
+
+  const hiddenCount = platforms.length - visible.length;
+
+  return (
+    <div className="rounded-xl border border-border overflow-hidden">
+      <div className="bg-elevated px-4 py-2.5">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          Comparativo de funcionalidades
+        </h3>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr>
+              <th className="p-3 text-left text-xs font-medium text-muted-foreground min-w-[140px]">Funcionalidade</th>
+              {visible.map((p) => (
+                <th key={p.name} className="p-3 text-center min-w-[100px]">
+                  <div className={`text-sm font-semibold ${p.highlight ? "text-primary" : "text-foreground"}`}>
+                    {p.name}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">{p.fee}</div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {featureRows.map((feature) => (
+              <tr key={feature.key} className="border-t border-border/50">
+                <td className="p-3 text-sm sticky left-0 bg-background z-10">
+                  <FeatureLabel feature={feature} />
+                </td>
+                {visible.map((p) => (
+                  <td key={p.name} className="p-3 text-center">
+                    <FeatureCell has={p.features[feature.key]} isHighlight={p.highlight} />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {!expanded && hiddenCount > 0 && (
+        <div className="p-3 flex justify-center">
+          <Button variant="ghost" onClick={() => setExpanded(true)}>
+            Mostrar mais ({hiddenCount})
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function TabelaComparativo() {
   const isMobile = useIsMobile();
 
   return (
     <div className="space-y-8">
-      {isMobile ? <MobileAccordion /> : <DesktopTable />}
+      {isMobile ? <MobileTable /> : <DesktopTable />}
 
       <p className="text-xs text-muted-foreground text-center">
-        Dados baseados em pesquisa pública de março de 2025. Funcionalidades e taxas dos concorrentes podem variar. Confirme nas respectivas plataformas.
+        Dados baseados em pesquisa pública de fevereiro de 2026. Funcionalidades e taxas dos concorrentes podem variar. Confirme nas respectivas plataformas.
       </p>
 
       <div className="flex justify-center">
