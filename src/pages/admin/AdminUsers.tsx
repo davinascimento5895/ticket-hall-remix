@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Search, Download, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { exportToCSV, userCSVColumns } from "@/lib/csv-export";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -152,9 +153,8 @@ export default function AdminUsers() {
       <h1 className="font-display text-2xl font-bold">Usuários</h1>
 
       <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar por nome..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+        <div className="flex-1 max-w-md">
+          <SearchInput placeholder="Buscar por nome..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full" />
         </div>
         <Button variant="outline" size="sm" onClick={() => usersWithRoles.length && exportToCSV(usersWithRoles, csvColumnsWithRole, "usuarios")} disabled={!usersWithRoles.length}>
           <Download className="h-4 w-4 mr-1" /> Exportar CSV

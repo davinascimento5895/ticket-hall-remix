@@ -349,7 +349,7 @@ O PIX transformou o mercado de ingressos no Brasil. Oferecer pagamento por PIX �
     date: "2026-01-05",
     readTime: "7 min",
     tags: ["Marketing", "Redes Sociais", "Divulgação"],
-    imageUrl: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800&q=80",
+    imageUrl: "/images/cover-event-promotion.svg",
     author: "Equipe TicketHall",
     content: `A divulgação nas redes sociais é o motor de vendas de qualquer evento moderno. Com a estratégia certa, você pode alcançar milhares de pessoas sem gastar uma fortuna em publicidade. Neste guia, vamos explorar as táticas que realmente funcionam para vender ingressos em 2026.
 
