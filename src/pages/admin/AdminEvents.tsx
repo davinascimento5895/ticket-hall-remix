@@ -153,7 +153,7 @@ export default function AdminEvents() {
                       <td className="p-3">
                         <FeeEditor eventId={event.id} currentFee={event.platform_fee_percent ?? 7} onSave={handleFeeUpdate} />
                       </td>
-                      <td className="p-3 text-muted-foreground">{new Date(event.start_date).toLocaleDateString("pt-BR")}</td>
+                      <td className="p-3 text-muted-foreground">{new Date(event.start_date).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</td>
                       <td className="p-3">
                         <button onClick={() => updateMutation.mutate({ id: event.id, updates: { is_featured: !event.is_featured } })} className="text-muted-foreground hover:text-accent transition-colors">
                           {event.is_featured ? <Star className="h-4 w-4 fill-accent text-accent" /> : <StarOff className="h-4 w-4" />}

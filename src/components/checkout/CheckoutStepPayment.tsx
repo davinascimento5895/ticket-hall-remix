@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { CreditCard, QrCode, FileText, Copy, ExternalLink, Loader2, AlertTriangle } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -333,6 +334,10 @@ export function CheckoutStepPayment({
           <span>Total</span>
           <span>{formatBRL(paymentMethod === "credit_card" && installments > 3 ? installmentOptions.find((o) => o.n === installments)?.total || total : total)}</span>
         </div>
+      </div>
+
+      <div className="text-xs text-muted-foreground">
+        Ao prosseguir com a compra, você concorda com os <Link to="/termos-de-uso" className="text-primary hover:underline">Termos de Uso</Link> e a <Link to="/politica-de-privacidade" className="text-primary hover:underline">Política de Privacidade</Link> da Ticket Hall.
       </div>
 
       <div className="flex gap-3">

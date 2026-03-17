@@ -82,7 +82,7 @@ export async function getAdminDashboardStats(dateRange?: { from: string; to: str
     const [y, m] = key.split("-");
     const d = new Date(Number(y), Number(m) - 1, 1);
     return {
-      month: d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" }),
+      month: d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit", timeZone: "America/Sao_Paulo" }),
       revenue: monthMap[key],
     };
   });
@@ -99,7 +99,7 @@ export async function getAdminDashboardStats(dateRange?: { from: string; to: str
     const [y, m, day] = key.split("-");
     const d = new Date(Number(y), Number(m) - 1, Number(day));
     return {
-      day: d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
+      day: d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", timeZone: "America/Sao_Paulo" }),
       revenue: dayMap[key],
     };
   });

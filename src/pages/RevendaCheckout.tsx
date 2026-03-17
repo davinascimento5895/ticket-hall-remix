@@ -97,7 +97,7 @@ export default function RevendaCheckout() {
               {listing.events?.start_date && (
                 <span className="inline-flex items-center gap-1">
                   <Calendar className="h-3 w-3 text-primary" />
-                  {new Date(listing.events.start_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
+                  {new Date(listing.events.start_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric", timeZone: "America/Sao_Paulo" })}
                 </span>
               )}
               {listing.events?.venue_city && (
