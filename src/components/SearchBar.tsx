@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { Search, X, MapPin, Tag, Calendar, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -36,6 +37,7 @@ export function SearchBar({
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [dropdownRect, setDropdownRect] = useState<{ top: number; left: number; width: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -134,6 +136,25 @@ export function SearchBar({
     fetchSuggestions(debouncedQuery);
   }, [debouncedQuery, fetchSuggestions]);
 
+  // Update dropdown position for portal rendering
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    const update = () => {
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (rect) {
+        setDropdownRect({ top: rect.bottom + window.scrollY, left: rect.left + window.scrollX, width: rect.width });
+      }
+    };
+
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [isOpen, suggestions]);
+
   // Close on click outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -189,15 +210,21 @@ export function SearchBar({
 
   const handleSuggestionClick = (suggestion: SearchSuggestion) => {
     switch (suggestion.type) {
-      case "event":
-        navigate(`/evento/${suggestion.slug}`);
+      case "event": {
+        const slug = suggestion.slug || suggestion.id;
+        navigate(`/evento/${encodeURIComponent(String(slug))}`);
         break;
-      case "category":
-        navigate(`/eventos?categoria=${suggestion.slug}`);
+      }
+      case "category": {
+        const cat = suggestion.slug || suggestion.id;
+        navigate(`/eventos?categoria=${encodeURIComponent(String(cat))}`);
         break;
-      case "city":
-        navigate(`/eventos?cidade=${suggestion.slug}`);
+      }
+      case "city": {
+        const city = suggestion.slug || suggestion.id;
+        navigate(`/eventos?cidade=${encodeURIComponent(String(city))}`);
         break;
+      }
     }
     setIsOpen(false);
     setQuery("");
@@ -206,11 +233,11 @@ export function SearchBar({
   const getSuggestionIcon = (type: SearchSuggestion["type"]) => {
     switch (type) {
       case "event":
-        return <Calendar className="h-4 w-4 text-muted-foreground" />;
+        return <Calendar className="h-4 w-4 text-gray-500" />;
       case "category":
-        return <Tag className="h-4 w-4 text-muted-foreground" />;
+        return <Tag className="h-4 w-4 text-gray-500" />;
       case "city":
-        return <MapPin className="h-4 w-4 text-muted-foreground" />;
+        return <MapPin className="h-4 w-4 text-gray-500" />;
     }
   };
 
@@ -284,59 +311,146 @@ export function SearchBar({
       </div>
 
       {/* Suggestions Dropdown */}
-      {isOpen && (suggestions.length > 0 || (query.length >= 2 && !isLoading)) && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-xl shadow-lg z-50 overflow-hidden animate-in fade-in-0 zoom-in-95 duration-200">
-          {suggestions.length > 0 ? (
-            <ul className="py-2">
-              {suggestions.map((suggestion, index) => (
-                <li key={`${suggestion.type}-${suggestion.id}`}>
-                  <button
-                    type="button"
-                    onClick={() => handleSuggestionClick(suggestion)}
-                    className={cn(
-                      "w-full px-4 py-2.5 flex items-center gap-3 text-left hover:bg-accent transition-colors",
-                      selectedIndex === index && "bg-accent"
-                    )}
-                  >
-                    {getSuggestionIcon(suggestion.type)}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{suggestion.title}</p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {suggestion.subtitle}
-                      </p>
-                    </div>
-                    <span className="text-xs text-muted-foreground capitalize">
-                      {suggestion.type === "event"
-                        ? "Evento"
-                        : suggestion.type === "category"
-                        ? "Categoria"
-                        : "Cidade"}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="px-4 py-6 text-center text-muted-foreground">
-              <p className="text-sm">Nenhum resultado para "{query}"</p>
-              <p className="text-xs mt-1">Tente termos diferentes ou verifique a ortografia</p>
-            </div>
-          )}
+      {isOpen && (suggestions.length > 0 || (query.length >= 2 && !isLoading)) &&
+        typeof document !== "undefined" &&
+        dropdownRect &&
+        createPortal(
+          <div
+            style={{ position: "absolute", top: dropdownRect.top, left: dropdownRect.left, width: dropdownRect.width }}
+            className="mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-[9999] overflow-hidden animate-in fade-in-0 zoom-in-95 duration-200"
+          >
+            {suggestions.length > 0 ? (
+              (() => {
+                const grouped: Record<string, SearchSuggestion[]> = {
+                  category: [],
+                  city: [],
+                  event: [],
+                };
 
-          {query.trim() && (
-            <div className="border-t border-border px-4 py-2">
-              <button
-                type="button"
-                onClick={navigateToSearch}
-                className="w-full text-sm text-primary hover:underline text-left flex items-center gap-2"
-              >
-                <Search className="h-3.5 w-3.5" />
-                Ver todos os resultados para "{query}"
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+                suggestions.forEach((s) => grouped[s.type].push(s));
+
+                const flat: SearchSuggestion[] = [
+                  ...grouped.category,
+                  ...grouped.city,
+                  ...grouped.event,
+                ];
+
+                return (
+                  <div>
+                    {grouped.category.length > 0 && (
+                      <div>
+                        <div className="px-3 py-1 bg-gray-50 text-xxs text-gray-500 uppercase text-[11px]">Categorias</div>
+                        <ul className="py-1">
+                          {grouped.category.map((suggestion, i) => {
+                            const overallIndex = i;
+                            return (
+                              <li key={`category-${suggestion.id}`}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleSuggestionClick(suggestion)}
+                                  className={cn(
+                                    "w-full px-3 py-2 flex items-center gap-3 text-left hover:bg-gray-100 transition-colors",
+                                    selectedIndex === overallIndex && "bg-gray-200"
+                                  )}
+                                >
+                                  {getSuggestionIcon(suggestion.type)}
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium truncate text-sm text-gray-900">{suggestion.title}</p>
+                                    <p className="text-xs text-gray-600 truncate">{suggestion.subtitle}</p>
+                                  </div>
+                                  <span className="text-xs text-gray-600 capitalize">Categoria</span>
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    )}
+
+                    {grouped.city.length > 0 && (
+                      <div>
+                        <div className="px-3 py-1 bg-gray-50 text-xxs text-gray-500 uppercase text-[11px]">Cidades</div>
+                        <ul className="py-1">
+                          {grouped.city.map((suggestion, i) => {
+                            const overallIndex = grouped.category.length + i;
+                            return (
+                              <li key={`city-${suggestion.id}`}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleSuggestionClick(suggestion)}
+                                  className={cn(
+                                    "w-full px-3 py-2 flex items-center gap-3 text-left hover:bg-gray-100 transition-colors",
+                                    selectedIndex === overallIndex && "bg-gray-200"
+                                  )}
+                                >
+                                  {getSuggestionIcon(suggestion.type)}
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium truncate text-sm text-gray-900">{suggestion.title}</p>
+                                    <p className="text-xs text-gray-600 truncate">{suggestion.subtitle}</p>
+                                  </div>
+                                  <span className="text-xs text-gray-600 capitalize">Cidade</span>
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    )}
+
+                    {grouped.event.length > 0 && (
+                      <div>
+                        <div className="px-3 py-1 bg-gray-50 text-xxs text-gray-500 uppercase text-[11px]">Eventos</div>
+                        <ul className="py-1">
+                          {grouped.event.map((suggestion, i) => {
+                            const overallIndex = grouped.category.length + grouped.city.length + i;
+                            return (
+                              <li key={`event-${suggestion.id}`}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleSuggestionClick(suggestion)}
+                                  className={cn(
+                                    "w-full px-3 py-2 flex items-center gap-3 text-left hover:bg-gray-100 transition-colors",
+                                    selectedIndex === overallIndex && "bg-gray-200"
+                                  )}
+                                >
+                                  {getSuggestionIcon(suggestion.type)}
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium truncate text-sm text-gray-900">{suggestion.title}</p>
+                                    <p className="text-xs text-gray-600 truncate">{suggestion.subtitle}</p>
+                                  </div>
+                                  <span className="text-xs text-gray-600 capitalize">Evento</span>
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()
+            ) : (
+              <div className="px-4 py-6 text-center text-gray-600">
+                <p className="text-sm text-gray-800">Nenhum resultado para "{query}"</p>
+                <p className="text-xs mt-1">Tente termos diferentes ou verifique a ortografia</p>
+              </div>
+            )}
+
+            {query.trim() && (
+              <div className="border-t border-gray-100 px-3 py-2">
+                <button
+                  type="button"
+                  onClick={navigateToSearch}
+                  className="w-full text-sm text-gray-800 hover:underline text-left flex items-center gap-2"
+                >
+                  <Search className="h-3.5 w-3.5 text-gray-600" />
+                  Ver todos os resultados para "{query}"
+                </button>
+              </div>
+            )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
