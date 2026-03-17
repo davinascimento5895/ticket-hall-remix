@@ -71,6 +71,14 @@ export function CheckoutStepData({
                   {opt}
                 </SelectItem>
               ))}
+
+          const handleClearBuyerData = (key: string) => {
+            setAttendeeData((prev) => ({
+              ...prev,
+              [key]: { name: "", email: "", cpf: "" },
+            }));
+            toast({ title: "Dados removidos", description: "Os dados do participante foram limpos." });
+          };
             </SelectContent>
           </Select>
         );
@@ -239,16 +247,21 @@ export function CheckoutStepData({
                   Ingresso {qi + 1} de {item.quantity}: {item.tierName}
                 </p>
                 {buyerData && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="text-xs gap-1.5 text-primary hover:text-primary"
-                    onClick={() => handleCopyBuyerData(key)}
-                  >
-                    <UserCheck className="h-3.5 w-3.5" />
-                    Usar meus dados
-                  </Button>
+                  <label className="flex items-center gap-2 text-xs cursor-pointer">
+                    <Checkbox
+                      checked={
+                        !!(data.name === buyerData.fullName && data.email === buyerData.email && data.cpf === buyerData.cpf)
+                      }
+                      onCheckedChange={(c) => {
+                        if (c) handleCopyBuyerData(key);
+                        else handleClearBuyerData(key);
+                      }}
+                    />
+                    <span className="text-primary flex items-center gap-1">
+                      <UserCheck className="h-3.5 w-3.5" />
+                      Usar meus dados
+                    </span>
+                  </label>
                 )}
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
