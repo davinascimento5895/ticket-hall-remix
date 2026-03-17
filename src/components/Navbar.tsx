@@ -295,18 +295,6 @@ export function Navbar() {
         {mobileOpen && !user && !isAdminOrProducer && (
           <div className="lg:hidden bg-background/95 backdrop-blur-xl border-b border-border animate-fade-in">
               <div className="container py-4 space-y-1">
-                <div className="px-3 py-3 border-b border-border">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-9 w-9">
-                      <AvatarImage src={profile?.avatar_url || undefined} />
-                      <AvatarFallback className="bg-muted text-muted-foreground">{initials}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="text-sm font-medium truncate">{profile?.full_name || "Usuário"}</div>
-                      <div className="text-xs text-muted-foreground truncate">{user?.email}</div>
-                    </div>
-                  </div>
-                </div>
               <Link
                 to="/"
                 className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 transition-colors"
