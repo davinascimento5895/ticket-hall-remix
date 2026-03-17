@@ -6,7 +6,6 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SearchInput } from "@/components/ui/search-input";
 import { TicketHallLogo } from "@/components/TicketHallLogo";
 import { AuthModal } from "@/components/AuthModal";
 import { BecomeProducerModal } from "@/components/BecomeProducerModal";
@@ -129,12 +128,13 @@ export function Navbar() {
           <nav className="hidden lg:flex items-center gap-6">
             {(scrolled || !isLandingPage) && !isAdminOrProducer && (
               <form onSubmit={handleNavSearch} className="relative">
-                <SearchInput
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
                   type="text"
                   value={navSearch}
                   onChange={(e) => setNavSearch(e.target.value)}
                   placeholder="Buscar..."
-                  className="h-8 w-[180px] text-sm rounded-full bg-muted/50 border-transparent focus:border-border focus:bg-background transition-all"
+                  className="h-8 w-[180px] pl-8 pr-3 text-sm rounded-full bg-muted/50 border-transparent focus:border-border focus:bg-background transition-all"
                 />
               </form>
             )}

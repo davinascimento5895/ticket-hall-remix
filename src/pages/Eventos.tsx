@@ -78,7 +78,7 @@ export default function Eventos() {
 
       if (debouncedSearch) {
         const safe = sanitizePostgrestFilter(debouncedSearch);
-        query = query.or(`title.ilike.%${safe}%,description.ilike.%${safe}%,venue_name.ilike.%${safe}%`);
+        query = query.or(`title.ilike.%${safe}%,description.ilike.%${safe}%,venue_name.ilike.%${safe}%,venue_city.ilike.%${safe}%`);
       }
       if (filters.category) query = query.eq("category", filters.category);
       if (cityFilter) query = query.eq("venue_city", cityFilter);

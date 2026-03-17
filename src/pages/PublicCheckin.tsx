@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QrCode, CheckCircle2, XCircle, Search, AlertTriangle, Camera, CameraOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -230,12 +229,13 @@ export default function PublicCheckin() {
         </CardContent>
       </Card>
 
-      <div>
-        <SearchInput
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
           placeholder="Buscar por nome, email ou código..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full"
+          className="pl-10"
         />
       </div>
 
