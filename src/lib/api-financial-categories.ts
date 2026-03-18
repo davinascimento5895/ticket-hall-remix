@@ -1,7 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
 
+const sb = supabase as any;
+
 export async function getFinancialCategories(producerId: string, type: string) {
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from("financial_categories")
     .select("id, value, label, type")
     .eq("producer_id", producerId)
@@ -12,7 +14,7 @@ export async function getFinancialCategories(producerId: string, type: string) {
 }
 
 export async function createFinancialCategory(producerId: string, type: string, payload: { value: string; label: string; }) {
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from("financial_categories")
     .insert({ producer_id: producerId, type, value: payload.value, label: payload.label })
     .select()
@@ -22,6 +24,6 @@ export async function createFinancialCategory(producerId: string, type: string, 
 }
 
 export async function deleteFinancialCategory(id: string) {
-  const { error } = await supabase.from("financial_categories").delete().eq("id", id);
+  const { error } = await sb.from("financial_categories").delete().eq("id", id);
   if (error) throw error;
 }

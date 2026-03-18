@@ -168,8 +168,8 @@ export default function ProducerAccountsPayable({ producerId }: { producerId: st
 
   const total = transactions.reduce((s: number, t: any) => s + Number(t.amount), 0);
 
-  const handleAddCategory = () => {
-    const result = addCategory(newCategoryLabel);
+  const handleAddCategory = async () => {
+    const result = await addCategory(newCategoryLabel);
     if (!result.ok) {
       toast({ title: "Categoria invalida", description: result.reason, variant: "destructive" });
       return;
@@ -181,8 +181,8 @@ export default function ProducerAccountsPayable({ producerId }: { producerId: st
     toast({ title: "Categoria adicionada!" });
   };
 
-  const handleRemoveCategory = (value: string) => {
-    const result = removeCategory(value);
+  const handleRemoveCategory = async (value: string) => {
+    const result = await removeCategory(value);
     if (!result.ok) {
       toast({ title: "Nao foi possivel remover", description: result.reason, variant: "destructive" });
       return;
