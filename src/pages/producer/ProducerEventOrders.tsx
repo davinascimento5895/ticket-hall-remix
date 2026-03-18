@@ -108,7 +108,7 @@ export default function ProducerEventOrders() {
                       <td className="p-3">{formatBRL(order.total)}</td>
                       <td className="p-3 text-muted-foreground">{order.payment_method || "—"}</td>
                       <td className="p-3"><OrderStatusBadge status={order.status} /></td>
-                      <td className="p-3 text-muted-foreground">{new Date(order.created_at).toLocaleDateString("pt-BR")}</td>
+                      <td className="p-3 text-muted-foreground">{new Date(order.created_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</td>
                       <td className="p-3 flex gap-1">
                         {order.status === "paid" && (
                           <Button

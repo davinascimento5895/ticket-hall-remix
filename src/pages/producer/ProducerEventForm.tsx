@@ -942,9 +942,9 @@ export default function ProducerEventForm() {
                 <span className="text-muted-foreground">Categoria:</span>
                 <span className="text-foreground">{EVENT_CATEGORIES.find((c) => c.value === form.category)?.label}</span>
                 <span className="text-muted-foreground">Início:</span>
-                <span className="text-foreground">{form.start_date ? new Date(form.start_date).toLocaleString("pt-BR") : "—"}</span>
+                <span className="text-foreground">{form.start_date ? new Date(form.start_date).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "—"}</span>
                 <span className="text-muted-foreground">Término:</span>
-                <span className="text-foreground">{form.end_date ? new Date(form.end_date).toLocaleString("pt-BR") : "—"}</span>
+                <span className="text-foreground">{form.end_date ? new Date(form.end_date).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "—"}</span>
                 <span className="text-muted-foreground">Local:</span>
                 <span className="text-foreground">{form.is_online ? (form.online_url || "URL não informada") : (form.venue_name || "—")}</span>
                 <span className="text-muted-foreground">Ingressos:</span>

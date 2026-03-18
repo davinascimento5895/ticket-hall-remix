@@ -176,7 +176,7 @@ export default function ProducerEventFinancial() {
                     <tr key={order.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                        <td className="p-3 font-mono text-xs">{order.id.slice(0, 8)}</td>
                        <td className="p-3">{order.profiles?.full_name || "—"}</td>
-                       <td className="p-3 text-muted-foreground">{new Date(order.created_at).toLocaleDateString("pt-BR")}</td>
+                       <td className="p-3 text-muted-foreground">{new Date(order.created_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</td>
                        <td className="p-3">{formatBRL(order.subtotal || 0)}</td>
                        <td className="p-3 text-muted-foreground">{order.discount_amount > 0 ? `-${formatBRL(order.discount_amount)}` : "—"}</td>
                        <td className="p-3">{formatBRL(order.total || 0)}</td>

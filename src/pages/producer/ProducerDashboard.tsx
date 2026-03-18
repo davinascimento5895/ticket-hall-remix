@@ -90,7 +90,7 @@ export default function ProducerDashboard() {
                       <td className="px-6 py-3 text-muted-foreground max-w-[160px] truncate">{order.events?.title || "—"}</td>
                       <td className="px-6 py-3 text-foreground font-medium">{formatBRL(order.total)}</td>
                       <td className="px-6 py-3"><OrderStatusBadge status={order.status} /></td>
-                      <td className="px-6 py-3 text-muted-foreground">{new Date(order.created_at).toLocaleDateString("pt-BR")}</td>
+                      <td className="px-6 py-3 text-muted-foreground">{new Date(order.created_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</td>
                     </tr>
                   ))}
                 </tbody>

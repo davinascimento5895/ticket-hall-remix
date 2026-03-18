@@ -181,7 +181,7 @@ export default function ProducerEventMessages() {
                       <p className="font-medium text-foreground text-sm">{msg.subject}</p>
                       <p className="text-xs text-muted-foreground line-clamp-1">{msg.body}</p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {msg.recipients_count} destinatário(s) · {new Date(msg.created_at).toLocaleString("pt-BR")}
+                        {msg.recipients_count} destinatário(s) · {new Date(msg.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
                       </p>
                     </div>
                     {statusLabel(msg.status)}
