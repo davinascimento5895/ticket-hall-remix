@@ -1,23 +1,45 @@
+import { useMemo, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Calendar, MapPin, Shield, AlertTriangle, CheckCircle2, Tag, Percent } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, Shield, AlertTriangle, CheckCircle2, Tag, Percent, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { SEOHead } from "@/components/SEOHead";
 import { AuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { getResaleListingById, purchaseResaleListing, calculateResaleFee } from "@/lib/api-resale";
-import { useState } from "react";
+import {
+  getResaleListingById,
+  calculateResaleFee,
+  createResalePayment,
+  type ResaleCreditCardData,
+} from "@/lib/api-resale";
+import { getUserWalletSummary } from "@/lib/api-wallet";
+import { formatCPF } from "@/lib/validators";
 
 export default function RevendaCheckout() {
   const { listingId } = useParams<{ listingId: string }>();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [confirmed, setConfirmed] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"pix" | "credit_card" | "boleto">("pix");
+  const [installments, setInstallments] = useState(1);
+  const [useWalletCredit, setUseWalletCredit] = useState(false);
+  const [payerCpf, setPayerCpf] = useState(profile?.cpf ? formatCPF(profile.cpf) : "");
+  const [cardData, setCardData] = useState<ResaleCreditCardData>({
+    holderName: profile?.full_name || "",
+    number: "",
+    expiryMonth: "",
+    expiryYear: "",
+    ccv: "",
+    postalCode: "",
+    addressNumber: "",
+  });
 
   const { data: listing, isLoading, error } = useQuery({
     queryKey: ["resale-listing", listingId],
@@ -26,18 +48,49 @@ export default function RevendaCheckout() {
     staleTime: 30_000,
   });
 
+  const { data: walletSummary } = useQuery({
+    queryKey: ["user-wallet-summary", user?.id],
+    queryFn: () => getUserWalletSummary(),
+    enabled: !!user,
+    staleTime: 15_000,
+  });
+
   const purchaseMutation = useMutation({
-    mutationFn: () => purchaseResaleListing(listingId!),
+    mutationFn: () => createResalePayment({
+      listingId: listingId!,
+      paymentMethod,
+      creditCard: paymentMethod === "credit_card" ? cardData : undefined,
+      installments: paymentMethod === "credit_card" ? installments : undefined,
+      payerCpf,
+      useWalletCredit,
+    }),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["my-tickets"] });
+      if (!data?.success) {
+        toast({ title: "Erro na compra", description: data?.error || "Tente novamente", variant: "destructive" });
+        return;
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["my-resale-listings"] });
       queryClient.invalidateQueries({ queryKey: ["resale-listings"] });
+
+      if (data.immediateConfirmation) {
+        queryClient.invalidateQueries({ queryKey: ["my-tickets"] });
+      }
+
       navigate(`/revenda/${listingId}/sucesso`, {
         state: {
           ticketId: data?.ticketId,
-          total: data?.total,
+          total: data?.total ?? askingPrice,
           eventTitle: listing?.events?.title,
           tierName: listing?.ticket_tiers?.name,
           eventSlug: listing?.events?.slug,
+          immediateConfirmation: !!data?.immediateConfirmation,
+          paymentMethod,
+          pixQrCode: data?.pixQrCode,
+          pixQrCodeImage: data?.pixQrCodeImage,
+          boletoUrl: data?.boletoUrl,
+          boletoBarcode: data?.boletoBarcode,
+          dueDate: data?.dueDate,
         },
       });
     },
@@ -68,9 +121,20 @@ export default function RevendaCheckout() {
 
   const askingPrice = Number(listing.asking_price);
   const originalPrice = listing.ticket_tiers?.price || listing.original_price || 0;
+  const walletAvailable = Number(walletSummary?.wallet?.available_balance || 0);
   const { platformFee, sellerReceives } = calculateResaleFee(askingPrice);
   const isExpired = new Date(listing.expires_at) < new Date();
   const isSelf = user?.id === listing.seller_id;
+  const cardIsValid = useMemo(() => {
+    if (paymentMethod !== "credit_card") return true;
+    return (
+      cardData.holderName.trim().length >= 3
+      && cardData.number.replace(/\s/g, "").length >= 13
+      && cardData.expiryMonth.length >= 2
+      && cardData.expiryYear.length >= 2
+      && cardData.ccv.length >= 3
+    );
+  }, [cardData, paymentMethod]);
 
   return (
     <>
@@ -171,6 +235,83 @@ export default function RevendaCheckout() {
           </>
         ) : (
           <div className="space-y-3">
+            <div className="grid sm:grid-cols-3 gap-2">
+              {[
+                { id: "pix", label: "PIX" },
+                { id: "boleto", label: "Boleto" },
+                { id: "credit_card", label: "Cartão" },
+              ].map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => setPaymentMethod(m.id as any)}
+                  className={`rounded-lg border p-2 text-sm font-medium transition-colors ${paymentMethod === m.id ? "border-primary bg-primary/5" : "border-border bg-background hover:border-primary/30"}`}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+
+            {paymentMethod === "credit_card" && (
+              <div className="space-y-3 rounded-lg border border-border p-3">
+                <div className="space-y-1">
+                  <Label>Nome no cartão</Label>
+                  <Input value={cardData.holderName} onChange={(e) => setCardData((p) => ({ ...p, holderName: e.target.value }))} />
+                </div>
+                <div className="space-y-1">
+                  <Label>Número do cartão</Label>
+                  <Input value={cardData.number} onChange={(e) => setCardData((p) => ({ ...p, number: e.target.value }))} placeholder="0000 0000 0000 0000" />
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="space-y-1">
+                    <Label>Mês</Label>
+                    <Input value={cardData.expiryMonth} onChange={(e) => setCardData((p) => ({ ...p, expiryMonth: e.target.value }))} placeholder="MM" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Ano</Label>
+                    <Input value={cardData.expiryYear} onChange={(e) => setCardData((p) => ({ ...p, expiryYear: e.target.value }))} placeholder="AA" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>CVV</Label>
+                    <Input value={cardData.ccv} onChange={(e) => setCardData((p) => ({ ...p, ccv: e.target.value }))} placeholder="123" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label>Parcelas</Label>
+                    <select
+                      value={installments}
+                      onChange={(e) => setInstallments(Number(e.target.value))}
+                      className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                    >
+                      {Array.from({ length: 12 }).map((_, idx) => (
+                        <option key={idx + 1} value={idx + 1}>{idx + 1}x</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>CPF pagador</Label>
+                    <Input value={payerCpf} onChange={(e) => setPayerCpf(e.target.value)} placeholder="000.000.000-00" />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <label className="flex items-start gap-2 cursor-pointer rounded-lg border border-border p-3">
+              <input
+                type="checkbox"
+                checked={useWalletCredit}
+                onChange={(e) => setUseWalletCredit(e.target.checked)}
+                className="mt-1"
+              />
+              <span className="text-xs text-muted-foreground">
+                <span className="inline-flex items-center gap-1 font-medium text-foreground"><Wallet className="h-3.5 w-3.5" /> Usar saldo da carteira primeiro</span>
+                <br />
+                Se houver saldo suficiente, a compra é concluída instantaneamente sem gateway.
+                Saldo atual: R$ {walletAvailable.toFixed(2)}
+              </span>
+            </label>
+
             <label className="flex items-start gap-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -188,7 +329,7 @@ export default function RevendaCheckout() {
             <Button
               className="w-full gap-2"
               size="lg"
-              disabled={!confirmed || purchaseMutation.isPending}
+              disabled={!confirmed || purchaseMutation.isPending || !cardIsValid}
               onClick={() => purchaseMutation.mutate()}
             >
               {purchaseMutation.isPending ? (

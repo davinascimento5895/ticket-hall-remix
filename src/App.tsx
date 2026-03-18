@@ -62,6 +62,7 @@ const MetodosPagamento = lazy(() => import("./pages/MetodosPagamento"));
 const PerfilNotificacoes = lazy(() => import("./pages/PerfilNotificacoes"));
 const PerfilSuporte = lazy(() => import("./pages/PerfilSuporte"));
 const Favoritos = lazy(() => import("./pages/Favoritos"));
+const MinhaCarteira = lazy(() => import("./pages/MinhaCarteira"));
 const Revenda = lazy(() => import("./pages/Revenda"));
 const RevendaCheckout = lazy(() => import("./pages/RevendaCheckout"));
 const RevendaSucesso = lazy(() => import("./pages/RevendaSucesso"));
@@ -204,6 +205,7 @@ const App = () => {
                 <Route path="/meu-perfil/notificacoes" element={<ProtectedRoute><PerfilNotificacoes /></ProtectedRoute>} />
                 <Route path="/meu-perfil/suporte" element={<ProtectedRoute><PerfilSuporte /></ProtectedRoute>} />
                 <Route path="/favoritos" element={<ProtectedRoute><Favoritos /></ProtectedRoute>} />
+                <Route path="/minha-carteira" element={<ProtectedRoute><MinhaCarteira /></ProtectedRoute>} />
                 <Route path="/revenda" element={<Revenda />} />
                 <Route path="/revenda/:listingId" element={<RevendaCheckout />} />
                 <Route path="/revenda/:listingId/sucesso" element={<ProtectedRoute><RevendaSucesso /></ProtectedRoute>} />
