@@ -6,6 +6,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { TicketHallLogo } from "@/components/TicketHallLogo";
 import { AuthModal } from "@/components/AuthModal";
 import { BecomeProducerModal } from "@/components/BecomeProducerModal";
@@ -128,13 +129,12 @@ export function Navbar() {
           <nav className="hidden lg:flex items-center gap-6">
             {(scrolled || !isLandingPage) && !isAdminOrProducer && (
               <form onSubmit={handleNavSearch} className="relative">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
+                <SearchInput
                   type="text"
                   value={navSearch}
                   onChange={(e) => setNavSearch(e.target.value)}
                   placeholder="Buscar..."
-                  className="h-8 w-[180px] pl-8 pr-3 text-sm rounded-full bg-muted/50 border-transparent focus:border-border focus:bg-background transition-all"
+                  className="h-8 w-[180px] text-sm rounded-full bg-muted/50 border-transparent focus:border-border focus:bg-background transition-all"
                 />
               </form>
             )}
@@ -295,6 +295,18 @@ export function Navbar() {
         {mobileOpen && !user && !isAdminOrProducer && (
           <div className="lg:hidden bg-background/95 backdrop-blur-xl border-b border-border animate-fade-in">
               <div className="container py-4 space-y-1">
+                <div className="px-3 py-3 border-b border-border">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={profile?.avatar_url || undefined} />
+                      <AvatarFallback className="bg-muted text-muted-foreground">{initials}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium truncate">{profile?.full_name || "Usuário"}</div>
+                      <div className="text-xs text-muted-foreground truncate">{user?.email}</div>
+                    </div>
+                  </div>
+                </div>
               <Link
                 to="/"
                 className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 transition-colors"
