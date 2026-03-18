@@ -1,17 +1,5 @@
 import * as React from "react";
-import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-// --- Utility Function (from @/lib/utils) ---
-
-/**
- * A utility function to conditionally join class names.
- * Requires `clsx` and `tailwind-merge` to be installed.
- * `npm install clsx tailwind-merge`
- */
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+import { cn } from "@/lib/utils";
 
 // --- Card Components ---
 
@@ -21,10 +9,9 @@ export function AnimatedCard({ className, ...props }: CardProps) {
   return (
     <div
       role="region"
-      aria-labelledby="card-title"
       aria-describedby="card-description"
       className={cn(
-        "group/animated-card relative w-full max-w-[420px] overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-900 dark:bg-black",
+        "group/animated-card relative w-[356px] overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-900 dark:bg-black",
         className
       )}
       {...props}
@@ -77,7 +64,7 @@ export function CardDescription({ className, ...props }: CardDescriptionProps) {
 export function CardVisual({ className, ...props }: CardProps) {
   return (
     <div
-      className={cn("h-[220px] w-full overflow-hidden", className)}
+      className={cn("h-[180px] w-[356px] overflow-hidden", className)}
       {...props}
     />
   );
@@ -96,6 +83,7 @@ export function Visual1({
   secondaryColor = "#fbbf24",
   gridColor = "#80808015",
 }: Visual1Props) {
+  const uniqueId = React.useId();
   return (
     <div
       aria-hidden
@@ -105,7 +93,7 @@ export function Visual1({
       <Layer2 color={mainColor} />
       <Layer3 color={mainColor} secondaryColor={secondaryColor} />
       <Layer4 />
-      <EllipseGradient color={mainColor} />
+      <EllipseGradient color={mainColor} gradientId={uniqueId} />
       <GridLayer color={gridColor} />
     </div>
   );
@@ -130,9 +118,10 @@ const GridLayer = ({ color }: GridLayerProps) => {
 
 interface EllipseGradientProps {
   color: string;
+  gradientId: string;
 }
 
-const EllipseGradient = ({ color }: EllipseGradientProps) => {
+const EllipseGradient = ({ color, gradientId }: EllipseGradientProps) => {
   return (
     <div className="absolute inset-0 z-[5] flex h-full w-full items-center justify-center">
       <svg
@@ -142,10 +131,10 @@ const EllipseGradient = ({ color }: EllipseGradientProps) => {
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
-        <rect width="356" height="180" fill="url(#paint)" />
+        <rect width="356" height="180" fill={`url(#${gradientId})`} />
         <defs>
           <radialGradient
-            id="paint"
+            id={gradientId}
             cx="0"
             cy="0"
             r="1"
@@ -171,7 +160,7 @@ const Layer1 = ({ color, secondaryColor }: LayerProps) => {
   return (
     <div className="ease-[cubic-bezier(0.6, 0.6, 0, 1)] absolute top-0 left-0 z-[6] transform transition-transform duration-500 group-hover/animated-card:translate-x-[-50%]">
       <svg
-        className="w-[840px]"
+        className="w-[712px]"
         viewBox="0 0 712 180"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
@@ -280,9 +269,9 @@ const Layer1 = ({ color, secondaryColor }: LayerProps) => {
 
 const Layer2 = ({ color }: LayerProps) => {
   return (
-    <div className="absolute top-0 left-[-1px] h-full w-[420px]">
+    <div className="absolute top-0 left-[-1px] h-full w-[356px]">
       <svg
-        className="h-full w-[420px]"
+        className="h-full w-[356px]"
         viewBox="0 0 356 180"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
@@ -326,13 +315,13 @@ const Layer3 = ({ color, secondaryColor }: LayerProps) => {
       <div className="flex shrink-0 items-center rounded-full border border-zinc-200 bg-white/25 px-1.5 py-0.5 backdrop-blur-sm transition-opacity duration-300 ease-in-out group-hover/animated-card:opacity-0 dark:border-zinc-800 dark:bg-black/25">
         <div className="h-1.5 w-1.5 rounded-full bg-[var(--color)]" />
         <span className="ml-1 text-[10px] text-black dark:text-white">
-          Summit
+          Usuário
         </span>
       </div>
       <div className="flex shrink-0 items-center rounded-full border border-zinc-200 bg-white/25 px-1.5 py-0.5 backdrop-blur-sm transition-opacity duration-300 ease-in-out group-hover/animated-card:opacity-0 dark:border-zinc-800 dark:bg-black/25">
         <div className="h-1.5 w-1.5 rounded-full bg-[var(--secondary-color)]" />
         <span className="ml-1 text-[10px] text-black dark:text-white">
-          Workshop
+          Convidado
         </span>
       </div>
     </div>
@@ -341,14 +330,14 @@ const Layer3 = ({ color, secondaryColor }: LayerProps) => {
 
 const Layer4 = () => {
   return (
-    <div className="group relative h-full w-[420px]">
-      <div className="ease-[cubic-bezier(0.6, 0.6, 0, 1)] absolute inset-0 z-[7] flex max-w-[420px] -translate-y-full items-start justify-start bg-transparent p-4 transition-transform duration-500 group-hover/animated-card:translate-y-0">
+    <div className="group relative h-full w-[356px]">
+      <div className="ease-[cubic-bezier(0.6, 0.6, 0, 1)] absolute inset-0 z-[7] flex max-w-[356px] -translate-y-full items-start justify-start bg-transparent p-4 transition-transform duration-500 group-hover/animated-card:translate-y-0">
         <div className="ease-[cubic-bezier(0.6, 0.6, 0, 1)] rounded-md border border-zinc-200 bg-white/25 p-1.5 opacity-0 backdrop-blur-sm transition-opacity duration-500 group-hover/animated-card:opacity-100 dark:border-zinc-800 dark:bg-black/25">
           <p className="mb-1 text-xs font-semibold text-black dark:text-white">
-            Vendas em tempo real
+            Random Data Visualization
           </p>
           <p className="text-xs text-neutral-500 dark:text-neutral-400">
-            Passe o mouse para ver o desempenho do evento.
+            Displaying some interesting stats.
           </p>
         </div>
       </div>

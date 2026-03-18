@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { SEOHead } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 

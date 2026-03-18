@@ -179,9 +179,9 @@ export default function ProducerEventCoupons() {
                       <td className="p-3">{coupon.discount_type === "percentage" ? `${coupon.discount_value}%` : formatBRL(coupon.discount_value)}</td>
                       <td className="p-3 text-muted-foreground">{coupon.uses_count || 0}{coupon.max_uses ? ` / ${coupon.max_uses}` : ""}</td>
                       <td className="p-3 text-muted-foreground text-xs">
-                        {coupon.valid_from ? new Date(coupon.valid_from).toLocaleDateString("pt-BR") : "—"}
+                        {coupon.valid_from ? new Date(coupon.valid_from).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "—"}
                         {" → "}
-                        {coupon.valid_until ? new Date(coupon.valid_until).toLocaleDateString("pt-BR") : "—"}
+                        {coupon.valid_until ? new Date(coupon.valid_until).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "—"}
                       </td>
                       <td className="p-3">
                         <Switch checked={coupon.is_active} onCheckedChange={(v) => toggleMutation.mutate({ couponId: coupon.id, isActive: v })} />

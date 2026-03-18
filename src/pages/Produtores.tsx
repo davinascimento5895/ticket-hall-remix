@@ -6,6 +6,14 @@ import { Button } from "@/components/ui/button";
 import { CalculadoraComparador } from "@/components/CalculadoraComparador";
 import { TabelaComparativo } from "@/components/TabelaComparativo";
 import AnimatedCard1Demo from "@/components/ui/demo";
+import {
+  AnimatedCard,
+  CardBody,
+  CardTitle,
+  CardDescription,
+  CardVisual,
+  Visual1,
+} from "@/components/ui/animated-card";
 
 import { BecomeProducerModal } from "@/components/BecomeProducerModal";
 import { useAuth } from "@/contexts/AuthContext";
@@ -107,6 +115,8 @@ export default function Produtores() {
   const { user, role } = useAuth();
   const navigate = useNavigate();
   const [producerModalOpen, setProducerModalOpen] = useState(false);
+  const sampleCash = 125430.5; // mock example value
+  const cashFormatted = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(sampleCash);
 
   const handleCTA = () => {
     if (role === "producer") {
@@ -247,6 +257,27 @@ export default function Produtores() {
           </motion.div>
           <CalculadoraComparador />
           <div className="h-6 md:h-8" />
+        </div>
+      </section>
+
+      {/* FLUXO DE CAIXA (DEMO) */}
+      <section className="py-12 md:py-16 bg-surface">
+        <div className="container">
+          <div className="text-center mb-6">
+            <h2 className="font-display text-2xl md:text-3xl font-bold">Fluxo de caixa estimado</h2>
+            <p className="text-muted-foreground">Um exemplo de como seu fluxo aparece no painel (valores em reais).</p>
+          </div>
+          <div className="flex justify-center">
+            <AnimatedCard>
+              <CardVisual>
+                <Visual1 mainColor="#06b6d4" secondaryColor="#0891b2" />
+              </CardVisual>
+              <CardBody>
+                <CardTitle>Fluxo de caixa — últimos 30 dias</CardTitle>
+                <CardDescription>{cashFormatted}</CardDescription>
+              </CardBody>
+            </AnimatedCard>
+          </div>
         </div>
       </section>
 
