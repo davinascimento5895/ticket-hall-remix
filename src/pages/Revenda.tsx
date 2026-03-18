@@ -26,7 +26,7 @@ import {
   isSunday,
   endOfDay,
 } from "date-fns";
-import { Search } from "lucide-react";
+
 
 type DatePreset = "hoje" | "amanha" | "semana" | "fim_de_semana" | "proxima_semana" | null;
 
