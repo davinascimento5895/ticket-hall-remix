@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -139,6 +140,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Auto-redirect based on role after login
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Only redirect when we have a logged-in user and a resolved role
+    if (!loading && user && role) {
+      // If user is a producer and currently on the public landing (or root), send to producer dashboard
+      if (role === "producer" && (location.pathname === "/" || location.pathname === "")) {
+        navigate("/producer/dashboard", { replace: true });
+      }
+      // If user switched away from producer (e.g., logged out or changed role) we don't force navigation here
+    }
+  }, [loading, user, role, navigate, location.pathname]);
 
   const signOut = async () => {
     await supabase.auth.signOut();

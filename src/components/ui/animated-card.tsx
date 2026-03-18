@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils";
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 export function AnimatedCard({ className, ...props }: CardProps) {
-  const uniqueId = React.useId();
   return (
     <div
       role="region"

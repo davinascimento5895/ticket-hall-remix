@@ -4,6 +4,7 @@ import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { CheckCircle2, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const competitors = [
@@ -43,6 +44,8 @@ function AnimatedNumber({ value, prefix = "", suffix = "" }: { value: number; pr
     </span>
   );
 }
+
+const formatBRL = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });
 
 // Mobile: card-based layout per platform
 function MobileComparisonTable({ rows }: { rows: ReturnType<typeof useRows> }) {
@@ -91,9 +94,7 @@ function MobileComparisonTable({ rows }: { rows: ReturnType<typeof useRows> }) {
               viewport={{ once: true }}
               transition={{ delay: i * 0.04 }}
               className={`border-b border-border last:border-0 transition-colors ${
-                row.highlight
-                  ? "bg-accent/5 border-l-2 border-l-accent"
-                  : "hover:bg-muted/30"
+                row.highlight ? "bg-accent/5 border-l-2 border-l-accent" : "hover:bg-muted/30"
               }`}
             >
               <td className="px-4 py-2.5">
@@ -107,14 +108,28 @@ function MobileComparisonTable({ rows }: { rows: ReturnType<typeof useRows> }) {
                 </span>
               </td>
               <td className="px-4 py-2.5">
-                <span className="text-sm font-display font-bold text-foreground">
-                  R$ <AnimatedNumber value={row.finalPrice} />
-                </span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-sm font-display font-bold text-foreground" aria-label={`Preço final ${row.name}`}>
+                      R$ <AnimatedNumber value={row.finalPrice} />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {`Preço final = Preço base × (1 + ${((row.fee || 0) * 100).toFixed(2).replace('.', ',')}%) = ${formatBRL(row.finalPrice)}`}
+                  </TooltipContent>
+                </Tooltip>
               </td>
               <td className="px-4 py-2.5 text-right">
-                <span className={`text-sm ${row.highlight ? "text-accent font-bold" : "text-muted-foreground"}`}>
-                  +R$ <AnimatedNumber value={row.extraCost} />
-                </span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className={`text-sm ${row.highlight ? "text-accent font-bold" : "text-muted-foreground"}`} aria-label={`Custo extra ${row.name}`}>
+                      +R$ <AnimatedNumber value={row.extraCost} />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {`Custo extra = Preço base × ${((row.fee || 0) * 100).toFixed(2).replace('.', ',')}% = ${formatBRL(row.extraCost)}`}
+                  </TooltipContent>
+                </Tooltip>
               </td>
             </motion.tr>
           ))}
@@ -175,14 +190,28 @@ function DesktopComparisonTable({ rows }: { rows: ReturnType<typeof useRows> }) 
                 </span>
               </td>
               <td className="px-4 py-2.5">
-                <span className="text-sm font-display font-bold text-foreground">
-                  R$ <AnimatedNumber value={row.finalPrice} />
-                </span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-sm font-display font-bold text-foreground" aria-label={`Preço final ${row.name}`}>
+                      R$ <AnimatedNumber value={row.finalPrice} />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {`Preço final = Preço base × (1 + ${((row.fee || 0) * 100).toFixed(2).replace('.', ',')}%) = ${formatBRL(row.finalPrice)}`}
+                  </TooltipContent>
+                </Tooltip>
               </td>
               <td className="px-4 py-2.5 text-right">
-                <span className={`text-sm ${row.highlight ? "text-accent font-bold" : "text-muted-foreground"}`}>
-                  +R$ <AnimatedNumber value={row.extraCost} />
-                </span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className={`text-sm ${row.highlight ? "text-accent font-bold" : "text-muted-foreground"}`} aria-label={`Custo extra ${row.name}`}>
+                      +R$ <AnimatedNumber value={row.extraCost} />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {`Custo extra = Preço base × ${((row.fee || 0) * 100).toFixed(2).replace('.', ',')}% = ${formatBRL(row.extraCost)}`}
+                  </TooltipContent>
+                </Tooltip>
               </td>
             </motion.tr>
           ))}
@@ -273,6 +302,11 @@ export function CalculadoraComparador() {
                 <Input
                   value={fmtInput(basePrice)}
                   onChange={handlePriceChange}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  aria-label="Preço base do ingresso"
+                  title={formatBRL(basePrice)}
+                  onFocus={(e) => (e.target as HTMLInputElement).select()}
                   className="pl-10 text-base font-display font-bold w-[140px] h-9 text-center"
                 />
               </div>
@@ -281,6 +315,8 @@ export function CalculadoraComparador() {
                 size="icon"
                 className="h-9 w-9 shrink-0"
                 onClick={() => setBasePrice((p) => Math.min(5000, p + 50))}
+                aria-label="Aumentar preço"
+                title="Aumentar preço 50"
                 disabled={basePrice >= 5000}
               >
                 <Plus className="h-4 w-4" />
@@ -325,12 +361,12 @@ export function CalculadoraComparador() {
             : { opacity: 0, y: 12, filter: "blur(6px)", height: 0, marginTop: 0, padding: 0 }
         }
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className="rounded-xl border border-accent/20 bg-accent/5 p-4 md:p-6 text-center space-y-2 overflow-hidden"
+        className="rounded-xl border border-accent/40 bg-accent/10 p-4 md:p-6 text-center space-y-2 overflow-hidden"
       >
           <p className="text-sm text-muted-foreground">
             Seus compradores economizam até
           </p>
-          <p className="text-xl md:text-2xl font-display font-bold text-accent">
+          <p className="text-2xl md:text-3xl font-display font-bold text-accent">
             R$ <AnimatedNumber value={savingsPerTicket} /> /ingresso
           </p>
           <p className="text-xs text-muted-foreground">

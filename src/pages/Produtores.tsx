@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { CalculadoraComparador } from "@/components/CalculadoraComparador";
 import { TabelaComparativo } from "@/components/TabelaComparativo";
+import AnimatedCard1Demo from "@/components/ui/demo";
 import {
   AnimatedCard,
   CardBody,
@@ -153,25 +154,31 @@ export default function Produtores() {
           <div className="absolute w-[300px] h-[300px] rounded-full bg-accent/5 bottom-0 -left-20 blur-3xl" />
         </div>
         <div className="container relative z-10 pt-24 pb-16">
-          <div className="max-w-2xl space-y-6">
-            <motion.h1 initial="hidden" animate="visible" custom={0} variants={fadeUp} className="font-display text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.1]">
-              A menor taxa do Brasil para{" "}
-              <span className="text-primary">produtores de eventos.</span>
-            </motion.h1>
-            <motion.p initial="hidden" animate="visible" custom={1} variants={fadeUp} className="text-lg text-muted-foreground">
-              Enquanto outros cobram 10% a 20%, nós cobramos apenas{" "}
-              <span className="text-accent font-bold text-xl">7%</span>. Simples, transparente, justo.
-            </motion.p>
-            <motion.div initial="hidden" animate="visible" custom={2} variants={fadeUp}>
-              <Button
-                variant="hero"
-                size="xl"
-                onClick={handleCTA}
-              >
-                {buttonContent.label}
-                {buttonContent.icon && <buttonContent.icon className="h-5 w-5 ml-2" />}
-              </Button>
-            </motion.div>
+          <div className="grid gap-10 lg:grid-cols-[1.1fr_1fr] items-center">
+            <div className="max-w-2xl space-y-6">
+              <motion.h1 initial="hidden" animate="visible" custom={0} variants={fadeUp} className="font-display text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.1]">
+                A menor taxa do Brasil para{" "}
+                <span className="text-primary">produtores de eventos.</span>
+              </motion.h1>
+              <motion.p initial="hidden" animate="visible" custom={1} variants={fadeUp} className="text-lg text-muted-foreground">
+                Enquanto outros cobram 10% a 20%, nós cobramos apenas{" "}
+                <span className="text-accent font-bold text-xl">7%</span>. Simples, transparente, justo.
+              </motion.p>
+              <motion.div initial="hidden" animate="visible" custom={2} variants={fadeUp}>
+                <Button
+                  variant="hero"
+                  size="xl"
+                  onClick={handleCTA}
+                >
+                  {buttonContent.label}
+                  {buttonContent.icon && <buttonContent.icon className="h-5 w-5 ml-2" />}
+                </Button>
+              </motion.div>
+            </div>
+
+            <div className="flex justify-center lg:justify-end">
+              <AnimatedCard1Demo />
+            </div>
           </div>
         </div>
       </section>

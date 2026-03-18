@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import {
   Dialog,
@@ -53,7 +54,7 @@ function OrderDetail({ order }: { order: any }) {
         </div>
         <div>
           <p className="text-muted-foreground text-xs mb-0.5">Data</p>
-          <p>{new Date(order.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</p>
+          <p>{new Date(order.created_at).toLocaleString("pt-BR")}</p>
         </div>
       </div>
 
@@ -121,14 +122,8 @@ export default function AdminOrders() {
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por ID do pedido..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
-          />
+        <div className="flex-1 max-w-md">
+          <SearchInput placeholder="Buscar por ID do pedido..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full" />
         </div>
         <div className="flex gap-1.5 flex-wrap">
           {statuses.map((s) => (
@@ -179,7 +174,7 @@ export default function AdminOrders() {
                       <td className="p-3 text-muted-foreground">{formatBRL(order.platform_fee)}</td>
                       <td className="p-3 text-muted-foreground">{methodLabels[order.payment_method] || order.payment_method || "—"}</td>
                       <td className="p-3"><OrderStatusBadge status={order.status} /></td>
-                      <td className="p-3 text-muted-foreground">{new Date(order.created_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</td>
+                      <td className="p-3 text-muted-foreground">{new Date(order.created_at).toLocaleDateString("pt-BR")}</td>
                       <td className="p-3">
                         <Dialog>
                           <DialogTrigger asChild>
