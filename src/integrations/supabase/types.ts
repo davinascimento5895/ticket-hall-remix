@@ -1721,7 +1721,6 @@ export type Database = {
           producer_status: Database["public"]["Enums"]["producer_status"] | null
           state: string | null
           street: string | null
-          address_number: string | null
           updated_at: string | null
         }
         Insert: {
@@ -1753,7 +1752,6 @@ export type Database = {
             | null
           state?: string | null
           street?: string | null
-          address_number?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -1785,7 +1783,6 @@ export type Database = {
             | null
           state?: string | null
           street?: string | null
-          address_number?: string | null
           updated_at?: string | null
         }
         Relationships: []
