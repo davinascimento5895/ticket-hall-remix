@@ -1,6 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Search, Star, StarOff, Percent, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -112,8 +114,7 @@ export default function AdminEvents() {
 
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar evento..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+              <SearchInput placeholder="Buscar evento..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full" />
         </div>
         <div className="flex gap-1 flex-wrap">
           {statuses.map((s) => (
@@ -153,7 +154,7 @@ export default function AdminEvents() {
                       <td className="p-3">
                         <FeeEditor eventId={event.id} currentFee={event.platform_fee_percent ?? 7} onSave={handleFeeUpdate} />
                       </td>
-                      <td className="p-3 text-muted-foreground">{new Date(event.start_date).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</td>
+                      <td className="p-3 text-muted-foreground">{new Date(event.start_date).toLocaleDateString("pt-BR")}</td>
                       <td className="p-3">
                         <button onClick={() => updateMutation.mutate({ id: event.id, updates: { is_featured: !event.is_featured } })} className="text-muted-foreground hover:text-accent transition-colors">
                           {event.is_featured ? <Star className="h-4 w-4 fill-accent text-accent" /> : <StarOff className="h-4 w-4" />}
