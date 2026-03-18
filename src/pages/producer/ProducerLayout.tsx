@@ -17,6 +17,13 @@ import { NavLink } from "@/components/NavLink";
 import { TicketHallLogo } from "@/components/TicketHallLogo";
 import { LayoutDashboard, CalendarDays, ClipboardList, Settings, LogOut, ExternalLink, DollarSign, Users, Inbox } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -35,7 +42,8 @@ const navItems = [
 function ProducerSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const { signOut, profile } = useAuth();
+  const { signOut, profile, allRoles, role, switchRole } = useAuth();
+  const navigate = useNavigate();
 
   const initials = profile?.full_name
     ? profile.full_name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
@@ -86,17 +94,30 @@ function ProducerSidebar() {
           <div className="p-3 space-y-2">
             {!collapsed && (
               <div className="flex items-center gap-3 px-2 py-1.5">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-sidebar-foreground truncate">
-                    {profile?.full_name || "Produtor"}
-                  </p>
-                  <p className="text-[10px] text-sidebar-foreground/40">Produtor</p>
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-sidebar-foreground truncate">
+                          {profile?.full_name || "Produtor"}
+                        </p>
+                        <p className="text-[10px] text-sidebar-foreground/40">Produtor</p>
+                      </div>
+                    </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent side="top">
+                    {allRoles.includes("buyer") && role !== "buyer" && (
+                      <DropdownMenuItem onClick={() => { switchRole("buyer"); navigate("/"); }}>
+                        Mudar para perfil de comprador
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             )}
             <Button
