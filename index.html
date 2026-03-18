@@ -34,10 +34,24 @@
     <!-- App shell: visível em T=0 enquanto React carrega. Substituído automaticamente por createRoot().render() -->
     <div id="root">
       <div style="min-height:100vh;background:hsl(0 0% 98%)">
-        <header style="position:fixed;top:0;left:0;right:0;z-index:50;height:3.5rem;display:flex;align-items:center;padding:0 1.5rem">
+        <header style="position:fixed;top:0;left:0;right:0;z-index:50;height:3.5rem;display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;background:hsl(0 0% 100%);border-bottom:1px solid rgba(0,0,0,0.06)">
           <span style="font-size:1.125rem;font-weight:700;letter-spacing:-0.025em;color:hsl(0 0% 8%)">TicketHall</span>
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <input
+              type="text"
+              placeholder="Buscar eventos, shows, cidades..."
+              aria-label="Buscar"
+              style="padding:0.5rem 0.75rem;border-radius:9999px;border:1px solid rgba(0,0,0,0.12);background:#fff;font-size:0.875rem;min-width:240px;outline:none"
+            />
+            <button
+              style="padding:0.5rem 0.75rem;border-radius:9999px;border:1px solid rgba(0,0,0,0.12);background:transparent;font-size:0.875rem;cursor:pointer"
+            >
+              Entrar
+            </button>
+          </div>
         </header>
-        <section style="min-height:85vh;display:flex;align-items:center;justify-content:center">
+
+        <section style="min-height:85vh;display:flex;align-items:center;justify-content:center;padding-top:3.5rem">
           <div style="text-align:center;padding:5rem 1rem">
             <h1 style="font-family:'Sora',sans-serif;font-size:2.25rem;font-weight:700;line-height:1.1;color:hsl(0 0% 8%)">
               Seus ingressos para eventos
