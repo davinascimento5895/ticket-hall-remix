@@ -1502,6 +1502,57 @@ export type Database = {
           },
         ]
       }
+      payment_webhook_events: {
+        Row: {
+          attempt_count: number
+          created_at: string
+          event_type: string
+          external_reference: string | null
+          failure_reason: string | null
+          first_received_at: string
+          id: string
+          last_received_at: string
+          payload: Json
+          payment_id: string
+          processed_at: string | null
+          provider: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempt_count?: number
+          created_at?: string
+          event_type: string
+          external_reference?: string | null
+          failure_reason?: string | null
+          first_received_at?: string
+          id?: string
+          last_received_at?: string
+          payload?: Json
+          payment_id: string
+          processed_at?: string | null
+          provider: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempt_count?: number
+          created_at?: string
+          event_type?: string
+          external_reference?: string | null
+          failure_reason?: string | null
+          first_received_at?: string
+          id?: string
+          last_received_at?: string
+          payload?: Json
+          payment_id?: string
+          processed_at?: string | null
+          provider?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       producer_follows: {
         Row: {
           created_at: string
@@ -1721,7 +1772,6 @@ export type Database = {
           producer_status: Database["public"]["Enums"]["producer_status"] | null
           state: string | null
           street: string | null
-          address_number: string | null
           updated_at: string | null
         }
         Insert: {
@@ -1753,7 +1803,6 @@ export type Database = {
             | null
           state?: string | null
           street?: string | null
-          address_number?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -1785,7 +1834,6 @@ export type Database = {
             | null
           state?: string | null
           street?: string | null
-          address_number?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -2694,6 +2742,14 @@ export type Database = {
         Returns: undefined
       }
       join_event_as_staff: { Args: { p_access_code: string }; Returns: Json }
+      mark_payment_webhook_event_failed: {
+        Args: { p_event_id: string; p_failure_reason?: string }
+        Returns: undefined
+      }
+      mark_payment_webhook_event_processed: {
+        Args: { p_event_id: string }
+        Returns: undefined
+      }
       purchase_resale_atomic: {
         Args: {
           p_buyer_email: string
@@ -2704,6 +2760,16 @@ export type Database = {
         }
         Returns: Json
       }
+      register_payment_webhook_event: {
+        Args: {
+          p_event_type: string
+          p_external_reference: string
+          p_payload?: Json
+          p_payment_id: string
+          p_provider: string
+        }
+        Returns: Json
+      }
       reserve_tickets: {
         Args: { p_order_id: string; p_quantity: number; p_tier_id: string }
         Returns: boolean
@@ -2711,6 +2777,24 @@ export type Database = {
       validate_unlock_code: {
         Args: { p_code: string; p_event_id: string }
         Returns: string[]
+      }
+      wallet_debit_available_atomic: {
+        Args: {
+          p_amount: number
+          p_description?: string
+          p_reference_id: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      wallet_refund_available_atomic: {
+        Args: {
+          p_amount: number
+          p_description?: string
+          p_reference_id: string
+          p_user_id: string
+        }
+        Returns: Json
       }
     }
     Enums: {

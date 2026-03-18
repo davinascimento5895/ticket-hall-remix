@@ -58,7 +58,7 @@ export function useFavorites() {
       queryClient.invalidateQueries({ queryKey: ["favorites", user?.id] });
       // Invalidate then force refetch of favorite-events for this user (including inactive queries)
       queryClient.invalidateQueries({ queryKey: ["favorite-events", user?.id] });
-      queryClient.refetchQueries({ queryKey: ["favorite-events", user?.id], exact: true, refetchType: "all" });
+      queryClient.refetchQueries({ queryKey: ["favorite-events", user?.id], exact: true });
     },
   });
 
