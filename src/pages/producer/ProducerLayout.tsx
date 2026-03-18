@@ -1,4 +1,4 @@
-import { Outlet, Link } from "react-router-dom";
+import { Outlet, Link, useLocation } from "react-router-dom";
 import { useEffect, Suspense } from "react";
 import {
   SidebarProvider,
@@ -29,6 +29,7 @@ import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { NotificationBell } from "@/components/NotificationBell";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 
 const navItems = [
   { title: "Dashboard", url: "/producer/dashboard", icon: LayoutDashboard },
@@ -137,6 +138,8 @@ function ProducerSidebar() {
 }
 
 export default function ProducerLayout() {
+  const location = useLocation();
+
   useEffect(() => {
     const savedDashTheme = localStorage.getItem("theme-dashboard");
     if (!savedDashTheme) {
@@ -145,11 +148,13 @@ export default function ProducerLayout() {
     }
   }, []);
 
+  const isProducerEventFormRoute = /^\/producer\/events\/(new|[^/]+\/edit)$/.test(location.pathname);
+
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
+    <SidebarProvider className="h-screen overflow-hidden">
+      <div className="h-full flex w-full bg-background overflow-hidden">
         <ProducerSidebar />
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 min-h-0">
           {/* Top bar */}
           <header className="h-14 flex items-center justify-between border-b border-border px-4 shrink-0 bg-background/80 backdrop-blur-sm">
             <div className="flex items-center gap-3">
@@ -170,7 +175,10 @@ export default function ProducerLayout() {
           </header>
 
           {/* Content */}
-          <main className="flex-1 p-4 md:p-6 overflow-auto">
+          <main className={cn(
+            "flex-1 min-h-0 p-4 md:p-6",
+            isProducerEventFormRoute ? "overflow-hidden" : "overflow-y-auto overscroll-contain",
+          )}>
             <Suspense fallback={
               <div className="flex items-center justify-center min-h-[40vh]">
                 <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-primary" />
