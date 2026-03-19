@@ -259,7 +259,7 @@ export async function getEventAnalytics(eventId: string) {
 export async function getEventTickets(eventId: string) {
   const { data, error } = await supabase
     .from("tickets")
-    .select("*, ticket_tiers(name), profiles!tickets_owner_id_fkey(full_name)")
+    .select("*, ticket_tiers(name), profiles!tickets_owner_id_fkey(full_name), orders(status, payment_status)")
     .eq("event_id", eventId)
     .order("created_at", { ascending: false });
   if (error) throw error;

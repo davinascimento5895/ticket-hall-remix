@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SearchInput } from "@/components/ui/search-input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -39,6 +40,17 @@ const STEPS = [
   { key: "settings", label: "Configurações", icon: Settings },
   { key: "review", label: "Revisão", icon: Eye },
 ];
+
+const STEP_HINTS: Record<string, string> = {
+  type: "Defina o formato do evento",
+  info: "Título, categoria e datas",
+  venue: "Localização ou link de transmissão",
+  tickets: "Estruture lotes e regras de venda",
+  form: "Perguntas do checkout para participantes",
+  products: "Produtos extras e complementos",
+  settings: "Recursos avançados e visibilidade",
+  review: "Validação final antes de publicar",
+};
 
 const SECTOR_COLORS = [
   "#E53E3E", "#DD6B20", "#D69E2E", "#38A169", "#3182CE",
@@ -404,6 +416,7 @@ export default function ProducerEventForm({ onCancel }: { onCancel?: () => void 
   const currentVisibleStepIndex = visibleSteps.findIndex((s) => STEPS.indexOf(s) === step);
   const currentStepNumber = currentVisibleStepIndex >= 0 ? currentVisibleStepIndex + 1 : 1;
   const isFirstVisibleStep = currentVisibleStepIndex <= 0;
+  const completionPercent = Math.min(100, Math.max(0, Math.round((currentStepNumber / visibleSteps.length) * 100)));
   const reviewStepIndex = STEPS.indexOf(visibleSteps[visibleSteps.length - 1]);
   const goToReview = () => setStep(reviewStepIndex);
 
@@ -427,11 +440,18 @@ export default function ProducerEventForm({ onCancel }: { onCancel?: () => void 
     )}>
       {/* Sidebar Steps - Desktop */}
       {!isInlineMode && (
-      <nav className="hidden lg:flex flex-col w-56 shrink-0 h-full border-r border-border/60 pr-4">
+      <nav className="hidden lg:flex flex-col w-72 shrink-0 h-full border-r border-border/60 pr-4">
         <div className="h-full flex flex-col">
-          <h2 className="font-display text-lg font-bold mb-4">
-            {isEdit ? "Editar Evento" : "Criar Evento"}
-          </h2>
+          <div className="mb-4 rounded-xl border border-border/70 bg-muted/20 p-3">
+            <h2 className="font-display text-base font-bold text-foreground">
+              {isEdit ? "Editar Evento" : "Criar Evento"}
+            </h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Etapa {currentStepNumber} de {visibleSteps.length} · {currentStepData?.label}
+            </p>
+            <Progress value={completionPercent} className="mt-2 h-2" />
+          </div>
+
           {visibleSteps.map((s) => {
             const realIndex = STEPS.indexOf(s);
             const Icon = s.icon;
@@ -442,27 +462,32 @@ export default function ProducerEventForm({ onCancel }: { onCancel?: () => void 
                 key={s.key}
                 onClick={() => setStep(realIndex)}
                 className={cn(
-                  "flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left",
-                  isActive && "bg-primary text-primary-foreground",
-                  isDone && !isActive && "text-primary",
-                  !isActive && !isDone && "text-muted-foreground hover:bg-muted"
+                  "mb-1 flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition-all",
+                  isActive && "border-primary/30 bg-primary/10 text-primary",
+                  isDone && !isActive && "border-transparent text-primary hover:bg-primary/5",
+                  !isActive && !isDone && "border-transparent text-muted-foreground hover:bg-muted"
                 )}
               >
                 <span className={cn(
                   "flex items-center justify-center w-6 h-6 rounded-full text-xs shrink-0",
-                  isActive && "bg-primary-foreground/20",
+                  isActive && "bg-primary/20",
                   isDone && !isActive && "bg-primary/15",
                   !isActive && !isDone && "bg-muted"
                 )}>
                   {isDone ? <Check className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
                 </span>
-                {s.label}
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-medium">{s.label}</span>
+                  <span className={cn("block truncate text-xs", isActive ? "text-primary/80" : "text-muted-foreground")}>
+                    {STEP_HINTS[s.key]}
+                  </span>
+                </span>
               </button>
             );
           })}
 
           {/* Action buttons below steps */}
-          <div className="mt-auto border-t border-border pt-4 pb-4 space-y-2 bg-background">
+          <div className="mt-auto sticky bottom-0 border-t border-border bg-background/95 backdrop-blur pt-4 pb-4 space-y-2">
             <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
@@ -507,16 +532,17 @@ export default function ProducerEventForm({ onCancel }: { onCancel?: () => void 
       <div className="lg:hidden">
         <button
           onClick={() => setMobileStepsOpen(!mobileStepsOpen)}
-          className="flex items-center justify-between w-full px-4 py-3 rounded-lg bg-muted text-sm font-medium"
+          className="flex items-center justify-between w-full rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm font-medium"
         >
-          <div className="flex items-center gap-2">
-            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs shrink-0">
               {currentStepNumber}
             </span>
-            <span>Passo {currentStepNumber} de {visibleSteps.length}: <span className="font-semibold">{currentStepData?.label}</span></span>
+            <span className="truncate">Etapa {currentStepNumber}/{visibleSteps.length}: <span className="font-semibold">{currentStepData?.label}</span></span>
           </div>
           {mobileStepsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </button>
+        <Progress value={completionPercent} className="mt-2 h-2" />
         {mobileStepsOpen && (
           <div className="mt-2 rounded-lg border border-border bg-background p-2 space-y-0.5">
             {visibleSteps.map((s) => {
@@ -529,14 +555,19 @@ export default function ProducerEventForm({ onCancel }: { onCancel?: () => void 
                   key={s.key}
                   onClick={() => { setStep(realIndex); setMobileStepsOpen(false); }}
                   className={cn(
-                    "flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm transition-colors",
+                    "flex w-full items-start gap-3 rounded-md px-3 py-2 text-sm transition-colors",
                     isActive && "bg-primary text-primary-foreground",
                     isDone && !isActive && "text-primary",
                     !isActive && !isDone && "text-muted-foreground"
                   )}
                 >
-                  {isDone ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
-                  {s.label}
+                  {isDone ? <Check className="h-4 w-4 mt-0.5" /> : <Icon className="h-4 w-4 mt-0.5" />}
+                  <span className="min-w-0 text-left">
+                    <span className="block truncate">{s.label}</span>
+                    <span className={cn("block truncate text-xs", isActive ? "text-primary-foreground/80" : "text-muted-foreground")}>
+                      {STEP_HINTS[s.key]}
+                    </span>
+                  </span>
                 </button>
               );
             })}
@@ -863,102 +894,147 @@ export default function ProducerEventForm({ onCancel }: { onCancel?: () => void 
 
         {/* Step 6: Settings */}
         {step === 6 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Settings className="h-5 w-5" />Configurações</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <Label>Idade mínima</Label>
-                  <Input type="number" min={0} value={form.minimum_age} onChange={(e) => updateField("minimum_age", parseInt(e.target.value) || 0)} />
-                </div>
-                <div>
-                  <Label>Capacidade máxima</Label>
-                  <Input type="number" min={0} value={form.max_capacity} onChange={(e) => updateField("max_capacity", parseInt(e.target.value) || 0)} />
-                </div>
-              </div>
+          <div className="space-y-4">
+            <Card className="border-border/70 shadow-sm">
+              <CardHeader className="space-y-2">
+                <CardTitle className="flex items-center gap-2"><Settings className="h-5 w-5" />Configurações do evento</CardTitle>
+                <CardDescription>
+                  Defina acesso, limites operacionais e recursos avançados em um único painel para manter a experiência do público consistente.
+                </CardDescription>
+              </CardHeader>
 
-              <Separator className="my-2" />
-              <h4 className="font-medium text-sm text-foreground">Funcionalidades avançadas</h4>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="rounded-xl border border-border/70 bg-muted/20 p-4 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Eye className="h-4 w-4 text-primary" />
+                      <h4 className="text-sm font-semibold text-foreground">Acesso e visibilidade</h4>
+                    </div>
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-sm">Mapa de setores</Label>
-                  <p className="text-xs text-muted-foreground">Upload de imagem do mapa com setores coloridos</p>
-                </div>
-                <Switch checked={form.has_seat_map} onCheckedChange={(v) => updateField("has_seat_map", v)} />
-              </div>
-              {form.has_seat_map && (
-                <div className="space-y-3 pl-4 border-l-2 border-primary/20">
-                  <div>
-                    <Label className="text-xs">Imagem do mapa de setores</Label>
-                    <p className="text-xs text-muted-foreground mb-1">Envie uma imagem (PNG/JPG) com o layout do evento.</p>
-                    {seatMapImageUrl && <img src={seatMapImageUrl} alt="Mapa" className="w-full max-h-48 object-contain rounded-lg border border-border mb-2 bg-muted/30" />}
-                    <Input type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) { setSeatMapFile(file); setSeatMapImageUrl(URL.createObjectURL(file)); }
-                    }} />
+                    <div>
+                      <Label className="text-sm">Visibilidade do evento</Label>
+                      <RadioGroup value={form.visibility} onValueChange={(v) => updateField("visibility", v)} className="flex gap-4 mt-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <RadioGroupItem value="public" />
+                          <span className="text-sm">Público</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <RadioGroupItem value="private" />
+                          <span className="text-sm">Privado</span>
+                        </label>
+                      </RadioGroup>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {form.visibility === "public" ? "Evento visível para todos na plataforma" : "Evento acessível apenas com link direto"}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <Label>Idade mínima</Label>
+                        <Input type="number" min={0} value={form.minimum_age} onChange={(e) => updateField("minimum_age", parseInt(e.target.value) || 0)} />
+                      </div>
+                      <div>
+                        <Label>Capacidade máxima</Label>
+                        <Input type="number" min={0} value={form.max_capacity} onChange={(e) => updateField("max_capacity", parseInt(e.target.value) || 0)} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-border/70 bg-muted/20 p-4 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-primary" />
+                      <h4 className="text-sm font-semibold text-foreground">Operação de venda</h4>
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-lg border border-border/70 bg-background p-3">
+                      <div>
+                        <Label className="text-sm">Fila virtual</Label>
+                        <p className="text-xs text-muted-foreground">Ativa fila de espera para picos de demanda.</p>
+                      </div>
+                      <Switch checked={form.has_virtual_queue} onCheckedChange={(v) => updateField("has_virtual_queue", v)} />
+                    </div>
+
+                    {form.has_virtual_queue && (
+                      <div>
+                        <Label className="text-xs">Capacidade da fila</Label>
+                        <Input type="number" min={0} value={form.queue_capacity} onChange={(e) => updateField("queue_capacity", parseInt(e.target.value) || 0)} />
+                      </div>
+                    )}
+
+                    <p className="text-xs text-muted-foreground">
+                      Use a fila virtual quando a procura for alta para distribuir acesso e reduzir sobrecarga no checkout.
+                    </p>
                   </div>
                 </div>
-              )}
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-sm">Fila virtual</Label>
-                  <p className="text-xs text-muted-foreground">Ativa fila de espera para alta demanda</p>
-                </div>
-                <Switch checked={form.has_virtual_queue} onCheckedChange={(v) => updateField("has_virtual_queue", v)} />
-              </div>
-              {form.has_virtual_queue && (
-                <div>
-                  <Label className="text-xs">Capacidade da fila</Label>
-                  <Input type="number" min={0} value={form.queue_capacity} onChange={(e) => updateField("queue_capacity", parseInt(e.target.value) || 0)} />
-                </div>
-              )}
+                <div className="rounded-xl border border-border/70 p-4 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Package className="h-4 w-4 text-primary" />
+                    <h4 className="text-sm font-semibold text-foreground">Recursos do evento</h4>
+                  </div>
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-sm">Certificados</Label>
-                  <p className="text-xs text-muted-foreground">Emitir certificados de participação</p>
-                </div>
-                <Switch checked={form.has_certificates} onCheckedChange={(v) => updateField("has_certificates", v)} />
-              </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between rounded-lg border border-border/70 bg-muted/20 p-3">
+                      <div>
+                        <Label className="text-sm">Mapa de setores</Label>
+                        <p className="text-xs text-muted-foreground">Upload de imagem do mapa com setores coloridos.</p>
+                      </div>
+                      <Switch checked={form.has_seat_map} onCheckedChange={(v) => updateField("has_seat_map", v)} />
+                    </div>
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-sm">Seguro de ingresso</Label>
-                  <p className="text-xs text-muted-foreground">Oferecer seguro opcional na compra</p>
-                </div>
-                <Switch checked={form.has_insurance_option} onCheckedChange={(v) => updateField("has_insurance_option", v)} />
-              </div>
-              {form.has_insurance_option && (
-                <div>
-                  <Label className="text-xs">Preço do seguro (R$)</Label>
-                  <Input type="number" min={0} step={0.01} value={form.insurance_price} onChange={(e) => updateField("insurance_price", parseFloat(e.target.value) || 0)} />
-                </div>
-              )}
+                    {form.has_seat_map && (
+                      <div className="space-y-3 pl-4 border-l-2 border-primary/20">
+                        <div>
+                          <Label className="text-xs">Imagem do mapa de setores</Label>
+                          <p className="text-xs text-muted-foreground mb-1">Envie uma imagem (PNG/JPG/WebP) com o layout do evento.</p>
+                          {seatMapImageUrl && <img src={seatMapImageUrl} alt="Mapa" className="w-full max-h-48 object-contain rounded-lg border border-border mb-2 bg-muted/30" />}
+                          <Input type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) { setSeatMapFile(file); setSeatMapImageUrl(URL.createObjectURL(file)); }
+                          }} />
+                        </div>
+                      </div>
+                    )}
 
-              <Separator className="my-2" />
+                    <div className="flex items-center justify-between rounded-lg border border-border/70 bg-muted/20 p-3">
+                      <div>
+                        <Label className="text-sm">Certificados</Label>
+                        <p className="text-xs text-muted-foreground">Emitir certificados de participação automaticamente.</p>
+                      </div>
+                      <Switch checked={form.has_certificates} onCheckedChange={(v) => updateField("has_certificates", v)} />
+                    </div>
 
-              <div>
-                <Label className="text-sm">Visibilidade do evento</Label>
-                <RadioGroup value={form.visibility} onValueChange={(v) => updateField("visibility", v)} className="flex gap-4 mt-2">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <RadioGroupItem value="public" />
-                    <span className="text-sm">Público</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <RadioGroupItem value="private" />
-                    <span className="text-sm">Privado</span>
-                  </label>
-                </RadioGroup>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {form.visibility === "public" ? "Evento visível para todos na plataforma" : "Evento acessível apenas com link direto"}
+                    <div className="flex items-center justify-between rounded-lg border border-border/70 bg-muted/20 p-3">
+                      <div>
+                        <Label className="text-sm">Seguro de ingresso</Label>
+                        <p className="text-xs text-muted-foreground">Oferecer seguro opcional na compra.</p>
+                      </div>
+                      <Switch checked={form.has_insurance_option} onCheckedChange={(v) => updateField("has_insurance_option", v)} />
+                    </div>
+
+                    {form.has_insurance_option && (
+                      <div>
+                        <Label className="text-xs">Preço do seguro (R$)</Label>
+                        <Input type="number" min={0} step={0.01} value={form.insurance_price} onChange={(e) => updateField("insurance_price", parseFloat(e.target.value) || 0)} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="sticky bottom-4 z-10 rounded-xl border border-border/70 bg-background/95 backdrop-blur px-4 py-3 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <p className="text-xs text-muted-foreground">
+                  Ajustes concluídos? Revise no próximo passo antes de publicar.
                 </p>
+                <div className="flex gap-2 justify-end">
+                  <Button variant="outline" onClick={() => setStep(5)}>Voltar</Button>
+                  <Button onClick={() => setStep(7)}>Continuar para revisão</Button>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
         {/* Step 7: Review */}

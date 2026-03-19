@@ -11,7 +11,7 @@ import { updateProfile } from "@/lib/api";
 import { supabase } from "@/integrations/supabase/client";
 import { getBankAccounts, createBankAccount, deleteBankAccount } from "@/lib/api-financial";
 import { toast } from "@/hooks/use-toast";
-import { Trash2, Upload, Loader2, Camera, ImageIcon } from "lucide-react";
+import { Trash2, Upload, Loader2, Camera, ImageIcon, ShieldCheck, Activity, Wallet, Link2, ArrowUpRight } from "lucide-react";
 
 export default function ProducerSettings() {
   const { user, profile } = useAuth();
@@ -33,6 +33,7 @@ export default function ProducerSettings() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [activeTab, setActiveTab] = useState<"profile" | "organizer" | "bank" | "integrations">("profile");
 
   const avatarRef = useRef<HTMLInputElement>(null);
   const logoRef = useRef<HTMLInputElement>(null);
@@ -133,21 +134,45 @@ export default function ProducerSettings() {
     }
   };
 
-  return (
-    <div className="space-y-6">
-      <h1 className="font-display text-2xl font-bold">Configurações</h1>
+  const initialDocumento = (profile as any)?.cnpj || profile?.cpf || "";
+  const hasProfileChanges =
+    form.full_name !== (profile?.full_name || "")
+    || form.phone !== (profile?.phone || "")
+    || form.documento !== initialDocumento;
 
-      <Tabs defaultValue="profile" className="w-full">
-        <TabsList>
+  const documentDigits = form.documento.replace(/\D/g, "");
+  const profileHealthScore = [
+    form.full_name.trim().length > 0,
+    form.phone.trim().length > 0,
+    documentDigits.length >= 11,
+    bankAccounts.length > 0,
+  ].filter(Boolean).length * 25;
+
+  return (
+    <div className="space-y-5">
+      <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-sm md:p-5">
+        <h1 className="font-display text-2xl font-bold text-foreground">Configurações do Produtor</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Gerencie identidade, recebimentos e integrações com um fluxo operacional unificado.
+        </p>
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => setActiveTab(value as typeof activeTab)}
+          className="w-full"
+        >
+          <TabsList className="flex w-full flex-wrap justify-start gap-1 rounded-xl border border-border/70 bg-muted/30 p-1">
           <TabsTrigger value="profile">Perfil</TabsTrigger>
           <TabsTrigger value="organizer">Página Pública</TabsTrigger>
           <TabsTrigger value="bank">Bancário</TabsTrigger>
           <TabsTrigger value="integrations">Integrações</TabsTrigger>
-        </TabsList>
+          </TabsList>
 
-        <TabsContent value="profile" className="pt-4 max-w-2xl space-y-4">
+          <TabsContent value="profile" className="pt-4 space-y-4">
           {/* Avatar */}
-          <Card>
+          <Card className="border-border/70">
             <CardHeader><CardTitle className="text-base">Foto de Perfil</CardTitle></CardHeader>
             <CardContent>
               <div className="flex items-center gap-4">
@@ -174,20 +199,22 @@ export default function ProducerSettings() {
           </Card>
 
           {/* Personal info */}
-          <Card>
+          <Card className="border-border/70">
             <CardHeader><CardTitle className="text-base">Informações Pessoais</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div><Label>Nome completo</Label><Input value={form.full_name} onChange={(e) => setForm((p) => ({ ...p, full_name: e.target.value }))} /></div>
               <div><Label>Telefone</Label><Input value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} placeholder="(11) 99999-9999" /></div>
               <div><Label>CPF / CNPJ</Label><Input value={form.documento} onChange={(e) => setForm((p) => ({ ...p, documento: e.target.value }))} placeholder="000.000.000-00 ou 00.000.000/0000-00" /></div>
-              <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>Salvar</Button>
+              <p className="text-xs text-muted-foreground">
+                Esses dados aparecem em comunicações oficiais e ajudam na validação da conta para saques.
+              </p>
             </CardContent>
           </Card>
-        </TabsContent>
+          </TabsContent>
 
-        <TabsContent value="organizer" className="pt-4 max-w-2xl space-y-4">
+          <TabsContent value="organizer" className="pt-4 space-y-4">
           {/* Logo + Banner uploads */}
-          <Card>
+          <Card className="border-border/70">
             <CardHeader><CardTitle className="text-base">Identidade Visual</CardTitle></CardHeader>
             <CardContent className="space-y-6">
               {/* Logo */}
@@ -240,7 +267,7 @@ export default function ProducerSettings() {
           </Card>
 
           {/* Text fields */}
-          <Card>
+          <Card className="border-border/70">
             <CardHeader><CardTitle className="text-base">Página do Organizador</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">Personalize sua página pública em <strong>/organizador/{profile?.organizer_slug || "seu-slug"}</strong></p>
@@ -256,12 +283,12 @@ export default function ProducerSettings() {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
+          </TabsContent>
 
-        <TabsContent value="bank" className="pt-4 max-w-2xl space-y-4">
+          <TabsContent value="bank" className="pt-4 space-y-4">
           {/* Existing accounts */}
           {bankAccounts.map((acc: any) => (
-            <Card key={acc.id}>
+            <Card key={acc.id} className="border-border/70">
               <CardContent className="pt-4">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
@@ -278,7 +305,7 @@ export default function ProducerSettings() {
           ))}
 
           {/* Add new */}
-          <Card>
+          <Card className="border-border/70">
             <CardHeader><CardTitle className="text-base">Adicionar Conta Bancária</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div><Label>Nome da conta</Label><Input value={bankForm.account_name} onChange={(e) => setBankForm((p) => ({ ...p, account_name: e.target.value }))} placeholder="Ex: Conta PJ Itaú" /></div>
@@ -293,12 +320,106 @@ export default function ProducerSettings() {
               </Button>
             </CardContent>
           </Card>
-        </TabsContent>
+          </TabsContent>
 
-        <TabsContent value="integrations" className="pt-4 max-w-2xl">
+          <TabsContent value="integrations" className="pt-4">
           <WebhooksManager />
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+
+          {activeTab === "profile" && (
+            <div className="sticky bottom-3 z-10 mt-4 rounded-2xl border border-border/70 bg-background/95 p-3 shadow-lg backdrop-blur">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-xs text-muted-foreground">
+                  {hasProfileChanges ? "Alterações pendentes no perfil." : "Perfil sincronizado com sucesso."}
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    disabled={!hasProfileChanges || saveMutation.isPending}
+                    onClick={() => setForm({
+                      full_name: profile?.full_name || "",
+                      phone: profile?.phone || "",
+                      documento: (profile as any)?.cnpj || profile?.cpf || "",
+                    })}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending || !hasProfileChanges}>
+                    {saveMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Salvar alterações
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </Tabs>
+
+        <div className="space-y-3">
+          <Card className="border-border/70">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Saúde da conta</p>
+                <ShieldCheck className="h-4 w-4 text-primary" />
+              </div>
+              <p className="mt-2 text-2xl font-semibold">{profileHealthScore}%</p>
+              <p className="mt-1 text-xs text-muted-foreground">Prontidão operacional para receber e gerenciar eventos.</p>
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
+                <div className="h-full rounded-full bg-primary" style={{ width: `${profileHealthScore}%` }} />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/70">
+            <CardContent className="space-y-3 p-4 text-sm">
+              <div className="flex items-start gap-2">
+                <Wallet className="mt-0.5 h-4 w-4 text-primary" />
+                <div>
+                  <p className="font-medium text-foreground">Prontidão de saque</p>
+                  <p className="text-xs text-muted-foreground">
+                    {bankAccounts.length > 0 ? "Conta bancária cadastrada e pronta para repasses." : "Cadastre uma conta bancária para habilitar recebimentos."}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <Activity className="mt-0.5 h-4 w-4 text-primary" />
+                <div>
+                  <p className="font-medium text-foreground">Status da operação</p>
+                  <p className="text-xs text-muted-foreground">Perfil e identidade refletidos na pagina publica do organizador.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <Link2 className="mt-0.5 h-4 w-4 text-primary" />
+                <div>
+                  <p className="font-medium text-foreground">Integrações</p>
+                  <p className="text-xs text-muted-foreground">Gerencie webhooks e automacoes para CRM e billing.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/70">
+            <CardContent className="space-y-2 p-4">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Ações rápidas</p>
+              <Button
+                variant="outline"
+                className="w-full justify-between"
+                onClick={() => setActiveTab("bank")}
+              >
+                Revisar dados bancários
+                <ArrowUpRight className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-between"
+                onClick={() => setActiveTab("integrations")}
+              >
+                Configurar webhooks
+                <ArrowUpRight className="h-4 w-4" />
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }
