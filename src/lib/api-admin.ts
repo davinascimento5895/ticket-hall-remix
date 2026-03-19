@@ -278,7 +278,7 @@ export async function getAllOrdersPaginated(
 ) {
   let query = supabase
     .from("orders")
-    .select("id, status, total, platform_fee, payment_method, created_at, buyer_id, event_id, events(title), profiles!orders_buyer_id_fkey(full_name, email)", { count: "exact" })
+    .select("id, status, total, platform_fee, payment_method, created_at, buyer_id, event_id, events(title), profiles!orders_buyer_id_fkey(full_name)", { count: "exact" })
     .order("created_at", { ascending: false });
 
   if (filters?.status && filters.status !== "all") query = query.eq("status", filters.status);
