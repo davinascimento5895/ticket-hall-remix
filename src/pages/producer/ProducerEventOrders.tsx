@@ -57,28 +57,36 @@ export default function ProducerEventOrders() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <Button variant="outline" size="sm" onClick={() => orders.length && exportToCSV(orders, orderCSVColumns, `pedidos_${id}`)} disabled={!orders.length}>
-          <Download className="h-4 w-4 mr-1" /> CSV
-        </Button>
-      </div>
+      <Card className="border-border/70 shadow-sm">
+        <CardContent className="pt-5 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <p className="text-sm font-semibold text-foreground">Filtros de pedidos</p>
+              <p className="text-xs text-muted-foreground">Busque compradores e refine por status para agir mais rapido.</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => orders.length && exportToCSV(orders, orderCSVColumns, `pedidos_${id}`)} disabled={!orders.length}>
+              <Download className="h-4 w-4 mr-1" /> Exportar CSV
+            </Button>
+          </div>
 
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1">
-          <SearchInput placeholder="Buscar por nome ou ID..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full" />
-        </div>
-        <div className="flex gap-1 flex-wrap">
-          {statuses.map((s) => (
-            <button
-              key={s.value}
-              onClick={() => setStatusFilter(s.value)}
-              className={`px-3 py-1.5 text-sm rounded-full transition-colors ${statusFilter === s.value ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
-      </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1">
+              <SearchInput placeholder="Buscar por nome ou ID..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full" />
+            </div>
+            <div className="flex gap-1 flex-wrap">
+              {statuses.map((s) => (
+                <button
+                  key={s.value}
+                  onClick={() => setStatusFilter(s.value)}
+                  className={`px-3 py-1.5 text-sm rounded-full transition-colors ${statusFilter === s.value ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardContent className="p-0">

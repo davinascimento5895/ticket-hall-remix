@@ -14,6 +14,31 @@ export async function getProducerEvents(producerId: string) {
   return data;
 }
 
+
+const missingEventColumns = new Set<string>();
+
+type StripResult = { payload: Record<string, any>; removedField: string } | null;
+
+function stripUnknownColumnError(error: any, payload: Record<string, any>): StripResult {
+  const message: string = error?.message || "";
+  const match = message.match(/Could not find the '(.+?)' column/);
+  if (!match) return null;
+  const field = match[1];
+  if (!(field in payload)) return null;
+  const { [field]: _, ...rest } = payload;
+  return { payload: rest, removedField: field };
+}
+
+function removeKnownMissingColumns(payload: Record<string, any>) {
+  const result = { ...payload };
+  for (const col of missingEventColumns) {
+    delete (result as any)[col];
+  }
+  return result;
+}
+
+const MAX_SCHEMA_RETRY = 10;
+
 export async function createEvent(event: {
   producer_id: string;
   title: string;
@@ -36,24 +61,66 @@ export async function createEvent(event: {
   minimum_age?: number;
   max_capacity?: number;
 }) {
-  const { data, error } = await supabase
-    .from("events")
-    .insert(event)
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
+  let payload: Record<string, any> = removeKnownMissingColumns({ ...event });
+  const removedFields: string[] = [];
+  let lastErrorMessage = "";
+
+  for (let i = 0; i < MAX_SCHEMA_RETRY; i++) {
+    const { data, error } = await supabase
+      .from("events")
+      .insert(payload)
+      .select()
+      .single();
+
+    if (!error) return data;
+    lastErrorMessage = error.message;
+
+    const stripped = stripUnknownColumnError(error, payload);
+    if (!stripped) {
+      const removedInfo = removedFields.length ? ` (removed fields: ${removedFields.join(", ")})` : "";
+      throw new Error(`${error.message}${removedInfo}`);
+    }
+
+    missingEventColumns.add(stripped.removedField);
+    removedFields.push(stripped.removedField);
+    payload = stripped.payload;
+  }
+
+  throw new Error(
+    `Failed to create event due to schema mismatch. Last error: ${lastErrorMessage}. Removed fields: ${removedFields.join(", ")}`,
+  );
 }
 
 export async function updateEvent(eventId: string, updates: Record<string, any>) {
-  const { data, error } = await supabase
-    .from("events")
-    .update(updates)
-    .eq("id", eventId)
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
+  let payload = removeKnownMissingColumns({ ...updates });
+  const removedFields: string[] = [];
+  let lastErrorMessage = "";
+
+  for (let i = 0; i < MAX_SCHEMA_RETRY; i++) {
+    const { data, error } = await supabase
+      .from("events")
+      .update(payload)
+      .eq("id", eventId)
+      .select()
+      .single();
+
+    if (!error) return data;
+    lastErrorMessage = error.message;
+
+    const stripped = stripUnknownColumnError(error, payload);
+    if (!stripped) {
+      const removedInfo = removedFields.length ? ` (removed fields: ${removedFields.join(", ")})` : "";
+      throw new Error(`${error.message}${removedInfo}`);
+    }
+
+    missingEventColumns.add(stripped.removedField);
+    removedFields.push(stripped.removedField);
+    payload = stripped.payload;
+  }
+
+  throw new Error(
+    `Failed to update event due to schema mismatch. Last error: ${lastErrorMessage}. Removed fields: ${removedFields.join(", ")}`,
+  );
 }
 
 export async function deleteEvent(eventId: string) {
@@ -192,7 +259,7 @@ export async function getEventAnalytics(eventId: string) {
 export async function getEventTickets(eventId: string) {
   const { data, error } = await supabase
     .from("tickets")
-    .select("*, ticket_tiers(name), profiles!tickets_owner_id_fkey(full_name)")
+    .select("*, ticket_tiers(name), profiles!tickets_owner_id_fkey(full_name), orders(status, payment_status)")
     .eq("event_id", eventId)
     .order("created_at", { ascending: false });
   if (error) throw error;

@@ -76,13 +76,21 @@ serve(async (req) => {
       // Verify ticket belongs to this event
       const { data: ticket } = await supabase
         .from("tickets")
-        .select("id, event_id, qr_code, status")
+        .select("id, event_id, order_id, qr_code, status")
         .eq("id", ticketId)
         .single();
 
       if (!ticket || ticket.event_id !== session.event_id) continue;
       if (ticket.qr_code !== scan.qrCode) continue; // QR was invalidated (transfer)
       if (ticket.status !== "active") continue;
+
+      const { data: order } = await supabase
+        .from("orders")
+        .select("status, payment_status")
+        .eq("id", ticket.order_id)
+        .maybeSingle();
+
+      if (!order || order.status !== "paid" || order.payment_status !== "paid") continue;
 
       const { error } = await supabase
         .from("tickets")

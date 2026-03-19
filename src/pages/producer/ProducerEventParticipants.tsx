@@ -130,33 +130,44 @@ export default function ProducerEventParticipants() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1">
-          <SearchInput placeholder="Buscar por nome, email ou ID..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full" />
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-48"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="confirmed">Confirmados</SelectItem>
-            <SelectItem value="pending">Pendentes</SelectItem>
-            <SelectItem value="cancelled">Cancelados</SelectItem>
-            <SelectItem value="used">Check-in realizado</SelectItem>
-          </SelectContent>
-        </Select>
-        {tiers && tiers.length > 1 && (
-          <Select value={tierFilter} onValueChange={setTierFilter}>
-            <SelectTrigger className="w-full sm:w-48"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os ingressos</SelectItem>
-              {tiers.map((t: any) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        )}
-        <Button variant="outline" size="icon" onClick={() => tickets.length && exportToCSV(tickets as any, ticketCSVColumns, `participantes_${id}`)} disabled={!tickets.length} title="Exportar CSV">
-          <Download className="h-4 w-4" />
-        </Button>
-      </div>
+      <Card className="border-border/70 shadow-sm">
+        <CardContent className="pt-5 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <p className="text-sm font-semibold text-foreground">Filtros de participantes</p>
+              <p className="text-xs text-muted-foreground">Combine status, tipo de ingresso e busca textual para achar rapidamente cada pessoa.</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => tickets.length && exportToCSV(tickets as any, ticketCSVColumns, `participantes_${id}`)} disabled={!tickets.length} title="Exportar CSV">
+              <Download className="h-4 w-4 mr-1" /> Exportar CSV
+            </Button>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1">
+              <SearchInput placeholder="Buscar por nome, email ou ID..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full" />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-48"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="confirmed">Confirmados</SelectItem>
+                <SelectItem value="pending">Pendentes</SelectItem>
+                <SelectItem value="cancelled">Cancelados</SelectItem>
+                <SelectItem value="used">Check-in realizado</SelectItem>
+              </SelectContent>
+            </Select>
+            {tiers && tiers.length > 1 && (
+              <Select value={tierFilter} onValueChange={setTierFilter}>
+                <SelectTrigger className="w-full sm:w-48"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os ingressos</SelectItem>
+                  {tiers.map((t: any) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Table */}
       <Card>

@@ -91,7 +91,7 @@ serve(async (req) => {
     // 2. Get ticket with details
     const { data: ticket, error: ticketErr } = await supabase
       .from("tickets")
-      .select("id, status, event_id, tier_id, owner_id, attendee_name, attendee_email, qr_code, ticket_tiers(name)")
+      .select("id, status, event_id, tier_id, order_id, owner_id, attendee_name, attendee_email, qr_code, ticket_tiers(name)")
       .eq("id", ticketId)
       .single();
 
@@ -127,6 +127,18 @@ serve(async (req) => {
     if (ticket.qr_code !== qrCode) {
       await logScan(supabase, { checkinListId, ticketId, qrCode, result: "invalid_qr", deviceId, scannedBy: effectiveScannedBy });
       return jsonResponse({ success: false, result: "invalid_qr", message: "QR code desatualizado (ingresso transferido)" }, 400);
+    }
+
+    // 3b. Critical payment guard: only allow check-in for effectively paid orders
+    const { data: order } = await supabase
+      .from("orders")
+      .select("status, payment_status")
+      .eq("id", ticket.order_id)
+      .maybeSingle();
+
+    if (!order || order.status !== "paid" || order.payment_status !== "paid") {
+      await logScan(supabase, { checkinListId, ticketId, qrCode, result: "inactive", deviceId, scannedBy: effectiveScannedBy });
+      return jsonResponse({ success: false, result: "unpaid", message: "Ingresso com pagamento não confirmado" }, 402);
     }
 
     // 4. Check if already used

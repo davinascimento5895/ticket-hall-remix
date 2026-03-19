@@ -138,7 +138,8 @@ export default function LoginSignupModal({
               </div>
             </CardHeader>
 
-            <CardContent
+<form
+                onSubmit={handleSubmit}
               className={`grid ${
                 isUltraCompact ? "gap-3 p-4 pt-1" : isCompact ? "gap-4 p-5 pt-2" : "gap-5"
               }`}
@@ -286,7 +287,7 @@ export default function LoginSignupModal({
                 </svg>
                 Continuar com Google
               </Button>
-            </CardContent>
+              </form>
 
             <CardFooter
               className={`justify-center gap-1 text-zinc-500 ${

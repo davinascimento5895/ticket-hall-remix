@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Send, Mail, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +21,7 @@ import {
 } from "@/lib/api-producer";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function ProducerEventMessages() {
   const { id } = useParams();
@@ -58,6 +59,24 @@ export default function ProducerEventMessages() {
     enabled: !!id,
     staleTime: 30_000,
   });
+
+  const { data: inboxPreview = [] } = useQuery({
+    queryKey: ["producer-inbox-preview", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("producer_messages")
+        .select("id, sender_name, subject, message, is_read, created_at")
+        .eq("producer_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id,
+    staleTime: 30_000,
+  });
+
+  const inboxUnreadCount = inboxPreview.filter((msg: any) => !msg.is_read).length;
 
   const saveDraftMutation = useMutation({
     mutationFn: async () => {
@@ -125,6 +144,43 @@ export default function ProducerEventMessages() {
           As mensagens são enviadas como notificações in-app para os participantes. Eles receberão a notificação ao acessar a plataforma.
         </p>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Mensagens recebidas de compradores</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            Dúvidas enviadas pelo botão "Falar com produtor" entram na Caixa de Entrada do produtor, não no histórico de disparos em massa abaixo.
+          </p>
+
+          {inboxPreview.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhuma mensagem recebida recentemente.</p>
+          ) : (
+            <div className="space-y-2">
+              {inboxPreview.map((msg: any) => (
+                <div key={msg.id} className="rounded-md border border-border p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-medium truncate">{msg.sender_name}</p>
+                    {!msg.is_read && <Badge variant="default">Novo</Badge>}
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">{msg.subject}</p>
+                  <p className="text-xs text-muted-foreground truncate mt-1">{msg.message}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs text-muted-foreground">
+              {inboxUnreadCount > 0 ? `${inboxUnreadCount} não lida(s) na sua caixa de entrada.` : "Sem mensagens não lidas no momento."}
+            </p>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/producer/inbox">Abrir caixa de entrada</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Compose */}
       <Card>
