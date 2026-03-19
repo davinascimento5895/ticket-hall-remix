@@ -1,9 +1,8 @@
 import { useParams } from "react-router-dom";
-import { Search, RotateCcw, Download, FileText } from "lucide-react";
+import { RotateCcw, Download, FileText } from "lucide-react";
 import { exportToCSV, orderCSVColumns } from "@/lib/csv-export";
 import { toast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,12 +13,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { formatBRL } from "@/lib/utils";
 import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
+import type { InvoicePayload } from "@/lib/invoice-pdf";
 
 export default function ProducerEventOrders() {
   const { id } = useParams();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [refundOrder, setRefundOrder] = useState<any>(null);
+  const [invoiceLoadingId, setInvoiceLoadingId] = useState<string | null>(null);
 
   const {
     items: orders,
@@ -29,7 +30,9 @@ export default function ProducerEventOrders() {
     setPage,
     resetPage,
     isLoading,
-    isFetching,
+    isError,
+    error,
+    refetch,
   } = usePaginatedQuery({
     queryKey: ["event-orders", id, statusFilter, search],
     queryFn: (range) =>
@@ -92,6 +95,14 @@ export default function ProducerEventOrders() {
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-4 space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
+          ) : isError ? (
+            <div className="py-12 text-center">
+              <p className="text-sm font-semibold text-destructive">Erro ao carregar pedidos.</p>
+              <p className="text-xs text-muted-foreground mb-4">{error?.message}</p>
+              <Button size="sm" onClick={() => refetch?.()}>
+                Recarregar
+              </Button>
+            </div>
           ) : orders.length === 0 ? (
             <p className="text-sm text-muted-foreground py-8 text-center">Nenhum pedido encontrado.</p>
           ) : (
@@ -122,19 +133,39 @@ export default function ProducerEventOrders() {
                           <Button
                             size="sm"
                             variant="ghost"
+                            disabled={invoiceLoadingId === order.id}
                             onClick={async () => {
                               try {
+                                setInvoiceLoadingId(order.id);
                                 const { data, error } = await supabase.functions.invoke("generate-invoice", { body: { order_id: order.id } });
                                 if (error) throw error;
-                                const w = window.open("", "_blank");
-                                if (w) { w.document.write(data.html); w.document.close(); }
-                                toast({ title: `Nota ${data.invoice_number} gerada!` });
+                                const { generateInvoicePDF } = await import("@/lib/invoice-pdf");
+                                const invoice = data?.invoice as InvoicePayload | undefined;
+
+                                if (invoice) {
+                                  await generateInvoicePDF(invoice);
+                                  toast({ title: `Nota ${data.invoice_number} baixada em PDF!` });
+                                } else if (data?.html) {
+                                  const printWindow = window.open("", "_blank");
+                                  if (printWindow) {
+                                    printWindow.document.write(data.html);
+                                    printWindow.document.close();
+                                    printWindow.focus();
+                                    printWindow.print();
+                                  }
+                                  toast({ title: `Nota ${data.invoice_number} gerada!` });
+                                } else {
+                                  throw new Error("A nota foi gerada, mas o PDF nao pode ser montado.");
+                                }
                               } catch (e: any) {
                                 toast({ title: "Erro ao gerar nota", description: e.message, variant: "destructive" });
+                              } finally {
+                                setInvoiceLoadingId(null);
                               }
                             }}
                           >
-                            <FileText className="h-3.5 w-3.5 mr-1" /> Nota
+                            <FileText className="h-3.5 w-3.5 mr-1" />
+                            {invoiceLoadingId === order.id ? "Gerando..." : "Nota (PDF)"}
                           </Button>
                         )}
                         {(order.status === "paid" || order.status === "processing") && (

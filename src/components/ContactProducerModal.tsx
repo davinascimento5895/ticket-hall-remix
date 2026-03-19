@@ -82,7 +82,7 @@ export function ContactProducerModal({
 
     setSending(true);
     try {
-      const { error } = await supabase.from("producer_messages").insert({
+      const payload = {
         producer_id: producerId,
         sender_id: user.id,
         sender_name: formData.name,
@@ -90,7 +90,15 @@ export function ContactProducerModal({
         event_id: eventId || null,
         subject: formData.subject,
         message: formData.message,
-      });
+      };
+
+      let { error } = await supabase.from("producer_messages").insert(payload);
+      if (error && /event_id/i.test(error.message || "")) {
+        const { event_id: _ignored, ...legacyPayload } = payload;
+        const legacyInsert = await supabase.from("producer_messages").insert(legacyPayload);
+        error = legacyInsert.error;
+      }
+
       if (error) throw error;
       toast({ title: "Mensagem enviada!", description: `Sua mensagem foi enviada para ${producerName}.` });
       setFormData({ name: "", email: "", subject: "", message: "" });

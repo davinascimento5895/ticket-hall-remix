@@ -1,24 +1,78 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Download, Users } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Download, Settings2, Users } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { exportToCSV, ticketCSVColumns } from "@/lib/csv-export";
 import { useState, useEffect } from "react";
 import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
 import { getEventTicketsPaginated } from "@/lib/api-producer";
+import { cn } from "@/lib/utils";
+
+type ParticipantColumnKey = "status" | "participant" | "ticket" | "tier" | "buyer" | "date" | "checkin";
+type ParticipantColumnWidth = "sm" | "md" | "lg";
+
+const participantColumns: Array<{ key: ParticipantColumnKey; label: string }> = [
+  { key: "status", label: "Status" },
+  { key: "participant", label: "Participante" },
+  { key: "ticket", label: "Nº ingresso" },
+  { key: "tier", label: "Tipo" },
+  { key: "buyer", label: "Comprado por" },
+  { key: "date", label: "Data" },
+  { key: "checkin", label: "Check-in" },
+];
+
+const defaultColumnVisibility: Record<ParticipantColumnKey, boolean> = {
+  status: true,
+  participant: true,
+  ticket: true,
+  tier: true,
+  buyer: true,
+  date: true,
+  checkin: true,
+};
+
+const defaultColumnWidths: Record<ParticipantColumnKey, ParticipantColumnWidth> = {
+  status: "sm",
+  participant: "lg",
+  ticket: "sm",
+  tier: "md",
+  buyer: "md",
+  date: "sm",
+  checkin: "sm",
+};
+
+const columnWidthClassMap: Record<ParticipantColumnWidth, string> = {
+  sm: "w-[120px] min-w-[120px]",
+  md: "w-[180px] min-w-[180px]",
+  lg: "w-[280px] min-w-[280px]",
+};
 
 export default function ProducerEventParticipants() {
   const { id } = useParams();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [tierFilter, setTierFilter] = useState("all");
+  const [columnVisibility, setColumnVisibility] = useState<Record<ParticipantColumnKey, boolean>>(defaultColumnVisibility);
+  const [columnWidths, setColumnWidths] = useState<Record<ParticipantColumnKey, ParticipantColumnWidth>>(defaultColumnWidths);
 
   // Map UI filter values to database status values
   const dbStatus = statusFilter === "confirmed" ? "active"
@@ -35,7 +89,9 @@ export default function ProducerEventParticipants() {
     setPage,
     resetPage,
     isLoading,
-    isFetching,
+    isError,
+    error,
+    refetch,
   } = usePaginatedQuery({
     queryKey: ["event-participants", id, dbStatus, tierFilter, search],
     queryFn: (range) =>
@@ -99,6 +155,53 @@ export default function ProducerEventParticipants() {
     return <Badge variant={m.variant}>{m.label}</Badge>;
   };
 
+  const getColumnClassName = (key: ParticipantColumnKey) => columnWidthClassMap[columnWidths[key] || "md"];
+
+  const visibleColumnCount = participantColumns.reduce((acc, col) => (columnVisibility[col.key] ? acc + 1 : acc), 0);
+
+  const handleColumnVisibilityChange = (key: ParticipantColumnKey, checked: boolean) => {
+    if (!checked && columnVisibility[key] && visibleColumnCount <= 1) return;
+    setColumnVisibility((prev) => ({ ...prev, [key]: checked }));
+  };
+
+  const visibleColumns = participantColumns.filter((column) => columnVisibility[column.key]);
+
+  const renderCell = (ticket: any, key: ParticipantColumnKey) => {
+    switch (key) {
+      case "status":
+        return <td key={key} className={cn("p-3", getColumnClassName(key))}>{statusLabel(ticket.status)}</td>;
+      case "participant":
+        return (
+          <td key={key} className={cn("p-3", getColumnClassName(key))}>
+            <p className="font-medium text-foreground">{ticket.attendee_name || "—"}</p>
+            <p className="text-xs text-muted-foreground truncate">{ticket.attendee_email || ""}</p>
+          </td>
+        );
+      case "ticket":
+        return <td key={key} className={cn("p-3 font-mono text-xs", getColumnClassName(key))}>{ticket.id.slice(0, 8)}</td>;
+      case "tier":
+        return <td key={key} className={cn("p-3 text-muted-foreground", getColumnClassName(key))}>{ticket.ticket_tiers?.name || "—"}</td>;
+      case "buyer":
+        return <td key={key} className={cn("p-3 text-muted-foreground", getColumnClassName(key))}>{ticket.profiles?.full_name || "—"}</td>;
+      case "date":
+        return (
+          <td key={key} className={cn("p-3 text-muted-foreground", getColumnClassName(key))}>
+            {new Date(ticket.created_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}
+          </td>
+        );
+      case "checkin":
+        return (
+          <td key={key} className={cn("p-3 text-muted-foreground", getColumnClassName(key))}>
+            {ticket.checked_in_at
+              ? new Date(ticket.checked_in_at).toLocaleString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" })
+              : "—"}
+          </td>
+        );
+      default:
+        return <td key={key} className="p-3">—</td>;
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Summary cards */}
@@ -137,9 +240,58 @@ export default function ProducerEventParticipants() {
               <p className="text-sm font-semibold text-foreground">Filtros de participantes</p>
               <p className="text-xs text-muted-foreground">Combine status, tipo de ingresso e busca textual para achar rapidamente cada pessoa.</p>
             </div>
-            <Button variant="outline" size="sm" onClick={() => tickets.length && exportToCSV(tickets as any, ticketCSVColumns, `participantes_${id}`)} disabled={!tickets.length} title="Exportar CSV">
-              <Download className="h-4 w-4 mr-1" /> Exportar CSV
-            </Button>
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" title="Configurar colunas">
+                    <Settings2 className="h-4 w-4 mr-1" /> Colunas
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-72">
+                  <DropdownMenuLabel>Configurar colunas</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {participantColumns.map((column) => (
+                    <DropdownMenuSub key={column.key}>
+                      <DropdownMenuSubTrigger>{column.label}</DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent className="w-56">
+                        <DropdownMenuCheckboxItem
+                          checked={columnVisibility[column.key]}
+                          onCheckedChange={(checked) => handleColumnVisibilityChange(column.key, Boolean(checked))}
+                        >
+                          Visível
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel>Largura</DropdownMenuLabel>
+                        <DropdownMenuRadioGroup
+                          value={columnWidths[column.key]}
+                          onValueChange={(value) => setColumnWidths((prev) => ({ ...prev, [column.key]: value as ParticipantColumnWidth }))}
+                        >
+                          <DropdownMenuRadioItem value="sm">Compacta</DropdownMenuRadioItem>
+                          <DropdownMenuRadioItem value="md">Padrão</DropdownMenuRadioItem>
+                          <DropdownMenuRadioItem value="lg">Larga</DropdownMenuRadioItem>
+                        </DropdownMenuRadioGroup>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start px-2"
+                    onClick={() => {
+                      setColumnVisibility(defaultColumnVisibility);
+                      setColumnWidths(defaultColumnWidths);
+                    }}
+                  >
+                    Restaurar padrao
+                  </Button>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Button variant="outline" size="sm" onClick={() => tickets.length && exportToCSV(tickets as any, ticketCSVColumns, `participantes_${id}`)} disabled={!tickets.length} title="Exportar CSV">
+                <Download className="h-4 w-4 mr-1" /> Exportar CSV
+              </Button>
+            </div>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
@@ -174,6 +326,15 @@ export default function ProducerEventParticipants() {
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-4 space-y-3">{[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
+          ) : isError ? (
+            <div className="py-12 text-center">
+              <Users className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+              <p className="text-sm font-semibold text-destructive">Erro ao carregar participantes.</p>
+              <p className="text-xs text-muted-foreground mb-4">{error?.message}</p>
+              <Button size="sm" onClick={() => refetch?.()}>
+                Recarregar
+              </Button>
+            </div>
           ) : tickets.length === 0 ? (
             <div className="py-12 text-center">
               <Users className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
@@ -181,33 +342,20 @@ export default function ProducerEventParticipants() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full min-w-[900px] text-sm table-fixed">
                 <thead>
                   <tr className="border-b border-border text-left text-muted-foreground">
-                    <th className="p-3 font-medium">Status</th>
-                    <th className="p-3 font-medium">Participante</th>
-                    <th className="p-3 font-medium">Nº ingresso</th>
-                    <th className="p-3 font-medium">Tipo</th>
-                    <th className="p-3 font-medium">Comprado por</th>
-                    <th className="p-3 font-medium">Data</th>
-                    <th className="p-3 font-medium">Check-in</th>
+                    {visibleColumns.map((column) => (
+                      <th key={column.key} className={cn("p-3 font-medium", getColumnClassName(column.key))}>
+                        {column.label}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   {tickets.map((ticket: any) => (
                     <tr key={ticket.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                      <td className="p-3">{statusLabel(ticket.status)}</td>
-                      <td className="p-3">
-                        <p className="font-medium text-foreground">{ticket.attendee_name || "—"}</p>
-                        <p className="text-xs text-muted-foreground">{ticket.attendee_email || ""}</p>
-                      </td>
-                      <td className="p-3 font-mono text-xs">{ticket.id.slice(0, 8)}</td>
-                      <td className="p-3 text-muted-foreground">{ticket.ticket_tiers?.name || "—"}</td>
-                      <td className="p-3 text-muted-foreground">{ticket.profiles?.full_name || "—"}</td>
-                      <td className="p-3 text-muted-foreground">{new Date(ticket.created_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</td>
-                      <td className="p-3 text-muted-foreground">
-                        {ticket.checked_in_at ? new Date(ticket.checked_in_at).toLocaleString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }) : "—"}
-                      </td>
+                      {visibleColumns.map((column) => renderCell(ticket, column.key))}
                     </tr>
                   ))}
                 </tbody>
