@@ -541,6 +541,8 @@ export default function EventDetail() {
           onOpenChange={setContactOpen}
           producerId={producer.id}
           producerName={producer.full_name || "Produtor"}
+          eventId={event?.id}
+          eventTitle={event?.title}
         />
       )}
     </div>
