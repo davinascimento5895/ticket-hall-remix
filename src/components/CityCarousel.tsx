@@ -33,7 +33,7 @@ export function CityCarousel({ className }: CityCarouselProps) {
           </Button>
         </div>
 
-        <div className="relative group">
+        <div className="relative group overflow-x-hidden">
           {/* Scroll buttons - desktop only */}
           <button
             onClick={() => scroll("left")}

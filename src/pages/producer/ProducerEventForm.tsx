@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, Plus, Trash2, ArrowLeft, ArrowRight, Upload, MapPin, Globe, Video, Link2, Image as ImageIcon, Calendar, Ticket, FileText, Settings, Eye, ChevronDown, ChevronUp, Clock, Users, EyeOff, ClipboardList, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,16 +11,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SearchInput } from "@/components/ui/search-input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
-import { createEvent, updateEvent, createTicketTier, deleteTicketTier } from "@/lib/api-producer";
+import { createEvent, updateEvent, createTicketTier, deleteTicketTier, uploadEventImage } from "@/lib/api-producer";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { CheckoutQuestionsBuilder } from "@/components/producer/CheckoutQuestionsBuilder";
-import { TaxesFeesManager } from "@/components/producer/TaxesFeesManager";
-import { CapacityGroupsManager } from "@/components/producer/CapacityGroupsManager";
 import { EventProductsManager } from "@/components/producer/EventProductsManager";
 import { getCapacityGroups } from "@/lib/api-checkout";
 import { EVENT_CATEGORIES } from "@/lib/categories";
@@ -41,6 +40,17 @@ const STEPS = [
   { key: "settings", label: "Configurações", icon: Settings },
   { key: "review", label: "Revisão", icon: Eye },
 ];
+
+const STEP_HINTS: Record<string, string> = {
+  type: "Defina o formato do evento",
+  info: "Título, categoria e datas",
+  venue: "Localização ou link de transmissão",
+  tickets: "Estruture lotes e regras de venda",
+  form: "Perguntas do checkout para participantes",
+  products: "Produtos extras e complementos",
+  settings: "Recursos avançados e visibilidade",
+  review: "Validação final antes de publicar",
+};
 
 const SECTOR_COLORS = [
   "#E53E3E", "#DD6B20", "#D69E2E", "#38A169", "#3182CE",
@@ -73,15 +83,17 @@ interface TierDraft {
   is_half_price: boolean;
 }
 
-export default function ProducerEventForm() {
+export default function ProducerEventForm({ onCancel }: { onCancel?: () => void }) {
   const { id } = useParams();
   const isEdit = !!id;
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const [step, setStep] = useState(isEdit ? 1 : 0);
   const [mobileStepsOpen, setMobileStepsOpen] = useState(false);
+  const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
 
   const [form, setForm] = useState({
     title: "", slug: "", description: "", category: "shows",
@@ -111,94 +123,97 @@ export default function ProducerEventForm() {
     enabled: isEdit,
   });
 
-  useQuery({
+  const { data: editEventData } = useQuery({
     queryKey: ["edit-event", id],
     queryFn: async () => {
       const { data, error } = await supabase.from("events").select("*").eq("id", id).single();
       if (error) throw error;
-      if (data) {
-        // Parse concatenated address back into components
-        // Format: "Street, Number - Complement, Neighborhood"
-        let parsedAddress = data.venue_address || "";
-        let parsedNumber = "";
-        let parsedComplement = "";
-        let parsedNeighborhood = "";
-        if (parsedAddress) {
-          // Try to extract: "Street, Number - Complement, Neighborhood"
-          const dashParts = parsedAddress.split(" - ");
-          let beforeDash = dashParts[0];
-          let afterDash = dashParts.slice(1).join(" - ");
-          // Before dash: "Street, Number"
-          const commaParts = beforeDash.split(", ");
-          if (commaParts.length >= 2) {
-            parsedAddress = commaParts[0];
-            parsedNumber = commaParts[1];
-          }
-          // After dash: "Complement, Neighborhood"
-          if (afterDash) {
-            const compParts = afterDash.split(", ");
-            parsedComplement = compParts[0] || "";
-            parsedNeighborhood = compParts.slice(1).join(", ") || "";
-          } else if (commaParts.length >= 3) {
-            parsedNeighborhood = commaParts.slice(2).join(", ");
-          }
-        }
-
-        setForm({
-          title: data.title || "", slug: data.slug || "", description: data.description || "",
-          category: data.category || "shows",
-          start_date: data.start_date?.slice(0, 16) || "", end_date: data.end_date?.slice(0, 16) || "",
-          doors_open_time: data.doors_open_time?.slice(0, 16) || "",
-          venue_name: data.venue_name || "", venue_address: parsedAddress,
-          venue_city: data.venue_city || "", venue_state: data.venue_state || "",
-          venue_zip: data.venue_zip || "", venue_number: parsedNumber, venue_complement: parsedComplement, venue_neighborhood: parsedNeighborhood,
-          is_online: data.is_online || false, online_url: data.online_url || "", online_platform: (data as any).online_platform || "external",
-          minimum_age: data.minimum_age || 0, max_capacity: data.max_capacity || 0,
-          cover_image_url: data.cover_image_url || "", status: data.status || "draft",
-          has_seat_map: data.has_seat_map || false,
-          has_virtual_queue: data.has_virtual_queue || false,
-          queue_capacity: data.queue_capacity || 0,
-          has_certificates: data.has_certificates || false,
-          has_insurance_option: data.has_insurance_option || false,
-          insurance_price: data.insurance_price || 0,
-          visibility: (data as any).visibility || "public",
-        });
-        if (data.cover_image_url) setCoverPreview(data.cover_image_url);
-        const smc = data.seat_map_config as any;
-        if (smc?.imageUrl) setSeatMapImageUrl(smc.imageUrl);
-      }
       return data;
     },
     enabled: isEdit,
   });
 
-  useQuery({
+  const { data: editEventTiers } = useQuery({
     queryKey: ["edit-event-tiers", id],
     queryFn: async () => {
       const { data, error } = await supabase.from("ticket_tiers").select("*").eq("event_id", id).order("sort_order");
       if (error) throw error;
-      if (data) {
-        setTiers(data.map((t, idx) => ({
-          id: t.id, name: t.name, tier_type: t.tier_type || "paid",
-          price: t.price || 0, quantity_total: t.quantity_total,
-          description: t.description || "",
-          min_per_order: t.min_per_order || 1, max_per_order: t.max_per_order || 10,
-          is_transferable: t.is_transferable ?? true,
-          capacity_group_id: (t as any).capacity_group_id || null,
-          is_hidden_by_default: (t as any).is_hidden_by_default ?? false,
-          unlock_code: (t as any).unlock_code || "",
-          sector_color: SECTOR_COLORS[idx % SECTOR_COLORS.length],
-          sale_start_date: t.sale_start_date?.slice(0, 16) || "",
-          sale_end_date: t.sale_end_date?.slice(0, 16) || "",
-          who_can_buy: "public",
-          is_visible: t.is_visible ?? true,
-          is_half_price: false,
-        })));
-      }
       return data;
     },
     enabled: isEdit,
   });
+
+  useEffect(() => {
+    if (!editEventData) return;
+
+    // Parse concatenated address back into components
+    // Format: "Street, Number - Complement, Neighborhood"
+    let parsedAddress = editEventData.venue_address || "";
+    let parsedNumber = "";
+    let parsedComplement = "";
+    let parsedNeighborhood = "";
+    if (parsedAddress) {
+      const dashParts = parsedAddress.split(" - ");
+      const beforeDash = dashParts[0];
+      const afterDash = dashParts.slice(1).join(" - ");
+      const commaParts = beforeDash.split(", ");
+      if (commaParts.length >= 2) {
+        parsedAddress = commaParts[0];
+        parsedNumber = commaParts[1];
+      }
+      if (afterDash) {
+        const compParts = afterDash.split(", ");
+        parsedComplement = compParts[0] || "";
+        parsedNeighborhood = compParts.slice(1).join(", ") || "";
+      } else if (commaParts.length >= 3) {
+        parsedNeighborhood = commaParts.slice(2).join(", ");
+      }
+    }
+
+    setForm({
+      title: editEventData.title || "", slug: editEventData.slug || "", description: editEventData.description || "",
+      category: editEventData.category || "shows",
+      start_date: editEventData.start_date?.slice(0, 16) || "", end_date: editEventData.end_date?.slice(0, 16) || "",
+      doors_open_time: editEventData.doors_open_time?.slice(0, 16) || "",
+      venue_name: editEventData.venue_name || "", venue_address: parsedAddress,
+      venue_city: editEventData.venue_city || "", venue_state: editEventData.venue_state || "",
+      venue_zip: editEventData.venue_zip || "", venue_number: parsedNumber, venue_complement: parsedComplement, venue_neighborhood: parsedNeighborhood,
+      is_online: editEventData.is_online || false, online_url: editEventData.online_url || "", online_platform: (editEventData as any).online_platform || "external",
+      minimum_age: editEventData.minimum_age || 0, max_capacity: editEventData.max_capacity || 0,
+      cover_image_url: editEventData.cover_image_url || "", status: editEventData.status || "draft",
+      has_seat_map: editEventData.has_seat_map || false,
+      has_virtual_queue: editEventData.has_virtual_queue || false,
+      queue_capacity: editEventData.queue_capacity || 0,
+      has_certificates: editEventData.has_certificates || false,
+      has_insurance_option: editEventData.has_insurance_option || false,
+      insurance_price: editEventData.insurance_price || 0,
+      visibility: (editEventData as any).visibility || "public",
+    });
+
+    setCoverPreview(editEventData.cover_image_url || "");
+    const smc = editEventData.seat_map_config as any;
+    setSeatMapImageUrl(smc?.imageUrl || "");
+  }, [editEventData]);
+
+  useEffect(() => {
+    if (!editEventTiers) return;
+    setTiers(editEventTiers.map((t, idx) => ({
+      id: t.id, name: t.name, tier_type: t.tier_type || "paid",
+      price: t.price || 0, quantity_total: t.quantity_total,
+      description: t.description || "",
+      min_per_order: t.min_per_order || 1, max_per_order: t.max_per_order || 10,
+      is_transferable: t.is_transferable ?? true,
+      capacity_group_id: (t as any).capacity_group_id || null,
+      is_hidden_by_default: (t as any).is_hidden_by_default ?? false,
+      unlock_code: (t as any).unlock_code || "",
+      sector_color: SECTOR_COLORS[idx % SECTOR_COLORS.length],
+      sale_start_date: t.sale_start_date?.slice(0, 16) || "",
+      sale_end_date: t.sale_end_date?.slice(0, 16) || "",
+      who_can_buy: "public",
+      is_visible: t.is_visible ?? true,
+      is_half_price: false,
+    })));
+  }, [editEventTiers]);
 
   const generateSlug = (title: string) => title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   const updateField = (field: string, value: any) => {
@@ -270,12 +285,15 @@ export default function ProducerEventForm() {
 
   const handleUploadCover = async () => {
     if (!coverFile || !user) return form.cover_image_url;
-    const ext = coverFile.name.split(".").pop();
-    const path = `${user.id}/${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("event-images").upload(path, coverFile);
-    if (error) throw error;
-    const { data } = supabase.storage.from("event-images").getPublicUrl(path);
-    return data.publicUrl;
+    if (coverFile.size > 5 * 1024 * 1024) {
+      throw new Error("Imagem deve ter até 5MB");
+    }
+    if (!["image/jpeg", "image/png", "image/webp"].includes(coverFile.type)) {
+      throw new Error("Formato inválido. Use JPG, PNG ou WebP.");
+    }
+    const ext = coverFile.name.split(".").pop() || "jpg";
+    const path = `${user.id}/event-cover-${Date.now()}.${ext}`;
+    return await uploadEventImage(path, coverFile);
   };
 
   const handleSave = async (publish = false) => {
@@ -379,23 +397,61 @@ export default function ProducerEventForm() {
 
       queryClient.invalidateQueries({ queryKey: ["producer-events"] });
       toast({ title: publish ? "Evento publicado!" : "Evento salvo!" });
-      navigate("/producer/events");
+      // When editing, reload the page so the cover image URL / preview updates reliably.
+      if (isEdit) {
+        window.location.reload();
+      } else {
+        navigate("/producer/events");
+      }
     } catch (err: any) {
-      toast({ title: "Erro ao salvar", description: err.message, variant: "destructive" });
+      const message = err?.message || JSON.stringify(err);
+      toast({ title: "Erro ao salvar", description: message, variant: "destructive" });
+      console.error("ProducerEventForm save error:", err);
     }
   };
 
   const visibleSteps = STEPS.filter((_, i) => !(i === 0 && isEdit));
+  const isInlineMode = !!searchParams.get("editorStep");
   const currentStepData = STEPS[step];
+  const currentVisibleStepIndex = visibleSteps.findIndex((s) => STEPS.indexOf(s) === step);
+  const currentStepNumber = currentVisibleStepIndex >= 0 ? currentVisibleStepIndex + 1 : 1;
+  const isFirstVisibleStep = currentVisibleStepIndex <= 0;
+  const completionPercent = Math.min(100, Math.max(0, Math.round((currentStepNumber / visibleSteps.length) * 100)));
+  const reviewStepIndex = STEPS.indexOf(visibleSteps[visibleSteps.length - 1]);
+  const goToReview = () => setStep(reviewStepIndex);
+
+  useEffect(() => {
+    if (!isEdit) return;
+    const requestedStep = searchParams.get("step") || searchParams.get("editorStep");
+    if (!requestedStep) return;
+
+    const stepIndex = STEPS.findIndex((s) => s.key === requestedStep);
+    if (stepIndex >= 1) {
+      setStep(stepIndex);
+    }
+  }, [isEdit, searchParams]);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 min-h-[calc(100vh-8rem)]">
+    <div className={cn(
+      "flex flex-col gap-6",
+      isInlineMode
+        ? "min-h-0 pb-24"
+        : "lg:flex-row min-h-[calc(100vh-8rem)] lg:h-full lg:min-h-0 lg:overflow-hidden"
+    )}>
       {/* Sidebar Steps - Desktop */}
-      <nav className="hidden lg:flex flex-col w-56 shrink-0">
-        <div className="sticky top-24 space-y-1">
-          <h2 className="font-display text-lg font-bold mb-4">
-            {isEdit ? "Editar Evento" : "Criar Evento"}
-          </h2>
+      {!isInlineMode && (
+      <nav className="hidden lg:flex flex-col w-72 shrink-0 h-full border-r border-border/60 pr-4">
+        <div className="h-full flex flex-col">
+          <div className="mb-4 rounded-xl border border-border/70 bg-muted/20 p-3">
+            <h2 className="font-display text-base font-bold text-foreground">
+              {isEdit ? "Editar Evento" : "Criar Evento"}
+            </h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Etapa {currentStepNumber} de {visibleSteps.length} · {currentStepData?.label}
+            </p>
+            <Progress value={completionPercent} className="mt-2 h-2" />
+          </div>
+
           {visibleSteps.map((s) => {
             const realIndex = STEPS.indexOf(s);
             const Icon = s.icon;
@@ -406,82 +462,87 @@ export default function ProducerEventForm() {
                 key={s.key}
                 onClick={() => setStep(realIndex)}
                 className={cn(
-                  "flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left",
-                  isActive && "bg-primary text-primary-foreground",
-                  isDone && !isActive && "text-primary",
-                  !isActive && !isDone && "text-muted-foreground hover:bg-muted"
+                  "mb-1 flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition-all",
+                  isActive && "border-primary/30 bg-primary/10 text-primary",
+                  isDone && !isActive && "border-transparent text-primary hover:bg-primary/5",
+                  !isActive && !isDone && "border-transparent text-muted-foreground hover:bg-muted"
                 )}
               >
                 <span className={cn(
                   "flex items-center justify-center w-6 h-6 rounded-full text-xs shrink-0",
-                  isActive && "bg-primary-foreground/20",
+                  isActive && "bg-primary/20",
                   isDone && !isActive && "bg-primary/15",
                   !isActive && !isDone && "bg-muted"
                 )}>
                   {isDone ? <Check className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
                 </span>
-                {s.label}
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-medium">{s.label}</span>
+                  <span className={cn("block truncate text-xs", isActive ? "text-primary/80" : "text-muted-foreground")}>
+                    {STEP_HINTS[s.key]}
+                  </span>
+                </span>
               </button>
             );
           })}
 
           {/* Action buttons below steps */}
-          <Separator className="!mt-4 !mb-3" />
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={step === 0 || (step === 1 && isEdit)}
-                onClick={() => setStep((s) => s - 1)}
-                className="gap-1 flex-1"
-              >
-                <ArrowLeft className="h-4 w-4" /> Anterior
-              </Button>
-              {step < STEPS.length - 1 ? (
-                <Button size="sm" onClick={() => setStep((s) => s + 1)} className="gap-1 flex-1">
-                  Próximo <ArrowRight className="h-4 w-4" />
-                </Button>
-              ) : (
-                <Button size="sm" onClick={() => handleSave(true)} className="flex-1">
-                  Publicar
-                </Button>
-              )}
-            </div>
+          <div className="mt-auto sticky bottom-0 border-t border-border bg-background/95 backdrop-blur pt-4 pb-4 space-y-2">
+            <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => handleSave(false)}
-              className="w-full"
+              disabled={isFirstVisibleStep}
+              onClick={() => setStep((s) => s - 1)}
+              className="gap-1 flex-1"
             >
-              Salvar rascunho
+              <ArrowLeft className="h-4 w-4" /> Anterior
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/producer/events")}
-              className="w-full text-muted-foreground"
-            >
-              Descartar
-            </Button>
+
+            {step < reviewStepIndex ? (
+              <>
+                <Button size="sm" onClick={() => setStep((s) => s + 1)} className="gap-1 flex-1">
+                  Próximo <ArrowRight className="h-4 w-4" />
+                </Button>
+                <Button size="sm" variant="secondary" onClick={goToReview} className="gap-1 flex-1">
+                  Revisar
+                </Button>
+              </>
+            ) : (
+              <Button size="sm" onClick={() => setIsPublishConfirmOpen(true)} className="flex-1">
+                Publicar
+              </Button>
+            )}
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/producer/events")}
+            className="w-full text-muted-foreground"
+          >
+            Descartar
+          </Button>
           </div>
         </div>
       </nav>
+      )}
 
       {/* Mobile Step Indicator */}
+      {!isInlineMode && (
       <div className="lg:hidden">
         <button
           onClick={() => setMobileStepsOpen(!mobileStepsOpen)}
-          className="flex items-center justify-between w-full px-4 py-3 rounded-lg bg-muted text-sm font-medium"
+          className="flex items-center justify-between w-full rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm font-medium"
         >
-          <div className="flex items-center gap-2">
-            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs">
-              {step + 1}
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs shrink-0">
+              {currentStepNumber}
             </span>
-            <span>Passo {step + 1} de {visibleSteps.length}: <span className="font-semibold">{currentStepData?.label}</span></span>
+            <span className="truncate">Etapa {currentStepNumber}/{visibleSteps.length}: <span className="font-semibold">{currentStepData?.label}</span></span>
           </div>
           {mobileStepsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </button>
+        <Progress value={completionPercent} className="mt-2 h-2" />
         {mobileStepsOpen && (
           <div className="mt-2 rounded-lg border border-border bg-background p-2 space-y-0.5">
             {visibleSteps.map((s) => {
@@ -494,23 +555,32 @@ export default function ProducerEventForm() {
                   key={s.key}
                   onClick={() => { setStep(realIndex); setMobileStepsOpen(false); }}
                   className={cn(
-                    "flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm transition-colors",
+                    "flex w-full items-start gap-3 rounded-md px-3 py-2 text-sm transition-colors",
                     isActive && "bg-primary text-primary-foreground",
                     isDone && !isActive && "text-primary",
                     !isActive && !isDone && "text-muted-foreground"
                   )}
                 >
-                  {isDone ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
-                  {s.label}
+                  {isDone ? <Check className="h-4 w-4 mt-0.5" /> : <Icon className="h-4 w-4 mt-0.5" />}
+                  <span className="min-w-0 text-left">
+                    <span className="block truncate">{s.label}</span>
+                    <span className={cn("block truncate text-xs", isActive ? "text-primary-foreground/80" : "text-muted-foreground")}>
+                      {STEP_HINTS[s.key]}
+                    </span>
+                  </span>
                 </button>
               );
             })}
           </div>
         )}
       </div>
+      )}
 
       {/* Main Content */}
-      <div className="flex-1 max-w-3xl space-y-6 pb-8">
+      <div className={cn(
+        "flex-1 space-y-6 pb-8",
+        isInlineMode ? "max-w-none" : "max-w-3xl lg:h-full lg:overflow-y-auto lg:pr-2"
+      )}>
         {/* Step 0: Event Type Selection */}
         {step === 0 && !isEdit && (
           <div className="space-y-6">
@@ -724,9 +794,6 @@ export default function ProducerEventForm() {
         {/* Step 3: Tickets */}
         {step === 3 && (
           <div className="space-y-6">
-            {isEdit && <CapacityGroupsManager eventId={id!} />}
-            {isEdit && <TaxesFeesManager eventId={id!} />}
-
             <Card>
               <CardHeader>
                 <div>
@@ -827,102 +894,147 @@ export default function ProducerEventForm() {
 
         {/* Step 6: Settings */}
         {step === 6 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Settings className="h-5 w-5" />Configurações</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <Label>Idade mínima</Label>
-                  <Input type="number" min={0} value={form.minimum_age} onChange={(e) => updateField("minimum_age", parseInt(e.target.value) || 0)} />
-                </div>
-                <div>
-                  <Label>Capacidade máxima</Label>
-                  <Input type="number" min={0} value={form.max_capacity} onChange={(e) => updateField("max_capacity", parseInt(e.target.value) || 0)} />
-                </div>
-              </div>
+          <div className="space-y-4">
+            <Card className="border-border/70 shadow-sm">
+              <CardHeader className="space-y-2">
+                <CardTitle className="flex items-center gap-2"><Settings className="h-5 w-5" />Configurações do evento</CardTitle>
+                <CardDescription>
+                  Defina acesso, limites operacionais e recursos avançados em um único painel para manter a experiência do público consistente.
+                </CardDescription>
+              </CardHeader>
 
-              <Separator className="my-2" />
-              <h4 className="font-medium text-sm text-foreground">Funcionalidades avançadas</h4>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="rounded-xl border border-border/70 bg-muted/20 p-4 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Eye className="h-4 w-4 text-primary" />
+                      <h4 className="text-sm font-semibold text-foreground">Acesso e visibilidade</h4>
+                    </div>
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-sm">Mapa de setores</Label>
-                  <p className="text-xs text-muted-foreground">Upload de imagem do mapa com setores coloridos</p>
-                </div>
-                <Switch checked={form.has_seat_map} onCheckedChange={(v) => updateField("has_seat_map", v)} />
-              </div>
-              {form.has_seat_map && (
-                <div className="space-y-3 pl-4 border-l-2 border-primary/20">
-                  <div>
-                    <Label className="text-xs">Imagem do mapa de setores</Label>
-                    <p className="text-xs text-muted-foreground mb-1">Envie uma imagem (PNG/JPG) com o layout do evento.</p>
-                    {seatMapImageUrl && <img src={seatMapImageUrl} alt="Mapa" className="w-full max-h-48 object-contain rounded-lg border border-border mb-2 bg-muted/30" />}
-                    <Input type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) { setSeatMapFile(file); setSeatMapImageUrl(URL.createObjectURL(file)); }
-                    }} />
+                    <div>
+                      <Label className="text-sm">Visibilidade do evento</Label>
+                      <RadioGroup value={form.visibility} onValueChange={(v) => updateField("visibility", v)} className="flex gap-4 mt-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <RadioGroupItem value="public" />
+                          <span className="text-sm">Público</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <RadioGroupItem value="private" />
+                          <span className="text-sm">Privado</span>
+                        </label>
+                      </RadioGroup>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {form.visibility === "public" ? "Evento visível para todos na plataforma" : "Evento acessível apenas com link direto"}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <Label>Idade mínima</Label>
+                        <Input type="number" min={0} value={form.minimum_age} onChange={(e) => updateField("minimum_age", parseInt(e.target.value) || 0)} />
+                      </div>
+                      <div>
+                        <Label>Capacidade máxima</Label>
+                        <Input type="number" min={0} value={form.max_capacity} onChange={(e) => updateField("max_capacity", parseInt(e.target.value) || 0)} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-border/70 bg-muted/20 p-4 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-primary" />
+                      <h4 className="text-sm font-semibold text-foreground">Operação de venda</h4>
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-lg border border-border/70 bg-background p-3">
+                      <div>
+                        <Label className="text-sm">Fila virtual</Label>
+                        <p className="text-xs text-muted-foreground">Ativa fila de espera para picos de demanda.</p>
+                      </div>
+                      <Switch checked={form.has_virtual_queue} onCheckedChange={(v) => updateField("has_virtual_queue", v)} />
+                    </div>
+
+                    {form.has_virtual_queue && (
+                      <div>
+                        <Label className="text-xs">Capacidade da fila</Label>
+                        <Input type="number" min={0} value={form.queue_capacity} onChange={(e) => updateField("queue_capacity", parseInt(e.target.value) || 0)} />
+                      </div>
+                    )}
+
+                    <p className="text-xs text-muted-foreground">
+                      Use a fila virtual quando a procura for alta para distribuir acesso e reduzir sobrecarga no checkout.
+                    </p>
                   </div>
                 </div>
-              )}
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-sm">Fila virtual</Label>
-                  <p className="text-xs text-muted-foreground">Ativa fila de espera para alta demanda</p>
-                </div>
-                <Switch checked={form.has_virtual_queue} onCheckedChange={(v) => updateField("has_virtual_queue", v)} />
-              </div>
-              {form.has_virtual_queue && (
-                <div>
-                  <Label className="text-xs">Capacidade da fila</Label>
-                  <Input type="number" min={0} value={form.queue_capacity} onChange={(e) => updateField("queue_capacity", parseInt(e.target.value) || 0)} />
-                </div>
-              )}
+                <div className="rounded-xl border border-border/70 p-4 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Package className="h-4 w-4 text-primary" />
+                    <h4 className="text-sm font-semibold text-foreground">Recursos do evento</h4>
+                  </div>
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-sm">Certificados</Label>
-                  <p className="text-xs text-muted-foreground">Emitir certificados de participação</p>
-                </div>
-                <Switch checked={form.has_certificates} onCheckedChange={(v) => updateField("has_certificates", v)} />
-              </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between rounded-lg border border-border/70 bg-muted/20 p-3">
+                      <div>
+                        <Label className="text-sm">Mapa de setores</Label>
+                        <p className="text-xs text-muted-foreground">Upload de imagem do mapa com setores coloridos.</p>
+                      </div>
+                      <Switch checked={form.has_seat_map} onCheckedChange={(v) => updateField("has_seat_map", v)} />
+                    </div>
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-sm">Seguro de ingresso</Label>
-                  <p className="text-xs text-muted-foreground">Oferecer seguro opcional na compra</p>
-                </div>
-                <Switch checked={form.has_insurance_option} onCheckedChange={(v) => updateField("has_insurance_option", v)} />
-              </div>
-              {form.has_insurance_option && (
-                <div>
-                  <Label className="text-xs">Preço do seguro (R$)</Label>
-                  <Input type="number" min={0} step={0.01} value={form.insurance_price} onChange={(e) => updateField("insurance_price", parseFloat(e.target.value) || 0)} />
-                </div>
-              )}
+                    {form.has_seat_map && (
+                      <div className="space-y-3 pl-4 border-l-2 border-primary/20">
+                        <div>
+                          <Label className="text-xs">Imagem do mapa de setores</Label>
+                          <p className="text-xs text-muted-foreground mb-1">Envie uma imagem (PNG/JPG/WebP) com o layout do evento.</p>
+                          {seatMapImageUrl && <img src={seatMapImageUrl} alt="Mapa" className="w-full max-h-48 object-contain rounded-lg border border-border mb-2 bg-muted/30" />}
+                          <Input type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) { setSeatMapFile(file); setSeatMapImageUrl(URL.createObjectURL(file)); }
+                          }} />
+                        </div>
+                      </div>
+                    )}
 
-              <Separator className="my-2" />
+                    <div className="flex items-center justify-between rounded-lg border border-border/70 bg-muted/20 p-3">
+                      <div>
+                        <Label className="text-sm">Certificados</Label>
+                        <p className="text-xs text-muted-foreground">Emitir certificados de participação automaticamente.</p>
+                      </div>
+                      <Switch checked={form.has_certificates} onCheckedChange={(v) => updateField("has_certificates", v)} />
+                    </div>
 
-              <div>
-                <Label className="text-sm">Visibilidade do evento</Label>
-                <RadioGroup value={form.visibility} onValueChange={(v) => updateField("visibility", v)} className="flex gap-4 mt-2">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <RadioGroupItem value="public" />
-                    <span className="text-sm">Público</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <RadioGroupItem value="private" />
-                    <span className="text-sm">Privado</span>
-                  </label>
-                </RadioGroup>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {form.visibility === "public" ? "Evento visível para todos na plataforma" : "Evento acessível apenas com link direto"}
+                    <div className="flex items-center justify-between rounded-lg border border-border/70 bg-muted/20 p-3">
+                      <div>
+                        <Label className="text-sm">Seguro de ingresso</Label>
+                        <p className="text-xs text-muted-foreground">Oferecer seguro opcional na compra.</p>
+                      </div>
+                      <Switch checked={form.has_insurance_option} onCheckedChange={(v) => updateField("has_insurance_option", v)} />
+                    </div>
+
+                    {form.has_insurance_option && (
+                      <div>
+                        <Label className="text-xs">Preço do seguro (R$)</Label>
+                        <Input type="number" min={0} step={0.01} value={form.insurance_price} onChange={(e) => updateField("insurance_price", parseFloat(e.target.value) || 0)} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="sticky bottom-4 z-10 rounded-xl border border-border/70 bg-background/95 backdrop-blur px-4 py-3 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <p className="text-xs text-muted-foreground">
+                  Ajustes concluídos? Revise no próximo passo antes de publicar.
                 </p>
+                <div className="flex gap-2 justify-end">
+                  <Button variant="outline" onClick={() => setStep(5)}>Voltar</Button>
+                  <Button onClick={() => setStep(7)}>Continuar para revisão</Button>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
         {/* Step 7: Review */}
@@ -976,37 +1088,65 @@ export default function ProducerEventForm() {
       </div>
 
       {/* Mobile bottom action buttons */}
+      {!isInlineMode && (
       <div className="lg:hidden space-y-2 pb-4">
         <Separator className="!mb-3" />
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
             size="sm"
-            disabled={step === 0 || (step === 1 && isEdit)}
+            disabled={isFirstVisibleStep}
             onClick={() => setStep((s) => s - 1)}
             className="gap-1 flex-1"
           >
             <ArrowLeft className="h-4 w-4" /> Anterior
           </Button>
-          {step < STEPS.length - 1 ? (
-            <Button size="sm" onClick={() => setStep((s) => s + 1)} className="gap-1 flex-1">
-              Próximo <ArrowRight className="h-4 w-4" />
-            </Button>
+
+          {step < reviewStepIndex ? (
+            <>
+              <Button size="sm" onClick={() => setStep((s) => s + 1)} className="gap-1 flex-1">
+                Próximo <ArrowRight className="h-4 w-4" />
+              </Button>
+              <Button size="sm" variant="secondary" onClick={goToReview} className="gap-1 flex-1">
+                Revisar
+              </Button>
+            </>
           ) : (
-            <Button size="sm" onClick={() => handleSave(true)} className="flex-1">
+            <Button size="sm" onClick={() => setIsPublishConfirmOpen(true)} className="flex-1">
               Publicar evento
             </Button>
           )}
         </div>
+        {step < reviewStepIndex && (
+          <p className="text-[11px] text-muted-foreground text-center">
+            A publicação aparece no passo "Revisão"
+          </p>
+        )}
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => handleSave(false)} className="flex-1">
-            Salvar rascunho
-          </Button>
           <Button variant="ghost" size="sm" onClick={() => navigate("/producer/events")} className="flex-1 text-muted-foreground">
             Descartar
           </Button>
         </div>
       </div>
+      )}
+
+
+      <AlertDialog open={isPublishConfirmOpen} onOpenChange={setIsPublishConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Publicar evento?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Seu evento ficará visível para compradores. Depois de publicado, você ainda pode editar informações, mas alguns campos podem precisar ser revisados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setIsPublishConfirmOpen(false); handleSave(true); }}>
+              Publicar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -1027,174 +1167,190 @@ function TierDialog({
   const update = (field: string, value: any) => setTier((prev) => ({ ...prev, [field]: value }));
   const isPaid = tier.tier_type === "paid";
   const isFree = tier.tier_type === "free";
+  const isDonation = tier.tier_type === "donation";
   const title = isEdit ? "Editar ingresso" : `Criar ingresso ${isFree ? "gratuito" : isPaid ? "pago" : "doação"}`;
 
+  if (!open) return null;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-        </DialogHeader>
+    <Card className="mt-6">
+      <CardHeader className="flex items-start justify-between gap-4">
+        <div>
+          <CardTitle>{title}</CardTitle>
+          {(isPaid || isDonation) && (
+            <CardDescription>
+              {isPaid
+                ? "A taxa de serviço é repassada ao comprador, sendo exibida junto com o valor do ingresso."
+                : "Este ingresso é uma doação: o comprador poderá escolher o valor no checkout."}
+            </CardDescription>
+          )}
+        </div>
+        <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
+          Fechar
+        </Button>
+      </CardHeader>
 
-        {isPaid && (
-          <div className="bg-muted rounded-lg p-3 text-xs text-muted-foreground">
-            A taxa de serviço é repassada ao comprador, sendo exibida junto com o valor do ingresso.
-          </div>
-        )}
-
-        <div className="space-y-5 mt-2">
-          {/* About the ticket */}
-          <div>
-            <h4 className="text-sm font-semibold text-primary mb-3">Sobre o ingresso *</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="sm:col-span-1">
-                <Label className="text-xs">Título do ingresso *</Label>
-                <Input value={tier.name} onChange={(e) => update("name", e.target.value)} placeholder="VIP, Meia-Entrada, etc." maxLength={45} />
-                <p className="text-xs text-muted-foreground mt-0.5">{45 - tier.name.length} caracteres restantes</p>
-              </div>
-              <div>
-                <Label className="text-xs">Quantidade *</Label>
-                <Input type="number" min={1} value={tier.quantity_total} onChange={(e) => update("quantity_total", parseInt(e.target.value) || 1)} placeholder="Ex. 100" />
-              </div>
-              <div>
-                <Label className="text-xs">Valor a receber *</Label>
-                {isFree ? (
-                  <Input disabled value="Grátis" className="bg-muted" />
-                ) : (
-                  <Input type="number" min={0} step={0.01} value={tier.price || ""} onChange={(e) => update("price", parseFloat(e.target.value) || 0)} placeholder="R$" />
-                )}
-              </div>
-            </div>
-            {isPaid && (
-              <div className="flex items-center gap-2 mt-3">
-                <Checkbox checked={tier.is_half_price} onCheckedChange={(v) => update("is_half_price", !!v)} />
-                <Label className="text-xs">Criar meia-entrada para este ingresso</Label>
-              </div>
-            )}
-          </div>
-
-          <Separator />
-
-          {/* Sale period */}
-          <div>
-            <h4 className="text-sm font-semibold text-primary mb-3">Quando o ingresso será vendido *</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs">Início das vendas</Label>
-                <Input type="datetime-local" value={tier.sale_start_date} onChange={(e) => update("sale_start_date", e.target.value)} />
-                <p className="text-xs text-muted-foreground mt-0.5">Horário de Brasília</p>
-              </div>
-              <div>
-                <Label className="text-xs">Término das vendas</Label>
-                <Input type="datetime-local" value={tier.sale_end_date} onChange={(e) => update("sale_end_date", e.target.value)} />
-                <p className="text-xs text-muted-foreground mt-0.5">Horário de Brasília</p>
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Who can buy */}
-          <div>
-            <h4 className="text-sm font-semibold text-primary mb-3">Quem pode comprar *</h4>
-            <RadioGroup value={tier.who_can_buy} onValueChange={(v) => update("who_can_buy", v)} className="space-y-2">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <RadioGroupItem value="public" />
-                <span className="text-sm">Para todo o público</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <RadioGroupItem value="guests" />
-                <span className="text-sm">Restrito a convidados</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <RadioGroupItem value="manual" />
-                <span className="text-sm">Para ser adicionado manualmente</span>
-              </label>
-            </RadioGroup>
-          </div>
-
-          <Separator />
-
-          {/* Quantity per order & description */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <h4 className="text-sm font-semibold text-primary mb-3">Quantidade por compra</h4>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-xs">Mínima *</Label>
-                  <Input type="number" min={1} value={tier.min_per_order} onChange={(e) => update("min_per_order", parseInt(e.target.value) || 1)} />
-                </div>
-                <div>
-                  <Label className="text-xs">Máxima *</Label>
-                  <Input type="number" min={1} value={tier.max_per_order} onChange={(e) => update("max_per_order", parseInt(e.target.value) || 5)} />
-                </div>
-              </div>
+      <CardContent className="space-y-5">
+        {/* About the ticket */}
+        <div>
+          <h4 className="text-sm font-semibold text-primary mb-3">Sobre o ingresso *</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="sm:col-span-1">
+              <Label className="text-xs">Título do ingresso *</Label>
+              <Input value={tier.name} onChange={(e) => update("name", e.target.value)} placeholder="VIP, Meia-Entrada, etc." maxLength={45} />
+              <p className="text-xs text-muted-foreground mt-0.5">{45 - tier.name.length} caracteres restantes</p>
             </div>
             <div>
-              <Label className="text-xs">Descrição do ingresso (opcional)</Label>
-              <Textarea
-                value={tier.description}
-                onChange={(e) => update("description", e.target.value)}
-                rows={3}
-                maxLength={100}
-                placeholder="Ex.: Esse ingresso dá direito a um copo"
-              />
-              <p className="text-xs text-muted-foreground mt-0.5 text-right">{100 - tier.description.length} caracteres restantes</p>
+              <Label className="text-xs">Quantidade *</Label>
+              <Input type="number" min={1} value={tier.quantity_total} onChange={(e) => update("quantity_total", parseInt(e.target.value) || 1)} placeholder="Ex. 100" />
+            </div>
+            <div>
+              <Label className="text-xs">Valor a receber *</Label>
+              {isFree ? (
+                <Input disabled value="Grátis" className="bg-muted" />
+              ) : isDonation ? (
+                <Input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={tier.price || ""}
+                  onChange={(e) => update("price", parseFloat(e.target.value) || 0)}
+                  placeholder="Opcional - valor livre no checkout"
+                />
+              ) : (
+                <Input type="number" min={0} step={0.01} value={tier.price || ""} onChange={(e) => update("price", parseFloat(e.target.value) || 0)} placeholder="R$" />
+              )}
             </div>
           </div>
-
-          {/* Advanced options */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Switch checked={tier.is_transferable} onCheckedChange={(v) => update("is_transferable", v)} />
-              <Label className="text-xs">Transferível</Label>
+          {isPaid && (
+            <div className="flex items-center gap-2 mt-3">
+              <Checkbox checked={tier.is_half_price} onCheckedChange={(v) => update("is_half_price", !!v)} />
+              <Label className="text-xs">Criar meia-entrada para este ingresso</Label>
             </div>
-            <div className="flex items-center gap-2">
-              <Switch checked={tier.is_hidden_by_default} onCheckedChange={(v) => update("is_hidden_by_default", v)} />
-              <Label className="text-xs">Ocultar até código de acesso</Label>
+          )}
+        </div>
+
+        <Separator />
+
+        {/* Sale period */}
+        <div>
+          <h4 className="text-sm font-semibold text-primary mb-3">Quando o ingresso será vendido *</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs">Início das vendas</Label>
+              <Input type="datetime-local" value={tier.sale_start_date} onChange={(e) => update("sale_start_date", e.target.value)} />
+              <p className="text-xs text-muted-foreground mt-0.5">Horário de Brasília</p>
             </div>
-            {tier.is_hidden_by_default && (
-              <div>
-                <Label className="text-xs">Código de acesso</Label>
-                <Input value={tier.unlock_code} onChange={(e) => update("unlock_code", e.target.value)} placeholder="Ex: VIP2025" maxLength={50} />
-              </div>
-            )}
+            <div>
+              <Label className="text-xs">Término das vendas</Label>
+              <Input type="datetime-local" value={tier.sale_end_date} onChange={(e) => update("sale_end_date", e.target.value)} />
+              <p className="text-xs text-muted-foreground mt-0.5">Horário de Brasília</p>
+            </div>
+          </div>
+        </div>
 
-            {capacityGroups.length > 0 && (
-              <div>
-                <Label className="text-xs">Grupo de capacidade</Label>
-                <Select value={tier.capacity_group_id || "none"} onValueChange={(v) => update("capacity_group_id", v === "none" ? null : v)}>
-                  <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Nenhum</SelectItem>
-                    {capacityGroups.map((g: any) => (
-                      <SelectItem key={g.id} value={g.id}>{g.name} ({g.sold_count}/{g.capacity})</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+        <Separator />
 
-            {hasSeatMap && (
-              <div className="flex items-center gap-3">
-                <Label className="text-xs whitespace-nowrap">Cor do setor</Label>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {SECTOR_COLORS.map((color) => (
-                    <button
-                      key={color}
-                      type="button"
-                      onClick={() => update("sector_color", color)}
-                      className={cn(
-                        "w-6 h-6 rounded-full border-2 transition-all",
-                        tier.sector_color === color ? "border-foreground scale-110 ring-2 ring-primary/30" : "border-transparent hover:scale-105"
-                      )}
-                      style={{ backgroundColor: color }}
-                    />
+        {/* Who can buy */}
+        <div>
+          <h4 className="text-sm font-semibold text-primary mb-3">Quem pode comprar *</h4>
+          <RadioGroup value={tier.who_can_buy} onValueChange={(v) => update("who_can_buy", v)} className="space-y-2">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <RadioGroupItem value="public" />
+              <span className="text-sm">Para todo o público</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <RadioGroupItem value="guests" />
+              <span className="text-sm">Restrito a convidados</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <RadioGroupItem value="manual" />
+              <span className="text-sm">Para ser adicionado manualmente</span>
+            </label>
+          </RadioGroup>
+        </div>
+
+        <Separator />
+
+        {/* Quantity per order & description */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <h4 className="text-sm font-semibold text-primary mb-3">Quantidade por compra</h4>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">Mínima *</Label>
+                <Input type="number" min={1} value={tier.min_per_order} onChange={(e) => update("min_per_order", parseInt(e.target.value) || 1)} />
+              </div>
+              <div>
+                <Label className="text-xs">Máxima *</Label>
+                <Input type="number" min={1} value={tier.max_per_order} onChange={(e) => update("max_per_order", parseInt(e.target.value) || 5)} />
+              </div>
+            </div>
+          </div>
+          <div>
+            <Label className="text-xs">Descrição do ingresso (opcional)</Label>
+            <Textarea
+              value={tier.description}
+              onChange={(e) => update("description", e.target.value)}
+              rows={3}
+              maxLength={100}
+              placeholder="Ex.: Esse ingresso dá direito a um copo"
+            />
+            <p className="text-xs text-muted-foreground mt-0.5 text-right">{100 - tier.description.length} caracteres restantes</p>
+          </div>
+        </div>
+
+        {/* Advanced options */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Switch checked={tier.is_transferable} onCheckedChange={(v) => update("is_transferable", v)} />
+            <Label className="text-xs">Transferível</Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Switch checked={tier.is_hidden_by_default} onCheckedChange={(v) => update("is_hidden_by_default", v)} />
+            <Label className="text-xs">Ocultar até código de acesso</Label>
+          </div>
+          {tier.is_hidden_by_default && (
+            <div>
+              <Label className="text-xs">Código de acesso</Label>
+              <Input value={tier.unlock_code} onChange={(e) => update("unlock_code", e.target.value)} placeholder="Ex: VIP2025" maxLength={50} />
+            </div>
+          )}
+
+          {capacityGroups.length > 0 && (
+            <div>
+              <Label className="text-xs">Grupo de capacidade</Label>
+              <Select value={tier.capacity_group_id || "none"} onValueChange={(v) => update("capacity_group_id", v === "none" ? null : v)}>
+                <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhum</SelectItem>
+                  {capacityGroups.map((g: any) => (
+                    <SelectItem key={g.id} value={g.id}>{g.name} ({g.sold_count}/{g.capacity})</SelectItem>
                   ))}
-                </div>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {hasSeatMap && (
+            <div className="flex items-center gap-3">
+              <Label className="text-xs whitespace-nowrap">Cor do setor</Label>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {SECTOR_COLORS.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => update("sector_color", color)}
+                    className={cn(
+                      "w-6 h-6 rounded-full border-2 transition-all",
+                      tier.sector_color === color ? "border-foreground scale-110 ring-2 ring-primary/30" : "border-transparent hover:scale-105"
+                    )}
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -1214,8 +1370,8 @@ function TierDialog({
             <Button onClick={onSave}>{isEdit ? "Salvar" : "Criar ingresso"}</Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </CardContent>
+    </Card>
   );
 }
 

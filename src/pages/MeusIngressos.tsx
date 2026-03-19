@@ -1,10 +1,10 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { SEOHead } from "@/components/SEOHead";
-import { Ticket, Calendar, MapPin, QrCode, Send, Clock, Search, Archive, Download, Repeat, XCircle, CalendarPlus, Mail, ChevronRight, Eye } from "lucide-react";
+import { Ticket, Calendar, MapPin, Send, Clock, Archive, Repeat, XCircle, CalendarPlus, Mail, Eye, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { TicketDetailModal } from "@/components/TicketDetailModal";
 import { TransferTicketModal } from "@/components/TransferTicketModal";
@@ -237,7 +237,7 @@ export default function MeusIngressos() {
         </div>
 
         {/* Actions */}
-        <div className="flex flex-col gap-2 shrink-0">
+        <div className="flex items-start gap-2 shrink-0">
           {ticket.status === "active" && (
             <Button
               variant="default"
@@ -248,119 +248,130 @@ export default function MeusIngressos() {
               <Eye className="h-4 w-4" /> Ver ingresso
             </Button>
           )}
-          {ticket.status === "active" && ticket.events?.start_date && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-1.5 text-muted-foreground"
-              onClick={() => {
-                const ev = ticket.events;
-                if (!ev) return;
-                const location = [ev.venue_name, ev.venue_city].filter(Boolean).join(", ");
-                const url = generateGoogleCalendarUrl({
-                  title: ev.title,
-                  startDate: ev.start_date,
-                  endDate: ev.start_date,
-                  location,
-                });
-                window.open(url, "_blank");
-              }}
-            >
-              <CalendarPlus className="h-4 w-4" /> Calendário
-            </Button>
-          )}
-          {ticket.status === "active" && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-1.5 text-muted-foreground"
-              onClick={async () => {
-                try {
-                  await supabase.functions.invoke("send-ticket-email", {
-                    body: {
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="h-9 w-9" aria-label="Mais ações">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              {ticket.status === "active" && (
+                <DropdownMenuItem onClick={() => setTicketDetailModal({ open: true, ticket })}>
+                  <Eye className="mr-2 h-4 w-4" /> Ver ingresso
+                </DropdownMenuItem>
+              )}
+
+              {ticket.status === "active" && ticket.events?.start_date && (
+                <DropdownMenuItem
+                  onClick={() => {
+                    const ev = ticket.events;
+                    if (!ev) return;
+                    const location = [ev.venue_name, ev.venue_city].filter(Boolean).join(", ");
+                    const url = generateGoogleCalendarUrl({
+                      title: ev.title,
+                      startDate: ev.start_date,
+                      endDate: ev.start_date,
+                      location,
+                    });
+                    window.open(url, "_blank");
+                  }}
+                >
+                  <CalendarPlus className="mr-2 h-4 w-4" /> Adicionar ao calendário
+                </DropdownMenuItem>
+              )}
+
+              {ticket.status === "active" && (
+                <DropdownMenuItem
+                  onClick={async () => {
+                    try {
+                      await supabase.functions.invoke("send-ticket-email", {
+                        body: {
+                          ticketId: ticket.id,
+                          recipientEmail: ticket.attendee_email || user?.email,
+                          eventTitle: ticket.events?.title,
+                          tierName: ticket.ticket_tiers?.name,
+                          qrCode: ticket.qr_code,
+                        },
+                      });
+                      toast({ title: "E-mail enviado!", description: "Verifique sua caixa de entrada." });
+                    } catch {
+                      toast({ title: "Erro ao enviar", variant: "destructive" });
+                    }
+                  }}
+                >
+                  <Mail className="mr-2 h-4 w-4" /> Reenviar por e-mail
+                </DropdownMenuItem>
+              )}
+
+              {(ticket.status === "active" || isForResale) && <DropdownMenuSeparator />}
+
+              {isTransferable && !isForResale && (
+                <DropdownMenuItem
+                  onClick={() =>
+                    setTransferModal({
+                      open: true,
                       ticketId: ticket.id,
-                      recipientEmail: ticket.attendee_email || user?.email,
-                      eventTitle: ticket.events?.title,
-                      tierName: ticket.ticket_tiers?.name,
-                      qrCode: ticket.qr_code,
-                    },
-                  });
-                  toast({ title: "E-mail enviado!", description: "Verifique sua caixa de entrada." });
-                } catch {
-                  toast({ title: "Erro ao enviar", variant: "destructive" });
-                }
-              }}
-            >
-              <Mail className="h-4 w-4" /> Reenviar
-            </Button>
-          )}
-          {isTransferable && !isForResale && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-1.5 text-muted-foreground"
-              onClick={() =>
-                setTransferModal({
-                  open: true,
-                  ticketId: ticket.id,
-                  eventTitle: ticket.events?.title || "",
-                  tierName: ticket.ticket_tiers?.name || "",
-                })
-              }
-            >
-              <Send className="h-4 w-4" /> Transferir
-            </Button>
-          )}
-          {isResellable && !isForResale && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-1.5 text-muted-foreground"
-              onClick={() => setResaleModal({ open: true, ticket })}
-            >
-              <Repeat className="h-4 w-4" /> Revender
-            </Button>
-          )}
-          {isForResale && activeListing && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-1.5 text-destructive"
-              onClick={() => handleCancelResale(activeListing.id, ticket.id)}
-            >
-              <XCircle className="h-4 w-4" /> Cancelar Revenda
-            </Button>
-          )}
-          {ticket.status === "active" && eventDate && (eventDate.getTime() - now.getTime()) > 7 * 24 * 60 * 60 * 1000 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-1.5 text-muted-foreground"
-              onClick={async () => {
-                const { data: order } = await supabase
-                  .from("orders")
-                  .select("*")
-                  .eq("id", ticket.order_id)
-                  .single();
-                if (order) {
-                  setRefundModal({ open: true, order });
-                }
-              }}
-            >
-              <XCircle className="h-4 w-4" /> Solicitar reembolso
-            </Button>
-          )}
-          {(activeTab === "past" || activeTab === "archived") && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-1.5 text-muted-foreground"
-              onClick={() => toggleArchive(ticket.id)}
-            >
-              <Archive className="h-4 w-4" />
-              {archivedIds.includes(ticket.id) ? "Desarquivar" : "Arquivar"}
-            </Button>
-          )}
+                      eventTitle: ticket.events?.title || "",
+                      tierName: ticket.ticket_tiers?.name || "",
+                    })
+                  }
+                >
+                  <Send className="mr-2 h-4 w-4" /> Transferir ingresso
+                </DropdownMenuItem>
+              )}
+
+              {ticket.status === "active" && !isForResale && (
+                <DropdownMenuItem
+                  onClick={() => {
+                    if (!isResellable) {
+                      toast({
+                        title: "Revenda indisponível",
+                        description: "Este ingresso não permite revenda para este evento/lote.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    setResaleModal({ open: true, ticket });
+                  }}
+                >
+                  <Repeat className="mr-2 h-4 w-4" /> {isResellable ? "Revender ingresso" : "Revenda indisponível"}
+                </DropdownMenuItem>
+              )}
+
+              {isForResale && activeListing && (
+                <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleCancelResale(activeListing.id, ticket.id)}>
+                  <XCircle className="mr-2 h-4 w-4" /> Cancelar revenda
+                </DropdownMenuItem>
+              )}
+
+              {ticket.status === "active" && eventDate && (eventDate.getTime() - now.getTime()) > 7 * 24 * 60 * 60 * 1000 && (
+                <DropdownMenuItem
+                  onClick={async () => {
+                    const { data: order } = await supabase
+                      .from("orders")
+                      .select("*")
+                      .eq("id", ticket.order_id)
+                      .single();
+                    if (order) {
+                      setRefundModal({ open: true, order });
+                    }
+                  }}
+                >
+                  <XCircle className="mr-2 h-4 w-4" /> Solicitar reembolso
+                </DropdownMenuItem>
+              )}
+
+              {(activeTab === "past" || activeTab === "archived") && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => toggleArchive(ticket.id)}>
+                    <Archive className="mr-2 h-4 w-4" />
+                    {archivedIds.includes(ticket.id) ? "Desarquivar" : "Arquivar"}
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     );

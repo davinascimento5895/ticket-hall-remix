@@ -24,9 +24,18 @@ interface ContactProducerModalProps {
   onOpenChange: (open: boolean) => void;
   producerId: string;
   producerName: string;
+  eventId?: string;
+  eventTitle?: string;
 }
 
-export function ContactProducerModal({ open, onOpenChange, producerId, producerName }: ContactProducerModalProps) {
+export function ContactProducerModal({
+  open,
+  onOpenChange,
+  producerId,
+  producerName,
+  eventId,
+  eventTitle,
+}: ContactProducerModalProps) {
   const { user, profile } = useAuth();
   const [showForm, setShowForm] = useState(false);
 
@@ -44,6 +53,15 @@ export function ContactProducerModal({ open, onOpenChange, producerId, producerN
 
   // Auto-fill from auth
   const handleShowForm = () => {
+    if (!user) {
+      toast({
+        title: "Faça login para continuar",
+        description: "Para enviar mensagem ao produtor, entre na sua conta primeiro.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setFormData((prev) => ({
       ...prev,
       name: prev.name || profile?.full_name || "",
@@ -69,6 +87,7 @@ export function ContactProducerModal({ open, onOpenChange, producerId, producerN
         sender_id: user.id,
         sender_name: formData.name,
         sender_email: formData.email,
+        event_id: eventId || null,
         subject: formData.subject,
         message: formData.message,
       });
@@ -125,8 +144,13 @@ export function ContactProducerModal({ open, onOpenChange, producerId, producerN
                 Com dúvidas sobre o evento? Envie sua dúvida para o produtor!
               </p>
               <Button className="w-full" onClick={handleShowForm}>
-                Falar com produtor
+                {user ? "Falar com produtor" : "Entrar para falar com produtor"}
               </Button>
+              {!user && (
+                <p className="text-xs text-muted-foreground">
+                  É necessário estar logado para enviar mensagens ao organizador.
+                </p>
+              )}
             </div>
           </>
         ) : (
@@ -134,7 +158,7 @@ export function ContactProducerModal({ open, onOpenChange, producerId, producerN
             <DialogHeader>
               <DialogTitle className="text-lg font-display">Falar com {producerName}</DialogTitle>
               <p className="text-sm text-muted-foreground">
-                Envie uma mensagem diretamente ao organizador do evento.
+                Envie uma mensagem diretamente ao organizador{eventTitle ? ` sobre ${eventTitle}.` : "."}
               </p>
             </DialogHeader>
 
