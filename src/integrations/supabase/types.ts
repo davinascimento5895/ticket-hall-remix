@@ -1534,10 +1534,13 @@ export type Database = {
       producer_messages: {
         Row: {
           created_at: string
+          event_id: string | null
           id: string
           is_read: boolean
+          is_urgent: boolean
           message: string
           producer_id: string
+          replied_at: string | null
           sender_email: string
           sender_id: string
           sender_name: string
@@ -1545,10 +1548,13 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          event_id?: string | null
           id?: string
           is_read?: boolean
+          is_urgent?: boolean
           message: string
           producer_id: string
+          replied_at?: string | null
           sender_email: string
           sender_id: string
           sender_name: string
@@ -1556,16 +1562,26 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          event_id?: string | null
           id?: string
           is_read?: boolean
+          is_urgent?: boolean
           message?: string
           producer_id?: string
+          replied_at?: string | null
           sender_email?: string
           sender_id?: string
           sender_name?: string
           subject?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "producer_messages_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "producer_messages_producer_id_fkey"
             columns: ["producer_id"]

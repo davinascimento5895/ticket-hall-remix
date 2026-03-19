@@ -194,7 +194,7 @@ export async function getEventOrdersPaginated(
 ) {
   let query = supabase
     .from("orders")
-    .select("id, status, total, platform_fee, payment_method, created_at, buyer_id, profiles!orders_buyer_id_fkey(full_name, email)", { count: "exact" })
+    .select("id, status, total, platform_fee, payment_method, created_at, buyer_id, profiles!orders_buyer_id_fkey(full_name)", { count: "exact" })
     .eq("event_id", eventId)
     .order("created_at", { ascending: false });
 
@@ -221,7 +221,7 @@ export async function getEventTicketsPaginated(
 ) {
   let query = supabase
     .from("tickets")
-    .select("id, status, attendee_name, attendee_email, checked_in_at, created_at, tier_id, owner_id, ticket_tiers(name), profiles!tickets_owner_id_fkey(full_name, email)", { count: "exact" })
+    .select("id, status, attendee_name, attendee_email, checked_in_at, created_at, tier_id, owner_id, ticket_tiers(name), profiles!tickets_owner_id_fkey(full_name)", { count: "exact" })
     .eq("event_id", eventId)
     .order("created_at", { ascending: false });
 
@@ -381,41 +381,308 @@ export async function deleteCoupon(couponId: string) {
 // ============================================================
 
 export async function getProducerDashboardStats(producerId: string) {
-  const { data: events } = await supabase
+  const { data: memberships } = await supabase
+    .from("producer_team_members")
+    .select("producer_id")
+    .eq("user_id", producerId)
+    .eq("status", "active");
+
+  const producerScopeIds = Array.from(new Set([
+    producerId,
+    ...(memberships || []).map((m) => m.producer_id).filter(Boolean),
+  ]));
+
+  const { data: events, error: eventsError } = await supabase
     .from("events")
-    .select("id, title, status, start_date, max_capacity")
-    .eq("producer_id", producerId);
+    .select("id, title, status, start_date, end_date, max_capacity")
+    .in("producer_id", producerScopeIds);
+
+  if (eventsError) throw eventsError;
 
   if (!events || events.length === 0) {
-    return { totalRevenue: 0, ticketsSold: 0, totalEvents: 0, upcomingEvents: 0, recentOrders: [] };
+    return {
+      totalRevenue: 0,
+      ticketsSold: 0,
+      totalEvents: 0,
+      upcomingEvents: 0,
+      activeEvents: 0,
+      confirmedOrders: 0,
+      focusEvent: null,
+      otherUpcomingEvents: [],
+      practicalAlerts: [
+        {
+          id: "first-event",
+          severity: "critical",
+          title: "Nenhum evento cadastrado",
+          description: "Crie seu primeiro evento para começar a vender ingressos.",
+          ctaLabel: "Criar evento",
+          ctaTo: "/producer/events/new",
+        },
+      ],
+    };
   }
 
+  const now = new Date();
+  const nowIso = now.toISOString();
+  const nowMs = now.getTime();
+
+  const sortedForFocus = [...events].sort((a, b) => {
+    const statusScore = (status: string | null) => {
+      const normalized = String(status || "").toLowerCase();
+      if (normalized === "published" || normalized === "active") return 0;
+      if (normalized === "draft") return 1;
+      return 2;
+    };
+
+    const scoreDiff = statusScore(a.status) - statusScore(b.status);
+    if (scoreDiff !== 0) return scoreDiff;
+
+    const aDate = a.start_date ? new Date(a.start_date).getTime() : 0;
+    const bDate = b.start_date ? new Date(b.start_date).getTime() : 0;
+    const aFuture = aDate >= nowMs;
+    const bFuture = bDate >= nowMs;
+
+    if (aFuture && bFuture) return aDate - bDate;
+    if (aFuture !== bFuture) return aFuture ? -1 : 1;
+    return bDate - aDate;
+  });
+
+  const focusEventRaw = sortedForFocus[0];
   const eventIds = events.map((e) => e.id);
 
-  // Parallelize analytics + orders queries
-  const [analyticsRes, ordersRes] = await Promise.all([
+  // Parallelize dashboard queries to keep page responsive.
+  const [analyticsRes, ordersRes, tiersRes, ticketsRes] = await Promise.all([
     supabase.from("event_analytics").select("*").in("event_id", eventIds),
-    supabase.from("orders")
-      .select("*, events(title), profiles!orders_buyer_id_fkey(full_name)")
+    supabase
+      .from("orders")
+      .select("id, event_id, total, created_at, status, payment_status")
+      .in("event_id", eventIds),
+    supabase
+      .from("ticket_tiers")
+      .select("id, event_id, name, quantity_total, quantity_sold")
+      .in("event_id", eventIds),
+    supabase
+      .from("tickets")
+      .select("id, event_id, order_id, status, orders(status, payment_status, total)")
       .in("event_id", eventIds)
-      .order("created_at", { ascending: false })
-      .limit(10),
+      .in("status", ["active", "used"]),
   ]);
 
-  const analytics = analyticsRes.data;
-  const recentOrders = ordersRes.data;
+  if (analyticsRes.error) throw analyticsRes.error;
+  if (ordersRes.error) throw ordersRes.error;
+  if (tiersRes.error) throw tiersRes.error;
+  if (ticketsRes.error) throw ticketsRes.error;
 
-  const totalRevenue = analytics?.reduce((s, a) => s + (a.producer_revenue || 0), 0) || 0;
-  const ticketsSold = analytics?.reduce((s, a) => s + (a.tickets_sold || 0), 0) || 0;
-  const now = new Date().toISOString();
-  const upcomingEvents = events.filter((e) => e.start_date > now).length;
+  const analytics = analyticsRes.data || [];
+  const rawOrders = ordersRes.data || [];
+  const tiers = tiersRes.data || [];
+  const rawTickets = ticketsRes.data || [];
+
+  const paidOrders = rawOrders.filter((order) => {
+    const status = String(order.status || "").trim().toLowerCase();
+    const paymentStatus = String(order.payment_status || "").trim().toLowerCase();
+
+    // Some legacy and gateway flows may finalize payment with equivalent values.
+    const isStatusPaid = status === "paid" || status === "confirmed";
+    const isPaymentPaid = ["paid", "confirmed", "received", "approved"].includes(paymentStatus);
+
+    return isStatusPaid || isPaymentPaid;
+  });
+
+  const paidTicketsWithConfirmedOrder = rawTickets.filter((ticket: any) => {
+    const rawOrder = Array.isArray(ticket.orders) ? ticket.orders[0] : ticket.orders;
+    const orderStatus = String(rawOrder?.status || "").trim().toLowerCase();
+    const paymentStatus = String(rawOrder?.payment_status || "").trim().toLowerCase();
+
+    const isStatusPaid = orderStatus === "paid" || orderStatus === "confirmed";
+    const isPaymentPaid = ["paid", "confirmed", "received", "approved"].includes(paymentStatus);
+
+    return !!ticket.order_id && (isStatusPaid || isPaymentPaid);
+  });
+
+  const paidOrderIdsFromTickets = new Set<string>(
+    paidTicketsWithConfirmedOrder.map((ticket: any) => String(ticket.order_id)).filter(Boolean),
+  );
+
+  const paidOrdersCount = paidOrders.length > 0
+    ? paidOrders.length
+    : paidOrderIdsFromTickets.size;
+
+  const fallbackRevenueFromTickets = Array.from(
+    new Map(
+      paidTicketsWithConfirmedOrder.map((ticket: any) => {
+        const rawOrder = Array.isArray(ticket.orders) ? ticket.orders[0] : ticket.orders;
+        return [String(ticket.order_id), Number(rawOrder?.total || 0)];
+      }),
+    ).values(),
+  ).reduce((sum, total) => sum + total, 0);
+
+  const analyticsByEventId = new Map(analytics.map((a) => [a.event_id, a]));
+  const tiersByEventId = new Map<string, any[]>();
+  for (const tier of tiers) {
+    const list = tiersByEventId.get(tier.event_id) || [];
+    list.push(tier);
+    tiersByEventId.set(tier.event_id, list);
+  }
+
+  const totalRevenue = paidOrders.length > 0
+    ? paidOrders.reduce((sum, order) => sum + Number(order.total || 0), 0)
+    : fallbackRevenueFromTickets;
+  const ticketsSold = tiers.reduce((sum, tier) => sum + Number(tier.quantity_sold || 0), 0);
+  const upcomingBase = events
+    .filter((e) => !!e.start_date && e.start_date > nowIso)
+    .sort((a, b) => a.start_date.localeCompare(b.start_date));
+
+  const activeEvents = events.filter((e) => {
+    const status = String(e.status || "").toLowerCase();
+    return ["published", "active"].includes(status);
+  }).length;
+
+  const focusAnalytics = focusEventRaw ? analyticsByEventId.get(focusEventRaw.id) : null;
+  const focusTiers = focusEventRaw ? tiersByEventId.get(focusEventRaw.id) || [] : [];
+  const totalCapacity = focusTiers.reduce((sum, tier) => sum + Number(tier.quantity_total || 0), 0);
+  const soldCapacity = focusTiers.reduce((sum, tier) => sum + Number(tier.quantity_sold || 0), 0);
+
+  const sevenDaysAgo = new Date(now);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const focusPaidOrders = focusEventRaw
+    ? paidOrders.filter((order) => order.event_id === focusEventRaw.id)
+    : [];
+
+  const focusPaidOrdersLast7Days = focusPaidOrders.filter((order) => {
+    if (!order.created_at) return false;
+    return new Date(order.created_at).getTime() >= sevenDaysAgo.getTime();
+  });
+
+  const paidOrdersLast7DaysCount = focusPaidOrdersLast7Days.length;
+  const paidSalesLast7DaysAmount = focusPaidOrdersLast7Days.reduce(
+    (sum, order) => sum + Number(order.total || 0),
+    0,
+  );
+
+  const focusDaysUntilEvent = focusEventRaw?.start_date
+    ? Math.ceil((new Date(focusEventRaw.start_date).getTime() - nowMs) / 86_400_000)
+    : null;
+
+  const focusEvent = focusEventRaw
+    ? {
+      id: focusEventRaw.id,
+      title: focusEventRaw.title,
+      status: focusEventRaw.status,
+      start_date: focusEventRaw.start_date,
+      daysUntilEvent: focusDaysUntilEvent,
+      revenue: focusPaidOrders.reduce((sum, order) => sum + Number(order.total || 0), 0),
+      ticketsSold: Number(focusAnalytics?.tickets_sold || soldCapacity || 0),
+      capacityTotal: totalCapacity,
+      capacitySold: soldCapacity,
+      paidOrdersLast7DaysCount,
+      paidSalesLast7DaysAmount,
+      hasPublishedTiers: focusTiers.length > 0,
+    }
+    : null;
+
+  const otherUpcomingEvents = upcomingBase
+    .filter((event) => event.id !== focusEventRaw?.id)
+    .slice(0, 3)
+    .map((event) => {
+    const eventAnalytics = analyticsByEventId.get(event.id);
+    return {
+      id: event.id,
+      title: event.title,
+      status: event.status,
+      start_date: event.start_date,
+      ticketsSold: eventAnalytics?.tickets_sold || 0,
+      revenue: eventAnalytics?.producer_revenue || 0,
+    };
+  });
+
+  const practicalAlerts: Array<{
+    id: string;
+    severity: "critical" | "warning" | "info";
+    title: string;
+    description: string;
+    ctaLabel: string;
+    ctaTo: string;
+  }> = [];
+
+  if (focusEvent) {
+    const focusStatus = String(focusEvent.status || "").toLowerCase();
+
+    if (!focusEvent.hasPublishedTiers) {
+      practicalAlerts.push({
+        id: `no-tiers-${focusEvent.id}`,
+        severity: "critical",
+        title: "Sem ingressos publicados",
+        description: "Sem lotes de ingressos, o evento não consegue vender.",
+        ctaLabel: "Publicar ingressos",
+        ctaTo: `/producer/events/${focusEvent.id}/edit`,
+      });
+    }
+
+    if (focusStatus !== "published" && focusStatus !== "active") {
+      practicalAlerts.push({
+        id: `not-published-${focusEvent.id}`,
+        severity: "warning",
+        title: "Evento ainda não publicado",
+        description: "Seu evento está em rascunho e ainda não está visível para venda.",
+        ctaLabel: "Revisar e publicar",
+        ctaTo: `/producer/events/${focusEvent.id}/edit`,
+      });
+    }
+
+    if (
+      focusEvent.daysUntilEvent !== null
+      && focusEvent.daysUntilEvent <= 14
+      && focusEvent.paidOrdersLast7DaysCount === 0
+    ) {
+      practicalAlerts.push({
+        id: `no-sales-7d-${focusEvent.id}`,
+        severity: "warning",
+        title: "Sem vendas nos últimos 7 dias",
+        description: "Ative divulgação ou ajuste os lotes para retomar as vendas antes do evento.",
+        ctaLabel: "Abrir painel do evento",
+        ctaTo: `/producer/events/${focusEvent.id}/panel`,
+      });
+    }
+
+    if (focusEvent.capacityTotal > 0) {
+      const remaining = Math.max(focusEvent.capacityTotal - focusEvent.capacitySold, 0);
+      const remainingRatio = remaining / focusEvent.capacityTotal;
+      if (remainingRatio <= 0.2 && remaining > 0) {
+        practicalAlerts.push({
+          id: `near-sold-out-${focusEvent.id}`,
+          severity: "info",
+          title: "Lote quase esgotado",
+          description: `Restam ${remaining} ingressos disponíveis no evento em foco.`,
+          ctaLabel: "Antecipar virada de lote",
+          ctaTo: `/producer/events/${focusEvent.id}/edit`,
+        });
+      }
+    }
+  }
+
+  if (practicalAlerts.length === 0) {
+    practicalAlerts.push({
+      id: "all-good",
+      severity: "info",
+      title: "Tudo certo para continuar vendendo",
+      description: "Seu evento principal está sem pendências críticas no momento.",
+      ctaLabel: "Abrir painel completo",
+      ctaTo: focusEvent ? `/producer/events/${focusEvent.id}/panel` : "/producer/events",
+    });
+  }
 
   return {
     totalRevenue,
     ticketsSold,
     totalEvents: events.length,
-    upcomingEvents,
-    recentOrders: recentOrders || [],
+    upcomingEvents: upcomingBase.length,
+    activeEvents,
+    confirmedOrders: paidOrdersCount,
+    focusEvent,
+    otherUpcomingEvents,
+    practicalAlerts: practicalAlerts.slice(0, 4),
   };
 }
 
