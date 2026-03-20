@@ -199,7 +199,7 @@ export default function ProducerLayout() {
 
           {/* Content */}
           <main className={cn(
-            "flex-1 min-h-0 p-4 md:p-6 lg:p-7",
+            "flex-1 min-h-0 px-3 py-4 sm:px-4 md:px-6 md:py-6 lg:px-7",
             isProducerEventFormRoute ? "overflow-hidden" : "overflow-y-auto overscroll-contain",
           )}>
             <Suspense fallback={

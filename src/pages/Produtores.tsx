@@ -138,7 +138,7 @@ export default function Produtores() {
       />
 
       {/* HERO */}
-      <section className="relative min-h-[80vh] flex items-center bg-hero-gradient overflow-hidden">
+      <section className="relative min-h-[80vh] flex items-center bg-hero-gradient overflow-hidden px-3 sm:px-0">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute w-[500px] h-[500px] rounded-full bg-primary/5 -top-32 right-0 blur-3xl" />
           <div className="absolute w-[300px] h-[300px] rounded-full bg-accent/5 bottom-0 -left-20 blur-3xl" />
@@ -174,7 +174,7 @@ export default function Produtores() {
       </section>
 
       {/* TIPOS DE EVENTO */}
-      <section className="py-16 md:py-24 bg-surface">
+      <section className="py-16 md:py-24 bg-surface px-3 sm:px-0">
         <div className="container">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -210,7 +210,7 @@ export default function Produtores() {
       </section>
 
       {/* TABELA COMPARATIVO */}
-      <section className="py-16 md:py-24 bg-surface">
+      <section className="py-16 md:py-24 bg-surface px-3 sm:px-0">
         <div className="container">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -229,7 +229,7 @@ export default function Produtores() {
       </section>
 
       {/* CALCULADORA */}
-      <section className="py-16 md:py-24">
+      <section className="py-16 md:py-24 px-3 sm:px-0">
         <div className="container max-w-4xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -251,7 +251,7 @@ export default function Produtores() {
       </section>
 
       {/* FEATURES */}
-      <section className="py-16 md:py-24 bg-surface">
+      <section className="py-16 md:py-24 bg-surface px-3 sm:px-0">
         <div className="container">
           <h2 className="font-display text-2xl md:text-3xl font-bold text-center mb-10">Tudo que você precisa para vender ingressos</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
@@ -276,7 +276,7 @@ export default function Produtores() {
       </section>
 
       {/* SEGURANÇA */}
-      <section className="py-16 md:py-24">
+      <section className="py-16 md:py-24 px-3 sm:px-0">
         <div className="container">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -312,7 +312,7 @@ export default function Produtores() {
       </section>
 
       {/* STEPS */}
-      <section className="py-16 md:py-24">
+      <section className="py-16 md:py-24 px-3 sm:px-0">
         <div className="container max-w-3xl">
           <h2 className="font-display text-2xl md:text-3xl font-bold text-center mb-12">Como começar</h2>
           <div className="space-y-6">
@@ -337,7 +337,7 @@ export default function Produtores() {
       </section>
 
       {/* FAQ PRODUTORES */}
-      <section className="py-16 md:py-24 bg-surface">
+      <section className="py-16 md:py-24 bg-surface px-3 sm:px-0">
         <div className="container max-w-4xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
