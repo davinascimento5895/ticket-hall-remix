@@ -100,15 +100,15 @@ export default function LoginSignupModal({
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0" />
-        <DialogPrimitive.Content
-          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
-          onOpenAutoFocus={(event) => event.preventDefault()}
-        >
-          <Card
-            className={`relative overflow-hidden border border-border/60 shadow-xl w-full max-w-[420px] h-auto max-h-[calc(100dvh-1rem)] ${
-              isUltraCompact ? "max-w-[360px]" : isCompact ? "max-w-[390px]" : ""
-            }`}
+          <DialogPrimitive.Content
+            className="fixed left-1/2 top-1/2 z-50 w-full max-w-[min(420px,calc(100vw-2rem))] max-h-[calc(100dvh-1rem)] -translate-x-1/2 -translate-y-1/2 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+            onOpenAutoFocus={(event) => event.preventDefault()}
           >
+            <Card
+              className={`relative overflow-hidden border border-border/60 shadow-xl w-full h-auto max-h-[calc(100dvh-1rem)] ${
+                isUltraCompact ? "max-w-[360px]" : isCompact ? "max-w-[390px]" : ""
+              }`}
+            >
             <div className="flex h-full flex-col overflow-hidden">
             <DialogPrimitive.Close className="absolute right-3 top-3 rounded-md p-1 text-zinc-400 transition hover:bg-black/10 hover:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
               <X className="h-4 w-4" />
@@ -141,7 +141,7 @@ export default function LoginSignupModal({
 <form
                 onSubmit={handleSubmit}
               className={`grid ${
-                isUltraCompact ? "gap-3 p-4 pt-1" : isCompact ? "gap-4 p-5 pt-2" : "gap-5"
+                isUltraCompact ? "gap-3 p-4 pt-1" : isCompact ? "gap-4 p-5 pt-2" : "gap-5 px-6 pb-6 pt-2"
               }`}
             >
               <div className="flex border-b border-border">
