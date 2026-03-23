@@ -56,18 +56,12 @@ export function TicketDownloadCard(props: TicketDownloadData) {
     `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrCode)}`;
 
   const startDate = new Date(eventDate);
-  const formattedDate = startDate.toLocaleDateString("pt-BR", {
-    weekday: "short",
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-  const formattedTime = startDate.toLocaleTimeString("pt-BR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const localeDateOpts = { weekday: "short", day: "2-digit", month: "long", year: "numeric", timeZone: "America/Sao_Paulo" } as const;
+  const localeTimeOpts = { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" } as const;
+  const formattedDate = startDate.toLocaleDateString("pt-BR", localeDateOpts);
+  const formattedTime = startDate.toLocaleTimeString("pt-BR", localeTimeOpts);
   const endTime = eventEndDate
-    ? new Date(eventEndDate).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+    ? new Date(eventEndDate).toLocaleTimeString("pt-BR", localeTimeOpts)
     : null;
 
   const locationParts = isOnline
@@ -82,6 +76,7 @@ export function TicketDownloadCard(props: TicketDownloadData) {
         year: "numeric",
         hour: "2-digit",
         minute: "2-digit",
+        timeZone: "America/Sao_Paulo",
       })
     : null;
 

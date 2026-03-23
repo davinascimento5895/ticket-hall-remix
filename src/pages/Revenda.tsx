@@ -5,6 +5,7 @@ import { Search, Calendar, MapPin, Tag, ArrowRight, ShoppingBag, Repeat, X } fro
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SearchInput } from "@/components/ui/search-input";
 import { Badge } from "@/components/ui/badge";
 import { SEOHead } from "@/components/SEOHead";
 import { EmptyState } from "@/components/EmptyState";
@@ -25,6 +26,7 @@ import {
   isSunday,
   endOfDay,
 } from "date-fns";
+
 
 type DatePreset = "hoje" | "amanha" | "semana" | "fim_de_semana" | "proxima_semana" | null;
 
@@ -147,14 +149,13 @@ export default function Revenda() {
         </div>
 
         {/* Search */}
-        <div className="relative max-w-md mb-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
+        <div className="max-w-md mb-4">
+          <SearchInput
             type="text"
             placeholder="Buscar por evento..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-muted/50"
+            className="bg-muted/50"
           />
           {searchQuery && (
             <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7" onClick={() => setSearchQuery("")}>

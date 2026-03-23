@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { Search, X, Ticket, MapPin, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/EventCard";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
@@ -78,7 +79,7 @@ export default function Eventos() {
 
       if (debouncedSearch) {
         const safe = sanitizePostgrestFilter(debouncedSearch);
-        query = query.or(`title.ilike.%${safe}%,description.ilike.%${safe}%,venue_name.ilike.%${safe}%`);
+        query = query.or(`title.ilike.%${safe}%,description.ilike.%${safe}%,venue_name.ilike.%${safe}%,venue_city.ilike.%${safe}%`);
       }
       if (filters.category) query = query.eq("category", filters.category);
       if (cityFilter) query = query.eq("venue_city", cityFilter);
@@ -188,14 +189,13 @@ export default function Eventos() {
         </div>
 
         {/* Search bar */}
-        <div className="mb-5 max-w-2xl relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
+        <div className="mb-5 max-w-2xl">
+          <SearchInput
             type="text"
             placeholder="Buscar eventos, artistas, locais..."
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
-            className="pl-10 bg-muted/50 border-border"
+            className="bg-muted/50 border-border"
           />
           {search && (
             <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7" onClick={() => { setSearch(""); setDebouncedSearch(""); }}>

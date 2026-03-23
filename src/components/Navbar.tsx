@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useSearchParams, useNavigate } from "react-router-dom";
 import { Menu, X, User, LogOut, ShoppingBag, Search, Plus, ArrowRightLeft } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/NotificationBell";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { TicketHallLogo } from "@/components/TicketHallLogo";
 import { AuthModal } from "@/components/AuthModal";
 import { BecomeProducerModal } from "@/components/BecomeProducerModal";
@@ -61,8 +63,10 @@ export function Navbar() {
   useEffect(() => {
     if (searchParams.get("login") === "true") {
       setAuthOpen(true);
+      // Clean up query param
+      navigate(location.pathname, { replace: true });
     }
-  }, [searchParams]);
+  }, [searchParams, navigate, location.pathname]);
 
   useEffect(() => {
     const handle = () => setScrolled(window.scrollY > 20);
@@ -104,7 +108,9 @@ export function Navbar() {
 
   const switchableRoles = allRoles.filter((r) => r !== role);
 
-  const dashboardLink = role ? roleDashboardLinks[role] : "/meus-ingressos";
+  const initials = profile?.full_name
+    ? profile.full_name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
+    : "?";
 
   return (
     <>
@@ -124,13 +130,12 @@ export function Navbar() {
           <nav className="hidden lg:flex items-center gap-6">
             {(scrolled || !isLandingPage) && !isAdminOrProducer && (
               <form onSubmit={handleNavSearch} className="relative">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
+                <SearchInput
                   type="text"
                   value={navSearch}
                   onChange={(e) => setNavSearch(e.target.value)}
                   placeholder="Buscar..."
-                  className="h-8 w-[180px] pl-8 pr-3 text-sm rounded-full bg-muted/50 border-transparent focus:border-border focus:bg-background transition-all"
+                  className="h-8 w-[180px] text-sm rounded-full bg-muted/50 border-transparent focus:border-border focus:bg-background transition-all"
                 />
               </form>
             )}
@@ -172,8 +177,20 @@ export function Navbar() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
+                    <div className="px-3 py-3 border-b border-border">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-9 w-9">
+                          <AvatarImage src={profile?.avatar_url || undefined} />
+                          <AvatarFallback className="bg-muted text-muted-foreground">{initials}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium truncate">{profile?.full_name || "Usuário"}</div>
+                          <div className="text-xs text-muted-foreground truncate">{user?.email}</div>
+                        </div>
+                      </div>
+                    </div>
                     <DropdownMenuItem asChild>
-                      <Link to={dashboardLink}>Meu Painel</Link>
+                      <Link to="/meu-perfil">Meu Perfil</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to="/meus-ingressos">Meus Ingressos</Link>
@@ -186,9 +203,6 @@ export function Navbar() {
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to="/notificacoes">Notificações</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/meu-perfil">Meu Perfil</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleCreateEvent}>
@@ -281,7 +295,19 @@ export function Navbar() {
         {/* Mobile Menu — logged-out users */}
         {mobileOpen && !user && !isAdminOrProducer && (
           <div className="lg:hidden bg-background/95 backdrop-blur-xl border-b border-border animate-fade-in">
-            <div className="container py-4 space-y-1">
+              <div className="container py-4 space-y-1">
+                <div className="px-3 py-3 border-b border-border">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={profile?.avatar_url || undefined} />
+                      <AvatarFallback className="bg-muted text-muted-foreground">{initials}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium truncate">{profile?.full_name || "Usuário"}</div>
+                      <div className="text-xs text-muted-foreground truncate">{user?.email}</div>
+                    </div>
+                  </div>
+                </div>
               <Link
                 to="/"
                 className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 transition-colors"
@@ -326,13 +352,10 @@ export function Navbar() {
                 </Link>
               ))}
               <div className="border-t border-border my-2" />
-              {isAdminOrProducer && (
-                <Link to={dashboardLink} className="block text-sm font-medium py-2.5" onClick={() => setMobileOpen(false)}>Meu Painel</Link>
-              )}
+              <Link to="/meu-perfil" className="block text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 transition-colors" onClick={() => setMobileOpen(false)}>Meu Perfil</Link>
               <Link to="/meus-ingressos" className="block text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 transition-colors" onClick={() => setMobileOpen(false)}>Meus Ingressos</Link>
               <Link to="/meus-pedidos" className="block text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 transition-colors" onClick={() => setMobileOpen(false)}>Meus Pedidos</Link>
               <Link to="/favoritos" className="block text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 transition-colors" onClick={() => setMobileOpen(false)}>Favoritos</Link>
-              <Link to="/meu-perfil" className="block text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 transition-colors" onClick={() => setMobileOpen(false)}>Meu Perfil</Link>
               {switchableRoles.length > 0 && (
                 <>
                   <div className="border-t border-border my-2" />

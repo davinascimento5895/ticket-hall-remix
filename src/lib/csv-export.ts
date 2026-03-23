@@ -50,14 +50,14 @@ export const orderCSVColumns = [
   { key: "platform_fee", header: "Taxa Plataforma", format: (v: number) => v?.toFixed(2) || "0" },
   { key: "payment_method", header: "Método" },
   { key: "status", header: "Status" },
-  { key: "created_at", header: "Data", format: (v: string) => v ? new Date(v).toLocaleDateString("pt-BR") : "" },
+  { key: "created_at", header: "Data", format: (v: string) => v ? new Date(v).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "" },
 ];
 
 export const userCSVColumns = [
   { key: "full_name", header: "Nome" },
   { key: "cpf", header: "CPF" },
   { key: "phone", header: "Telefone" },
-  { key: "created_at", header: "Cadastro", format: (v: string) => v ? new Date(v).toLocaleDateString("pt-BR") : "" },
+  { key: "created_at", header: "Cadastro", format: (v: string) => v ? new Date(v).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "" },
 ];
 
 export const ticketCSVColumns = [
@@ -67,8 +67,8 @@ export const ticketCSVColumns = [
   { key: "ticket_tiers.name", header: "Lote" },
   { key: "status", header: "Status" },
   { key: "qr_code", header: "QR Code" },
-  { key: "checked_in_at", header: "Check-in", format: (v: string) => v ? new Date(v).toLocaleString("pt-BR") : "" },
-  { key: "created_at", header: "Criado em", format: (v: string) => v ? new Date(v).toLocaleDateString("pt-BR") : "" },
+  { key: "checked_in_at", header: "Check-in", format: (v: string) => v ? new Date(v).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "" },
+  { key: "created_at", header: "Criado em", format: (v: string) => v ? new Date(v).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "" },
 ];
 
 export const eventCSVColumns = [
@@ -76,6 +76,6 @@ export const eventCSVColumns = [
   { key: "slug", header: "Slug" },
   { key: "status", header: "Status" },
   { key: "venue_city", header: "Cidade" },
-  { key: "start_date", header: "Início", format: (v: string) => v ? new Date(v).toLocaleDateString("pt-BR") : "" },
-  { key: "end_date", header: "Fim", format: (v: string) => v ? new Date(v).toLocaleDateString("pt-BR") : "" },
+  { key: "start_date", header: "Início", format: (v: string) => v ? new Date(v).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "" },
+  { key: "end_date", header: "Fim", format: (v: string) => v ? new Date(v).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "" },
 ];

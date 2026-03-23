@@ -58,22 +58,25 @@ export default function Favoritos() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {events.map((event: any) => (
-              <Link
+              <article
                 key={event.id}
-                to={`/eventos/${event.slug}`}
-                className="group relative rounded-xl overflow-hidden border border-border bg-card hover:border-muted-foreground/30 transition-colors block"
+                className="group relative rounded-xl overflow-hidden border border-border bg-card hover:border-muted-foreground/30 transition-colors"
               >
-                <div className="aspect-video relative overflow-hidden">
-                  {event.cover_image_url ? (
-                    <img src={event.cover_image_url} alt={event.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
-                  ) : (
-                    <div className="w-full h-full bg-secondary" />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
-                  <FavoriteButton eventId={event.id} className="absolute top-3 right-3" />
-                </div>
+                <Link to={`/eventos/${event.slug}`} className="block">
+                  <div className="aspect-video relative overflow-hidden">
+                    {event.cover_image_url ? (
+                      <img src={event.cover_image_url} alt={event.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+                    ) : (
+                      <div className="w-full h-full bg-secondary" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+                  </div>
+                </Link>
+                <FavoriteButton eventId={event.id} className="absolute top-3 right-3" />
                 <div className="p-4 space-y-2">
-                  <h3 className="font-display font-semibold text-foreground line-clamp-2 leading-tight">{event.title}</h3>
+                  <Link to={`/eventos/${event.slug}`} className="block">
+                    <h3 className="font-display font-semibold text-foreground line-clamp-2 leading-tight">{event.title}</h3>
+                  </Link>
                   <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                     <Calendar className="h-3.5 w-3.5" />
                     <span>{format(new Date(event.start_date), "dd MMM yyyy", { locale: ptBR })}</span>
@@ -84,8 +87,17 @@ export default function Favoritos() {
                       <span>{event.venue_city}</span>
                     </div>
                   )}
+
+                  <div className="pt-2 flex gap-2">
+                    <Button asChild size="sm" className="flex-1">
+                      <Link to={`/eventos/${event.slug}/comprar`}>Comprar agora</Link>
+                    </Button>
+                    <Button asChild variant="outline" size="sm" className="flex-1">
+                      <Link to={`/eventos/${event.slug}`}>Detalhes</Link>
+                    </Button>
+                  </div>
                 </div>
-              </Link>
+              </article>
             ))}
           </div>
         )}

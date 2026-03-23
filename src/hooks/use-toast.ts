@@ -2,8 +2,9 @@ import * as React from "react";
 
 import type { ToastActionElement, ToastProps } from "@/components/ui/toast";
 
-const TOAST_LIMIT = 1;
-const TOAST_REMOVE_DELAY = 1000000;
+// Allow a few simultaneous toasts and keep them short-lived to avoid noise
+const TOAST_LIMIT = 3;
+const TOAST_REMOVE_DELAY = 6000;
 
 type ToasterToast = ToastProps & {
   id: string;

@@ -70,7 +70,7 @@ export function NotificationBell() {
                 <p className="text-sm font-medium text-foreground">{n.title}</p>
                 {n.body && <p className="text-xs text-muted-foreground mt-0.5">{n.body}</p>}
                 <p className="text-[10px] text-muted-foreground mt-1">
-                  {new Date(n.created_at).toLocaleDateString("pt-BR")}
+                  {new Date(n.created_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}
                 </p>
               </div>
             ))

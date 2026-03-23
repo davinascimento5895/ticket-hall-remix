@@ -11,6 +11,59 @@ export function calculateResaleFee(askingPrice: number) {
   return { platformFee, sellerReceives, buyerPays: askingPrice };
 }
 
+export interface ResaleCreditCardData {
+  holderName: string;
+  number: string;
+  expiryMonth: string;
+  expiryYear: string;
+  ccv: string;
+  postalCode?: string;
+  addressNumber?: string;
+}
+
+export interface CreateResalePaymentResult {
+  success: boolean;
+  error?: string;
+  resaleOrderId?: string;
+  paymentId?: string;
+  pixQrCode?: string;
+  pixQrCodeImage?: string;
+  boletoUrl?: string;
+  boletoBarcode?: string;
+  dueDate?: string;
+  immediateConfirmation?: boolean;
+  chargeStatus?: string;
+  ticketId?: string;
+  total?: number;
+  platformFee?: number;
+  sellerReceives?: number;
+  walletAvailableAt?: string;
+}
+
+/** Create payment for resale checkout using the dedicated edge function. */
+export async function createResalePayment(params: {
+  listingId: string;
+  paymentMethod: "pix" | "credit_card" | "boleto";
+  creditCard?: ResaleCreditCardData;
+  installments?: number;
+  payerCpf?: string;
+  useWalletCredit?: boolean;
+}) {
+  const { data, error } = await supabase.functions.invoke("create-resale-payment", {
+    body: {
+      listingId: params.listingId,
+      paymentMethod: params.paymentMethod,
+      creditCard: params.creditCard,
+      installments: params.installments,
+      payerCpf: params.payerCpf,
+      useWalletCredit: params.useWalletCredit,
+    },
+  });
+
+  if (error) throw error;
+  return data as CreateResalePaymentResult;
+}
+
 /** Get active resale listings, optionally filtered */
 export async function getResaleListings(filters?: {
   eventId?: string;

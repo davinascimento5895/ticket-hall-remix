@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { getFinancialTransactions, createFinancialTransaction, updateFinancialTr
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { formatBRL } from "@/lib/utils";
+import { resolveFinancialCategoryLabel, useFinancialCategories } from "@/hooks/useFinancialCategories";
 
 const statusColors: Record<string, string> = {
   pending: "secondary",
@@ -32,7 +33,10 @@ const statusLabels: Record<string, string> = {
 export default function ProducerAccountsReceivable({ producerId }: { producerId: string }) {
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const [newCategoryLabel, setNewCategoryLabel] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const { categories, addCategory, removeCategory } = useFinancialCategories(producerId, "receivable");
   const [form, setForm] = useState({
     description: "",
     amount: "",
@@ -40,6 +44,17 @@ export default function ProducerAccountsReceivable({ producerId }: { producerId:
     due_date: "",
     notes: "",
   });
+
+  useEffect(() => {
+    if (!categories.some((category) => category.value === form.category)) {
+      setForm((previous) => ({ ...previous, category: categories[0]?.value || "ticket_sale" }));
+    }
+  }, [categories, form.category]);
+
+  const categoryOptionsForCreate = useMemo(() => {
+    if (categories.some((category) => category.value === form.category)) return categories;
+    return [...categories, { value: form.category, label: resolveFinancialCategoryLabel(form.category, categories) }];
+  }, [categories, form.category]);
 
   const { data: transactions = [], isLoading } = useQuery({
     queryKey: ["financial-receivable", producerId, statusFilter],
@@ -90,7 +105,7 @@ export default function ProducerAccountsReceivable({ producerId }: { producerId:
 
   const columns: DataTableColumn<any>[] = [
     { key: "description", header: "Descrição", render: (row) => <span className="font-medium">{row.description}</span> },
-    { key: "category", header: "Categoria", render: (row) => <span className="text-sm capitalize">{row.category?.replace("_", " ")}</span> },
+    { key: "category", header: "Categoria", render: (row) => <span className="text-sm">{resolveFinancialCategoryLabel(row.category, categories)}</span> },
     { key: "amount", header: "Valor", render: (row) => <span className="font-semibold text-green-600">{formatBRL(row.amount)}</span> },
     { key: "due_date", header: "Vencimento", render: (row) => row.due_date ? format(new Date(row.due_date), "dd/MM/yyyy") : "—" },
     { key: "status", header: "Status", render: (row) => <Badge variant={statusColors[row.status] as any}>{statusLabels[row.status] || row.status}</Badge> },
@@ -112,10 +127,36 @@ export default function ProducerAccountsReceivable({ producerId }: { producerId:
 
   const total = transactions.reduce((s: number, t: any) => s + Number(t.amount), 0);
 
+  const handleAddCategory = async () => {
+    const result = await addCategory(newCategoryLabel);
+    if (!result.ok) {
+      toast({ title: "Categoria invalida", description: result.reason, variant: "destructive" });
+      return;
+    }
+
+    setNewCategoryLabel("");
+    setForm((previous) => ({ ...previous, category: result.value }));
+    toast({ title: "Categoria adicionada!" });
+  };
+
+  const handleRemoveCategory = async (value: string) => {
+    const result = await removeCategory(value);
+    if (!result.ok) {
+      toast({ title: "Nao foi possivel remover", description: result.reason, variant: "destructive" });
+      return;
+    }
+
+    if (form.category === value) {
+      setForm((previous) => ({ ...previous, category: result.fallback || "ticket_sale" }));
+    }
+
+    toast({ title: "Categoria removida!" });
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -128,7 +169,10 @@ export default function ProducerAccountsReceivable({ producerId }: { producerId:
           </Select>
           <span className="text-sm text-muted-foreground">Total: <strong className="text-green-600">{formatBRL(total)}</strong></span>
         </div>
-        <Button size="sm" onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-1" /> Nova entrada</Button>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={() => setShowCategoryManager(true)}>Categorias</Button>
+          <Button size="sm" onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-1" /> Nova entrada</Button>
+        </div>
       </div>
 
       <DataTable columns={columns} data={transactions} isLoading={isLoading} emptyMessage="Nenhuma conta a receber cadastrada." />
@@ -148,9 +192,9 @@ export default function ProducerAccountsReceivable({ producerId }: { producerId:
                 <Select value={form.category} onValueChange={(v) => setForm(p => ({ ...p, category: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ticket_sale">Venda de ingressos</SelectItem>
-                    <SelectItem value="payout">Repasse</SelectItem>
-                    <SelectItem value="other">Outro</SelectItem>
+                    {categoryOptionsForCreate.map((category) => (
+                      <SelectItem key={category.value} value={category.value}>{category.label}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -161,6 +205,38 @@ export default function ProducerAccountsReceivable({ producerId }: { producerId:
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreate(false)}>Cancelar</Button>
             <Button onClick={() => createMut.mutate()} disabled={!form.description || !form.amount || createMut.isPending}>Criar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showCategoryManager} onOpenChange={setShowCategoryManager}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Categorias de contas a receber</DialogTitle>
+            <DialogDescription>Adicione ou remova categorias para usar nas receitas.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                value={newCategoryLabel}
+                onChange={(e) => setNewCategoryLabel(e.target.value)}
+                placeholder="Ex: Patrocinio, Bilheteria externa"
+              />
+              <Button onClick={handleAddCategory} disabled={!newCategoryLabel.trim()}>Adicionar</Button>
+            </div>
+            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+              {categories.map((category) => (
+                <div key={category.value} className="flex items-center justify-between rounded-md border p-2">
+                  <span className="text-sm">{category.label}</span>
+                  <Button size="icon" variant="ghost" className="text-destructive" onClick={() => handleRemoveCategory(category.value)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCategoryManager(false)}>Fechar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

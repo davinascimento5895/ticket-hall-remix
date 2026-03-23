@@ -10,6 +10,7 @@ function formatDate(dateStr: string) {
     day: "numeric",
     month: "long",
     year: "numeric",
+    timeZone: "America/Sao_Paulo",
   });
 }
 

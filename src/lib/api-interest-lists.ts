@@ -209,7 +209,7 @@ export const exportSubmissionsCSV = async (listId: string, fields: InterestListF
   const csvHeaders = ["Data", ...headers].join(",");
   const rows = submissions.map((s: any) => {
     const answers = s.answers as Record<string, string>;
-    const date = new Date(s.created_at).toLocaleString("pt-BR");
+    const date = new Date(s.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
     const values = headers.map((h) => `"${(answers[h] || "").replace(/"/g, '""')}"`);
     return [date, ...values].join(",");
   });

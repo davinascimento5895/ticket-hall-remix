@@ -1,3 +1,4 @@
+/// <reference path="./types.d.ts" />
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -6,7 +7,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -67,86 +68,147 @@ Deno.serve(async (req) => {
     const invoiceNumber = `TH-${new Date().getFullYear()}-${order_id.slice(0, 8).toUpperCase()}`;
 
     const fmt = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
-    const ticketRows = (tickets || [])
+    const eventData = (order.events as any) || {};
+    const eventLocation = `${eventData.venue_name || ""}${eventData.venue_city ? ` - ${eventData.venue_city}` : ""}`.trim();
+
+    const ticketData = (tickets || []).map((t: any) => ({
+      name: t.ticket_tiers?.name || "Ingresso",
+      attendee_name: t.attendee_name || null,
+      price: Number(t.ticket_tiers?.price || 0),
+    }));
+
+    const ticketRows = ticketData
       .map(
         (t: any, i: number) =>
           `<tr>
-            <td style="padding:8px;border-bottom:1px solid #eee;">${i + 1}</td>
-            <td style="padding:8px;border-bottom:1px solid #eee;">${t.ticket_tiers?.name || "Ingresso"}</td>
-            <td style="padding:8px;border-bottom:1px solid #eee;">${t.attendee_name || "—"}</td>
-            <td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">${fmt(t.ticket_tiers?.price || 0)}</td>
+            <td style="padding:10px 8px;border-bottom:1px solid #ececf1;color:#616170;">${i + 1}</td>
+            <td style="padding:10px 8px;border-bottom:1px solid #ececf1;">${t.name}</td>
+            <td style="padding:10px 8px;border-bottom:1px solid #ececf1;">${t.attendee_name || "-"}</td>
+            <td style="padding:10px 8px;border-bottom:1px solid #ececf1;text-align:right;">${fmt(t.price)}</td>
           </tr>`
       )
       .join("");
 
+    const invoicePayload = {
+      invoice_number: invoiceNumber,
+      issued_at: new Date().toISOString(),
+      order_id: order.id,
+      buyer_name: order.profiles?.full_name || "-",
+      buyer_cpf: order.profiles?.cpf || null,
+      billing_company_name: order.billing_company_name || null,
+      billing_cnpj: order.billing_cnpj || null,
+      event_title: eventData.title || "-",
+      event_location: eventLocation || "-",
+      event_date: eventData.start_date || null,
+      payment_method: order.payment_method || null,
+      order_status: order.status,
+      subtotal: Number(order.subtotal || 0),
+      discount_amount: Number(order.discount_amount || 0),
+      platform_fee: Number(order.platform_fee || 0),
+      total: Number(order.total || 0),
+      tickets: ticketData,
+    };
+
     const html = `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><title>Nota Fiscal ${invoiceNumber}</title></head>
-<body style="font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:40px;color:#222;">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:40px;">
-    <div>
-      <h1 style="margin:0;font-size:28px;color:#5046e5;">TicketHall</h1>
-      <p style="margin:4px 0 0;color:#666;font-size:14px;">Plataforma de Ingressos</p>
-    </div>
-    <div style="text-align:right;">
-      <h2 style="margin:0;font-size:18px;">NOTA FISCAL</h2>
-      <p style="margin:4px 0 0;color:#666;font-size:14px;">${invoiceNumber}</p>
-      <p style="margin:2px 0 0;color:#666;font-size:14px;">${new Date().toLocaleDateString("pt-BR")}</p>
-    </div>
-  </div>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nota ${invoiceNumber}</title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body { font-family: Inter, Arial, sans-serif; background:#f6f6f8; margin:0; color:#141414; }
+    .page { max-width: 920px; margin: 0 auto; padding: 28px 22px 40px; }
+    .sheet { background:#fff; border:1px solid #ececf1; border-radius:14px; overflow:hidden; }
+    .topbar { height:8px; background:#ea580c; }
+    .head { padding:20px 24px 16px; display:flex; justify-content:space-between; gap:16px; }
+    .brand h1 { margin:0; font-size:24px; }
+    .brand p { margin:4px 0 0; color:#616170; font-size:13px; }
+    .doc { text-align:right; }
+    .doc h2 { margin:0; font-size:16px; }
+    .doc p { margin:4px 0 0; color:#616170; font-size:13px; }
+    .block { margin:0 24px 18px; padding:14px; border:1px solid #ececf1; border-radius:10px; }
+    .block h3 { margin:0 0 8px; font-size:11px; color:#616170; letter-spacing:.04em; text-transform:uppercase; }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
+    .title { margin:0; font-size:15px; font-weight:700; }
+    .meta { margin:4px 0 0; font-size:13px; color:#616170; }
+    table { width:100%; border-collapse:collapse; }
+    thead tr { background:#f6f6f8; }
+    th { text-align:left; padding:10px 8px; font-size:12px; color:#616170; font-weight:600; }
+    .table-wrap { margin:0 24px 18px; border:1px solid #ececf1; border-radius:10px; overflow:hidden; }
+    .totals { margin:0 24px 18px; padding:14px; border:1px solid #ececf1; border-radius:10px; }
+    .line { display:flex; justify-content:space-between; margin:0 0 8px; color:#616170; font-size:14px; }
+    .line.total { margin-top:10px; padding-top:10px; border-top:1px solid #ececf1; color:#141414; font-weight:700; font-size:18px; }
+    .footer { margin:0 24px 24px; font-size:12px; color:#616170; line-height:1.6; }
+    @media print {
+      body { background:#fff; }
+      .page { max-width: 100%; padding: 0; }
+      .sheet { border:none; border-radius:0; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="sheet">
+      <div class="topbar"></div>
+      <header class="head">
+        <div class="brand">
+          <h1>TicketHall</h1>
+          <p>Comprovante fiscal do pedido</p>
+        </div>
+        <div class="doc">
+          <h2>NOTA</h2>
+          <p>${invoiceNumber}</p>
+          <p>${new Date().toLocaleDateString("pt-BR")}</p>
+        </div>
+      </header>
 
-  <div style="display:flex;justify-content:space-between;margin-bottom:30px;">
-    <div>
-      <h3 style="margin:0 0 8px;font-size:14px;color:#666;text-transform:uppercase;">Comprador</h3>
-      <p style="margin:0;font-weight:bold;">${order.profiles?.full_name || "—"}</p>
-      <p style="margin:2px 0;color:#666;font-size:14px;">CPF: ${order.profiles?.cpf || "—"}</p>
-      ${order.billing_company_name ? `<p style="margin:2px 0;font-size:14px;">${order.billing_company_name}</p>` : ""}
-      ${order.billing_cnpj ? `<p style="margin:2px 0;color:#666;font-size:14px;">CNPJ: ${order.billing_cnpj}</p>` : ""}
-    </div>
-    <div style="text-align:right;">
-      <h3 style="margin:0 0 8px;font-size:14px;color:#666;text-transform:uppercase;">Evento</h3>
-      <p style="margin:0;font-weight:bold;">${(order.events as any)?.title || "—"}</p>
-      <p style="margin:2px 0;color:#666;font-size:14px;">${(order.events as any)?.venue_name || ""}${(order.events as any)?.venue_city ? ` — ${(order.events as any).venue_city}` : ""}</p>
-      <p style="margin:2px 0;color:#666;font-size:14px;">${(order.events as any)?.start_date ? new Date((order.events as any).start_date).toLocaleDateString("pt-BR") : ""}</p>
-    </div>
-  </div>
+      <section class="grid" style="margin:0 24px 18px;">
+        <div class="block" style="margin:0;">
+          <h3>Comprador</h3>
+          <p class="title">${invoicePayload.buyer_name}</p>
+          ${invoicePayload.buyer_cpf ? `<p class="meta">CPF: ${invoicePayload.buyer_cpf}</p>` : ""}
+          ${invoicePayload.billing_company_name ? `<p class="meta">${invoicePayload.billing_company_name}</p>` : ""}
+          ${invoicePayload.billing_cnpj ? `<p class="meta">CNPJ: ${invoicePayload.billing_cnpj}</p>` : ""}
+        </div>
 
-  <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
-    <thead>
-      <tr style="background:#f5f5f5;">
-        <th style="padding:10px 8px;text-align:left;font-size:13px;">#</th>
-        <th style="padding:10px 8px;text-align:left;font-size:13px;">Lote</th>
-        <th style="padding:10px 8px;text-align:left;font-size:13px;">Participante</th>
-        <th style="padding:10px 8px;text-align:right;font-size:13px;">Valor</th>
-      </tr>
-    </thead>
-    <tbody>${ticketRows}</tbody>
-  </table>
+        <div class="block" style="margin:0;">
+          <h3>Evento</h3>
+          <p class="title">${invoicePayload.event_title}</p>
+          <p class="meta">${invoicePayload.event_location || "-"}</p>
+          ${invoicePayload.event_date ? `<p class="meta">${new Date(invoicePayload.event_date).toLocaleDateString("pt-BR")}</p>` : ""}
+        </div>
+      </section>
 
-  <div style="border-top:2px solid #222;padding-top:16px;">
-    <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-      <span style="color:#666;">Subtotal</span><span>${fmt(order.subtotal)}</span>
-    </div>
-    ${order.discount_amount > 0 ? `<div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:#666;">Desconto</span><span style="color:green;">-${fmt(order.discount_amount)}</span></div>` : ""}
-    <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-      <span style="color:#666;">Taxa de Serviço</span><span>${fmt(order.platform_fee)}</span>
-    </div>
-    <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:bold;margin-top:10px;padding-top:10px;border-top:1px solid #ddd;">
-      <span>Total</span><span>${fmt(order.total)}</span>
-    </div>
-  </div>
+      <section class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:48px;">#</th>
+              <th>Lote</th>
+              <th>Participante</th>
+              <th style="text-align:right;">Valor</th>
+            </tr>
+          </thead>
+          <tbody>${ticketRows}</tbody>
+        </table>
+      </section>
 
-  <div style="margin-top:40px;padding:16px;background:#f9f9f9;border-radius:8px;">
-    <p style="margin:0;font-size:12px;color:#666;">
-      Método de pagamento: <strong>${order.payment_method || "—"}</strong><br/>
-      ID do pedido: <strong>${order.id}</strong><br/>
-      Status: <strong>${order.status}</strong>
-    </p>
-  </div>
+      <section class="totals">
+        <p class="line"><span>Subtotal</span><span>${fmt(invoicePayload.subtotal)}</span></p>
+        ${invoicePayload.discount_amount > 0 ? `<p class="line"><span>Desconto</span><span>-${fmt(invoicePayload.discount_amount)}</span></p>` : ""}
+        <p class="line"><span>Taxa de servico</span><span>${fmt(invoicePayload.platform_fee)}</span></p>
+        <p class="line total"><span>Total</span><span>${fmt(invoicePayload.total)}</span></p>
+      </section>
 
-  <p style="text-align:center;margin-top:40px;color:#999;font-size:11px;">
-    Documento gerado automaticamente pela plataforma TicketHall — tickethall.com.br
-  </p>
+      <p class="footer">
+        Metodo de pagamento: <strong>${invoicePayload.payment_method || "-"}</strong><br/>
+        Pedido: <strong>${invoicePayload.order_id}</strong> | Status: <strong>${invoicePayload.order_status}</strong><br/>
+        Documento gerado automaticamente pela plataforma TicketHall.
+      </p>
+    </section>
+  </main>
 </body>
 </html>`;
 
@@ -156,7 +218,7 @@ Deno.serve(async (req) => {
       .eq("id", order_id);
 
     return new Response(
-      JSON.stringify({ invoice_number: invoiceNumber, html }),
+      JSON.stringify({ invoice_number: invoiceNumber, html, invoice: invoicePayload }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err: any) {
