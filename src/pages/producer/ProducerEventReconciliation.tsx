@@ -67,14 +67,7 @@ export default function ProducerEventReconciliation({ producerId }: { producerId
 
   return (
     <div className="space-y-4">
-      {/* Informational banner */}
-      <div className="flex items-start gap-2 px-4 py-3 rounded-lg bg-primary/5 border border-primary/20 text-sm">
-        <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-        <span className="text-muted-foreground">
-          A taxa de plataforma é cobrada <strong className="text-foreground">diretamente do comprador</strong> no momento da compra.
-          O produtor recebe <strong className="text-foreground">100% do valor dos ingressos</strong> que ele definiu.
-        </span>
-      </div>
+      
 
       <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
         <span>Valor dos ingressos: <strong className="text-foreground">{formatBRL(totalTicketRevenue)}</strong></span>

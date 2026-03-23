@@ -147,7 +147,7 @@ export function SupportChat() {
         {!open && (
           <motion.div
             key="chat-fab"
-            initial={{ scale: 0 }}
+            initial={false}
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
           >

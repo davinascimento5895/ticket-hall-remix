@@ -92,11 +92,11 @@ export function CheckoutStepConfirmation({ orderId }: CheckoutStepConfirmationPr
                 <p className="font-display font-semibold text-foreground text-lg leading-snug">{event.title}</p>
                 <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                   <CalendarPlus className="h-3.5 w-3.5 shrink-0" />
-                  {new Date(event.start_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
+                  {new Date(event.start_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric", timeZone: "America/Sao_Paulo" })}
                   {" • "}
-                  {new Date(event.start_date).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                  {new Date(event.start_date).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" })}
                   {" > "}
-                  {new Date(event.end_date).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                  {new Date(event.end_date).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" })}
                 </p>
                 {event.is_online ? (
                   <p className="text-sm text-muted-foreground flex items-center gap-1.5">

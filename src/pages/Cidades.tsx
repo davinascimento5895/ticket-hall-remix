@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Search, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { SEOHead } from "@/components/SEOHead";
 import { SearchBar } from "@/components/SearchBar";
 import { MAIN_CAPITALS, BRAZILIAN_CAPITALS } from "@/lib/cities";
@@ -80,48 +81,47 @@ export default function Cidades() {
             </Select>
 
             {selectedUF && (
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Filtrar cidade..."
-                  className="pl-10"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+              <div>
+                  <SearchInput
+                    placeholder="Pesquisar cidade..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+
+                {/* Combobox dropdown */}
+                {ibgeCities && ibgeCities.length > 0 && (
+                  <div className="absolute z-50 mt-2 w-full max-h-64 overflow-auto rounded-md border bg-popover text-popover-foreground shadow-lg">
+                    {ibgeCities
+                      .filter((c) => !searchQuery || c.nome.toLowerCase().includes(searchQuery.toLowerCase()))
+                      .slice(0, 200)
+                      .map((city) => (
+                        <Link
+                          key={city.id}
+                          to={`/eventos?cidade=${encodeURIComponent(city.nome)}&estado=${selectedUF}`}
+                          className={cn(
+                            "flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent/40 hover:text-accent-foreground",
+                          )}
+                        >
+                          <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
+                          <span className="truncate">{city.nome}</span>
+                        </Link>
+                      ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
 
-          {selectedUF && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-              {citiesLoading ? (
-                <p className="text-sm text-muted-foreground col-span-full">Carregando cidades...</p>
-              ) : (
-                ibgeCities
-                  .filter((c) => !searchQuery || c.nome.toLowerCase().includes(searchQuery.toLowerCase()))
-                  .map((city) => (
-                    <Link
-                      key={city.id}
-                      to={`/eventos?cidade=${encodeURIComponent(city.nome)}&estado=${selectedUF}`}
-                      className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-border bg-card hover:border-primary/40 hover:bg-secondary transition-colors text-sm"
-                    >
-                      <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
-                      <span className="truncate">{city.nome}</span>
-                    </Link>
-                  ))
-              )}
-            </div>
-          )}
+          {/* Removed grid of city buttons: cities are now selectable via the combobox above. */}
         </section>
 
         {/* All capitals */}
         <section>
           <h2 className="font-display text-lg font-semibold mb-4 text-foreground">Todas as capitais</h2>
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
+          <div className="mb-4">
+            <SearchInput
               placeholder="Buscar capital..."
-              className="pl-10 max-w-sm"
+              className="max-w-sm"
               value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setSelectedUF(""); }}
             />

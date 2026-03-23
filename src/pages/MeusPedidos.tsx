@@ -4,6 +4,7 @@ import { SEOHead } from "@/components/SEOHead";
 import { Calendar, CreditCard, MapPin, FileText, ChevronRight, ChevronLeft, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { EmptyState } from "@/components/EmptyState";
@@ -108,13 +109,12 @@ export default function MeusPedidos() {
             {/* Search and Filters */}
             <div className="space-y-4 mb-6">
               {/* Search input */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
+              <div>
+                <SearchInput
                   placeholder="Buscar por evento ou número do pedido..."
                   value={searchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
-                  className="pl-9"
+                  className="w-full"
                 />
               </div>
 

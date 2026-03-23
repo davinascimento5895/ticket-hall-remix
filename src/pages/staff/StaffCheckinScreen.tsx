@@ -146,7 +146,7 @@ export default function StaffCheckinScreen() {
     setHistory((prev) => [{
       id: crypto.randomUUID(),
       name: attendeeName || "—",
-      time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+      time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "America/Sao_Paulo" }),
       result,
     }, ...prev].slice(0, 50));
 
@@ -353,8 +353,8 @@ export default function StaffCheckinScreen() {
             {feedback.attendeeName && <p className="text-xl mt-2 font-semibold">{feedback.attendeeName}</p>}
             {feedback.tierName && <Badge variant="secondary" className="mt-2 text-sm">{feedback.tierName}</Badge>}
             <p className="mt-3 text-sm opacity-90 text-center">{feedback.message}</p>
-            {feedback.checkedInAt && feedback.result === "already_used" && (
-              <p className="mt-1 text-xs opacity-75">Check-in original: {new Date(feedback.checkedInAt).toLocaleTimeString("pt-BR")}</p>
+              {feedback.checkedInAt && feedback.result === "already_used" && (
+              <p className="mt-1 text-xs opacity-75">Check-in original: {new Date(feedback.checkedInAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" })}</p>
             )}
             <p className="mt-4 text-xs opacity-60">Toque para fechar</p>
           </div>

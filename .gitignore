@@ -1,3 +1,11 @@
+# Local Node installation and common ignores
+.local/
+node_modules/
+.env
+
+# Editor directories
+.vscode/
+
 # Logs
 logs
 *.log
@@ -24,3 +32,5 @@ dist-ssr
 *.sw?
 
 .env
+# Supabase local CLI temp artifacts
+supabase/.temp/

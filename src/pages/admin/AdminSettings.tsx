@@ -207,7 +207,7 @@ export default function AdminSettings() {
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{evt.title}</p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(evt.start_date).toLocaleDateString("pt-BR")} · {statusLabel[evt.status] || evt.status}
+                      {new Date(evt.start_date).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })} · {statusLabel[evt.status] || evt.status}
                     </p>
                   </div>
                   <button

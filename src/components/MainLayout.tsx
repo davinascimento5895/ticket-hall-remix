@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,6 +16,9 @@ export function MainLayout() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
 
+  const { pathname } = useLocation();
+  const hideFooter = pathname.startsWith("/meu-perfil");
+
   // Bottom nav only shows for logged-in users on mobile
   const hasBottomNav = user && isMobile;
 
@@ -31,7 +34,7 @@ export function MainLayout() {
           <Outlet />
         </Suspense>
       </main>
-      <Footer />
+      {!hideFooter && <Footer />}
     </div>
   );
 }

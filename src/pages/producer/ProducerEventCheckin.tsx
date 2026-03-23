@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Search, QrCode, CheckCircle2, Wifi, WifiOff, XCircle, AlertTriangle, Camera, CameraOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,6 +14,23 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Html5Qrcode } from "html5-qrcode";
+
+function getTicketStatusLabel(status: string) {
+  switch (status) {
+    case "active":
+      return "Ativo";
+    case "used":
+      return "Utilizado";
+    case "cancelled":
+      return "Cancelado";
+    case "transferred":
+      return "Transferido";
+    case "refunded":
+      return "Reembolsado";
+    default:
+      return status;
+  }
+}
 
 export default function ProducerEventCheckin() {
   const { id } = useParams();
@@ -68,8 +86,13 @@ export default function ProducerEventCheckin() {
     },
   });
 
-  const totalTickets = tickets?.length || 0;
-  const checkedIn = tickets?.filter((t: any) => t.status === "used").length || 0;
+  const eligibleTickets = (tickets || []).filter((t: any) => {
+    const orderPaid = t.orders?.status === "paid" && t.orders?.payment_status === "paid";
+    return orderPaid && (t.status === "active" || t.status === "used");
+  });
+
+  const totalTickets = eligibleTickets.length;
+  const checkedIn = eligibleTickets.filter((t: any) => t.status === "used").length;
 
   // QR Scanner start/stop
   const startScanner = useCallback(async () => {
@@ -127,13 +150,13 @@ export default function ProducerEventCheckin() {
     return () => { stopScanner(); };
   }, [stopScanner]);
 
-  const filtered = tickets?.filter((t: any) => {
+  const filtered = eligibleTickets.filter((t: any) => {
     if (!search) return true;
     const s = search.toLowerCase();
     return t.attendee_name?.toLowerCase().includes(s) ||
       t.attendee_email?.toLowerCase().includes(s) ||
       t.id.includes(s);
-  }) || [];
+  });
 
   return (
     <div className="space-y-6">
@@ -212,9 +235,8 @@ export default function ProducerEventCheckin() {
           </Card>
 
           {/* Manual search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar por nome, email ou código..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+          <div>
+            <SearchInput placeholder="Buscar por nome, email ou código..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full" />
           </div>
 
           {/* Attendee list */}
@@ -232,6 +254,10 @@ export default function ProducerEventCheckin() {
                       </div>
                       {ticket.status === "used" ? (
                         <span className="inline-flex items-center gap-1 text-sm text-success"><CheckCircle2 className="h-4 w-4" />Entrou</span>
+                      ) : ticket.status !== "active" ? (
+                        <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">{getTicketStatusLabel(ticket.status)}</span>
+                      ) : ticket.orders?.status !== "paid" || ticket.orders?.payment_status !== "paid" ? (
+                        <span className="inline-flex items-center gap-1 text-sm text-yellow-600">Pagamento pendente</span>
                       ) : (
                         <Button
                           size="sm"

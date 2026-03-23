@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { SEOHead } from "@/components/SEOHead";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { BecomeProducerModal } from "@/components/BecomeProducerModal";
+import { Button } from "@/components/ui/button";
+import { getMyOrders, getMyTickets } from "@/lib/api";
 import {
   Pencil,
   Lock,
@@ -16,6 +19,10 @@ import {
   Briefcase,
   CheckCircle2,
   Heart,
+  CalendarDays,
+  FileText,
+  Ticket,
+  Clock3,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -30,6 +37,20 @@ export default function MeuPerfil() {
   const { user, profile, role, signOut } = useAuth();
   const navigate = useNavigate();
   const [producerModalOpen, setProducerModalOpen] = useState(false);
+
+  const { data: tickets = [] } = useQuery({
+    queryKey: ["my-tickets", user?.id],
+    queryFn: () => getMyTickets(user!.id),
+    enabled: !!user?.id,
+    staleTime: 30_000,
+  });
+
+  const { data: orders = [] } = useQuery({
+    queryKey: ["my-orders", user?.id],
+    queryFn: () => getMyOrders(user!.id),
+    enabled: !!user?.id,
+    staleTime: 30_000,
+  });
 
   const handleLogout = async () => {
     await signOut();
@@ -48,6 +69,23 @@ export default function MeuPerfil() {
 
   const displayName = profile?.full_name || user?.email || "Usuário";
   const displayPhone = profile?.phone || user?.email || "";
+
+  const now = new Date();
+  const upcomingTickets = tickets
+    .filter((ticket: any) => {
+      if (!ticket?.events?.start_date) return false;
+      const eventDate = new Date(ticket.events.start_date);
+      return ticket.status === "active" && eventDate >= now;
+    })
+    .sort(
+      (a: any, b: any) =>
+        new Date(a.events.start_date).getTime() - new Date(b.events.start_date).getTime()
+    )
+    .slice(0, 2);
+
+  const activeTicketsCount = tickets.filter((ticket: any) => ticket.status === "active").length;
+  const pendingOrdersCount = orders.filter((order: any) => order.status === "pending").length;
+  const unreadStatus = pendingOrdersCount > 0 ? "Ação pendente" : "Tudo em dia";
 
   const menuItems: MenuItem[] = [
     { id: "password", icon: Lock, label: "Alterar senha", href: "/meu-perfil/alterar-senha" },
@@ -141,6 +179,88 @@ export default function MeuPerfil() {
             >
               <Pencil className="h-4 w-4 text-foreground" />
             </button>
+          </div>
+
+          {/* Quick status */}
+          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Clock3 className="h-4 w-4 text-primary" />
+                <p className="text-sm font-semibold text-foreground">Status da conta</p>
+              </div>
+              <span className="text-xs font-medium px-2 py-1 rounded-full bg-muted text-foreground">
+                {unreadStatus}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => navigate("/meus-ingressos")}
+                className="text-left rounded-lg border border-border px-3 py-2 hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                  <Ticket className="h-3.5 w-3.5" />
+                  Ingressos ativos
+                </div>
+                <p className="text-lg font-semibold text-foreground mt-1">{activeTicketsCount}</p>
+              </button>
+              <button
+                onClick={() => navigate("/meus-pedidos")}
+                className="text-left rounded-lg border border-border px-3 py-2 hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                  <FileText className="h-3.5 w-3.5" />
+                  Pedidos pendentes
+                </div>
+                <p className="text-lg font-semibold text-foreground mt-1">{pendingOrdersCount}</p>
+              </button>
+            </div>
+          </div>
+
+          {/* Upcoming events */}
+          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <CalendarDays className="h-4 w-4 text-primary" />
+                <p className="text-sm font-semibold text-foreground">Próximos eventos</p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/meus-ingressos")}>Ver todos</Button>
+            </div>
+
+            {upcomingTickets.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-border px-3 py-4 text-sm text-muted-foreground">
+                Você ainda não tem eventos próximos.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {upcomingTickets.map((ticket: any) => {
+                  const eventDate = new Date(ticket.events.start_date);
+                  return (
+                    <button
+                      key={ticket.id}
+                      onClick={() => navigate("/meus-ingressos")}
+                      className="w-full text-left rounded-lg border border-border px-3 py-3 hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-foreground truncate">{ticket.events.title}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {eventDate.toLocaleDateString("pt-BR", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                            {" · "}
+                            {eventDate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                            {ticket.events.venue_city ? ` · ${ticket.events.venue_city}` : ""}
+                          </p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Producer Status Card */}

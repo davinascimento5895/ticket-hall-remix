@@ -82,7 +82,7 @@ export async function getAdminDashboardStats(dateRange?: { from: string; to: str
     const [y, m] = key.split("-");
     const d = new Date(Number(y), Number(m) - 1, 1);
     return {
-      month: d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" }),
+      month: d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit", timeZone: "America/Sao_Paulo" }),
       revenue: monthMap[key],
     };
   });
@@ -99,7 +99,7 @@ export async function getAdminDashboardStats(dateRange?: { from: string; to: str
     const [y, m, day] = key.split("-");
     const d = new Date(Number(y), Number(m) - 1, Number(day));
     return {
-      day: d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
+      day: d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", timeZone: "America/Sao_Paulo" }),
       revenue: dayMap[key],
     };
   });
@@ -278,7 +278,7 @@ export async function getAllOrdersPaginated(
 ) {
   let query = supabase
     .from("orders")
-    .select("id, status, total, platform_fee, payment_method, created_at, buyer_id, event_id, events(title), profiles!orders_buyer_id_fkey(full_name, email)", { count: "exact" })
+    .select("id, status, total, platform_fee, payment_method, created_at, buyer_id, event_id, events(title), profiles!orders_buyer_id_fkey(full_name)", { count: "exact" })
     .order("created_at", { ascending: false });
 
   if (filters?.status && filters.status !== "all") query = query.eq("status", filters.status);

@@ -89,7 +89,7 @@ export default function EmbedWidget() {
           <div className={`flex flex-col gap-1 text-sm ${mutedClass}`}>
             <span className="inline-flex items-center gap-1.5">
               <CalendarDays className="h-3.5 w-3.5" />
-              {new Date(event.start_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+              {new Date(event.start_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" })}
             </span>
             {event.venue_name && (
               <span className="inline-flex items-center gap-1.5">

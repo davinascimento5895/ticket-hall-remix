@@ -4,6 +4,7 @@ import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { CheckCircle2, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const competitors = [
@@ -44,49 +45,103 @@ function AnimatedNumber({ value, prefix = "", suffix = "" }: { value: number; pr
   );
 }
 
+const formatBRL = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });
+
 // Mobile: card-based layout per platform
-function MobileComparisonCards({ rows, basePrice }: { rows: ReturnType<typeof useRows>; basePrice: number }) {
+function MobileComparisonTable({ rows }: { rows: ReturnType<typeof useRows> }) {
+  const [maxVisible, setMaxVisible] = useState(rows.length);
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    function update() {
+      const w = typeof window !== "undefined" ? window.innerWidth : 1024;
+      let max = rows.length;
+      if (w < 360) max = 2;
+      else if (w < 420) max = 3;
+      else if (w < 560) max = 4;
+      else if (w < 768) max = 5;
+      setMaxVisible(max);
+    }
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [rows.length]);
+
+  const visible = expanded ? rows : rows.slice(0, Math.max(1, maxVisible));
+
   return (
-    <div className="space-y-2">
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">
-        O que seu comprador paga
-      </p>
-      {rows.map((row, i) => (
-        <motion.div
-          key={row.name}
-          initial={{ opacity: 0, y: 8 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: i * 0.05 }}
-          className={`rounded-lg border p-3 ${
-            row.highlight
-              ? "border-accent/40 bg-accent/5"
-              : "border-border bg-card"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className={`text-sm font-semibold inline-flex items-center gap-1.5 ${row.highlight ? "text-accent" : "text-foreground"}`}>
-              {row.highlight && <CheckCircle2 className="h-4 w-4 text-accent" />}
-              {row.name}
-            </span>
-            <span className={`text-xs font-bold ${row.highlight ? "text-accent" : "text-muted-foreground"}`}>
-              {row.feeLabel}
-            </span>
-          </div>
-          <div className="flex items-baseline justify-between mt-1.5">
-            <span className="text-xs text-muted-foreground">Preço final</span>
-            <span className="text-sm font-display font-bold text-foreground">
-              R$ <AnimatedNumber value={row.finalPrice} />
-            </span>
-          </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-xs text-muted-foreground">Custo extra</span>
-            <span className={`text-xs ${row.highlight ? "text-accent font-bold" : "text-muted-foreground"}`}>
-              +R$ <AnimatedNumber value={row.extraCost} />
-            </span>
-          </div>
-        </motion.div>
-      ))}
+    <div className="rounded-xl border border-border overflow-hidden">
+      <div className="bg-elevated px-4 py-2.5">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          O que seu comprador paga
+        </h3>
+      </div>
+      <table className="w-full">
+        <thead>
+          <tr className="border-b border-border text-left text-xs text-muted-foreground">
+            <th className="px-4 py-2.5 font-medium">Plataforma</th>
+            <th className="px-4 py-2.5 font-medium">Taxa</th>
+            <th className="px-4 py-2.5 font-medium">Preço final</th>
+            <th className="px-4 py-2.5 font-medium text-right">Custo extra</th>
+          </tr>
+        </thead>
+        <tbody>
+          {visible.map((row, i) => (
+            <motion.tr
+              key={row.name}
+              initial={{ opacity: 0, y: 6 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.04 }}
+              className={`border-b border-border last:border-0 transition-colors ${
+                row.highlight ? "bg-accent/5 border-l-2 border-l-accent" : "hover:bg-muted/30"
+              }`}
+            >
+              <td className="px-4 py-2.5">
+                <span className={`text-sm font-semibold ${row.highlight ? "text-accent" : "text-foreground"}`}>
+                  {row.name}
+                </span>
+              </td>
+              <td className="px-4 py-2.5">
+                <span className={`text-sm font-bold ${row.highlight ? "text-accent" : "text-muted-foreground"}`}>
+                  {row.feeLabel}
+                </span>
+              </td>
+              <td className="px-4 py-2.5">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-sm font-display font-bold text-foreground" aria-label={`Preço final ${row.name}`}>
+                      R$ <AnimatedNumber value={row.finalPrice} />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {`Preço final = Preço base × (1 + ${((row.fee || 0) * 100).toFixed(2).replace('.', ',')}%) = ${formatBRL(row.finalPrice)}`}
+                  </TooltipContent>
+                </Tooltip>
+              </td>
+              <td className="px-4 py-2.5 text-right">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className={`text-sm ${row.highlight ? "text-accent font-bold" : "text-muted-foreground"}`} aria-label={`Custo extra ${row.name}`}>
+                      +R$ <AnimatedNumber value={row.extraCost} />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {`Custo extra = Preço base × ${((row.fee || 0) * 100).toFixed(2).replace('.', ',')}% = ${formatBRL(row.extraCost)}`}
+                  </TooltipContent>
+                </Tooltip>
+              </td>
+            </motion.tr>
+          ))}
+        </tbody>
+      </table>
+      {!expanded && rows.length > maxVisible && (
+        <div className="px-4 py-3 flex justify-center">
+          <Button variant="ghost" onClick={() => setExpanded(true)}>
+            Mostrar mais ({rows.length - maxVisible})
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
@@ -135,14 +190,28 @@ function DesktopComparisonTable({ rows }: { rows: ReturnType<typeof useRows> }) 
                 </span>
               </td>
               <td className="px-4 py-2.5">
-                <span className="text-sm font-display font-bold text-foreground">
-                  R$ <AnimatedNumber value={row.finalPrice} />
-                </span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-sm font-display font-bold text-foreground" aria-label={`Preço final ${row.name}`}>
+                      R$ <AnimatedNumber value={row.finalPrice} />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {`Preço final = Preço base × (1 + ${((row.fee || 0) * 100).toFixed(2).replace('.', ',')}%) = ${formatBRL(row.finalPrice)}`}
+                  </TooltipContent>
+                </Tooltip>
               </td>
               <td className="px-4 py-2.5 text-right">
-                <span className={`text-sm ${row.highlight ? "text-accent font-bold" : "text-muted-foreground"}`}>
-                  +R$ <AnimatedNumber value={row.extraCost} />
-                </span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className={`text-sm ${row.highlight ? "text-accent font-bold" : "text-muted-foreground"}`} aria-label={`Custo extra ${row.name}`}>
+                      +R$ <AnimatedNumber value={row.extraCost} />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {`Custo extra = Preço base × ${((row.fee || 0) * 100).toFixed(2).replace('.', ',')}% = ${formatBRL(row.extraCost)}`}
+                  </TooltipContent>
+                </Tooltip>
               </td>
             </motion.tr>
           ))}
@@ -233,6 +302,11 @@ export function CalculadoraComparador() {
                 <Input
                   value={fmtInput(basePrice)}
                   onChange={handlePriceChange}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  aria-label="Preço base do ingresso"
+                  title={formatBRL(basePrice)}
+                  onFocus={(e) => (e.target as HTMLInputElement).select()}
                   className="pl-10 text-base font-display font-bold w-[140px] h-9 text-center"
                 />
               </div>
@@ -241,6 +315,8 @@ export function CalculadoraComparador() {
                 size="icon"
                 className="h-9 w-9 shrink-0"
                 onClick={() => setBasePrice((p) => Math.min(5000, p + 50))}
+                aria-label="Aumentar preço"
+                title="Aumentar preço 50"
                 disabled={basePrice >= 5000}
               >
                 <Plus className="h-4 w-4" />
@@ -270,7 +346,7 @@ export function CalculadoraComparador() {
 
       {/* Comparison - responsive */}
       {isMobile ? (
-        <MobileComparisonCards rows={rows} basePrice={basePrice} />
+        <MobileComparisonTable rows={rows} />
       ) : (
         <DesktopComparisonTable rows={rows} />
       )}
@@ -281,16 +357,16 @@ export function CalculadoraComparador() {
         initial={{ opacity: 0, y: 12, filter: "blur(6px)", height: 0, marginTop: 0, padding: 0 }}
         animate={
           ticketCount > 0 && isInView
-            ? { opacity: 1, y: 0, filter: "blur(0px)", height: "auto", marginTop: 0, padding: undefined }
+            ? { opacity: 1, y: 0, filter: "blur(0px)", height: "auto", marginTop: isMobile ? 8 : 16, padding: undefined }
             : { opacity: 0, y: 12, filter: "blur(6px)", height: 0, marginTop: 0, padding: 0 }
         }
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className="rounded-xl border border-accent/20 bg-accent/5 p-4 md:p-6 text-center space-y-2 overflow-hidden"
+        className="rounded-xl border border-accent/40 bg-accent/10 p-4 md:p-6 text-center space-y-2 overflow-hidden"
       >
           <p className="text-sm text-muted-foreground">
             Seus compradores economizam até
           </p>
-          <p className="text-xl md:text-2xl font-display font-bold text-accent">
+          <p className="text-2xl md:text-3xl font-display font-bold text-accent">
             R$ <AnimatedNumber value={savingsPerTicket} /> /ingresso
           </p>
           <p className="text-xs text-muted-foreground">
@@ -302,7 +378,7 @@ export function CalculadoraComparador() {
               Em <span className="text-foreground font-semibold">{ticketCount.toLocaleString("pt-BR")}</span> ingressos:
             </p>
             <p className="text-2xl md:text-3xl font-display font-bold text-accent">
-              ✨ R$ <AnimatedNumber value={totalSavings} /> ✨
+              R$ <AnimatedNumber value={totalSavings} />
             </p>
           </div>
           <p className="text-xs text-muted-foreground">
@@ -311,7 +387,7 @@ export function CalculadoraComparador() {
         </motion.div>
 
       <p className="text-[10px] text-muted-foreground text-center">
-        Taxas dos concorrentes são aproximadas, baseadas em pesquisa pública de março de 2025.
+        Taxas dos concorrentes são aproximadas, baseadas em pesquisa pública de fevereiro de 2026.
       </p>
     </div>
   );

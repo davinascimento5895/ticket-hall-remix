@@ -402,23 +402,7 @@ export default function EditarPerfil() {
 
         {/* ═── DESKTOP LAYOUT ───═ */}
         <div className="hidden md:flex h-screen">
-          {/* Left Sidebar */}
-          <div className="w-56 bg-card border-r border-border flex flex-col p-6 space-y-4 overflow-y-auto">
-            <div className="flex items-center gap-2 pb-4 border-b border-border">
-              <button onClick={() => navigate("/meu-perfil")} className="p-2 -ml-2 hover:bg-muted rounded-lg">
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-              <h1 className="text-xl font-bold flex-1">Editar Perfil</h1>
-            </div>
-            <nav className="space-y-1 flex-1">
-              <NavItem icon={<User className="h-4 w-4" />} label="Dados Pessoais" href="#personal" />
-              <NavItem icon={<MapPin className="h-4 w-4" />} label="Endereço" href="#address" />
-              <NavItem icon={<Mail className="h-4 w-4" />} label="E-mail" href="#email" />
-              <NavItem icon={<Lock className="h-4 w-4" />} label="Categorias" href="#categories" />
-            </nav>
-          </div>
-
-          {/* Main Content */}
+          {/* Main Content (sidebar removed) */}
           <div className="flex-1 overflow-y-auto">
             <div className="max-w-4xl mx-auto p-8 space-y-8">
               {/* Avatar Section */}

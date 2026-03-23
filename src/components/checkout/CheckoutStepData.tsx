@@ -8,7 +8,7 @@ import { CartItem } from "@/contexts/CartContext";
 import { validateCPF, formatCPF } from "@/lib/validators";
 import { toast } from "@/hooks/use-toast";
 import { BuyerData } from "./CheckoutStepBuyer";
-import { UserCheck } from "lucide-react";
+
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -115,19 +115,6 @@ export function CheckoutStepData({
 
   // M07: Filter out product items from attendee form
   const ticketItems = items.filter((item) => !item.tierId.startsWith("product-"));
-
-  const handleCopyBuyerData = (key: string) => {
-    if (!buyerData) return;
-    setAttendeeData((prev) => ({
-      ...prev,
-      [key]: {
-        name: buyerData.fullName,
-        email: buyerData.email,
-        cpf: buyerData.cpf,
-      },
-    }));
-    toast({ title: "Dados copiados", description: "Os dados do comprador foram preenchidos." });
-  };
 
   const handleValidateAndNext = () => {
     // Validate attendee data for ticket items only
@@ -238,18 +225,36 @@ export function CheckoutStepData({
                 <p className="text-sm font-medium text-muted-foreground">
                   Ingresso {qi + 1} de {item.quantity}: {item.tierName}
                 </p>
-                {buyerData && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="text-xs gap-1.5 text-primary hover:text-primary"
-                    onClick={() => handleCopyBuyerData(key)}
-                  >
-                    <UserCheck className="h-3.5 w-3.5" />
-                    Usar meus dados
-                  </Button>
-                )}
+                {buyerData && (() => {
+                  const isBuyerCopied =
+                    data.name === buyerData.fullName &&
+                    data.email === buyerData.email &&
+                    data.cpf === buyerData.cpf;
+
+                  return (
+                    <label className="flex items-center gap-2 text-xs cursor-pointer">
+                      <Checkbox
+                        checked={isBuyerCopied}
+                        onCheckedChange={(c) => {
+                          if (c) {
+                            setAttendeeData((prev) => ({
+                              ...prev,
+                              [key]: {
+                                name: buyerData.fullName,
+                                email: buyerData.email,
+                                cpf: buyerData.cpf,
+                              },
+                            }));
+                            toast({ title: "Dados copiados", description: "Os dados do comprador foram preenchidos." });
+                          } else {
+                            setAttendeeData((prev) => ({ ...prev, [key]: { name: "", email: "", cpf: "" } }));
+                          }
+                        }}
+                      />
+                      <span className="text-primary font-medium">Usar meus dados</span>
+                    </label>
+                  );
+                })()}
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
