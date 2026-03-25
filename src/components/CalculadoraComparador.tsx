@@ -94,16 +94,16 @@ function MobileComparisonTable({ rows }: { rows: ReturnType<typeof useRows> }) {
               viewport={{ once: true }}
               transition={{ delay: i * 0.04 }}
               className={`border-b border-border last:border-0 transition-colors ${
-                row.highlight ? "bg-accent/5 border-l-2 border-l-accent" : "hover:bg-muted/30"
+                row.highlight ? "bg-[hsl(69,100%,43%)]/5 border-l-2 border-l-[hsl(69,100%,43%)]" : "hover:bg-muted/30"
               }`}
             >
               <td className="px-4 py-2.5">
-                <span className={`text-sm font-semibold ${row.highlight ? "text-accent" : "text-foreground"}`}>
+                <span className={`text-sm font-semibold ${row.highlight ? "text-[hsl(69,100%,43%)]" : "text-foreground"}`}>
                   {row.name}
                 </span>
               </td>
               <td className="px-4 py-2.5">
-                <span className={`text-sm font-bold ${row.highlight ? "text-accent" : "text-muted-foreground"}`}>
+                <span className={`text-sm font-bold ${row.highlight ? "text-[hsl(69,100%,43%)]" : "text-muted-foreground"}`}>
                   {row.feeLabel}
                 </span>
               </td>
@@ -122,7 +122,7 @@ function MobileComparisonTable({ rows }: { rows: ReturnType<typeof useRows> }) {
               <td className="px-4 py-2.5 text-right">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className={`text-sm ${row.highlight ? "text-accent font-bold" : "text-muted-foreground"}`} aria-label={`Custo extra ${row.name}`}>
+                    <span className={`text-sm ${row.highlight ? "text-[hsl(69,100%,43%)] font-bold" : "text-muted-foreground"}`} aria-label={`Custo extra ${row.name}`}>
                       +R$ <AnimatedNumber value={row.extraCost} />
                     </span>
                   </TooltipTrigger>
@@ -174,18 +174,18 @@ function DesktopComparisonTable({ rows }: { rows: ReturnType<typeof useRows> }) 
               transition={{ delay: i * 0.04 }}
               className={`border-b border-border last:border-0 transition-colors ${
                 row.highlight
-                  ? "bg-accent/5 border-l-2 border-l-accent"
+                  ? "bg-[hsl(69,100%,43%)]/5 border-l-2 border-l-[hsl(69,100%,43%)]"
                   : "hover:bg-muted/30"
               }`}
             >
               <td className="px-4 py-2.5">
-                <span className={`text-sm font-semibold inline-flex items-center gap-1.5 ${row.highlight ? "text-accent" : "text-foreground"}`}>
-                  {row.highlight && <CheckCircle2 className="h-4 w-4 text-accent" />}
+                <span className={`text-sm font-semibold inline-flex items-center gap-1.5 ${row.highlight ? "text-[hsl(69,100%,43%)]" : "text-foreground"}`}>
+                  {row.highlight && <CheckCircle2 className="h-4 w-4 text-[hsl(69,100%,43%)]" />}
                   {row.name}
                 </span>
               </td>
               <td className="px-4 py-2.5">
-                <span className={`text-sm font-bold ${row.highlight ? "text-accent" : "text-muted-foreground"}`}>
+                <span className={`text-sm font-bold ${row.highlight ? "text-[hsl(69,100%,43%)]" : "text-muted-foreground"}`}>
                   {row.feeLabel}
                 </span>
               </td>
@@ -204,7 +204,7 @@ function DesktopComparisonTable({ rows }: { rows: ReturnType<typeof useRows> }) 
               <td className="px-4 py-2.5 text-right">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className={`text-sm ${row.highlight ? "text-accent font-bold" : "text-muted-foreground"}`} aria-label={`Custo extra ${row.name}`}>
+                    <span className={`text-sm ${row.highlight ? "text-[hsl(69,100%,43%)] font-bold" : "text-muted-foreground"}`} aria-label={`Custo extra ${row.name}`}>
                       +R$ <AnimatedNumber value={row.extraCost} />
                     </span>
                   </TooltipTrigger>
@@ -361,23 +361,23 @@ export function CalculadoraComparador() {
             : { opacity: 0, y: 12, filter: "blur(6px)", height: 0, marginTop: 0, padding: 0 }
         }
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className="rounded-xl border border-accent/40 bg-accent/10 p-4 md:p-6 text-center space-y-2 overflow-hidden"
+        className="rounded-xl border border-[hsl(69,100%,43%)]/40 bg-[hsl(69,100%,43%)]/10 p-4 md:p-6 text-center space-y-2 overflow-hidden"
       >
           <p className="text-sm text-muted-foreground">
             Seus compradores economizam até
           </p>
-          <p className="text-2xl md:text-3xl font-display font-bold text-accent">
+          <p className="text-2xl md:text-3xl font-display font-bold text-[hsl(69,100%,43%)]">
             R$ <AnimatedNumber value={savingsPerTicket} /> /ingresso
           </p>
           <p className="text-xs text-muted-foreground">
             vs {worstName}
           </p>
-          {!isMobile && <div className="h-px w-12 mx-auto bg-accent/20" />}
+          {!isMobile && <div className="h-px w-12 mx-auto bg-[hsl(69,100%,43%)]/20" />}
           <div className={isMobile ? "pt-1" : ""}>
             <p className="text-sm text-muted-foreground">
               Em <span className="text-foreground font-semibold">{ticketCount.toLocaleString("pt-BR")}</span> ingressos:
             </p>
-            <p className="text-2xl md:text-3xl font-display font-bold text-accent">
+            <p className="text-2xl md:text-3xl font-display font-bold text-[hsl(69,100%,43%)]">
               R$ <AnimatedNumber value={totalSavings} />
             </p>
           </div>
