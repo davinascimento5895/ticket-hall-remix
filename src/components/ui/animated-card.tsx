@@ -334,10 +334,10 @@ const Layer4 = () => {
       <div className="ease-[cubic-bezier(0.6, 0.6, 0, 1)] absolute inset-0 z-[7] flex max-w-[356px] -translate-y-full items-start justify-start bg-transparent p-4 transition-transform duration-500 group-hover/animated-card:translate-y-0">
         <div className="ease-[cubic-bezier(0.6, 0.6, 0, 1)] rounded-md border border-zinc-200 bg-white/25 p-1.5 opacity-0 backdrop-blur-sm transition-opacity duration-500 group-hover/animated-card:opacity-100 dark:border-zinc-800 dark:bg-black/25">
           <p className="mb-1 text-xs font-semibold text-black dark:text-white">
-            Random Data Visualization
+            Vendas e check-ins em tempo real
           </p>
           <p className="text-xs text-neutral-500 dark:text-neutral-400">
-            Displaying some interesting stats.
+            Monitore resultados do evento para decidir os proximos passos.
           </p>
         </div>
       </div>
