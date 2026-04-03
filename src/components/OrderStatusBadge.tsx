@@ -12,6 +12,10 @@ const statusConfig: Record<string, { label: string; classes: string }> = {
   transferred: { label: "Transferido", classes: "bg-info/15 text-info border-info/20" },
 };
 
+export function getOrderStatusLabel(status: string): string {
+  return statusConfig[status]?.label || status;
+}
+
 export function OrderStatusBadge({ status }: { status: string }) {
   const config = statusConfig[status] || { label: status, classes: "bg-muted text-muted-foreground border-border" };
   return (

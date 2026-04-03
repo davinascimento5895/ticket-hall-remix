@@ -127,7 +127,7 @@ export default function AdminLayout() {
         <AdminSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           {/* Top bar */}
-          <header className="h-14 flex items-center justify-between border-b border-border px-4 shrink-0 bg-background/80 backdrop-blur-sm">
+          <header className="relative z-10 h-14 flex items-center justify-between border-b border-border/70 px-4 shrink-0 bg-card">
             <div className="flex items-center gap-3">
               <SidebarTrigger />
               <Separator orientation="vertical" className="h-5" />
@@ -146,13 +146,15 @@ export default function AdminLayout() {
           </header>
 
           {/* Content */}
-          <main className="flex-1 p-4 md:p-6 overflow-auto">
+          <main className="relative z-10 flex-1 overflow-auto p-4 md:p-6">
             <Suspense fallback={
               <div className="flex items-center justify-center min-h-[40vh]">
                 <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-primary" />
               </div>
             }>
-              <Outlet />
+              <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6">
+                <Outlet />
+              </div>
             </Suspense>
           </main>
         </div>

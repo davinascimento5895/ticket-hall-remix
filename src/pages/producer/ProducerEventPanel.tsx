@@ -14,6 +14,11 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import ProducerEventForm from "@/pages/producer/ProducerEventForm";
 
+interface ProducerEventPanelProps {
+  eventsBasePath?: string;
+  listPath?: string;
+}
+
 const EVENT_OPERATIONS = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "", hint: "Visão geral" },
   { key: "tickets", label: "Ingressos", icon: Ticket, path: "/tickets", hint: "Lotes e disponibilidade" },
@@ -38,7 +43,7 @@ const EDIT_SECTIONS = [
   { key: "review", label: "Revisão", icon: Eye, hint: "Conferência final" },
 ] as const;
 
-export default function ProducerEventPanel() {
+export default function ProducerEventPanel({ eventsBasePath = "/producer/events", listPath = "/producer/events" }: ProducerEventPanelProps) {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -67,7 +72,7 @@ export default function ProducerEventPanel() {
     staleTime: 30_000,
   });
 
-  const basePath = `/producer/events/${id}/panel`;
+  const basePath = `${eventsBasePath}/${id}/panel`;
   const currentSuffix = location.pathname.replace(basePath, "");
   const activeTab = EVENT_OPERATIONS.find((t) => t.path === currentSuffix) || EVENT_OPERATIONS[0];
   const activeMode = isInlineEditing ? "edit" : "operations";
@@ -153,7 +158,7 @@ export default function ProducerEventPanel() {
       {/* Event Header */}
       <div className="mb-6 pb-4 border-b border-border">
         <Link
-          to="/producer/events"
+          to={listPath}
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-3"
         >
           <ArrowLeft className="h-4 w-4" /> Voltar aos eventos
@@ -400,7 +405,7 @@ export default function ProducerEventPanel() {
           )}
 
           {isInlineEditing ? (
-            <ProducerEventForm onCancel={closeInlineEditor} />
+            <ProducerEventForm onCancel={closeInlineEditor} returnPath={listPath} />
           ) : (
             <Suspense fallback={
               <div className="flex items-center justify-center min-h-[30vh]">

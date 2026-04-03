@@ -11,6 +11,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   const { user, role, loading } = useAuth();
   const location = useLocation();
 
+
   // Auth loading is handled by parent Suspense - don't show extra spinner
   if (loading) {
     return (
