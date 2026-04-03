@@ -58,13 +58,27 @@ serve(async (req) => {
       operatorId = user.id;
     }
 
-    const { qrCode, checkinListId, scannedBy, deviceId } = await req.json();
+    const { qrCode, checkinListId, scannedBy, deviceId, verificationMethod } = await req.json();
     if (!qrCode) throw new Error("qrCode is required");
 
     const supabase = createClient(supabaseUrl, serviceKey);
 
     // Use authenticated operator ID instead of body param
     const effectiveScannedBy = operatorId || scannedBy;
+
+    // Fetch operator and list metadata for audit logging
+    let operatorName: string | null = null;
+    let operatorEmail: string | null = null;
+    let checkinListName: string | null = null;
+    if (effectiveScannedBy) {
+      const { data: op } = await supabase.from("profiles").select("full_name, email").eq("id", effectiveScannedBy).maybeSingle();
+      operatorName = op?.full_name || null;
+      operatorEmail = op?.email || null;
+    }
+    if (checkinListId) {
+      const { data: cl } = await supabase.from("checkin_lists").select("name").eq("id", checkinListId).maybeSingle();
+      checkinListName = cl?.name || null;
+    }
 
     // Rate limit
     const rlKey = `checkin:${effectiveScannedBy || deviceId || "anon"}`;
@@ -82,7 +96,7 @@ serve(async (req) => {
     // 1. Verify JWT signature
     const payload = await verifyJWT(qrCode, qrSecret);
     if (!payload || !payload.tid) {
-      await logScan(supabase, { checkinListId, qrCode, result: "invalid_qr", deviceId, scannedBy: effectiveScannedBy });
+      await logScan(supabase, { checkinListId, checkinListName, qrCode, result: "invalid_qr", deviceId, scannedBy: effectiveScannedBy, operatorName, operatorEmail, verificationMethod: "qr_scan" });
       return jsonResponse({ success: false, result: "invalid_qr", message: "QR code inválido ou adulterado" }, 400);
     }
 
@@ -96,7 +110,7 @@ serve(async (req) => {
       .single();
 
     if (ticketErr || !ticket) {
-      await logScan(supabase, { checkinListId, ticketId, qrCode, result: "not_found", deviceId, scannedBy: effectiveScannedBy });
+      await logScan(supabase, { checkinListId, checkinListName, ticketId, qrCode, result: "not_found", deviceId, scannedBy: effectiveScannedBy, operatorName, operatorEmail, verificationMethod: "qr_scan" });
       return jsonResponse({ success: false, result: "not_found", message: "Ingresso não encontrado" }, 404);
     }
 
@@ -125,7 +139,7 @@ serve(async (req) => {
 
     // 3. Check if QR matches (detects old QR after transfer)
     if (ticket.qr_code !== qrCode) {
-      await logScan(supabase, { checkinListId, ticketId, qrCode, result: "invalid_qr", deviceId, scannedBy: effectiveScannedBy });
+      await logScan(supabase, { checkinListId, checkinListName, ticketId, qrCode, result: "invalid_qr", deviceId, scannedBy: effectiveScannedBy, operatorName, operatorEmail, verificationMethod: "qr_scan" });
       return jsonResponse({ success: false, result: "invalid_qr", message: "QR code desatualizado (ingresso transferido)" }, 400);
     }
 
@@ -137,13 +151,13 @@ serve(async (req) => {
       .maybeSingle();
 
     if (!order || order.status !== "paid" || order.payment_status !== "paid") {
-      await logScan(supabase, { checkinListId, ticketId, qrCode, result: "inactive", deviceId, scannedBy: effectiveScannedBy });
+      await logScan(supabase, { checkinListId, checkinListName, ticketId, qrCode, result: "inactive", deviceId, scannedBy: effectiveScannedBy, operatorName, operatorEmail, verificationMethod: "qr_scan" });
       return jsonResponse({ success: false, result: "unpaid", message: "Ingresso com pagamento não confirmado" }, 402);
     }
 
     // 4. Check if already used
     if (ticket.status === "used") {
-      await logScan(supabase, { checkinListId, ticketId, qrCode, result: "already_used", deviceId, scannedBy: effectiveScannedBy });
+      await logScan(supabase, { checkinListId, checkinListName, ticketId, qrCode, result: "already_used", deviceId, scannedBy: effectiveScannedBy, operatorName, operatorEmail, verificationMethod: "qr_scan" });
       return jsonResponse({
         success: false, result: "already_used", message: "Ingresso já utilizado",
         attendeeName: ticket.attendee_name, tierName: (ticket as any).ticket_tiers?.name,
@@ -152,7 +166,7 @@ serve(async (req) => {
 
     // 5. Check ticket is active
     if (ticket.status !== "active") {
-      await logScan(supabase, { checkinListId, ticketId, qrCode, result: "inactive", deviceId, scannedBy: effectiveScannedBy });
+      await logScan(supabase, { checkinListId, checkinListName, ticketId, qrCode, result: "inactive", deviceId, scannedBy: effectiveScannedBy, operatorName, operatorEmail, verificationMethod: "qr_scan" });
       return jsonResponse({ success: false, result: "inactive", message: `Ingresso com status: ${ticket.status}` }, 400);
     }
 
@@ -164,7 +178,7 @@ serve(async (req) => {
       }
       if (list?.allowed_tier_ids && list.allowed_tier_ids.length > 0) {
         if (!list.allowed_tier_ids.includes(ticket.tier_id)) {
-          await logScan(supabase, { checkinListId, ticketId, qrCode, result: "wrong_list", deviceId, scannedBy: effectiveScannedBy });
+          await logScan(supabase, { checkinListId, checkinListName, ticketId, qrCode, result: "wrong_list", deviceId, scannedBy: effectiveScannedBy, operatorName, operatorEmail, verificationMethod: "qr_scan" });
           return jsonResponse({ success: false, result: "wrong_list", message: "Ingresso não pertence a esta entrada", tierName: (ticket as any).ticket_tiers?.name }, 403);
         }
       }
@@ -181,7 +195,7 @@ serve(async (req) => {
       .single();
 
     if (updateErr || !updated) {
-      await logScan(supabase, { checkinListId, ticketId, qrCode, result: "race_condition", deviceId, scannedBy: effectiveScannedBy });
+      await logScan(supabase, { checkinListId, checkinListName, ticketId, qrCode, result: "race_condition", deviceId, scannedBy: effectiveScannedBy, operatorName, operatorEmail, verificationMethod: "qr_scan" });
       return jsonResponse({ success: false, result: "already_used", message: "Ingresso já foi utilizado por outro operador" }, 409);
     }
 
@@ -189,7 +203,7 @@ serve(async (req) => {
     try { await supabase.rpc("confirm_checkin_analytics", { p_event_id: ticket.event_id }); } catch {}
 
     // 9. Log success
-    await logScan(supabase, { checkinListId, ticketId, qrCode, result: "success", deviceId, scannedBy: effectiveScannedBy });
+    await logScan(supabase, { checkinListId, checkinListName, ticketId, qrCode, result: "success", deviceId, scannedBy: effectiveScannedBy, operatorName, operatorEmail, verificationMethod: verificationMethod || "qr_scan" });
 
     return jsonResponse({
       success: true, result: "success", message: "Check-in realizado!",
@@ -209,15 +223,19 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 }
 
-async function logScan(supabase: any, params: { checkinListId?: string; ticketId?: string; qrCode: string; result: string; deviceId?: string; scannedBy?: string }) {
+async function logScan(supabase: any, params: { checkinListId?: string; checkinListName?: string | null; ticketId?: string; qrCode: string; result: string; deviceId?: string; scannedBy?: string; operatorName?: string | null; operatorEmail?: string | null; verificationMethod?: string }) {
   try {
     await supabase.from("checkin_scan_logs").insert({
       checkin_list_id: params.checkinListId || null,
+      checkin_list_name: params.checkinListName || null,
       ticket_id: params.ticketId || null,
       qr_code_scanned: params.qrCode.slice(0, 500),
       result: params.result,
       device_id: params.deviceId || null,
       scanned_by: params.scannedBy || null,
+      operator_name: params.operatorName || null,
+      operator_email: params.operatorEmail || null,
+      verification_method: params.verificationMethod || "qr_scan",
     });
   } catch (e) { console.error("Failed to log scan:", e); }
 }

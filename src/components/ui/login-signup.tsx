@@ -101,9 +101,13 @@ export default function LoginSignupModal({
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" />
+        <DialogPrimitive.Overlay
+          className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-sm ${open ? "dialog-overlay-fade" : ""}`}
+        />
           <DialogPrimitive.Content
-            className="fixed left-1/2 top-1/2 z-50 w-full max-w-[min(420px,calc(100vw-2rem))] max-h-[calc(100dvh-1rem)] -translate-x-1/2 -translate-y-1/2"
+            className={`fixed left-1/2 top-1/2 z-50 w-full max-w-[min(420px,calc(100vw-2rem))] max-h-[calc(100dvh-1rem)] -translate-x-1/2 -translate-y-1/2 ${
+              open ? "dialog-fade" : ""
+            }`}
             onOpenAutoFocus={(event) => event.preventDefault()}
           >
             <Card
