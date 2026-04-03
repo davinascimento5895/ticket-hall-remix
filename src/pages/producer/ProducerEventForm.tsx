@@ -83,7 +83,7 @@ interface TierDraft {
   is_half_price: boolean;
 }
 
-export default function ProducerEventForm({ onCancel }: { onCancel?: () => void }) {
+export default function ProducerEventForm({ onCancel, returnPath = "/producer/events" }: { onCancel?: () => void; returnPath?: string }) {
   const { id } = useParams();
   const isEdit = !!id;
   const navigate = useNavigate();
@@ -222,6 +222,14 @@ export default function ProducerEventForm({ onCancel }: { onCancel?: () => void 
       if (field === "title" && !isEdit) updated.slug = generateSlug(value);
       return updated;
     });
+  };
+
+  const handleDiscard = () => {
+    if (onCancel) {
+      onCancel();
+      return;
+    }
+    navigate(returnPath);
   };
 
   function emptyTier(): TierDraft {
@@ -401,7 +409,7 @@ export default function ProducerEventForm({ onCancel }: { onCancel?: () => void 
       if (isEdit) {
         window.location.reload();
       } else {
-        navigate("/producer/events");
+        navigate(returnPath);
       }
     } catch (err: any) {
       const message = err?.message || JSON.stringify(err);
@@ -517,7 +525,7 @@ export default function ProducerEventForm({ onCancel }: { onCancel?: () => void 
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate("/producer/events")}
+            onClick={handleDiscard}
             className="w-full text-muted-foreground"
           >
             Descartar
@@ -1123,7 +1131,7 @@ export default function ProducerEventForm({ onCancel }: { onCancel?: () => void 
           </p>
         )}
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/producer/events")} className="flex-1 text-muted-foreground">
+          <Button variant="ghost" size="sm" onClick={handleDiscard} className="flex-1 text-muted-foreground">
             Descartar
           </Button>
         </div>

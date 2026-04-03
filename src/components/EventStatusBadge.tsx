@@ -6,6 +6,8 @@ const eventStatusConfig: Record<string, { label: string; variant: "default" | "s
   cancelled: { label: "Cancelado", variant: "destructive" },
   ended: { label: "Encerrado", variant: "outline" },
   completed: { label: "Encerrado", variant: "outline" },
+  finished: { label: "Encerrado", variant: "outline" },
+  done: { label: "Encerrado", variant: "outline" },
 };
 
 export function EventStatusBadge({ status }: { status: string }) {

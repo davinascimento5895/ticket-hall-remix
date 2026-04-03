@@ -28,7 +28,6 @@ export function EventImage({ src, alt, className, priority = false }: EventImage
       alt={alt}
       className={cn("w-full h-full object-cover", className)}
       loading={priority ? "eager" : "lazy"}
-      fetchPriority={priority ? "high" : "auto"}
       onError={() => setHasError(true)}
     />
   );

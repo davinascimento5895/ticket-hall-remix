@@ -1,9 +1,56 @@
+## .htaccess gerado/ajustado para deploy de SPA
+## Reescrita para fallback ao index.html (Vite/SPA)
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+  # Não reescrever explicitamente o index
   RewriteRule ^index\.html$ - [L]
+  # Se não existir arquivo, diretório ou link simbólico, encaminha para index.html
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteCond %{REQUEST_FILENAME} !-l
   RewriteRule . /index.html [L]
 </IfModule>
+
+## Desativa MultiViews para evitar comportamento inesperado de content negotiation
+<IfModule mod_negotiation.c>
+  Options -MultiViews
+</IfModule>
+
+## Cabeçalhos de cache
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/html "access plus 0 seconds"
+  ExpiresByType text/css "access plus 1 month"
+  ExpiresByType application/javascript "access plus 1 month"
+  ExpiresByType image/x-icon "access plus 1 month"
+  ExpiresByType image/* "access plus 1 month"
+  ExpiresByType font/* "access plus 1 month"
+</IfModule>
+
+## Evita cache agressivo para HTML
+<FilesMatch "\.(html|htm)$">
+  <IfModule mod_headers.c>
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </IfModule>
+</FilesMatch>
+
+## Compressão (gzip/deflate)
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css application/javascript application/json image/svg+xml
+</IfModule>
+
+## Cabeçalhos de segurança recomendados
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "no-referrer-when-downgrade"
+  Header always set X-XSS-Protection "1; mode=block"
+  # HSTS: ative apenas se tiver HTTPS configurado no servidor
+  # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+</IfModule>
+
+## Desativa a assinatura do servidor
+ServerSignature Off

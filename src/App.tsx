@@ -106,15 +106,15 @@ const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 
 // Admin pages — lazy loaded
-const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
-const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
-const AdminEvents = lazy(() => import("./pages/admin/AdminEvents"));
-const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
-const AdminProducers = lazy(() => import("./pages/admin/AdminProducers"));
-const AdminProducerDetail = lazy(() => import("./pages/admin/AdminProducerDetail"));
-const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
-const AdminFinance = lazy(() => import("./pages/admin/AdminFinance"));
-const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
+const AdminLayout = lazy(() => import("./pages/admin/AdminLayout.tsx"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard.tsx"));
+const AdminEvents = lazy(() => import("./pages/admin/AdminEvents.tsx"));
+const AdminUsers = lazy(() => import("./pages/admin/AdminUsers.tsx"));
+const AdminProducers = lazy(() => import("./pages/admin/AdminProducers.tsx"));
+const AdminProducerDetail = lazy(() => import("./pages/admin/AdminProducerDetail.tsx"));
+const AdminOrders = lazy(() => import("./pages/admin/AdminOrders.tsx"));
+const AdminFinance = lazy(() => import("./pages/admin/AdminFinance.tsx"));
+const AdminSettings = lazy(() => import("./pages/admin/AdminSettings.tsx"));
 
 // Staff pages — lazy loaded
 const StaffEventList = lazy(() => import("./pages/staff/StaffEventList"));
@@ -271,6 +271,21 @@ const App = () => {
                 <Route index element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="events" element={<AdminEvents />} />
+                <Route path="events/new" element={<ProducerEventForm returnPath="/admin/events" />} />
+                <Route path="events/:id/edit" element={<ProducerEventForm returnPath="/admin/events" />} />
+                <Route path="events/:id/panel" element={<ProducerEventPanel eventsBasePath="/admin/events" listPath="/admin/events" />}>
+                  <Route index element={<ProducerEventDashboardTab />} />
+                  <Route path="tickets" element={<ProducerEventTicketsTab />} />
+                  <Route path="orders" element={<ProducerEventOrders />} />
+                  <Route path="participants" element={<ProducerEventParticipants />} />
+                  <Route path="guestlist" element={<ProducerEventGuestlist />} />
+                  <Route path="checkin" element={<ProducerEventCheckin />} />
+                  <Route path="financial" element={<ProducerEventFinancial />} />
+                  <Route path="messages" element={<ProducerEventMessages />} />
+                  <Route path="coupons" element={<ProducerEventCoupons />} />
+                  <Route path="promoters" element={<ProducerEventPromoters />} />
+                  <Route path="staff" element={<ProducerEventStaff />} />
+                </Route>
                 <Route path="users" element={<AdminUsers />} />
                 <Route path="producers" element={<AdminProducers />} />
                 <Route path="producers/:producerId" element={<AdminProducerDetail />} />
