@@ -49,6 +49,8 @@ export default function LoginSignupModal({
   const [remember, setRemember] = React.useState(false);
   const [isCompact, setIsCompact] = React.useState(false);
   const [isUltraCompact, setIsUltraCompact] = React.useState(false);
+  const [confirmPassword, setConfirmPassword] = React.useState("");
+  const [passwordMismatch, setPasswordMismatch] = React.useState(false);
 
   React.useEffect(() => {
     const updateViewportMode = () => {
@@ -82,6 +84,10 @@ export default function LoginSignupModal({
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
+    if (view === "register" && password !== confirmPassword) {
+      setPasswordMismatch(true);
+      return;
+    }
     onSubmit?.(
       {
         email,
@@ -130,18 +136,7 @@ export default function LoginSignupModal({
                   : "Crie sua conta para começar a explorar eventos e ofertas."}
               </CardDescription>
 
-              <div className="flex items-center justify-center gap-2">
-                <div
-                  className={`h-1.5 rounded-full transition-[width] ${
-                    view === "login" ? "w-10 bg-primary" : "w-4 bg-muted"
-                  }`}
-                />
-                <div
-                  className={`h-1.5 rounded-full transition-[width] ${
-                    view === "register" ? "w-10 bg-primary" : "w-4 bg-muted"
-                  }`}
-                />
-              </div>
+              {/* indicador de progresso removido para padronização da tela de login */}
             </CardHeader>
 
 <form
@@ -225,7 +220,13 @@ export default function LoginSignupModal({
                     id="login-password"
                     type={showPassword ? "text" : "password"}
                     value={password}
-                    onChange={(event) => setPassword(event.target.value)}
+                    onChange={(event) => {
+                      const val = event.target.value;
+                      setPassword(val);
+                      if (passwordMismatch && confirmPassword === val) {
+                        setPasswordMismatch(false);
+                      }
+                    }}
                     placeholder="••••••••"
                     className={`${isUltraCompact ? "h-9 text-sm" : "h-10"} pl-10 pr-10 bg-surface border-border`}
                   />
@@ -239,6 +240,34 @@ export default function LoginSignupModal({
                   </button>
                 </div>
               </div>
+              {view === "register" && (
+                <div className="grid gap-2">
+                  <Label htmlFor="signup-confirm-password" className="text-zinc-500">
+                    Confirmar senha
+                  </Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+                    <Input
+                      id="signup-confirm-password"
+                      type={showPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(event) => {
+                        const val = event.target.value;
+                        setConfirmPassword(val);
+                        if (passwordMismatch && password === val) {
+                          setPasswordMismatch(false);
+                        }
+                      }}
+                      placeholder="••••••••"
+                      aria-invalid={passwordMismatch}
+                      className={`${isUltraCompact ? "h-9 text-sm" : "h-10"} pl-10 pr-10 bg-surface border-border`}
+                    />
+                  </div>
+                  {passwordMismatch && (
+                    <div className="text-destructive text-sm">As senhas não conferem</div>
+                  )}
+                </div>
+              )}
 
               {view === "login" && (
                 <div className="flex items-center justify-between text-sm text-zinc-500">
@@ -264,8 +293,8 @@ export default function LoginSignupModal({
 
               <Button
                 type="submit"
-                disabled={loading}
-                className={`w-full gap-2 ${isUltraCompact ? "h-10 text-sm" : "h-11"} ${loading ? "opacity-70 pointer-events-none" : ""}`}
+                disabled={loading || (view === "register" && password !== confirmPassword)}
+                className={`w-full gap-2 ${isUltraCompact ? "h-10 text-sm" : "h-11"} ${loading || (view === "register" && password !== confirmPassword) ? "opacity-70 pointer-events-none" : ""}`}
                 onClick={handleSubmit}
               >
                 {loading ? (

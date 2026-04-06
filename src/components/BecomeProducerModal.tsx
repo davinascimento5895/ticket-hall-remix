@@ -185,19 +185,7 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
         }`}
       >
         <div className={`${isUltraCompact ? "p-3 space-y-3" : isCompact ? "p-4 space-y-4" : "p-6 space-y-5"}`}>
-          {/* Step indicator */}
-          {totalSteps > 1 && !isUltraCompact && (
-            <div className="flex items-center justify-center gap-2">
-              {[1, 2].map((s) => (
-                <div
-                  key={s}
-                  className={`h-1.5 rounded-full transition-all ${
-                    s === stepNumber ? (isCompact ? "w-7 bg-primary" : "w-8 bg-primary") : "w-4 bg-muted"
-                  }`}
-                />
-              ))}
-            </div>
-          )}
+          {/* Step indicator removed as requested */}
 
           {/* ============ STEP 1: AUTH ============ */}
           {step === "auth" && (
@@ -208,7 +196,7 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
                     isUltraCompact ? "text-lg" : isCompact ? "text-xl" : "text-2xl"
                   }`}
                 >
-                  {authTab === "login" ? "Entre na sua conta" : "Crie sua conta"}
+                  {authTab === "login" ? "Entre como produtor" : "Crie sua conta de produtor"}
                 </h2>
                 <p className={`${isUltraCompact ? "text-xs" : "text-sm"} text-muted-foreground mt-1`}>
                   Para criar eventos, você precisa de uma conta.
