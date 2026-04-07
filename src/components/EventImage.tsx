@@ -12,7 +12,20 @@ interface EventImageProps {
 
 export function EventImage({ src, alt, className, priority = false }: EventImageProps) {
   const [hasError, setHasError] = useState(false);
-  const imgSrc = src && !hasError ? src : null;
+  let imgSrc: string | null = src && !hasError ? src : null;
+
+  // Substitui imagens com marcas irrelevantes (ex.: 'netflix') por uma imagem neutra
+  // obtida via Unsplash. Isso evita exibir logos/personalizações indesejadas.
+  if (imgSrc) {
+    try {
+      const low = imgSrc.toLowerCase();
+      if (low.includes("netflix")) {
+        imgSrc = "https://source.unsplash.com/1200x750/?event,concert";
+      }
+    } catch {
+      // ignore
+    }
+  }
 
   if (!imgSrc) {
     return (

@@ -159,13 +159,51 @@ function FeatureLabel({ feature }: { feature: FeatureRow }) {
   );
 }
 
+// Horizontal platform summary used above the comparison for quick scanning
+function PlatformStrip({ platforms, isMobile }: { platforms: Platform[]; isMobile: boolean }) {
+  return (
+    <div className={isMobile ? "md:hidden" : "hidden md:block"}>
+      <div className="flex gap-3 overflow-x-auto py-2 -mx-3 px-3">
+        {platforms.map((p) => (
+          <div
+            key={p.name}
+            className={`min-w-[180px] flex items-center justify-between gap-3 p-3 rounded-lg border ${
+              p.highlight ? "border-primary/40 bg-primary/5 shadow-sm" : "bg-card"
+            }`}
+            aria-hidden={isMobile ? undefined : false}
+          >
+            <div>
+              {p.badge && (
+                <div className="inline-block text-[10px] font-bold uppercase tracking-wider text-accent bg-accent/10 px-2 py-0.5 rounded-full mb-1">
+                  {p.badge}
+                </div>
+              )}
+              <div className={`text-sm font-semibold ${p.highlight ? "text-primary" : "text-foreground"}`}>
+                {p.name}
+              </div>
+              <div className="text-xs text-muted-foreground mt-0.5">{p.fee}</div>
+            </div>
+            <div className="text-right">
+              <div className={`font-display font-bold ${p.highlight ? "text-accent text-2xl" : "text-foreground text-lg"}`}>
+                {p.fee}
+              </div>
+              <div className="text-[11px] text-muted-foreground">{Object.values(p.features).filter(Boolean).length}/{featureRows.length}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // Desktop Table
 function DesktopTable() {
   let lastCategory = "";
-
   return (
-    <div className="overflow-x-auto rounded-xl border border-border">
-      <table className="w-full border-collapse">
+    <div>
+      <PlatformStrip platforms={platforms} isMobile={false} />
+      <div className="overflow-x-auto rounded-xl border border-border">
+        <table className="w-full border-collapse">
         <thead className="sticky top-0 z-10">
           <tr className="bg-elevated">
             <th className="p-4 text-left text-xs font-medium text-muted-foreground min-w-[180px] bg-elevated sticky left-0 z-20">
@@ -174,7 +212,7 @@ function DesktopTable() {
             {platforms.map((p) => (
               <th
                 key={p.name}
-                className={`p-4 text-center min-w-[100px] ${
+                className={`px-6 py-3 text-center min-w-[120px] ${
                   p.highlight
                     ? "bg-primary/5 border-x-2 border-t-2 border-primary/40"
                     : "bg-elevated"
@@ -201,7 +239,7 @@ function DesktopTable() {
             {platforms.map((p) => (
               <td
                 key={p.name}
-                className={`p-4 text-center ${
+                className={`px-6 py-3 text-center ${
                   p.highlight ? "border-x-2 border-primary/40 bg-primary/5" : ""
                 }`}
               >
@@ -245,13 +283,13 @@ function DesktopTable() {
                   transition={{ delay: i * 0.04 }}
                   className="border-b border-border/50 hover:bg-muted/20 transition-colors"
                 >
-                  <td className="p-4 sticky left-0 bg-background z-10">
+                  <td className="px-6 py-3 sticky left-0 bg-background z-10">
                     <FeatureLabel feature={feature} />
                   </td>
                   {platforms.map((p) => (
                     <td
                       key={p.name}
-                      className={`p-4 ${
+                      className={`px-6 py-3 ${
                         p.highlight ? "border-x-2 border-primary/40 bg-primary/5" : ""
                       }`}
                     >
@@ -397,6 +435,7 @@ function MobileTable() {
 
   return (
     <div className="rounded-xl border border-border overflow-hidden">
+      <PlatformStrip platforms={platforms} isMobile={true} />
       <div className="bg-elevated px-4 py-2.5">
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           Comparativo de funcionalidades
