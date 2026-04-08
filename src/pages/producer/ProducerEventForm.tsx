@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, Plus, Trash2, ArrowLeft, ArrowRight, Upload, MapPin, Globe, Video, Link2, Image as ImageIcon, Calendar, Ticket, FileText, Settings, Eye, ChevronDown, ChevronUp, Clock, Users, EyeOff, ClipboardList, Package } from "lucide-react";
@@ -29,6 +29,7 @@ import { generateUniqueSlug } from "@/lib/slug";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn, formatBRL } from "@/lib/utils";
 import { InlineImageCrop } from "@/components/producer/InlineImageCrop";
+import { scrollPageToTop } from "@/lib/scroll";
 
 const STEPS = [
   { key: "type", label: "Tipo", icon: Globe },
@@ -439,6 +440,10 @@ export default function ProducerEventForm({ onCancel, returnPath = "/producer/ev
     }
   }, [isEdit, searchParams]);
 
+  useLayoutEffect(() => {
+    scrollPageToTop();
+  }, [step]);
+
   return (
     <div className={cn(
       "flex flex-col gap-6",
@@ -588,7 +593,7 @@ export default function ProducerEventForm({ onCancel, returnPath = "/producer/ev
       <div className={cn(
         "flex-1 space-y-6 pb-8",
         isInlineMode ? "max-w-none" : "max-w-3xl lg:h-full lg:overflow-y-auto lg:pr-2"
-      )}>
+      )} data-scroll-container>
         {/* Step 0: Event Type Selection */}
         {step === 0 && !isEdit && (
           <div className="space-y-6">

@@ -1,4 +1,4 @@
-import { useState, Suspense } from "react";
+import { useState, Suspense, useLayoutEffect } from "react";
 import { EmbedSnippetGenerator } from "@/components/EmbedSnippetGenerator";
 import { useParams, useNavigate, useLocation, Link, Outlet, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import ProducerEventForm from "@/pages/producer/ProducerEventForm";
+import { scrollPageToTop } from "@/lib/scroll";
 
 interface ProducerEventPanelProps {
   eventsBasePath?: string;
@@ -88,6 +89,10 @@ export default function ProducerEventPanel({ eventsBasePath = "/producer/events"
   ];
   const readinessDone = readinessChecklist.filter((item) => item.done).length;
   const readinessPercent = Math.round((readinessDone / readinessChecklist.length) * 100);
+
+  useLayoutEffect(() => {
+    scrollPageToTop();
+  }, [location.search]);
 
   const navigateToTab = (tab: typeof EVENT_OPERATIONS[number]) => {
     if (isInlineEditing) {
@@ -387,7 +392,7 @@ export default function ProducerEventPanel({ eventsBasePath = "/producer/events"
         )}
 
         {/* Tab Content - Main Area */}
-        <div className="flex-1 min-w-0 overflow-y-auto pr-2 lg:pr-4">
+        <div className="flex-1 min-w-0 overflow-y-auto pr-2 lg:pr-4" data-scroll-container>
           {isInlineEditing && (
             <div className="mb-4 rounded-xl border border-border/70 bg-muted/20 p-3 sm:p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">

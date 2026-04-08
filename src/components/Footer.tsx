@@ -60,7 +60,7 @@ export function Footer() {
           <div>
             <h4 className="font-display font-semibold text-sm mb-4">Contato</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="mailto:contato@tickethall.com.br" className="hover:text-foreground transition-colors">contato@tickethall.com.br</a></li>
+              <li><a href="mailto:contato@tickethall.com" className="hover:text-foreground transition-colors">contato@tickethall.com</a></li>
             </ul>
             <div className="flex items-center gap-3 mt-4">
               <a href="https://instagram.com/tickethallbrasil" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Instagram">
@@ -73,7 +73,7 @@ export function Footer() {
           </div>
         </div>
         <div className="border-t border-border mt-8 pt-8 text-center text-sm text-muted-foreground">
-          © 2026 TicketHall. Todos os direitos reservados.
+          © 2026 TicketHall. Todos os direitos reservados. Uma empresa do grupo ioMob Tecnologia LTDA - CNPJ 29.256.741/0001-10
         </div>
       </div>
 

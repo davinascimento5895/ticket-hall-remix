@@ -198,7 +198,7 @@ export default function ProducerLayout() {
           </header>
 
           {/* Content */}
-          <main className={cn(
+          <main data-scroll-container className={cn(
             "flex-1 min-h-0 px-3 py-4 sm:px-4 md:px-6 md:py-6 lg:px-7",
             isProducerEventFormRoute ? "overflow-hidden" : "overflow-y-auto overscroll-contain",
           )}>

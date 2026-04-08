@@ -146,7 +146,7 @@ export default function AdminLayout() {
           </header>
 
           {/* Content */}
-          <main className="relative z-10 flex-1 overflow-auto p-4 md:p-6">
+          <main className="relative z-10 flex-1 overflow-auto p-4 md:p-6" data-scroll-container>
             <Suspense fallback={
               <div className="flex items-center justify-center min-h-[40vh]">
                 <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-primary" />
