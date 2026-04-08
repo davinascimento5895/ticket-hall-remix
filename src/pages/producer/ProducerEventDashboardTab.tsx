@@ -287,7 +287,7 @@ export default function ProducerEventDashboardTab() {
                 <BarChart data={tierChartData}>
                   <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip />
+                  <Tooltip cursor={{ fill: 'rgba(0,0,0,0.04)' }} />
                   <Bar dataKey="vendidos" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -307,7 +307,7 @@ export default function ProducerEventDashboardTab() {
                   <Pie data={paymentPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
                     {paymentPieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                   </Pie>
-                  <Tooltip formatter={(value: number) => formatBRL(value)} />
+                  <Tooltip formatter={(value: number) => formatBRL(value)} cursor={{ fill: 'rgba(0,0,0,0.04)' }} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (

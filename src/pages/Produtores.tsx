@@ -220,7 +220,7 @@ export default function Produtores() {
           >
             <h2 className="font-display text-2xl md:text-3xl font-bold mb-3">Compare e decida.</h2>
             <p className="text-muted-foreground">
-              Menor taxa e mais funcionalidades. Veja como o TicketHall se compara ao mercado.
+              Menor taxa na comparação e mais funcionalidades. Veja como o TicketHall se compara às plataformas analisadas.
             </p>
           </motion.div>
           <TabelaComparativo />
@@ -242,7 +242,7 @@ export default function Produtores() {
               <span className="text-gradient-brand">Mais vendas para quem produz.</span>
             </h2>
             <p className="text-muted-foreground">
-              No TicketHall, a taxa de 7% é a menor do mercado. Isso significa que o preço final que seu comprador vê é menor do que em qualquer outra plataforma — e ingresso mais barato converte mais.
+              Na comparação abaixo, a taxa de 7% do TicketHall é a menor entre as plataformas analisadas. Isso reduz o preço final que seu comprador vê e ajuda a melhorar a conversão.
             </p>
           </motion.div>
           <CalculadoraComparador />
