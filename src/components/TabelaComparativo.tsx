@@ -201,7 +201,6 @@ function DesktopTable() {
   let lastCategory = "";
   return (
     <div>
-      <PlatformStrip platforms={platforms} isMobile={false} />
       <div className="overflow-x-auto rounded-xl border border-border">
         <table className="w-full border-collapse">
         <thead className="sticky top-0 z-10">
@@ -316,6 +315,7 @@ function DesktopTable() {
         </tbody>
       </table>
     </div>
+  </div>
   );
 }
 
