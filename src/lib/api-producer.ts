@@ -386,7 +386,7 @@ export async function getEventAnalytics(eventId: string) {
     .from("event_analytics")
     .select("*")
     .eq("event_id", eventId)
-    .single();
+    .maybeSingle();
   if (error) throw error;
   return data;
 }

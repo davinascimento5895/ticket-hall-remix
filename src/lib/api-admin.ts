@@ -643,9 +643,36 @@ export async function getProducerDetail(producerId: string) {
   return { profile: profileRes.data, events: eventsRes.data || [] };
 }
 
+function getFunctionStatus(error: unknown) {
+  if (!error || typeof error !== "object") return undefined;
+
+  const context = (error as { context?: unknown }).context;
+  if (context && typeof context === "object" && "status" in context && typeof (context as { status?: unknown }).status === "number") {
+    return (context as { status: number }).status;
+  }
+
+  if ("status" in error && typeof (error as { status?: unknown }).status === "number") {
+    return (error as { status: number }).status;
+  }
+
+  return undefined;
+}
+
 export async function adminDeleteEvent(eventId: string) {
-  const { error } = await supabase.rpc("admin_force_delete_event", { p_event_id: eventId });
-  if (error) throw error;
+  const { error: edgeError } = await supabase.functions.invoke("admin-force-delete-event", {
+    body: { eventId },
+  });
+
+  if (!edgeError) return;
+
+  const status = getFunctionStatus(edgeError);
+  if (status === 404) {
+    const { error: rpcError } = await supabase.rpc("admin_force_delete_event", { p_event_id: eventId });
+    if (!rpcError) return;
+    throw rpcError;
+  }
+
+  throw edgeError instanceof Error ? edgeError : new Error("Erro ao remover evento");
 }
 
 // ============================================================

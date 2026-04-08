@@ -88,12 +88,13 @@ export default function ProducerEventForm({ onCancel, returnPath = "/producer/ev
   const isEdit = !!id;
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user, profile } = useAuth();
+  const { user, role } = useAuth();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const [step, setStep] = useState(isEdit ? 1 : 0);
   const [mobileStepsOpen, setMobileStepsOpen] = useState(false);
   const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
+  const canManageEvent = role === "admin" || role === "producer";
 
   const [form, setForm] = useState({
     title: "", slug: "", description: "", category: "shows",
@@ -305,8 +306,7 @@ export default function ProducerEventForm({ onCancel, returnPath = "/producer/ev
   };
 
   const handleSave = async (publish = false) => {
-    if (!user) return;
-    if (publish && !user) {
+    if (!user || !canManageEvent) {
       toast({ title: "Erro", description: "Você precisa estar autenticado para publicar eventos.", variant: "destructive" });
       return;
     }
@@ -1094,6 +1094,49 @@ export default function ProducerEventForm({ onCancel, returnPath = "/producer/ev
         )}
 
       </div>
+
+      {/* Inline bottom action buttons */}
+      {isInlineMode && (
+      <div className="space-y-2 pb-2">
+        <Separator className="!mb-3" />
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isFirstVisibleStep}
+            onClick={() => setStep((s) => s - 1)}
+            className="gap-1 flex-1"
+          >
+            <ArrowLeft className="h-4 w-4" /> Anterior
+          </Button>
+
+          {step < reviewStepIndex ? (
+            <>
+              <Button size="sm" onClick={() => setStep((s) => s + 1)} className="gap-1 flex-1">
+                Proximo <ArrowRight className="h-4 w-4" />
+              </Button>
+              <Button size="sm" variant="secondary" onClick={goToReview} className="gap-1 flex-1">
+                Revisar
+              </Button>
+            </>
+          ) : (
+            <Button size="sm" onClick={() => setIsPublishConfirmOpen(true)} className="flex-1" disabled={!canManageEvent}>
+              Publicar evento
+            </Button>
+          )}
+        </div>
+        {step < reviewStepIndex && (
+          <p className="text-[11px] text-muted-foreground text-center">
+            A publicacao aparece no passo "Revisao"
+          </p>
+        )}
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={handleDiscard} className="flex-1 text-muted-foreground">
+            Fechar
+          </Button>
+        </div>
+      </div>
+      )}
 
       {/* Mobile bottom action buttons */}
       {!isInlineMode && (
