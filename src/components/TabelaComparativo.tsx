@@ -25,7 +25,6 @@ type FeatureKey =
 interface Platform {
   name: string;
   highlight: boolean;
-  badge?: string;
   fee: string;
   feeNumeric: number;
   features: Record<FeatureKey, boolean>;
@@ -35,7 +34,6 @@ const platforms: Platform[] = [
   {
     name: "TicketHall",
     highlight: true,
-    badge: "Melhor custo-benefício",
     fee: "7%",
     feeNumeric: 7,
     features: {
@@ -46,7 +44,7 @@ const platforms: Platform[] = [
     },
   },
   {
-    name: "Sympla",
+    name: "Plataforma analisada 1",
     highlight: false,
     fee: "~10%",
     feeNumeric: 10.18,
@@ -58,7 +56,7 @@ const platforms: Platform[] = [
     },
   },
   {
-    name: "Ingresse",
+    name: "Plataforma analisada 2",
     highlight: false,
     fee: "~10,7%",
     feeNumeric: 10.67,
@@ -70,7 +68,7 @@ const platforms: Platform[] = [
     },
   },
   {
-    name: "ZigBrasil",
+    name: "Plataforma analisada 3",
     highlight: false,
     fee: "~8,2%",
     feeNumeric: 8.21,
@@ -82,7 +80,7 @@ const platforms: Platform[] = [
     },
   },
   {
-    name: "Lets.events",
+    name: "Plataforma analisada 4",
     highlight: false,
     fee: "~8,7%",
     feeNumeric: 8.66,
@@ -94,7 +92,7 @@ const platforms: Platform[] = [
     },
   },
   {
-    name: "Ticketmaster",
+    name: "Plataforma analisada 5",
     highlight: false,
     fee: "~18,3%",
     feeNumeric: 18.33,
@@ -180,11 +178,6 @@ function DesktopTable() {
                     : "bg-elevated"
                 }`}
               >
-                {p.badge && (
-                  <span className="inline-block text-[10px] font-bold uppercase tracking-wider text-accent bg-accent/10 px-2 py-0.5 rounded-full mb-1.5">
-                    {p.badge}
-                  </span>
-                )}
                 <div className={`text-sm font-semibold ${p.highlight ? "text-primary" : "text-foreground"}`}>
                   {p.name}
                 </div>
@@ -327,9 +320,6 @@ function MobileAccordion() {
       <div className="rounded-xl border-2 border-primary/40 bg-primary/5 p-4 space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <span className="inline-block text-[10px] font-bold uppercase tracking-wider text-accent bg-accent/10 px-2 py-0.5 rounded-full mb-1">
-              {tickethall.badge}
-            </span>
             <h3 className="font-display font-bold text-primary">{tickethall.name}</h3>
           </div>
           <div className="text-right">
@@ -454,7 +444,7 @@ export function TabelaComparativo() {
       {isMobile ? <MobileTable /> : <DesktopTable />}
 
       <p className="text-xs text-muted-foreground text-center">
-        Dados baseados em pesquisa pública de fevereiro de 2026. Funcionalidades e taxas dos concorrentes podem variar. Confirme nas respectivas plataformas.
+        Dados baseados em pesquisa pública de fevereiro de 2026. Funcionalidades e taxas das plataformas analisadas podem variar. Confirme nas respectivas plataformas.
       </p>
 
       <div className="flex justify-center">

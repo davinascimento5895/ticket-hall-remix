@@ -82,7 +82,7 @@ export default function ProducerEventReports() {
                     <BarChart data={tierChartData}>
                       <XAxis dataKey="name" tick={{ fontSize: 12, fill: "hsl(240 5% 65%)" }} />
                       <YAxis tick={{ fontSize: 12, fill: "hsl(240 5% 65%)" }} />
-                      <Tooltip contentStyle={{ background: "hsl(240 6% 7%)", border: "1px solid hsl(240 4% 18%)", borderRadius: 8 }} />
+                      <Tooltip contentStyle={{ background: "hsl(240 6% 7%)", border: "1px solid hsl(240 4% 18%)", borderRadius: 8 }} cursor={{ fill: 'rgba(255,255,255,0.1)' }} />
                       <Bar dataKey="vendidos" fill="hsl(243 75% 59%)" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -101,7 +101,7 @@ export default function ProducerEventReports() {
                       <Pie data={tierPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
                         {tierPieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                       </Pie>
-                      <Tooltip contentStyle={{ background: "hsl(240 6% 7%)", border: "1px solid hsl(240 4% 18%)", borderRadius: 8 }} />
+                      <Tooltip contentStyle={{ background: "hsl(240 6% 7%)", border: "1px solid hsl(240 4% 18%)", borderRadius: 8 }} cursor={{ fill: 'rgba(255,255,255,0.1)' }} />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (

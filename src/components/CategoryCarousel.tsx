@@ -73,7 +73,7 @@ export function CategoryCarousel({ className }: CategoryCarouselProps) {
                   className="flex-shrink-0 scroll-snap-align-start"
                   style={{ scrollSnapAlign: "start" }}
                 >
-                  <div className="flex flex-col items-center gap-2 p-4 md:p-5 rounded-xl bg-card hover:bg-accent/10 border border-border hover:border-primary/30 transition-all duration-200 min-w-[100px] md:min-w-[120px] group/item">
+                  <div className="flex flex-col items-center gap-2 p-4 md:p-5 rounded-xl bg-card border border-border hover:border-primary/30 transition-all duration-200 min-w-[100px] md:min-w-[120px] group/item">
                     <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-secondary flex items-center justify-center group-hover/item:bg-primary/10 transition-colors">
                       <Icon className="h-5 w-5 md:h-6 md:w-6 text-muted-foreground group-hover/item:text-primary transition-colors" />
                     </div>

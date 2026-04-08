@@ -39,6 +39,145 @@ function removeKnownMissingColumns(payload: Record<string, any>) {
 
 const MAX_SCHEMA_RETRY = 10;
 
+const TIME_ZONE = "America/Sao_Paulo";
+const PRODUCER_TREND_DAYS = 30;
+
+type TimelineGranularity = "day" | "month";
+
+type ProducerTimelinePoint = {
+  label: string;
+  revenue: number;
+  orders: number;
+  ticketsSold: number;
+  checkins: number;
+};
+
+type ProducerTimelineBucket = ProducerTimelinePoint & { sortKey: string };
+
+function formatPercent(value: number) {
+  return `${value.toFixed(1).replace(".", ",")}%`;
+}
+
+function isOrderPaid(order: any) {
+  const status = String(order?.status || "").trim().toLowerCase();
+  const paymentStatus = String(order?.payment_status || "").trim().toLowerCase();
+
+  return status === "paid"
+    || status === "confirmed"
+    || ["paid", "confirmed", "received", "approved"].includes(paymentStatus);
+}
+
+function dedupeOrders(orders: any[]) {
+  const uniqueOrders = new Map<string, any>();
+  for (const order of orders) {
+    if (!order?.id) continue;
+    if (!uniqueOrders.has(order.id)) {
+      uniqueOrders.set(order.id, order);
+    }
+  }
+  return Array.from(uniqueOrders.values());
+}
+
+function getBucketInfo(value: string, granularity: TimelineGranularity) {
+  const date = new Date(value);
+  const sortKey = granularity === "month"
+    ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
+    : `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+  const label = granularity === "month"
+    ? date.toLocaleDateString("pt-BR", { month: "short", year: "2-digit", timeZone: TIME_ZONE })
+    : date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", timeZone: TIME_ZONE });
+
+  return { sortKey, label };
+}
+
+function createEmptyProducerTimelinePoint(label: string): ProducerTimelinePoint {
+  return {
+    label,
+    revenue: 0,
+    orders: 0,
+    ticketsSold: 0,
+    checkins: 0,
+  };
+}
+
+function buildProducerTimelineSeries(
+  rows: { orders: any[]; tickets: any[] },
+  granularity: TimelineGranularity,
+) {
+  const now = new Date();
+  const cutoff = new Date(now);
+  if (granularity === "month") {
+    cutoff.setDate(1);
+    cutoff.setMonth(cutoff.getMonth() - 11);
+  } else {
+    cutoff.setDate(cutoff.getDate() - (PRODUCER_TREND_DAYS - 1));
+  }
+  cutoff.setHours(0, 0, 0, 0);
+
+  const buckets = new Map<string, ProducerTimelineBucket>();
+
+  const seedBucket = (dateValue: Date) => {
+    const { sortKey, label } = getBucketInfo(dateValue.toISOString(), granularity);
+    if (!buckets.has(sortKey)) {
+      buckets.set(sortKey, { sortKey, ...createEmptyProducerTimelinePoint(label) });
+    }
+  };
+
+  const cursor = new Date(cutoff);
+  if (granularity === "month") {
+    cursor.setDate(1);
+    while (cursor <= now) {
+      seedBucket(new Date(cursor));
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+  } else {
+    while (cursor <= now) {
+      seedBucket(new Date(cursor));
+      cursor.setDate(cursor.getDate() + 1);
+    }
+  }
+
+  const ensureBucket = (dateValue: string) => {
+    const { sortKey, label } = getBucketInfo(dateValue, granularity);
+    if (!buckets.has(sortKey)) {
+      buckets.set(sortKey, { sortKey, ...createEmptyProducerTimelinePoint(label) });
+    }
+    return buckets.get(sortKey)!;
+  };
+
+  rows.orders.forEach((order) => {
+    if (!order?.created_at) return;
+    const createdAt = new Date(order.created_at);
+    if (Number.isNaN(createdAt.getTime()) || createdAt.getTime() < cutoff.getTime()) return;
+
+    const bucket = ensureBucket(order.created_at);
+    bucket.orders += 1;
+    bucket.revenue += Math.max(0, Number(order.total || 0) - Number(order.platform_fee || 0));
+  });
+
+  rows.tickets.forEach((ticket) => {
+    if (!ticket?.created_at) return;
+    const createdAt = new Date(ticket.created_at);
+    if (Number.isNaN(createdAt.getTime()) || createdAt.getTime() < cutoff.getTime()) return;
+
+    const bucket = ensureBucket(ticket.created_at);
+    bucket.ticketsSold += 1;
+
+    if (ticket.checked_in_at) {
+      const checkedInAt = new Date(ticket.checked_in_at);
+      if (!Number.isNaN(checkedInAt.getTime()) && checkedInAt.getTime() >= cutoff.getTime()) {
+        const checkinBucket = ensureBucket(ticket.checked_in_at);
+        checkinBucket.checkins += 1;
+      }
+    }
+  });
+
+  return Array.from(buckets.values())
+    .sort((a, b) => a.sortKey.localeCompare(b.sortKey))
+    .map(({ sortKey, ...bucket }) => bucket);
+}
+
 export async function createEvent(event: {
   producer_id: string;
   title: string;
@@ -389,12 +528,12 @@ export async function getProducerDashboardStats(producerId: string) {
 
   const producerScopeIds = Array.from(new Set([
     producerId,
-    ...(memberships || []).map((m) => m.producer_id).filter(Boolean),
+    ...(memberships || []).map((member) => member.producer_id).filter(Boolean),
   ]));
 
   const { data: events, error: eventsError } = await supabase
     .from("events")
-    .select("id, title, status, start_date, end_date, max_capacity")
+    .select("id, title, status, start_date, end_date, created_at, max_capacity, venue_city, views_count, slug")
     .in("producer_id", producerScopeIds);
 
   if (eventsError) throw eventsError;
@@ -402,19 +541,49 @@ export async function getProducerDashboardStats(producerId: string) {
   if (!events || events.length === 0) {
     return {
       totalRevenue: 0,
+      grossRevenue: 0,
+      netRevenue: 0,
+      ticketRevenue: 0,
+      platformRevenue: 0,
+      gatewayFees: 0,
+      refundAmount: 0,
       ticketsSold: 0,
+      ticketsCheckedIn: 0,
+      pageViews: 0,
+      conversionRate: 0,
+      checkinRate: 0,
+      portfolioOccupancyRate: 0,
+      averageOrderValue: 0,
+      averageRevenuePerTicket: 0,
+      viewsPerTicket: 0,
       totalEvents: 0,
       upcomingEvents: 0,
       activeEvents: 0,
+      publishedEvents: 0,
+      draftEvents: 0,
+      endedEvents: 0,
+      soldOutEvents: 0,
+      nearSoldOutEvents: 0,
       confirmedOrders: 0,
+      ordersLast7DaysCount: 0,
+      revenueLast7DaysAmount: 0,
+      ordersLast30DaysCount: 0,
+      revenueLast30DaysAmount: 0,
+      ticketsSoldLast7DaysCount: 0,
+      ticketsSoldLast30DaysCount: 0,
+      checkinsLast7DaysCount: 0,
+      checkinsLast30DaysCount: 0,
+      timelineByDay: [],
+      timelineByMonth: [],
       focusEvent: null,
+      topEvents: [],
       otherUpcomingEvents: [],
       practicalAlerts: [
         {
           id: "first-event",
           severity: "critical",
           title: "Nenhum evento cadastrado",
-          description: "Crie seu primeiro evento para começar a vender ingressos.",
+          description: "Crie seu primeiro evento para começar a acompanhar vendas e desempenho.",
           ctaLabel: "Criar evento",
           ctaTo: "/producer/events/new",
         },
@@ -423,8 +592,14 @@ export async function getProducerDashboardStats(producerId: string) {
   }
 
   const now = new Date();
-  const nowIso = now.toISOString();
   const nowMs = now.getTime();
+  const sevenDaysAgo = new Date(now);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const thirtyDaysAgo = new Date(now);
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const sevenDaysAgoMs = sevenDaysAgo.getTime();
+  const thirtyDaysAgoMs = thirtyDaysAgo.getTime();
+  const nowIso = now.toISOString();
 
   const sortedForFocus = [...events].sort((a, b) => {
     const statusScore = (status: string | null) => {
@@ -447,15 +622,13 @@ export async function getProducerDashboardStats(producerId: string) {
     return bDate - aDate;
   });
 
-  const focusEventRaw = sortedForFocus[0];
-  const eventIds = events.map((e) => e.id);
+  const eventIds = events.map((event) => event.id);
 
-  // Parallelize dashboard queries to keep page responsive.
   const [analyticsRes, ordersRes, tiersRes, ticketsRes] = await Promise.all([
-    supabase.from("event_analytics").select("*").in("event_id", eventIds),
+    supabase.from("event_analytics").select("event_id, total_revenue, platform_revenue, producer_revenue, tickets_sold, tickets_checked_in, page_views, conversion_rate, events(id, title, status, start_date, end_date, venue_city, cover_image_url, max_capacity, views_count, is_featured, platform_fee_percent, slug, created_at)").in("event_id", eventIds),
     supabase
       .from("orders")
-      .select("id, event_id, total, created_at, status, payment_status")
+      .select("id, event_id, total, platform_fee, payment_gateway_fee, refunded_amount, coupon_id, payment_method, created_at, status, payment_status")
       .in("event_id", eventIds),
     supabase
       .from("ticket_tiers")
@@ -463,7 +636,7 @@ export async function getProducerDashboardStats(producerId: string) {
       .in("event_id", eventIds),
     supabase
       .from("tickets")
-      .select("id, event_id, order_id, status, orders(status, payment_status, total)")
+      .select("id, event_id, order_id, status, created_at, checked_in_at, tier_id, owner_id, ticket_tiers(name), orders(id, status, payment_status, total, platform_fee, payment_gateway_fee, refunded_amount)")
       .in("event_id", eventIds)
       .in("status", ["active", "used"]),
   ]);
@@ -478,46 +651,17 @@ export async function getProducerDashboardStats(producerId: string) {
   const tiers = tiersRes.data || [];
   const rawTickets = ticketsRes.data || [];
 
-  const paidOrders = rawOrders.filter((order) => {
-    const status = String(order.status || "").trim().toLowerCase();
-    const paymentStatus = String(order.payment_status || "").trim().toLowerCase();
-
-    // Some legacy and gateway flows may finalize payment with equivalent values.
-    const isStatusPaid = status === "paid" || status === "confirmed";
-    const isPaymentPaid = ["paid", "confirmed", "received", "approved"].includes(paymentStatus);
-
-    return isStatusPaid || isPaymentPaid;
-  });
-
+  const paidOrders = rawOrders.filter(isOrderPaid);
   const paidTicketsWithConfirmedOrder = rawTickets.filter((ticket: any) => {
     const rawOrder = Array.isArray(ticket.orders) ? ticket.orders[0] : ticket.orders;
-    const orderStatus = String(rawOrder?.status || "").trim().toLowerCase();
-    const paymentStatus = String(rawOrder?.payment_status || "").trim().toLowerCase();
-
-    const isStatusPaid = orderStatus === "paid" || orderStatus === "confirmed";
-    const isPaymentPaid = ["paid", "confirmed", "received", "approved"].includes(paymentStatus);
-
-    return !!ticket.order_id && (isStatusPaid || isPaymentPaid);
+    return !!ticket.order_id && !!rawOrder?.id && isOrderPaid(rawOrder);
   });
+  const paidOrdersFromTickets = paidTicketsWithConfirmedOrder
+    .map((ticket: any) => (Array.isArray(ticket.orders) ? ticket.orders[0] : ticket.orders))
+    .filter(Boolean);
+  const effectivePaidOrders = dedupeOrders([...paidOrders, ...paidOrdersFromTickets]);
 
-  const paidOrderIdsFromTickets = new Set<string>(
-    paidTicketsWithConfirmedOrder.map((ticket: any) => String(ticket.order_id)).filter(Boolean),
-  );
-
-  const paidOrdersCount = paidOrders.length > 0
-    ? paidOrders.length
-    : paidOrderIdsFromTickets.size;
-
-  const fallbackRevenueFromTickets = Array.from(
-    new Map(
-      paidTicketsWithConfirmedOrder.map((ticket: any) => {
-        const rawOrder = Array.isArray(ticket.orders) ? ticket.orders[0] : ticket.orders;
-        return [String(ticket.order_id), Number(rawOrder?.total || 0)];
-      }),
-    ).values(),
-  ).reduce((sum, total) => sum + total, 0);
-
-  const analyticsByEventId = new Map(analytics.map((a) => [a.event_id, a]));
+  const analyticsByEventId = new Map(analytics.map((row) => [row.event_id, row]));
   const tiersByEventId = new Map<string, any[]>();
   for (const tier of tiers) {
     const list = tiersByEventId.get(tier.event_id) || [];
@@ -525,77 +669,142 @@ export async function getProducerDashboardStats(producerId: string) {
     tiersByEventId.set(tier.event_id, list);
   }
 
-  const totalRevenue = paidOrders.length > 0
-    ? paidOrders.reduce((sum, order) => sum + Number(order.total || 0), 0)
-    : fallbackRevenueFromTickets;
-  const ticketsSold = tiers.reduce((sum, tier) => sum + Number(tier.quantity_sold || 0), 0);
+  const paidOrdersByEventId = new Map<string, any[]>();
+  for (const order of effectivePaidOrders) {
+    const list = paidOrdersByEventId.get(order.event_id) || [];
+    list.push(order);
+    paidOrdersByEventId.set(order.event_id, list);
+  }
+
+  const totalGrossRevenue = effectivePaidOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
+  const totalPlatformRevenue = effectivePaidOrders.reduce((sum, order) => sum + Number(order.platform_fee || 0), 0);
+  const totalGatewayFees = effectivePaidOrders.reduce((sum, order) => sum + Number(order.payment_gateway_fee || 0), 0);
+  const totalRefundAmount = effectivePaidOrders.reduce((sum, order) => sum + Number(order.refunded_amount || 0), 0);
+  const totalTicketRevenue = Math.max(totalGrossRevenue - totalPlatformRevenue, 0);
+  const totalNetRevenue = Math.max(totalTicketRevenue - totalGatewayFees - totalRefundAmount, 0);
+
+  const totalEvents = events.length;
+  const publishedEvents = events.filter((event) => String(event.status || "").toLowerCase() === "published").length;
+  const draftEvents = events.filter((event) => String(event.status || "").toLowerCase() === "draft").length;
+  const endedEvents = events.filter((event) => ["ended", "completed", "finished", "done"].includes(String(event.status || "").toLowerCase())).length;
+  const activeEvents = events.filter((event) => ["published", "active"].includes(String(event.status || "").toLowerCase())).length;
+
   const upcomingBase = events
-    .filter((e) => !!e.start_date && e.start_date > nowIso)
+    .filter((event) => !!event.start_date && new Date(event.start_date).getTime() > nowMs)
     .sort((a, b) => a.start_date.localeCompare(b.start_date));
 
-  const activeEvents = events.filter((e) => {
-    const status = String(e.status || "").toLowerCase();
-    return ["published", "active"].includes(status);
-  }).length;
-
-  const focusAnalytics = focusEventRaw ? analyticsByEventId.get(focusEventRaw.id) : null;
-  const focusTiers = focusEventRaw ? tiersByEventId.get(focusEventRaw.id) || [] : [];
-  const totalCapacity = focusTiers.reduce((sum, tier) => sum + Number(tier.quantity_total || 0), 0);
-  const soldCapacity = focusTiers.reduce((sum, tier) => sum + Number(tier.quantity_sold || 0), 0);
-
-  const sevenDaysAgo = new Date(now);
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-  const focusPaidOrders = focusEventRaw
-    ? paidOrders.filter((order) => order.event_id === focusEventRaw.id)
-    : [];
-
-  const focusPaidOrdersLast7Days = focusPaidOrders.filter((order) => {
-    if (!order.created_at) return false;
-    return new Date(order.created_at).getTime() >= sevenDaysAgo.getTime();
-  });
-
-  const paidOrdersLast7DaysCount = focusPaidOrdersLast7Days.length;
-  const paidSalesLast7DaysAmount = focusPaidOrdersLast7Days.reduce(
-    (sum, order) => sum + Number(order.total || 0),
-    0,
-  );
-
-  const focusDaysUntilEvent = focusEventRaw?.start_date
-    ? Math.ceil((new Date(focusEventRaw.start_date).getTime() - nowMs) / 86_400_000)
-    : null;
-
-  const focusEvent = focusEventRaw
-    ? {
-      id: focusEventRaw.id,
-      title: focusEventRaw.title,
-      status: focusEventRaw.status,
-      start_date: focusEventRaw.start_date,
-      daysUntilEvent: focusDaysUntilEvent,
-      revenue: focusPaidOrders.reduce((sum, order) => sum + Number(order.total || 0), 0),
-      ticketsSold: Number(focusAnalytics?.tickets_sold || soldCapacity || 0),
-      capacityTotal: totalCapacity,
-      capacitySold: soldCapacity,
-      paidOrdersLast7DaysCount,
-      paidSalesLast7DaysAmount,
-      hasPublishedTiers: focusTiers.length > 0,
-    }
-    : null;
-
-  const otherUpcomingEvents = upcomingBase
-    .filter((event) => event.id !== focusEventRaw?.id)
-    .slice(0, 3)
-    .map((event) => {
+  const buildEventSummary = (event: any) => {
     const eventAnalytics = analyticsByEventId.get(event.id);
+    const eventTiers = tiersByEventId.get(event.id) || [];
+    const eventPaidOrders = paidOrdersByEventId.get(event.id) || [];
+
+    const grossRevenue = eventPaidOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
+    const platformRevenue = eventPaidOrders.reduce((sum, order) => sum + Number(order.platform_fee || 0), 0);
+    const gatewayFees = eventPaidOrders.reduce((sum, order) => sum + Number(order.payment_gateway_fee || 0), 0);
+    const refundAmount = eventPaidOrders.reduce((sum, order) => sum + Number(order.refunded_amount || 0), 0);
+    const ticketRevenue = Math.max(grossRevenue - platformRevenue, 0);
+    const netRevenue = Math.max(ticketRevenue - gatewayFees - refundAmount, 0);
+    const totalCapacity = eventTiers.reduce((sum, tier) => sum + Number(tier.quantity_total || 0), 0);
+    const capacitySold = eventTiers.reduce((sum, tier) => sum + Number(tier.quantity_sold || 0), 0);
+    const ticketsSoldEvent = Number(eventAnalytics?.tickets_sold || capacitySold || 0);
+    const ticketsCheckedInEvent = Number(eventAnalytics?.tickets_checked_in || 0);
+    const pageViewsEvent = Number(eventAnalytics?.page_views || event.views_count || 0);
+    const conversionRateEvent = pageViewsEvent > 0 ? (ticketsSoldEvent / pageViewsEvent) * 100 : 0;
+    const checkinRateEvent = ticketsSoldEvent > 0 ? (ticketsCheckedInEvent / ticketsSoldEvent) * 100 : 0;
+    const occupancyRate = totalCapacity > 0 ? (capacitySold / totalCapacity) * 100 : 0;
+    const remainingCapacity = Math.max(totalCapacity - capacitySold, 0);
+    const daysUntilEvent = event.start_date
+      ? Math.ceil((new Date(event.start_date).getTime() - nowMs) / 86_400_000)
+      : null;
+    const paidOrdersLast7DaysCount = eventPaidOrders.filter((order) => order.created_at && new Date(order.created_at).getTime() >= sevenDaysAgoMs).length;
+    const revenueLast7DaysAmount = eventPaidOrders
+      .filter((order) => order.created_at && new Date(order.created_at).getTime() >= sevenDaysAgoMs)
+      .reduce((sum, order) => sum + Math.max(0, Number(order.total || 0) - Number(order.platform_fee || 0)), 0);
+    const paidOrdersLast30DaysCount = eventPaidOrders.filter((order) => order.created_at && new Date(order.created_at).getTime() >= thirtyDaysAgoMs).length;
+    const revenueLast30DaysAmount = eventPaidOrders
+      .filter((order) => order.created_at && new Date(order.created_at).getTime() >= thirtyDaysAgoMs)
+      .reduce((sum, order) => sum + Math.max(0, Number(order.total || 0) - Number(order.platform_fee || 0)), 0);
+    const couponOrdersCount = eventPaidOrders.filter((order) => !!order.coupon_id).length;
+    const couponUseRate = eventPaidOrders.length > 0 ? (couponOrdersCount / eventPaidOrders.length) * 100 : 0;
+
     return {
       id: event.id,
       title: event.title,
       status: event.status,
-      start_date: event.start_date,
-      ticketsSold: eventAnalytics?.tickets_sold || 0,
-      revenue: eventAnalytics?.producer_revenue || 0,
+      slug: event.slug || null,
+      start_date: event.start_date || null,
+      end_date: event.end_date || null,
+      venue_city: event.venue_city || null,
+      grossRevenue,
+      totalRevenue: grossRevenue,
+      revenue: grossRevenue,
+      ticketRevenue,
+      netRevenue,
+      platformRevenue,
+      gatewayFees,
+      refundAmount,
+      pageViews: pageViewsEvent,
+      ticketsSold: ticketsSoldEvent,
+      ticketsCheckedIn: ticketsCheckedInEvent,
+      conversionRate: conversionRateEvent,
+      checkinRate: checkinRateEvent,
+      capacityTotal: totalCapacity,
+      capacitySold,
+      occupancyRate,
+      remainingCapacity,
+      daysUntilEvent,
+      paidOrdersCount: eventPaidOrders.length,
+      paidOrdersLast7DaysCount,
+      revenueLast7DaysAmount,
+      paidOrdersLast30DaysCount,
+      revenueLast30DaysAmount,
+      couponOrdersCount,
+      couponUseRate,
+      hasPublishedTiers: eventTiers.length > 0,
     };
-  });
+  };
+
+  const topEvents = events
+    .map((event) => buildEventSummary(event))
+    .sort((a, b) => b.netRevenue - a.netRevenue || b.ticketsSold - a.ticketsSold || b.pageViews - a.pageViews);
+
+  const focusEventRaw = sortedForFocus[0];
+  const focusEvent = focusEventRaw ? buildEventSummary(focusEventRaw) : null;
+
+  const timelineByDay = buildProducerTimelineSeries({ orders: effectivePaidOrders, tickets: rawTickets }, "day");
+  const timelineByMonth = buildProducerTimelineSeries({ orders: effectivePaidOrders, tickets: rawTickets }, "month");
+
+  const ticketsSold = Number(analytics.reduce((sum, row) => sum + Number(row.tickets_sold || 0), 0)) || topEvents.reduce((sum, event) => sum + Number(event.ticketsSold || 0), 0);
+  const ticketsCheckedIn = Number(analytics.reduce((sum, row) => sum + Number(row.tickets_checked_in || 0), 0)) || topEvents.reduce((sum, event) => sum + Number(event.ticketsCheckedIn || 0), 0);
+  const pageViews = Number(analytics.reduce((sum, row) => sum + Number(row.page_views || 0), 0)) || events.reduce((sum, event) => sum + Number(event.views_count || 0), 0);
+  const checkinRate = ticketsSold > 0 ? (ticketsCheckedIn / ticketsSold) * 100 : 0;
+  const conversionRate = pageViews > 0 ? (ticketsSold / pageViews) * 100 : 0;
+
+  const totalCapacity = topEvents.reduce((sum, event) => sum + Number(event.capacityTotal || 0), 0);
+  const capacitySold = topEvents.reduce((sum, event) => sum + Number(event.capacitySold || 0), 0);
+  const portfolioOccupancyRate = totalCapacity > 0 ? (capacitySold / totalCapacity) * 100 : 0;
+  const soldOutEvents = topEvents.filter((event) => event.capacityTotal > 0 && event.capacitySold >= event.capacityTotal).length;
+  const nearSoldOutEvents = topEvents.filter((event) => {
+    if (event.capacityTotal <= 0) return false;
+    const remaining = Math.max(event.capacityTotal - event.capacitySold, 0);
+    return remaining > 0 && (remaining / event.capacityTotal) <= 0.2;
+  }).length;
+
+  const averageOrderValue = effectivePaidOrders.length > 0 ? totalGrossRevenue / effectivePaidOrders.length : 0;
+  const averageRevenuePerTicket = ticketsSold > 0 ? totalNetRevenue / ticketsSold : 0;
+  const viewsPerTicket = ticketsSold > 0 ? pageViews / ticketsSold : 0;
+  const ordersLast7DaysCount = effectivePaidOrders.filter((order) => order.created_at && new Date(order.created_at).getTime() >= sevenDaysAgoMs).length;
+  const revenueLast7DaysAmount = effectivePaidOrders
+    .filter((order) => order.created_at && new Date(order.created_at).getTime() >= sevenDaysAgoMs)
+    .reduce((sum, order) => sum + Math.max(0, Number(order.total || 0) - Number(order.platform_fee || 0)), 0);
+  const ordersLast30DaysCount = effectivePaidOrders.filter((order) => order.created_at && new Date(order.created_at).getTime() >= thirtyDaysAgoMs).length;
+  const revenueLast30DaysAmount = effectivePaidOrders
+    .filter((order) => order.created_at && new Date(order.created_at).getTime() >= thirtyDaysAgoMs)
+    .reduce((sum, order) => sum + Math.max(0, Number(order.total || 0) - Number(order.platform_fee || 0)), 0);
+  const ticketsSoldLast7DaysCount = rawTickets.filter((ticket) => ticket.created_at && new Date(ticket.created_at).getTime() >= sevenDaysAgoMs).length;
+  const ticketsSoldLast30DaysCount = rawTickets.filter((ticket) => ticket.created_at && new Date(ticket.created_at).getTime() >= thirtyDaysAgoMs).length;
+  const checkinsLast7DaysCount = rawTickets.filter((ticket) => ticket.checked_in_at && new Date(ticket.checked_in_at).getTime() >= sevenDaysAgoMs).length;
+  const checkinsLast30DaysCount = rawTickets.filter((ticket) => ticket.checked_in_at && new Date(ticket.checked_in_at).getTime() >= thirtyDaysAgoMs).length;
 
   const practicalAlerts: Array<{
     id: string;
@@ -631,11 +840,7 @@ export async function getProducerDashboardStats(producerId: string) {
       });
     }
 
-    if (
-      focusEvent.daysUntilEvent !== null
-      && focusEvent.daysUntilEvent <= 14
-      && focusEvent.paidOrdersLast7DaysCount === 0
-    ) {
+    if (focusEvent.daysUntilEvent !== null && focusEvent.daysUntilEvent <= 14 && focusEvent.paidOrdersLast7DaysCount === 0) {
       practicalAlerts.push({
         id: `no-sales-7d-${focusEvent.id}`,
         severity: "warning",
@@ -647,14 +852,13 @@ export async function getProducerDashboardStats(producerId: string) {
     }
 
     if (focusEvent.capacityTotal > 0) {
-      const remaining = Math.max(focusEvent.capacityTotal - focusEvent.capacitySold, 0);
-      const remainingRatio = remaining / focusEvent.capacityTotal;
-      if (remainingRatio <= 0.2 && remaining > 0) {
+      const remainingRatio = focusEvent.remainingCapacity / focusEvent.capacityTotal;
+      if (remainingRatio <= 0.2 && focusEvent.remainingCapacity > 0) {
         practicalAlerts.push({
           id: `near-sold-out-${focusEvent.id}`,
           severity: "info",
           title: "Lote quase esgotado",
-          description: `Restam ${remaining} ingressos disponíveis no evento em foco.`,
+          description: `Restam ${focusEvent.remainingCapacity} ingressos disponíveis no evento em foco.`,
           ctaLabel: "Antecipar virada de lote",
           ctaTo: `/producer/events/${focusEvent.id}/edit`,
         });
@@ -662,25 +866,82 @@ export async function getProducerDashboardStats(producerId: string) {
     }
   }
 
+  if (conversionRate < 1.5 && pageViews >= 100) {
+    practicalAlerts.push({
+      id: "low-conversion",
+      severity: "warning",
+      title: "Conversão abaixo do esperado",
+      description: `${conversionRate.toFixed(1).replace(".", ",")}% das visualizações viraram ingressos no portfólio.`,
+      ctaLabel: "Revisar vitrine e oferta",
+      ctaTo: focusEvent ? `/producer/events/${focusEvent.id}/panel` : "/producer/events",
+    });
+  }
+
+  if (totalRefundAmount > 0 && totalGrossRevenue > 0 && (totalRefundAmount / totalGrossRevenue) > 0.05) {
+    practicalAlerts.push({
+      id: "refund-pressure",
+      severity: "warning",
+      title: "Volume relevante de estornos",
+      description: `${formatPercent((totalRefundAmount / totalGrossRevenue) * 100)} do GMV já voltou em estornos.`,
+      ctaLabel: "Revisar repasses e suporte",
+      ctaTo: "/producer/financial",
+    });
+  }
+
   if (practicalAlerts.length === 0) {
     practicalAlerts.push({
       id: "all-good",
       severity: "info",
       title: "Tudo certo para continuar vendendo",
-      description: "Seu evento principal está sem pendências críticas no momento.",
+      description: "Seu portfólio está sem pendências críticas no momento.",
       ctaLabel: "Abrir painel completo",
       ctaTo: focusEvent ? `/producer/events/${focusEvent.id}/panel` : "/producer/events",
     });
   }
 
+  const otherUpcomingEvents = upcomingBase
+    .filter((event) => event.id !== focusEventRaw?.id)
+    .slice(0, 3)
+    .map((event) => buildEventSummary(event));
+
   return {
-    totalRevenue,
+    totalRevenue: totalGrossRevenue,
+    grossRevenue: totalGrossRevenue,
+    netRevenue: totalNetRevenue,
+    ticketRevenue: totalTicketRevenue,
+    platformRevenue: totalPlatformRevenue,
+    gatewayFees: totalGatewayFees,
+    refundAmount: totalRefundAmount,
     ticketsSold,
-    totalEvents: events.length,
+    ticketsCheckedIn,
+    pageViews,
+    conversionRate,
+    checkinRate,
+    portfolioOccupancyRate,
+    averageOrderValue,
+    averageRevenuePerTicket,
+    viewsPerTicket,
+    totalEvents,
     upcomingEvents: upcomingBase.length,
     activeEvents,
-    confirmedOrders: paidOrdersCount,
+    publishedEvents,
+    draftEvents,
+    endedEvents,
+    soldOutEvents,
+    nearSoldOutEvents,
+    confirmedOrders: effectivePaidOrders.length,
+    ordersLast7DaysCount,
+    revenueLast7DaysAmount,
+    ordersLast30DaysCount,
+    revenueLast30DaysAmount,
+    ticketsSoldLast7DaysCount,
+    ticketsSoldLast30DaysCount,
+    checkinsLast7DaysCount,
+    checkinsLast30DaysCount,
+    timelineByDay,
+    timelineByMonth,
     focusEvent,
+    topEvents,
     otherUpcomingEvents,
     practicalAlerts: practicalAlerts.slice(0, 4),
   };

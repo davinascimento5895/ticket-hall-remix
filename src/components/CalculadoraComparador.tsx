@@ -8,10 +8,10 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const competitors = [
-  { name: "Sympla", fee: 0.1018 },
-  { name: "Ingresse", fee: 0.1067 },
-  { name: "ZigBrasil", fee: 0.0821 },
-  { name: "Ticketmaster", fee: 0.1833 },
+  { name: "Plataforma analisada 1", fee: 0.1018 },
+  { name: "Plataforma analisada 2", fee: 0.1067 },
+  { name: "Plataforma analisada 3", fee: 0.0821 },
+  { name: "Plataforma analisada 4", fee: 0.1833 },
 ];
 
 const TICKETHALL_FEE = 0.07;
@@ -268,7 +268,7 @@ export function CalculadoraComparador() {
   const maxCompetitorFee = Math.max(...competitors.map((c) => c.fee));
   const savingsPerTicket = basePrice * (maxCompetitorFee - TICKETHALL_FEE);
   const totalSavings = savingsPerTicket * ticketCount;
-  const worstName = competitors.find((c) => c.fee === maxCompetitorFee)?.name || "";
+  const worstLabel = "a plataforma com maior taxa na comparação";
 
   const sliderLabels = [
     { value: 0, label: "0" },
@@ -370,7 +370,7 @@ export function CalculadoraComparador() {
             R$ <AnimatedNumber value={savingsPerTicket} /> /ingresso
           </p>
           <p className="text-xs text-muted-foreground">
-            vs {worstName}
+            vs {worstLabel}
           </p>
           {!isMobile && <div className="h-px w-12 mx-auto bg-[hsl(69,100%,43%)]/20" />}
           <div className={isMobile ? "pt-1" : ""}>
@@ -387,7 +387,7 @@ export function CalculadoraComparador() {
         </motion.div>
 
       <p className="text-[10px] text-muted-foreground text-center">
-        Taxas dos concorrentes são aproximadas, baseadas em pesquisa pública de fevereiro de 2026.
+        Taxas das plataformas analisadas são aproximadas, baseadas em pesquisa pública de fevereiro de 2026.
       </p>
     </div>
   );

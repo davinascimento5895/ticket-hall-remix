@@ -636,6 +636,11 @@ export default function AdminDashboard() {
                       boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                     }}
                     formatter={(v: number, name) => [name === "revenue" ? formatBRL(v) : v.toLocaleString("pt-BR"), name === "revenue" ? "Receita" : "Pedidos"]}
+                    labelFormatter={(label) => {
+                      const parsed = new Date(String(label));
+                      return isNaN(parsed.getTime()) ? String(label) : parsed.toLocaleDateString("pt-BR");
+                    }}
+                    cursor={{ stroke: "hsl(var(--primary))", strokeWidth: 1 }}
                   />
                   <Legend />
                   <Area yAxisId="left" type="monotone" dataKey="revenue" fill="hsl(var(--primary) / 0.18)" stroke="hsl(var(--primary))" strokeWidth={2} name="Receita" />
@@ -679,7 +684,10 @@ export default function AdminDashboard() {
                   <Pie data={paymentEntries} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={86} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
                     {paymentEntries.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                   </Pie>
-                  <Tooltip formatter={(value: number) => [paymentSort === "total" ? formatBRL(value) : value, paymentSort === "total" ? "Total" : "Pedidos"]} />
+                  <Tooltip
+                    formatter={(value: number) => [paymentSort === "total" ? formatBRL(value) : value, paymentSort === "total" ? "Total" : "Pedidos"]}
+                    cursor={{ fill: 'rgba(0,0,0,0.04)' }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
@@ -717,12 +725,17 @@ export default function AdminDashboard() {
                       boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                     }}
                     formatter={(value: number, name) => [value.toLocaleString("pt-BR"), name === "newEvents" ? "Eventos" : name === "newUsers" ? "Usuários" : name === "activeUsers" ? "Ativos" : "Check-ins"]}
+                    labelFormatter={(label) => {
+                      const parsed = new Date(String(label));
+                      return isNaN(parsed.getTime()) ? String(label) : parsed.toLocaleDateString("pt-BR");
+                    }}
+                    cursor={{ stroke: "hsl(var(--accent))", strokeWidth: 1 }}
                   />
                   <Legend />
-                  <Line type="monotone" dataKey="newEvents" name="Eventos criados" stroke="hsl(var(--primary))" strokeWidth={2.25} dot={false} />
-                  <Line type="monotone" dataKey="newUsers" name="Usuários novos" stroke="hsl(var(--accent))" strokeWidth={2.25} dot={false} />
-                  <Line type="monotone" dataKey="activeUsers" name="Usuários ativos" stroke="hsl(142 71% 45%)" strokeWidth={2.25} dot={false} />
-                  <Line type="monotone" dataKey="checkins" name="Check-ins" stroke="hsl(38 92% 50%)" strokeWidth={2.25} dot={false} />
+                  <Line type="monotone" dataKey="newEvents" name="Eventos criados" stroke="hsl(var(--primary))" strokeWidth={2.25} dot={false} activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="newUsers" name="Usuários novos" stroke="hsl(var(--accent))" strokeWidth={2.25} dot={false} activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="activeUsers" name="Usuários ativos" stroke="hsl(142 71% 45%)" strokeWidth={2.25} dot={false} activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="checkins" name="Check-ins" stroke="hsl(38 92% 50%)" strokeWidth={2.25} dot={false} activeDot={{ r: 6 }} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
