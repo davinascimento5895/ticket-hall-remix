@@ -2,6 +2,7 @@
 .local/
 node_modules/
 .env
+.env.backup
 
 # Editor directories
 .vscode/
