@@ -42,7 +42,8 @@ export default function NotificacoesConfig() {
     queryKey: ["notifications-page", user?.id],
     queryFn: () => getNotifications(user!.id, 50),
     enabled: !!user?.id,
-    refetchInterval: 30_000,
+    refetchInterval: 5 * 60_000,  // 5 min — reduz polling frequente
+    staleTime: 60_000,  // 1 min — cache local
   });
 
   const markAllRead = useMutation({

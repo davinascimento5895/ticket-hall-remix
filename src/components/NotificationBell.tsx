@@ -20,7 +20,8 @@ export function NotificationBell() {
     queryKey: ["notifications", user?.id],
     queryFn: () => getNotifications(user!.id),
     enabled: !!user?.id,
-    refetchInterval: 30000,
+    refetchInterval: 5 * 60000,  // 5 minutos — reduz polling frequente. Usa Realtime para updates em tempo real
+    staleTime: 60000,  // 1 min — cache local para melhor performance
   });
 
   const markRead = useMutation({

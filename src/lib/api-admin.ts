@@ -598,16 +598,24 @@ export async function getAllUsers(search?: string) {
 // ============================================================
 
 export async function getProducers(search?: string) {
-  // Get all users with producer role
-  const { data: producerRoles, error: rolesError } = await supabase
-    .from("user_roles")
-    .select("user_id")
-    .eq("role", "producer" as any);
-  if (rolesError) throw rolesError;
-  if (!producerRoles || producerRoles.length === 0) return [];
+  // Get all users with producer role + events count in parallel
+  const [rolesRes, eventsRes] = await Promise.all([
+    supabase
+      .from("user_roles")
+      .select("user_id")
+      .eq("role", "producer" as any),
+    supabase
+      .from("events")
+      .select("producer_id"),
+  ]);
+
+  if (rolesRes.error) throw rolesRes.error;
+  const producerRoles = rolesRes.data || [];
+  if (producerRoles.length === 0) return [];
 
   const producerIds = producerRoles.map((r: any) => r.user_id);
 
+  // Query profiles with event count in single pass
   let query = supabase
     .from("profiles")
     .select("id, full_name, phone, created_at")
@@ -620,15 +628,12 @@ export async function getProducers(search?: string) {
   if (error) throw error;
   if (!profiles) return [];
 
-  // Count events per producer
-  const { data: events } = await supabase
-    .from("events")
-    .select("producer_id")
-    .in("producer_id", producerIds);
-
+  // Count events per producer from already-fetched events
   const countMap = new Map<string, number>();
-  (events || []).forEach((e: any) => {
-    countMap.set(e.producer_id, (countMap.get(e.producer_id) || 0) + 1);
+  (eventsRes.data || []).forEach((e: any) => {
+    if (producerIds.includes(e.producer_id)) {
+      countMap.set(e.producer_id, (countMap.get(e.producer_id) || 0) + 1);
+    }
   });
 
   return profiles.map((p) => ({ ...p, events_count: countMap.get(p.id) || 0 }));

@@ -29,14 +29,14 @@ export default function ProducerEventDashboardTab() {
       return data;
     },
     enabled: !!id,
-    staleTime: 30_000,
+    staleTime: 2 * 60_000,  // 2 min — event summary não muda frequentemente
   });
 
   const { data: analytics, isLoading } = useQuery({
     queryKey: ["event-analytics", id],
     queryFn: () => getEventAnalytics(id!),
     enabled: !!id,
-    staleTime: 30_000,
+    staleTime: 2 * 60_000,  // 2 min — analytics agregadas
   });
 
   // Tickets for attendance/no-show calculation
@@ -52,7 +52,7 @@ export default function ProducerEventDashboardTab() {
       return data;
     },
     enabled: !!id,
-    staleTime: 30_000,
+    staleTime: 60_000,  // 1 min — tickets podem mudar com check-ins
   });
 
   const { data: tiers } = useQuery({

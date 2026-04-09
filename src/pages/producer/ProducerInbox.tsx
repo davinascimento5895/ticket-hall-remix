@@ -92,20 +92,14 @@ export default function ProducerInbox() {
   }, []);
 
   useEffect(() => {
+    // Aggregate localStorage writes into single effect (avoid blocking renders)
     try {
       localStorage.setItem(QUICK_REPLIES_STORAGE_KEY, JSON.stringify(quickReplies));
-    } catch {
-      // Ignore storage limitations.
-    }
-  }, [quickReplies]);
-
-  useEffect(() => {
-    try {
       localStorage.setItem(URGENCY_OVERRIDES_STORAGE_KEY, JSON.stringify(urgentOverrides));
     } catch {
       // Ignore storage limitations.
     }
-  }, [urgentOverrides]);
+  }, [quickReplies, urgentOverrides]);
 
   const { data: messages = [], isLoading, error: inboxError } = useQuery({
     queryKey: ["producer-inbox", user?.id],

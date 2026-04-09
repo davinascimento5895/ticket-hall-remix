@@ -2,11 +2,9 @@ import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { EventCard } from "@/components/EventCard";
+import { LandingHero } from "@/components/LandingHero";
 import { CategoryCarousel } from "@/components/CategoryCarousel";
 import { CityCarousel } from "@/components/CityCarousel";
-import { SearchBar } from "@/components/SearchBar";
-import { Spotlight } from "@/components/core/spotlight";
-import { WordRotate } from "@/components/ui/word-rotate";
 import { motion } from "framer-motion";
 import {
   CreditCard, Smartphone, Zap,
@@ -70,59 +68,7 @@ export default function Index() {
 
   return (
     <>
-      {/* ===== HERO ===== */}
-      <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden">
-        <Spotlight size={500} className="z-0" />
-        <div className="container relative z-10 text-center space-y-6 py-20">
-          <motion.h1
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="font-display text-4xl lg:text-6xl xl:text-7xl font-bold leading-tight"
-          >
-            Seus ingressos para{" "}
-            <WordRotate
-              words={["shows", "festivais", "eventos", "summits", "teatros", "congressos", "workshops"]}
-              duration={2500}
-              className="text-primary"
-            />
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.05 }}
-            className="text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto"
-          >
-            Compre, transfira e gerencie seus ingressos com segurança. A plataforma completa para produtores e compradores.
-          </motion.p>
-
-          {/* Hero Search Bar */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.1 }}
-            className="max-w-2xl mx-auto w-full"
-          >
-            <SearchBar variant="hero" placeholder="Buscar eventos, shows, cidades..." />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.15 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4"
-          >
-            <Button variant="default" size="lg" asChild>
-              <Link to="/eventos">
-                Explorar eventos <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-            <Button variant="outline" size="lg" asChild>
-              <Link to="/produtores">Sou produtor</Link>
-            </Button>
-          </motion.div>
-        </div>
-      </section>
+      <LandingHero />
 
       {/* ===== CATEGORY CAROUSEL ===== */}
       <CategoryCarousel className="bg-secondary/30" />

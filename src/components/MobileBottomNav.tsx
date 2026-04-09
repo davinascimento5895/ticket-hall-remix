@@ -49,6 +49,11 @@ export function MobileBottomNav() {
     return null;
   }
 
+  // Hide on staff portal flow
+  if (location.pathname.startsWith("/staff")) {
+    return null;
+  }
+
   const navItems = baseNavItems.map((item) =>
     item.id === "profile" ? { ...item, href: "/meu-perfil" } : item
   );

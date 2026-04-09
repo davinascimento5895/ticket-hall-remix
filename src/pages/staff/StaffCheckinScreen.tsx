@@ -9,7 +9,7 @@ import {
   isSoundEnabled, toggleSound,
 } from "@/lib/audio-feedback";
 import { Html5Qrcode } from "html5-qrcode";
-import { LogOut, Flashlight, Volume2, VolumeX, Search, History, CheckCircle2, AlertTriangle, XCircle, ChevronLeft } from "lucide-react";
+import { LogOut, Volume2, VolumeX, Search, History, CheckCircle2, AlertTriangle, XCircle, ChevronLeft, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,14 @@ import {
   Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger,
 } from "@/components/ui/drawer";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type ScanResult = "success" | "already_used" | "invalid_qr" | "not_found" | "inactive" | "wrong_list" | "error" | "rate_limited" | "config_error" | "unauthorized";
 
@@ -51,6 +59,15 @@ function maskEmail(email: string) {
   return `${local.slice(0, 2)}***@${domain}`;
 }
 
+function normalizeSearchText(text: string) {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\w\s@.-]/g, "")
+    .trim();
+}
+
 const SCANNER_ID = "staff-qr-reader";
 
 export default function StaffCheckinScreen() {
@@ -68,7 +85,6 @@ export default function StaffCheckinScreen() {
 
   // Scanner
   const scannerRef = useRef<Html5Qrcode | null>(null);
-  const [torchOn, setTorchOn] = useState(false);
   const [soundOn, setSoundOn] = useState(isSoundEnabled());
   const soundRef = useRef(soundOn);
   soundRef.current = soundOn;
@@ -83,10 +99,26 @@ export default function StaffCheckinScreen() {
 
   // Manual search
   const [manualOpen, setManualOpen] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<TicketRow[]>([]);
   const [searching, setSearching] = useState(false);
   const [confirmTicket, setConfirmTicket] = useState<TicketRow | null>(null);
+  const searchRequestRef = useRef(0);
+
+  useEffect(() => {
+    if (!eventId) return;
+    const storageKey = `staff-checkin-instructions-hidden:${eventId}`;
+    setShowInstructions(localStorage.getItem(storageKey) !== "1");
+  }, [eventId]);
+
+  const setInstructionsVisible = useCallback((visible: boolean) => {
+    if (!eventId) return;
+    const storageKey = `staff-checkin-instructions-hidden:${eventId}`;
+    if (visible) localStorage.removeItem(storageKey);
+    else localStorage.setItem(storageKey, "1");
+    setShowInstructions(visible);
+  }, [eventId]);
 
   // History drawer
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -216,33 +248,83 @@ export default function StaffCheckinScreen() {
   }, [loading, user]);
 
   // ─── Manual search ───
-  const doSearch = useCallback(async () => {
-    if (!searchQuery.trim() || !eventId) return;
+  const doSearch = useCallback(async (rawQuery = searchQuery) => {
+    if (!eventId) return;
+
+    const q = rawQuery.trim();
+    if (!q) {
+      searchRequestRef.current += 1;
+      setSearchResults([]);
+      setSearching(false);
+      return;
+    }
+
+    const requestId = ++searchRequestRef.current;
     setSearching(true);
-    const q = searchQuery.trim();
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(q);
+    const safeQuery = q.replace(/[%_,]/g, "");
 
     // Search by name, email, order_id, or ticket id
     const orFilters = [
-      `attendee_name.ilike.%${q}%`,
-      `attendee_email.ilike.%${q}%`,
+      `attendee_name.ilike.%${safeQuery}%`,
+      `attendee_email.ilike.%${safeQuery}%`,
+      `order_id.ilike.%${safeQuery}%`,
+      `id.ilike.%${safeQuery}%`,
     ];
-    if (isUuid) {
-      orFilters.push(`order_id.eq.${q}`);
-      orFilters.push(`id.eq.${q}`);
+
+    try {
+      const { data, error } = await supabase
+        .from("tickets")
+        .select("id, attendee_name, attendee_email, status, tier_id, order_id, ticket_tiers(name)")
+        .eq("event_id", eventId)
+        .in("status", ["active", "used"])
+        .or(orFilters.join(","))
+        .limit(20);
+
+      if (error) throw error;
+
+      const normalizedQuery = normalizeSearchText(q);
+      const rows = ((data as any[]) || []).filter((ticket) => {
+        const searchable = normalizeSearchText([
+          ticket.attendee_name,
+          ticket.attendee_email,
+          ticket.order_id,
+          ticket.id,
+        ].filter(Boolean).join(" "));
+
+        return searchable.includes(normalizedQuery);
+      });
+
+      if (requestId !== searchRequestRef.current) return;
+      setSearchResults(rows);
+      setConfirmTicket(null);
+    } catch (error) {
+      if (requestId !== searchRequestRef.current) return;
+      setSearchResults([]);
+    } finally {
+      if (requestId === searchRequestRef.current) {
+        setSearching(false);
+      }
+    }
+  }, [searchQuery, eventId]);
+
+  useEffect(() => {
+    if (!manualOpen) return;
+
+    const q = searchQuery.trim();
+    if (!q) {
+      searchRequestRef.current += 1;
+      setSearchResults([]);
+      setConfirmTicket(null);
+      setSearching(false);
+      return;
     }
 
-    const { data } = await supabase
-      .from("tickets")
-      .select("id, attendee_name, attendee_email, status, tier_id, order_id, ticket_tiers(name)")
-      .eq("event_id", eventId)
-      .in("status", ["active", "used"])
-      .or(orFilters.join(","))
-      .limit(20);
+    const timer = setTimeout(() => {
+      void doSearch(q);
+    }, 250);
 
-    setSearchResults((data as any[]) || []);
-    setSearching(false);
-  }, [searchQuery, eventId]);
+    return () => clearTimeout(timer);
+  }, [manualOpen, searchQuery, doSearch]);
 
   const handleManualCheckin = useCallback(async (ticket: TicketRow) => {
     setConfirmTicket(null);
@@ -265,19 +347,6 @@ export default function StaffCheckinScreen() {
       showFeedback("error", err?.message || "Erro ao validar ingresso");
     }
   }, [user, showFeedback]);
-
-  // ─── Toggle torch ───
-  const toggleTorch = useCallback(async () => {
-    try {
-      // Access the underlying video track
-      const el = document.querySelector(`#${SCANNER_ID} video`) as HTMLVideoElement | null;
-      const track = el?.srcObject instanceof MediaStream ? el.srcObject.getVideoTracks()[0] : null;
-      if (track) {
-        await track.applyConstraints({ advanced: [{ torch: !torchOn } as any] });
-        setTorchOn((v) => !v);
-      }
-    } catch { /* torch not supported */ }
-  }, [torchOn]);
 
   // ─── Derived ───
   const pct = totalTickets > 0 ? Math.round((checkedInCount / totalTickets) * 100) : 0;
@@ -322,6 +391,40 @@ export default function StaffCheckinScreen() {
         </div>
       </div>
 
+      {/* ── Instruções rápidas ── */}
+      {showInstructions ? (
+        <section className="px-4 py-3 border-b border-border bg-muted/20">
+          <div className="flex items-start gap-2">
+            <ClipboardList className="h-4 w-4 mt-0.5 text-primary" />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-sm font-semibold">Instruções para a equipe</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Fluxo rápido para check-in sem erro. A confirmação final sempre aparece antes de efetivar a busca manual.
+                  </p>
+                </div>
+                <Button variant="ghost" size="sm" className="h-7 px-2 text-[11px]" onClick={() => setInstructionsVisible(false)}>
+                  Ocultar
+                </Button>
+              </div>
+              <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+                <li>1. Aponte a câmera para o QR Code inteiro e aguarde o retorno na tela.</li>
+                <li>2. Se o ingresso falhar, use a busca manual por nome, e-mail ou código.</li>
+                <li>3. Em caso de "já utilizado", confirme documento com o participante.</li>
+                <li>4. Mantenha uma fila por vez para acelerar o check-in.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      ) : (
+        <div className="px-4 py-2 border-b border-border bg-muted/10">
+          <Button variant="ghost" size="sm" className="h-8 px-3 text-xs" onClick={() => setInstructionsVisible(true)}>
+            <ClipboardList className="h-4 w-4 mr-2" /> Mostrar instruções
+          </Button>
+        </div>
+      )}
+
       {/* ── Scanner area (always mounted, hidden behind feedback) ── */}
       <div className="flex-1 flex flex-col items-center justify-center p-3 relative min-h-0">
         <div className={`w-full max-w-sm aspect-square relative rounded-xl overflow-hidden border-2 border-primary/30 ${feedback ? "invisible" : "visible"}`}>
@@ -363,11 +466,6 @@ export default function StaffCheckinScreen() {
 
       {/* ── Bottom controls ── */}
       <div className="sticky bottom-0 z-30 flex items-center justify-around p-2 border-t border-border bg-card" style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
-        <Button variant={torchOn ? "default" : "outline"} size="sm" onClick={toggleTorch} className="flex-col h-auto py-1.5 px-3 gap-0.5">
-          <Flashlight className="h-5 w-5" />
-          <span className="text-[10px]">Lanterna</span>
-        </Button>
-
         <Button
           variant={soundOn ? "default" : "outline"}
           size="sm"
@@ -379,7 +477,7 @@ export default function StaffCheckinScreen() {
         </Button>
 
         {/* Manual search */}
-        <Drawer open={manualOpen} onOpenChange={(open) => { setManualOpen(open); if (!open) { setSearchResults([]); setConfirmTicket(null); setSearchQuery(""); } }}>
+        <Drawer open={manualOpen} onOpenChange={(open) => { setManualOpen(open); if (!open) { searchRequestRef.current += 1; setSearchResults([]); setConfirmTicket(null); setSearchQuery(""); setSearching(false); } }}>
           <DrawerTrigger asChild>
             <Button variant="outline" size="sm" className="flex-col h-auto py-1.5 px-3 gap-0.5">
               <Search className="h-5 w-5" />
@@ -387,34 +485,47 @@ export default function StaffCheckinScreen() {
             </Button>
           </DrawerTrigger>
           <DrawerContent className="max-h-[80dvh]">
-            <DrawerHeader><DrawerTitle>Busca Manual</DrawerTitle></DrawerHeader>
+            <DrawerHeader>
+              <DrawerTitle>Busca Manual</DrawerTitle>
+            </DrawerHeader>
             <div className="px-4 pb-4 space-y-3">
               <div className="flex gap-2">
-                <Input placeholder="Nome, e-mail ou código" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyDown={(e) => e.key === "Enter" && doSearch()} autoFocus />
-                <Button onClick={doSearch} disabled={searching} size="sm">{searching ? "..." : "Buscar"}</Button>
+                <Input
+                  placeholder="Nome, e-mail, pedido ou código"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && doSearch()}
+                  autoFocus
+                />
+                <Button onClick={() => doSearch()} disabled={searching} size="sm">{searching ? "..." : "Buscar"}</Button>
               </div>
 
-              {confirmTicket && (
-                <div className="p-3 rounded-lg border border-primary bg-primary/5">
-                  <p className="text-sm font-medium">Confirmar check-in de <strong>{confirmTicket.attendee_name}</strong>?</p>
-                  <div className="flex gap-2 mt-2">
-                    <Button size="sm" onClick={() => handleManualCheckin(confirmTicket)}>Confirmar</Button>
-                    <Button size="sm" variant="outline" onClick={() => setConfirmTicket(null)}>Cancelar</Button>
-                  </div>
-                </div>
-              )}
+              <p className="text-[11px] text-muted-foreground">
+                A busca é automática enquanto você digita. Toque em um resultado para abrir a confirmação.
+              </p>
 
               <div className="space-y-2 max-h-52 overflow-y-auto">
                 {searchResults.map((t) => (
-                  <div key={t.id} className="flex items-center justify-between p-2 rounded-lg border border-border cursor-pointer active:bg-muted/50" onClick={() => setConfirmTicket(t)}>
+                  <button
+                    key={t.id}
+                    type="button"
+                    className="w-full flex items-center justify-between p-2 rounded-lg border border-border text-left cursor-pointer active:bg-muted/50"
+                    onClick={() => setConfirmTicket(t)}
+                  >
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{t.attendee_name || "Sem nome"}</p>
                       <p className="text-xs text-muted-foreground">{t.attendee_email ? maskEmail(t.attendee_email) : "—"}</p>
                       <p className="text-xs text-muted-foreground">{(t as any).ticket_tiers?.name || "—"}</p>
                     </div>
                     <Badge variant={t.status === "used" ? "secondary" : "default"} className="text-[10px]">{t.status === "used" ? "USADO" : "ATIVO"}</Badge>
-                  </div>
+                  </button>
                 ))}
+
+                {!searching && searchQuery.trim() && searchResults.length === 0 && (
+                  <p className="text-sm text-muted-foreground py-4 text-center">
+                    Nenhum ingresso encontrado. Verifique nome, e-mail ou código.
+                  </p>
+                )}
               </div>
             </div>
           </DrawerContent>
@@ -447,6 +558,45 @@ export default function StaffCheckinScreen() {
           </DrawerContent>
         </Drawer>
       </div>
+
+      <Dialog open={!!confirmTicket} onOpenChange={(open) => !open && setConfirmTicket(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirmar check-in</DialogTitle>
+            <DialogDescription>
+              Revise os dados do ingresso antes de efetivar. Essa etapa evita check-in errado por seleção acidental.
+            </DialogDescription>
+          </DialogHeader>
+
+          {confirmTicket && (
+            <div className="space-y-3">
+              <div className="rounded-lg border border-border bg-muted/30 p-3">
+                <p className="text-sm font-semibold truncate">{confirmTicket.attendee_name || "Sem nome"}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {confirmTicket.attendee_email ? maskEmail(confirmTicket.attendee_email) : "—"}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">{(confirmTicket as any).ticket_tiers?.name || "Sem lote"}</p>
+                <div className="mt-2 flex items-center gap-2">
+                  <Badge variant={confirmTicket.status === "used" ? "secondary" : "default"} className="text-[10px]">
+                    {confirmTicket.status === "used" ? "JÁ UTILIZADO" : "PRONTO PARA CHECK-IN"}
+                  </Badge>
+                </div>
+              </div>
+
+              {confirmTicket.status === "used" && (
+                <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-warning-foreground">
+                  Esse ingresso já foi validado anteriormente. O sistema vai bloquear nova entrada e mostrar o histórico original.
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmTicket(null)}>Cancelar</Button>
+            <Button onClick={() => confirmTicket && handleManualCheckin(confirmTicket)}>Confirmar check-in</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <style>{`
         @keyframes scan {

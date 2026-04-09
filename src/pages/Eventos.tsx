@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
@@ -16,6 +16,7 @@ import { EventFilterBar, defaultEventFilters, getDateRangeFromPreset, type Event
 import { sanitizePostgrestFilter } from "@/lib/search";
 import { RandomDiscoveryButton } from "@/components/RandomDiscoveryButton";
 import { useCityDetection } from "@/hooks/useCityDetection";
+import { useDebounce } from "@/hooks/useDebounce";
 import { isWithinInterval, endOfDay } from "date-fns";
 
 export default function Eventos() {
@@ -23,46 +24,44 @@ export default function Eventos() {
   const navigate = useNavigate();
   const { user, role } = useAuth();
   const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 400);
   const { city, loading: cityLoading, requestLocation } = useCityDetection();
   const [producerModalOpen, setProducerModalOpen] = useState(false);
   const [cityFilter, setCityFilter] = useState<string>(searchParams.get("cidade") || "");
 
-  // New unified filters
   const [filters, setFilters] = useState<EventFilters>(() => {
     const cat = searchParams.get("categoria") || "";
     return { ...defaultEventFilters, category: cat };
   });
 
-  const handleCreateEvent = () => {
+  const handleCreateEvent = useCallback(() => {
     if (role === "producer") {
       navigate("/producer/events/new");
       return;
     }
     setProducerModalOpen(true);
-  };
+  }, [role, navigate]);
 
-  // Sync URL params on mount
   useEffect(() => {
     const cat = searchParams.get("categoria");
     const cid = searchParams.get("cidade");
     const q = searchParams.get("q");
     if (cat) setFilters((f) => ({ ...f, category: cat }));
     if (cid) setCityFilter(cid);
-    if (q) { setSearch(q); setDebouncedSearch(q); }
+    if (q) setSearch(q);
   }, [searchParams]);
 
-  const [timer, setTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
-  const handleSearch = (value: string) => {
+  const handleSearch = useCallback((value: string) => {
     setSearch(value);
-    if (timer) clearTimeout(timer);
-    const t = setTimeout(() => setDebouncedSearch(value), 400);
-    setTimer(t);
-  };
+  }, []);
 
   const PAGE_SIZE = 24;
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  // Limite inicial: 50 eventos para melhor performance
+  // Se usuário quer ver mais, usa infinite scroll/pagination
+  const INITIAL_LIMIT = 50;
 
   const { data: rawEvents, isLoading } = useQuery({
     queryKey: ["events", debouncedSearch, filters.category, cityFilter],
@@ -75,7 +74,7 @@ export default function Eventos() {
         .eq("status", "published")
         .gte("end_date", new Date().toISOString())
         .order("start_date", { ascending: true })
-        .limit(200);
+        .limit(INITIAL_LIMIT);
 
       if (debouncedSearch) {
         const safe = sanitizePostgrestFilter(debouncedSearch);
@@ -101,54 +100,39 @@ export default function Eventos() {
     setVisibleCount(PAGE_SIZE);
   }, [debouncedSearch, filters, cityFilter]);
 
-  // Apply all client-side filters
+  // Apply all client-side filters in a single pass (O(n) instead of O(n*k))
   const filteredEvents = useMemo(() => {
     if (!rawEvents) return [];
-    let result = [...rawEvents];
 
-    // Date preset filter
-    if (filters.datePreset) {
-      const range = getDateRangeFromPreset(filters.datePreset);
-      if (range) {
-        result = result.filter((e: any) => {
-          const d = new Date(e.start_date);
-          return isWithinInterval(d, { start: range.start, end: range.end });
-        });
+    const datePresetRange = filters.datePreset ? getDateRangeFromPreset(filters.datePreset) : null;
+    const hasDateRange = Boolean(filters.dateRange?.from);
+    const dateRangeStart = filters.dateRange?.from;
+    const dateRangeEnd = filters.dateRange?.to || filters.dateRange?.from;
+    const priceMin = filters.priceMin ? Number(filters.priceMin) : null;
+    const priceMax = filters.priceMax ? Number(filters.priceMax) : null;
+
+    let result = rawEvents.filter((e: any) => {
+      // Date preset filter
+      if (datePresetRange && !isWithinInterval(new Date(e.start_date), { start: datePresetRange.start, end: datePresetRange.end })) {
+        return false;
       }
-    }
+      // Calendar range filter
+      if (hasDateRange && !isWithinInterval(new Date(e.start_date), { start: dateRangeStart!, end: endOfDay(dateRangeEnd!) })) {
+        return false;
+      }
+      // Price filters
+      if (priceMin !== null && (e._minPrice ?? 0) < priceMin) return false;
+      if (priceMax !== null && (e._minPrice ?? 0) > priceMax) return false;
+      // Modality filter
+      if (filters.modality === "online" && !e.is_online) return false;
+      if (filters.modality === "presential" && e.is_online) return false;
+      return true;
+    });
 
-    // Calendar range filter
-    if (filters.dateRange?.from) {
-      const from = filters.dateRange.from;
-      const to = filters.dateRange.to || from;
-      result = result.filter((e: any) => {
-        const d = new Date(e.start_date);
-        return isWithinInterval(d, { start: from, end: endOfDay(to) });
-      });
-    }
-
-    // Price filter
-    if (filters.priceMin) {
-      const min = Number(filters.priceMin);
-      result = result.filter((e: any) => (e._minPrice ?? 0) >= min);
-    }
-    if (filters.priceMax) {
-      const max = Number(filters.priceMax);
-      result = result.filter((e: any) => (e._minPrice ?? 0) <= max);
-    }
-
-    // Modality filter
-    if (filters.modality === "online") {
-      result = result.filter((e: any) => e.is_online === true);
-    } else if (filters.modality === "presential") {
-      result = result.filter((e: any) => !e.is_online);
-    }
-
-    // Sort
+    // Sort after filtering
     if (filters.sort === "relevance") {
       result.sort((a: any, b: any) => (b.views_count || 0) - (a.views_count || 0));
     }
-    // default sort is by date (already from API)
 
     return result;
   }, [rawEvents, filters]);

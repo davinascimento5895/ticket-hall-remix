@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
@@ -94,7 +95,7 @@ function getSeriesDelta(series: TimelinePoint[] | undefined, key: keyof Timeline
   return `${delta >= 0 ? "+" : ""}${formatPercent(delta)}`;
 }
 
-function MiniSparkline({ data, dataKey, stroke }: { data: TimelinePoint[]; dataKey: keyof TimelinePoint; stroke: string }) {
+const MiniSparkline = React.memo(function MiniSparkline({ data, dataKey, stroke }: { data: TimelinePoint[]; dataKey: keyof TimelinePoint; stroke: string }) {
   if (!data.length) return null;
 
   return (
@@ -104,7 +105,7 @@ function MiniSparkline({ data, dataKey, stroke }: { data: TimelinePoint[]; dataK
       </LineChart>
     </ResponsiveContainer>
   );
-}
+});
 
 export default function AdminDashboard() {
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
@@ -131,7 +132,8 @@ export default function AdminDashboard() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ["admin-dashboard", queryDateRange],
     queryFn: () => getAdminDashboardStats(queryDateRange),
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,  // 5 min — dados agregados não mudam a cada minuto
+    gcTime: 15 * 60_000,  // 15 min — cache persistido
   });
 
   const { data: events = [] } = useQuery({
@@ -142,7 +144,7 @@ export default function AdminDashboard() {
 
   const selectedEvent = events.find((event: any) => event.id === selectedEventId);
 
-  const handlePreset = (preset: typeof presets[number]) => {
+  const handlePreset = useCallback((preset: typeof presets[number]) => {
     setActivePreset(preset.label);
     if (preset.days === 0) {
       setDateRange({ from: undefined, to: undefined });
@@ -152,42 +154,100 @@ export default function AdminDashboard() {
     } else {
       setDateRange({ from: subDays(new Date(), preset.days), to: new Date() });
     }
-  };
+  }, []);
 
-  const timelineData = (granularity === "month" ? stats?.timelineByMonth : stats?.timelineByDay) as TimelinePoint[] | undefined;
-  const revenueTrend = getSeriesDelta(timelineData, "revenue");
-  const ordersTrend = getSeriesDelta(timelineData, "orders");
-  const ticketsTrend = getSeriesDelta(timelineData, "ticketsSold");
-  const eventsTrend = getSeriesDelta(timelineData, "newEvents");
-  const usersTrend = getSeriesDelta(timelineData, "newUsers");
-  const activeUsersTrend = getSeriesDelta(timelineData, "activeUsers");
+  const timelineData = useMemo(
+    () => (granularity === "month" ? stats?.timelineByMonth : stats?.timelineByDay) as TimelinePoint[] | undefined,
+    [stats?.timelineByMonth, stats?.timelineByDay, granularity]
+  );
 
-  const revenueChartData = timelineData || [];
-  const growthChartData = timelineData || [];
+  const calculatedMetrics = useMemo(() => {
+    const revenueTrend = getSeriesDelta(timelineData, "revenue");
+    const ordersTrend = getSeriesDelta(timelineData, "orders");
+    const ticketsTrend = getSeriesDelta(timelineData, "ticketsSold");
+    const eventsTrend = getSeriesDelta(timelineData, "newEvents");
+    const usersTrend = getSeriesDelta(timelineData, "newUsers");
+    const activeUsersTrend = getSeriesDelta(timelineData, "activeUsers");
 
-  const paidOrders = Number(stats?.ordersByStatus?.paid || 0);
-  const paymentSuccessRate = stats && stats.totalOrders > 0 ? Math.round((paidOrders / stats.totalOrders) * 100) : 0;
+    const paidOrders = Number(stats?.ordersByStatus?.paid || 0);
+    const paymentSuccessRate = stats && stats.totalOrders > 0 ? Math.round((paidOrders / stats.totalOrders) * 100) : 0;
+    
+    const totalCheckedIn = Number(stats?.totalCheckedIn || 0);
+    const totalPageViews = Number(stats?.totalPageViews || 0);
+    const checkinRate = stats && stats.ticketsSold > 0 ? Math.round((totalCheckedIn / stats.ticketsSold) * 100) : 0;
+    const conversionRate = stats && totalPageViews > 0 ? Math.round((stats.ticketsSold / totalPageViews) * 100) : 0;
+    const revenuePerEvent = stats && stats.totalEvents > 0 ? stats.totalGMV / stats.totalEvents : 0;
+    const publishedEventCount = Number(stats?.publishedEvents || 0);
+    const draftEventCount = Number(stats?.draftEvents || 0);
+    const endedEventCount = Number(stats?.endedEvents || 0);
+    const featuredEventCount = Array.isArray(stats?.topEvents) ? stats.topEvents.filter((event: any) => event.featured).length : 0;
+
+    return {
+      revenueTrend,
+      ordersTrend,
+      ticketsTrend,
+      eventsTrend,
+      usersTrend,
+      activeUsersTrend,
+      paidOrders,
+      paymentSuccessRate,
+      totalCheckedIn,
+      totalPageViews,
+      checkinRate,
+      conversionRate,
+      revenuePerEvent,
+      publishedEventCount,
+      draftEventCount,
+      endedEventCount,
+      featuredEventCount,
+    };
+  }, [stats, timelineData]);
+
+  const {
+    revenueTrend,
+    ordersTrend,
+    ticketsTrend,
+    eventsTrend,
+    usersTrend,
+    activeUsersTrend,
+    paidOrders,
+    paymentSuccessRate,
+    totalCheckedIn,
+    totalPageViews,
+    checkinRate,
+    conversionRate,
+    revenuePerEvent,
+    publishedEventCount,
+    draftEventCount,
+    endedEventCount,
+    featuredEventCount,
+  } = calculatedMetrics;
+
   const topPaymentMethodEntry = useMemo(() => {
     if (!stats?.paymentMethodMap) return undefined;
     return Object.entries(stats.paymentMethodMap).sort((a, b) => b[1].total - a[1].total)[0];
   }, [stats?.paymentMethodMap]);
-  const topPaymentMethod = topPaymentMethodEntry
-    ? {
-        name: methodLabels[topPaymentMethodEntry[0]] || topPaymentMethodEntry[0],
-        count: topPaymentMethodEntry[1].count,
-        total: topPaymentMethodEntry[1].total,
-      }
-    : undefined;
-  const topPaymentShare = stats && stats.totalGMV > 0 && topPaymentMethod ? Math.round((topPaymentMethod.total / stats.totalGMV) * 100) : 0;
-  const totalCheckedIn = Number(stats?.totalCheckedIn || 0);
-  const totalPageViews = Number(stats?.totalPageViews || 0);
-  const checkinRate = stats && stats.ticketsSold > 0 ? Math.round((totalCheckedIn / stats.ticketsSold) * 100) : 0;
-  const conversionRate = stats && totalPageViews > 0 ? Math.round((stats.ticketsSold / totalPageViews) * 100) : 0;
-  const revenuePerEvent = stats && stats.totalEvents > 0 ? stats.totalGMV / stats.totalEvents : 0;
-  const publishedEventCount = Number(stats?.publishedEvents || 0);
-  const draftEventCount = Number(stats?.draftEvents || 0);
-  const endedEventCount = Number(stats?.endedEvents || 0);
-  const featuredEventCount = Array.isArray(stats?.topEvents) ? stats.topEvents.filter((event: any) => event.featured).length : 0;
+
+  const topPaymentMethod = useMemo(
+    () =>
+      topPaymentMethodEntry
+        ? {
+            name: methodLabels[topPaymentMethodEntry[0]] || topPaymentMethodEntry[0],
+            count: topPaymentMethodEntry[1].count,
+            total: topPaymentMethodEntry[1].total,
+          }
+        : undefined,
+    [topPaymentMethodEntry]
+  );
+
+  const topPaymentShare = useMemo(
+    () =>
+      stats && stats.totalGMV > 0 && topPaymentMethod ? Math.round((topPaymentMethod.total / stats.totalGMV) * 100) : 0,
+    [stats, topPaymentMethod]
+  );
+
+  const revenueChartData = useMemo(() => timelineData || [], [timelineData]);
+  const growthChartData = useMemo(() => timelineData || [], [timelineData]);
 
   const metrics = [
     {

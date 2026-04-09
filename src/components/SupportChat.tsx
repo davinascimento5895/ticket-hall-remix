@@ -125,8 +125,12 @@ export function SupportChat() {
   const [input, setInput] = useState("");
   const location = useLocation();
 
-  // Hide on admin/producer panels
-  if (location.pathname.startsWith("/admin") || location.pathname.startsWith("/producer")) return null;
+  // Hide on admin/producer panels and staff portal
+  if (
+    location.pathname.startsWith("/admin") ||
+    location.pathname.startsWith("/producer") ||
+    location.pathname.startsWith("/staff")
+  ) return null;
 
   const sendMessage = (text: string) => {
     if (!text.trim()) return;

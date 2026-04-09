@@ -169,7 +169,8 @@ export default function ProducerDashboard() {
     queryKey: ["producer-dashboard", user?.id],
     queryFn: () => getProducerDashboardStats(user!.id),
     enabled: !!user?.id,
-    staleTime: 30_000,
+    staleTime: 3 * 60_000,  //3 min — dashboard agregado não muda frequentemente
+    gcTime: 10 * 60_000,  // 10 min — cache persistido
   });
 
   const dashboard = stats as any;

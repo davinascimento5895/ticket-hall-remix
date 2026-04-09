@@ -74,7 +74,7 @@ export default function AdminUsers() {
     queryKey: ["admin-users", debouncedSearch],
     queryFn: (range) => getAllUsersPaginated({ search: debouncedSearch || undefined }, range),
     pageSize: 20,
-    staleTime: 30_000,
+    staleTime: 2 * 60_000,  // 2 min — dados de usuários não mudam frequentemente
   });
 
   useEffect(() => {
@@ -91,7 +91,7 @@ export default function AdminUsers() {
       return data || [];
     },
     enabled: userIds.length > 0,
-    staleTime: 30_000,
+    staleTime: 2 * 60_000,  // 2 min — roles não mudam frequentemente
   });
 
   const roleMap = useMemo(() => {
