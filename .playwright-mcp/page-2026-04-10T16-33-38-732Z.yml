@@ -1,0 +1,560 @@
+- generic [ref=e4]:
+  - navigation [ref=e5]:
+    - link "Página inicial da Unsplash" [ref=e8] [cursor=pointer]:
+      - /url: /pt-br
+      - img "Página inicial da Unsplash" [ref=e9]
+    - generic [ref=e11]:
+      - link "Entrar / Cadastrar-se" [ref=e12] [cursor=pointer]:
+        - /url: /pt-br/login?referrer=%2Fpt-br%2Fs%2Ffotografias%2Flaptop-buying-tickets-online
+        - img [ref=e13]
+      - button "Idioma" [ref=e15] [cursor=pointer]:
+        - img [ref=e16]
+      - button "Menu" [ref=e18] [cursor=pointer]:
+        - img [ref=e19]
+  - generic [ref=e21]:
+    - generic [ref=e22]:
+      - navigation [ref=e23]:
+        - search "Pesquise conteúdo visual em todo o site" [ref=e25]:
+          - button "Pesquise na Unsplash" [ref=e26] [cursor=pointer]:
+            - img [ref=e27]
+          - combobox [ref=e29]:
+            - searchbox "Pesquise na Unsplash" [ref=e30]: laptop buying tickets online
+            - listbox
+          - button "Limpar" [ref=e31] [cursor=pointer]:
+            - img [ref=e32]
+        - button "Filtros" [ref=e34] [cursor=pointer]:
+          - img [ref=e36]
+      - generic [ref=e38]:
+        - list [ref=e45]:
+          - listitem [ref=e46]:
+            - link "Fotos 13 mil":
+              - /url: /pt-br/s/fotografias/laptop-buying-tickets-online
+              - text: Fotos
+              - generic: 13 mil
+          - listitem [ref=e47]:
+            - link "Ilustrações 492" [ref=e48] [cursor=pointer]:
+              - /url: /pt-br/s/ilustra%C3%A7%C3%B5es/laptop-buying-tickets-online
+              - text: Ilustrações
+              - generic [ref=e49]: "492"
+          - listitem [ref=e50]:
+            - button "Mais" [ref=e51] [cursor=pointer]
+        - generic [ref=e52]:
+          - heading "Laptop buying tickets online" [level=1] [ref=e54]
+          - generic [ref=e58]:
+            - link "comércio eletrônico" [ref=e60] [cursor=pointer]:
+              - /url: /pt-br/s/fotografias/com%C3%A9rcio-eletr%C3%B4nico
+            - link "computador portátil" [ref=e62] [cursor=pointer]:
+              - /url: /pt-br/s/fotografias/computador-port%C3%A1til
+            - link "compras online" [ref=e64] [cursor=pointer]:
+              - /url: /pt-br/s/fotografias/compras-online
+            - link "cartão de crédito" [ref=e66] [cursor=pointer]:
+              - /url: /pt-br/s/fotografias/cart%C3%A3o-de-cr%C3%A9dito
+            - link "compra" [ref=e68] [cursor=pointer]:
+              - /url: /pt-br/s/fotografias/compra
+            - link "transação" [ref=e70] [cursor=pointer]:
+              - /url: /pt-br/s/fotografias/transa%C3%A7%C3%A3o
+            - link "negócio" [ref=e72] [cursor=pointer]:
+              - /url: /pt-br/s/fotografias/neg%C3%B3cio
+            - link "varejo" [ref=e74] [cursor=pointer]:
+              - /url: /pt-br/s/fotografias/varejo
+            - link "cartão" [ref=e76] [cursor=pointer]:
+              - /url: /pt-br/s/fotografias/cart%C3%A3o
+            - link "pagamento" [ref=e78] [cursor=pointer]:
+              - /url: /pt-br/s/fotografias/pagamento
+            - link "pagamento online" [ref=e80] [cursor=pointer]:
+              - /url: /pt-br/s/fotografias/pagamento-online
+            - link "macbook" [ref=e82] [cursor=pointer]:
+              - /url: /pt-br/s/fotografias/macbook
+        - generic [ref=e84]:
+          - generic [ref=e87]:
+            - figure [ref=e88]:
+              - generic [ref=e90]:
+                - link [ref=e91] [cursor=pointer]:
+                  - /url: /pt-br/@lazizli
+                - generic [ref=e94]:
+                  - link "Lala Azizli" [ref=e95] [cursor=pointer]:
+                    - /url: /pt-br/@lazizli
+                  - generic [ref=e96]:
+                    - text: Para
+                    - link "Unsplash+" [ref=e97] [cursor=pointer]:
+                      - /url: /pt-br/plus?referrer=%2Fpt-br%2Ffotografias%2Fuma-pessoa-usando-um-laptop-com-uma-tela-branca-xa1k9nHKpYk
+              - generic [ref=e98]:
+                - link "uma pessoa usando um laptop com uma tela branca" [ref=e99]:
+                  - /url: /pt-br/fotografias/uma-pessoa-usando-um-laptop-com-uma-tela-branca-xa1k9nHKpYk
+                  - img "uma pessoa usando um laptop com uma tela branca" [ref=e100]
+                - link [ref=e101] [cursor=pointer]:
+                  - /url: /pt-br/plus?referrer=%2Fpt-br%2Ffotografias%2Fuma-pessoa-usando-um-laptop-com-uma-tela-branca-xa1k9nHKpYk
+                  - img [ref=e102]
+              - generic [ref=e105]:
+                - generic [ref=e106]:
+                  - button "Favorito" [ref=e107] [cursor=pointer]:
+                    - img [ref=e108]
+                  - button "Adicionar à coleção" [ref=e111] [cursor=pointer]:
+                    - img [ref=e112]
+                - link "Download" [ref=e115] [cursor=pointer]:
+                  - /url: /pt-br/plus?referrer=%2Fpt-br%2Ffotografias%2Fuma-pessoa-usando-um-laptop-com-uma-tela-branca-xa1k9nHKpYk
+                  - img [ref=e116]
+                  - text: Download
+            - contentinfo [ref=e122]:
+              - generic [ref=e128]: –– ––– ––– –– ––– – ––– ––– –––– – – –– ––– – – ––– –– –– –––– ––
+            - figure [ref=e130]:
+              - generic [ref=e132]:
+                - link [ref=e133] [cursor=pointer]:
+                  - /url: /pt-br/@campaign_creators
+                - link "Campaign Creators" [ref=e137] [cursor=pointer]:
+                  - /url: /pt-br/@campaign_creators
+              - link "person using MacBook Pro" [ref=e139]:
+                - /url: /pt-br/fotografias/person-using-macbook-pro-OGOWDVLbMSc
+                - img "person using MacBook Pro" [ref=e140]
+              - generic [ref=e142]:
+                - generic [ref=e143]:
+                  - button "Favorito" [ref=e144] [cursor=pointer]:
+                    - img [ref=e145]
+                  - button "Adicionar à coleção" [ref=e148] [cursor=pointer]:
+                    - img [ref=e149]
+                - generic [ref=e152]:
+                  - link "Download" [ref=e153] [cursor=pointer]:
+                    - /url: https://unsplash.com/photos/OGOWDVLbMSc/download?force=true
+                  - button "Escolha o tamanho do download" [ref=e154] [cursor=pointer]:
+                    - img [ref=e155]
+            - generic [ref=e157]:
+              - heading "Imagens patrocinadas" [level=4] [ref=e158]:
+                - generic [ref=e159]: Imagens patrocinadas
+                - link [ref=e160] [cursor=pointer]:
+                  - /url: https://www.istockphoto.com/search/2/image?utm_source=unsplash&utm_medium=affiliate&utm_campaign=srp_photos_top&utm_content=https%3A%2F%2Funsplash.com%2Fpt-br%2Fs%2Ffotografias%2Flaptop-buying-tickets-online&utm_term=laptop+buying+tickets+online%3A%3A%3A%3A&phrase=laptop+buying+tickets+online&alloweduse=availableforalluses&excludenudity=true&sort=best&mediatype=photography
+                  - img [ref=e161]
+              - generic [ref=e163]:
+                - link "Compra de bilhetes e fazer reservas para viagens com cartão de crédito" [ref=e164] [cursor=pointer]:
+                  - /url: https://www.istockphoto.com/photo/buying-tickets-and-making-reservation-for-travel-with-credit-card-gm1015284648-273241233?utm_source=unsplash&utm_medium=affiliate&utm_campaign=srp_photos_top&utm_content=https%3A%2F%2Funsplash.com%2Fpt-br%2Fs%2Ffotografias%2Flaptop-buying-tickets-online&utm_term=laptop+buying+tickets+online%3A%3A%3A%3A
+                  - img "Compra de bilhetes e fazer reservas para viagens com cartão de crédito" [ref=e165]
+                - link "Mulher usando laptop e smartphone com cartão de crédito, reservando uma viagem, com um globo, passaporte, e modelo de avião na mesa, planejando suas próximas férias" [ref=e166] [cursor=pointer]:
+                  - /url: https://www.istockphoto.com/photo/woman-using-laptop-and-smartphone-with-credit-card-booking-a-trip-with-a-globe-gm2202212009-619823680?utm_source=unsplash&utm_medium=affiliate&utm_campaign=srp_photos_top&utm_content=https%3A%2F%2Funsplash.com%2Fpt-br%2Fs%2Ffotografias%2Flaptop-buying-tickets-online&utm_term=laptop+buying+tickets+online%3A%3A%3A%3A
+                  - img "Mulher usando laptop e smartphone com cartão de crédito, reservando uma viagem, com um globo, passaporte, e modelo de avião na mesa, planejando suas próximas férias" [ref=e167]
+                - link "Mulher usa telefone inteligente para reserva de viagem do livro" [ref=e168] [cursor=pointer]:
+                  - /url: https://www.istockphoto.com/photo/woman-uses-smart-phone-to-book-travel-reservation-gm925320050-253929210?utm_source=unsplash&utm_medium=affiliate&utm_campaign=srp_photos_top&utm_content=https%3A%2F%2Funsplash.com%2Fpt-br%2Fs%2Ffotografias%2Flaptop-buying-tickets-online&utm_term=laptop+buying+tickets+online%3A%3A%3A%3A
+                  - img "Mulher usa telefone inteligente para reserva de viagem do livro" [ref=e169]
+                - link "Mulher usando laptop para reservar viagem" [ref=e170] [cursor=pointer]:
+                  - /url: https://www.istockphoto.com/photo/woman-using-laptop-to-book-travel-reservation-gm1400698542-454193974?utm_source=unsplash&utm_medium=affiliate&utm_campaign=srp_photos_top&utm_content=https%3A%2F%2Funsplash.com%2Fpt-br%2Fs%2Ffotografias%2Flaptop-buying-tickets-online&utm_term=laptop+buying+tickets+online%3A%3A%3A%3A
+                  - img "Mulher usando laptop para reservar viagem" [ref=e171]
+              - link "Ganhe 20% de desconto com o código UNSPLASH20" [ref=e172] [cursor=pointer]:
+                - /url: https://www.istockphoto.com/search/2/image?utm_source=unsplash&utm_medium=affiliate&utm_campaign=srp_photos_top&utm_content=https%3A%2F%2Funsplash.com%2Fpt-br%2Fs%2Ffotografias%2Flaptop-buying-tickets-online&utm_term=laptop+buying+tickets+online%3A%3A%3A%3A&phrase=laptop+buying+tickets+online&alloweduse=availableforalluses&excludenudity=true&sort=best&mediatype=photography
+            - figure [ref=e173]:
+              - generic [ref=e175]:
+                - link [ref=e176] [cursor=pointer]:
+                  - /url: /pt-br/@sumup
+                - link "SumUp" [ref=e180] [cursor=pointer]:
+                  - /url: /pt-br/@sumup
+              - link "Uma pessoa sentada em uma cadeira com um laptop e um cartão de crédito" [ref=e182]:
+                - /url: /pt-br/fotografias/uma-pessoa-sentada-em-uma-cadeira-com-um-laptop-e-um-cartao-de-credito-ShB9pI4mpRg
+                - img "Uma pessoa sentada em uma cadeira com um laptop e um cartão de crédito" [ref=e183]
+              - generic [ref=e185]:
+                - generic [ref=e186]:
+                  - button "Favorito" [ref=e187] [cursor=pointer]:
+                    - img [ref=e188]
+                  - button "Adicionar à coleção" [ref=e191] [cursor=pointer]:
+                    - img [ref=e192]
+                - generic [ref=e195]:
+                  - link "Download" [ref=e196] [cursor=pointer]:
+                    - /url: https://unsplash.com/photos/ShB9pI4mpRg/download?force=true
+                  - button "Escolha o tamanho do download" [ref=e197] [cursor=pointer]:
+                    - img [ref=e198]
+            - figure [ref=e200]:
+              - generic [ref=e202]:
+                - link [ref=e203] [cursor=pointer]:
+                  - /url: /pt-br/@shoperpl
+                - link "Shoper" [ref=e207] [cursor=pointer]:
+                  - /url: /pt-br/@shoperpl
+              - link "uma pessoa digitando em um laptop em uma mesa" [ref=e209]:
+                - /url: /pt-br/fotografias/uma-pessoa-digitando-em-um-laptop-em-uma-mesa-slLo94wES2M
+                - img "uma pessoa digitando em um laptop em uma mesa" [ref=e210]
+              - generic [ref=e212]:
+                - generic [ref=e213]:
+                  - button "Favorito" [ref=e214] [cursor=pointer]:
+                    - img [ref=e215]
+                  - button "Adicionar à coleção" [ref=e218] [cursor=pointer]:
+                    - img [ref=e219]
+                - generic [ref=e222]:
+                  - link "Download" [ref=e223] [cursor=pointer]:
+                    - /url: https://unsplash.com/photos/slLo94wES2M/download?force=true
+                  - button "Escolha o tamanho do download" [ref=e224] [cursor=pointer]:
+                    - img [ref=e225]
+            - figure [ref=e227]:
+              - generic [ref=e229]:
+                - link [ref=e230] [cursor=pointer]:
+                  - /url: /pt-br/@gettyimages
+                - generic [ref=e233]:
+                  - link "Getty Images" [ref=e234] [cursor=pointer]:
+                    - /url: /pt-br/@gettyimages
+                  - generic [ref=e235]:
+                    - text: Para
+                    - link "Unsplash+" [ref=e236] [cursor=pointer]:
+                      - /url: /pt-br/plus?referrer=%2Fpt-br%2Ffotografias%2Fconceito-de-internet-comercial-comercial-de-compras-Q6l4AuZHlQ0
+              - generic [ref=e237]:
+                - link "Conceito de Internet Comercial Comercial de Compras" [ref=e238]:
+                  - /url: /pt-br/fotografias/conceito-de-internet-comercial-comercial-de-compras-Q6l4AuZHlQ0
+                  - img "Conceito de Internet Comercial Comercial de Compras" [ref=e239]
+                - link [ref=e240] [cursor=pointer]:
+                  - /url: /pt-br/plus?referrer=%2Fpt-br%2Ffotografias%2Fconceito-de-internet-comercial-comercial-de-compras-Q6l4AuZHlQ0
+                  - img [ref=e241]
+              - generic [ref=e244]:
+                - generic [ref=e245]:
+                  - button "Favorito" [ref=e246] [cursor=pointer]:
+                    - img [ref=e247]
+                  - button "Adicionar à coleção" [ref=e250] [cursor=pointer]:
+                    - img [ref=e251]
+                - link "Download" [ref=e254] [cursor=pointer]:
+                  - /url: /pt-br/plus?referrer=%2Fpt-br%2Ffotografias%2Fconceito-de-internet-comercial-comercial-de-compras-Q6l4AuZHlQ0
+                  - img [ref=e255]
+                  - text: Download
+            - figure [ref=e257]:
+              - generic [ref=e259]:
+                - link [ref=e260] [cursor=pointer]:
+                  - /url: /pt-br/@henrikladewig
+                - link "Henrik L." [ref=e264] [cursor=pointer]:
+                  - /url: /pt-br/@henrikladewig
+              - link "uma pessoa usando um laptop" [ref=e266]:
+                - /url: /pt-br/fotografias/uma-pessoa-usando-um-laptop-36sBViiRU3I
+                - img "uma pessoa usando um laptop" [ref=e267]
+              - generic [ref=e269]:
+                - generic [ref=e270]:
+                  - button "Favorito" [ref=e271] [cursor=pointer]:
+                    - img [ref=e272]
+                  - button "Adicionar à coleção" [ref=e275] [cursor=pointer]:
+                    - img [ref=e276]
+                - generic [ref=e279]:
+                  - link "Download" [ref=e280] [cursor=pointer]:
+                    - /url: https://unsplash.com/photos/36sBViiRU3I/download?force=true
+                  - button "Escolha o tamanho do download" [ref=e281] [cursor=pointer]:
+                    - img [ref=e282]
+            - figure [ref=e284]:
+              - generic [ref=e286]:
+                - link [ref=e287] [cursor=pointer]:
+                  - /url: /pt-br/@mainermedia
+                - link "Dylan Gillis" [ref=e291] [cursor=pointer]:
+                  - /url: /pt-br/@mainermedia
+              - link "papel de impressora branco sobre tecido vermelho" [ref=e293]:
+                - /url: /pt-br/fotografias/papel-de-impressora-branco-sobre-tecido-vermelho-xKmXZ4Fv63w
+                - img "papel de impressora branco sobre tecido vermelho" [ref=e294]
+              - generic [ref=e296]:
+                - generic [ref=e297]:
+                  - button "Favorito" [ref=e298] [cursor=pointer]:
+                    - img [ref=e299]
+                  - button "Adicionar à coleção" [ref=e302] [cursor=pointer]:
+                    - img [ref=e303]
+                - generic [ref=e306]:
+                  - link "Download" [ref=e307] [cursor=pointer]:
+                    - /url: https://unsplash.com/photos/xKmXZ4Fv63w/download?force=true
+                  - button "Escolha o tamanho do download" [ref=e308] [cursor=pointer]:
+                    - img [ref=e309]
+            - figure [ref=e311]:
+              - generic [ref=e313]:
+                - link [ref=e314] [cursor=pointer]:
+                  - /url: /pt-br/@revendo
+                - link "Revendo" [ref=e318] [cursor=pointer]:
+                  - /url: /pt-br/@revendo
+              - link "a mão de uma pessoa em cima de um computador portátil" [ref=e320]:
+                - /url: /pt-br/fotografias/a-mao-de-uma-pessoa-em-cima-de-um-computador-portatil-pt_Ciwikir8
+                - img "a mão de uma pessoa em cima de um computador portátil" [ref=e321]
+              - generic [ref=e323]:
+                - generic [ref=e324]:
+                  - button "Favorito" [ref=e325] [cursor=pointer]:
+                    - img [ref=e326]
+                  - button "Adicionar à coleção" [ref=e329] [cursor=pointer]:
+                    - img [ref=e330]
+                - generic [ref=e333]:
+                  - link "Download" [ref=e334] [cursor=pointer]:
+                    - /url: https://unsplash.com/photos/pt_Ciwikir8/download?force=true
+                  - button "Escolha o tamanho do download" [ref=e335] [cursor=pointer]:
+                    - img [ref=e336]
+            - figure [ref=e338]:
+              - generic [ref=e340]:
+                - link [ref=e341] [cursor=pointer]:
+                  - /url: /pt-br/@lishakov
+                - generic [ref=e344]:
+                  - link "Andrej Lišakov" [ref=e345] [cursor=pointer]:
+                    - /url: /pt-br/@lishakov
+                  - generic [ref=e346]:
+                    - text: Para
+                    - link "Unsplash+" [ref=e347] [cursor=pointer]:
+                      - /url: /pt-br/plus?referrer=%2Fpt-br%2Ffotografias%2Fum-homem-sentado-em-uma-cadeira-segurando-um-cartao-de-credito-e-um-laptop-Tf75FqfOJGk
+              - generic [ref=e348]:
+                - link "um homem sentado em uma cadeira segurando um cartão de crédito e um laptop" [ref=e349]:
+                  - /url: /pt-br/fotografias/um-homem-sentado-em-uma-cadeira-segurando-um-cartao-de-credito-e-um-laptop-Tf75FqfOJGk
+                  - img "um homem sentado em uma cadeira segurando um cartão de crédito e um laptop" [ref=e350]
+                - link [ref=e351] [cursor=pointer]:
+                  - /url: /pt-br/plus?referrer=%2Fpt-br%2Ffotografias%2Fum-homem-sentado-em-uma-cadeira-segurando-um-cartao-de-credito-e-um-laptop-Tf75FqfOJGk
+                  - img [ref=e352]
+              - generic [ref=e355]:
+                - generic [ref=e356]:
+                  - button "Favorito" [ref=e357] [cursor=pointer]:
+                    - img [ref=e358]
+                  - button "Adicionar à coleção" [ref=e361] [cursor=pointer]:
+                    - img [ref=e362]
+                - link "Download" [ref=e365] [cursor=pointer]:
+                  - /url: /pt-br/plus?referrer=%2Fpt-br%2Ffotografias%2Fum-homem-sentado-em-uma-cadeira-segurando-um-cartao-de-credito-e-um-laptop-Tf75FqfOJGk
+                  - img [ref=e366]
+                  - text: Download
+            - figure [ref=e368]:
+              - generic [ref=e370]:
+                - link [ref=e371] [cursor=pointer]:
+                  - /url: /pt-br/@shoperpl
+                - link "Shoper" [ref=e375] [cursor=pointer]:
+                  - /url: /pt-br/@shoperpl
+              - link "uma pessoa digitando em um laptop em uma mesa" [ref=e377]:
+                - /url: /pt-br/fotografias/uma-pessoa-digitando-em-um-laptop-em-uma-mesa-1BjsO2t42_4
+                - img "uma pessoa digitando em um laptop em uma mesa" [ref=e378]
+              - generic [ref=e380]:
+                - generic [ref=e381]:
+                  - button "Favorito" [ref=e382] [cursor=pointer]:
+                    - img [ref=e383]
+                  - button "Adicionar à coleção" [ref=e386] [cursor=pointer]:
+                    - img [ref=e387]
+                - generic [ref=e390]:
+                  - link "Download" [ref=e391] [cursor=pointer]:
+                    - /url: https://unsplash.com/photos/1BjsO2t42_4/download?force=true
+                  - button "Escolha o tamanho do download" [ref=e392] [cursor=pointer]:
+                    - img [ref=e393]
+            - figure [ref=e395]:
+              - generic [ref=e397]:
+                - link [ref=e398] [cursor=pointer]:
+                  - /url: /pt-br/@samsungmemory
+                - link "Samsung Memory" [ref=e402] [cursor=pointer]:
+                  - /url: /pt-br/@samsungmemory
+              - link "caixa azul e branca ao lado do macbook pro" [ref=e404]:
+                - /url: /pt-br/fotografias/caixa-azul-e-branca-ao-lado-do-macbook-pro-NaYimKmzems
+                - img "caixa azul e branca ao lado do macbook pro" [ref=e405]
+              - generic [ref=e407]:
+                - generic [ref=e408]:
+                  - button "Favorito" [ref=e409] [cursor=pointer]:
+                    - img [ref=e410]
+                  - button "Adicionar à coleção" [ref=e413] [cursor=pointer]:
+                    - img [ref=e414]
+                - generic [ref=e417]:
+                  - link "Download" [ref=e418] [cursor=pointer]:
+                    - /url: https://unsplash.com/photos/NaYimKmzems/download?force=true
+                  - button "Escolha o tamanho do download" [ref=e419] [cursor=pointer]:
+                    - img [ref=e420]
+            - figure [ref=e422]:
+              - generic [ref=e424]:
+                - link [ref=e425] [cursor=pointer]:
+                  - /url: /pt-br/@samsungmemory
+                - link "Samsung Memory" [ref=e429] [cursor=pointer]:
+                  - /url: /pt-br/@samsungmemory
+              - link "pessoa usando macbook pro na mesa preta" [ref=e431]:
+                - /url: /pt-br/fotografias/pessoa-usando-macbook-pro-na-mesa-preta-plMJJ8nylzc
+                - img "pessoa usando macbook pro na mesa preta" [ref=e432]
+              - generic [ref=e434]:
+                - generic [ref=e435]:
+                  - button "Favorito" [ref=e436] [cursor=pointer]:
+                    - img [ref=e437]
+                  - button "Adicionar à coleção" [ref=e440] [cursor=pointer]:
+                    - img [ref=e441]
+                - generic [ref=e444]:
+                  - link "Download" [ref=e445] [cursor=pointer]:
+                    - /url: https://unsplash.com/photos/plMJJ8nylzc/download?force=true
+                  - button "Escolha o tamanho do download" [ref=e446] [cursor=pointer]:
+                    - img [ref=e447]
+            - figure [ref=e449]:
+              - generic [ref=e451]:
+                - link [ref=e452] [cursor=pointer]:
+                  - /url: /pt-br/@gettyimages
+                - generic [ref=e455]:
+                  - link "Getty Images" [ref=e456] [cursor=pointer]:
+                    - /url: /pt-br/@gettyimages
+                  - generic [ref=e457]:
+                    - text: Para
+                    - link "Unsplash+" [ref=e458] [cursor=pointer]:
+                      - /url: /pt-br/plus?referrer=%2Fpt-br%2Ffotografias%2Fmaos-segurando-cartao-de-credito-de-plastico-e-usando-laptop-conceito-de-compras-online-imagem-tonificada-7r_G9xWu2iw
+              - generic [ref=e459]:
+                - link "Mãos segurando cartão de crédito de plástico e usando laptop. Conceito de compras online. Imagem tonificada" [ref=e460]:
+                  - /url: /pt-br/fotografias/maos-segurando-cartao-de-credito-de-plastico-e-usando-laptop-conceito-de-compras-online-imagem-tonificada-7r_G9xWu2iw
+                  - img "Mãos segurando cartão de crédito de plástico e usando laptop. Conceito de compras online. Imagem tonificada" [ref=e461]
+                - link [ref=e462] [cursor=pointer]:
+                  - /url: /pt-br/plus?referrer=%2Fpt-br%2Ffotografias%2Fmaos-segurando-cartao-de-credito-de-plastico-e-usando-laptop-conceito-de-compras-online-imagem-tonificada-7r_G9xWu2iw
+                  - img [ref=e463]
+              - generic [ref=e466]:
+                - generic [ref=e467]:
+                  - button "Favorito" [ref=e468] [cursor=pointer]:
+                    - img [ref=e469]
+                  - button "Adicionar à coleção" [ref=e472] [cursor=pointer]:
+                    - img [ref=e473]
+                - link "Download" [ref=e476] [cursor=pointer]:
+                  - /url: /pt-br/plus?referrer=%2Fpt-br%2Ffotografias%2Fmaos-segurando-cartao-de-credito-de-plastico-e-usando-laptop-conceito-de-compras-online-imagem-tonificada-7r_G9xWu2iw
+                  - img [ref=e477]
+                  - text: Download
+            - figure [ref=e479]:
+              - generic [ref=e481]:
+                - link [ref=e482] [cursor=pointer]:
+                  - /url: /pt-br/@samsungmemory
+                - link "Samsung Memory" [ref=e486] [cursor=pointer]:
+                  - /url: /pt-br/@samsungmemory
+              - link "Uma mulher sentada em um banco usando um computador portátil" [ref=e488]:
+                - /url: /pt-br/fotografias/uma-mulher-sentada-em-um-banco-usando-um-computador-portatil-yetbUp2P6po
+                - img "Uma mulher sentada em um banco usando um computador portátil" [ref=e489]
+              - generic [ref=e491]:
+                - generic [ref=e492]:
+                  - button "Favorito" [ref=e493] [cursor=pointer]:
+                    - img [ref=e494]
+                  - button "Adicionar à coleção" [ref=e497] [cursor=pointer]:
+                    - img [ref=e498]
+                - generic [ref=e501]:
+                  - link "Download" [ref=e502] [cursor=pointer]:
+                    - /url: https://unsplash.com/photos/yetbUp2P6po/download?force=true
+                  - button "Escolha o tamanho do download" [ref=e503] [cursor=pointer]:
+                    - img [ref=e504]
+            - figure [ref=e506]:
+              - generic [ref=e508]:
+                - link [ref=e509] [cursor=pointer]:
+                  - /url: /pt-br/@samsungmemoryus
+                - link "Samsung Memory US" [ref=e513] [cursor=pointer]:
+                  - /url: /pt-br/@samsungmemoryus
+              - link "Pessoa inserindo cartão SD no laptop" [ref=e515]:
+                - /url: /pt-br/fotografias/pessoa-inserindo-cartao-sd-no-laptop-hdnVBrV4XY0
+                - img "Pessoa inserindo cartão SD no laptop" [ref=e516]
+              - generic [ref=e518]:
+                - generic [ref=e519]:
+                  - button "Favorito" [ref=e520] [cursor=pointer]:
+                    - img [ref=e521]
+                  - button "Adicionar à coleção" [ref=e524] [cursor=pointer]:
+                    - img [ref=e525]
+                - generic [ref=e528]:
+                  - link "Download" [ref=e529] [cursor=pointer]:
+                    - /url: https://unsplash.com/photos/hdnVBrV4XY0/download?force=true
+                  - button "Escolha o tamanho do download" [ref=e530] [cursor=pointer]:
+                    - img [ref=e531]
+            - figure [ref=e533]:
+              - generic [ref=e535]:
+                - link [ref=e536] [cursor=pointer]:
+                  - /url: /pt-br/@myspainvisa
+                - link "My Spain Visa" [ref=e540] [cursor=pointer]:
+                  - /url: /pt-br/@myspainvisa
+              - link "Itens essenciais de viagem, passaporte, laptop e café da manhã." [ref=e542]:
+                - /url: /pt-br/fotografias/itens-essenciais-de-viagem-passaporte-laptop-e-cafe-da-manha-4NkooaqwutU
+                - img "Itens essenciais de viagem, passaporte, laptop e café da manhã." [ref=e543]
+              - generic [ref=e545]:
+                - generic [ref=e546]:
+                  - button "Favorito" [ref=e547] [cursor=pointer]:
+                    - img [ref=e548]
+                  - button "Adicionar à coleção" [ref=e551] [cursor=pointer]:
+                    - img [ref=e552]
+                - generic [ref=e555]:
+                  - link "Download" [ref=e556] [cursor=pointer]:
+                    - /url: https://unsplash.com/photos/4NkooaqwutU/download?force=true
+                  - button "Escolha o tamanho do download" [ref=e557] [cursor=pointer]:
+                    - img [ref=e558]
+            - figure [ref=e560]:
+              - generic [ref=e562]:
+                - link [ref=e563] [cursor=pointer]:
+                  - /url: /pt-br/@gettyimages
+                - generic [ref=e566]:
+                  - link "Getty Images" [ref=e567] [cursor=pointer]:
+                    - /url: /pt-br/@gettyimages
+                  - generic [ref=e568]:
+                    - text: Para
+                    - link "Unsplash+" [ref=e569] [cursor=pointer]:
+                      - /url: /pt-br/plus?referrer=%2Fpt-br%2Ffotografias%2Fhomem-asiatico-sentado-na-sala-de-estar-e-tendo-chamada-de-video-no-computador-portatil-9nTCNTxXVXs
+              - generic [ref=e570]:
+                - link "Homem asiático sentado na sala de estar e tendo chamada de vídeo no computador portátil." [ref=e571]:
+                  - /url: /pt-br/fotografias/homem-asiatico-sentado-na-sala-de-estar-e-tendo-chamada-de-video-no-computador-portatil-9nTCNTxXVXs
+                  - img "Homem asiático sentado na sala de estar e tendo chamada de vídeo no computador portátil." [ref=e572]
+                - link [ref=e573] [cursor=pointer]:
+                  - /url: /pt-br/plus?referrer=%2Fpt-br%2Ffotografias%2Fhomem-asiatico-sentado-na-sala-de-estar-e-tendo-chamada-de-video-no-computador-portatil-9nTCNTxXVXs
+                  - img [ref=e574]
+              - generic [ref=e577]:
+                - generic [ref=e578]:
+                  - button "Favorito" [ref=e579] [cursor=pointer]:
+                    - img [ref=e580]
+                  - button "Adicionar à coleção" [ref=e583] [cursor=pointer]:
+                    - img [ref=e584]
+                - link "Download" [ref=e587] [cursor=pointer]:
+                  - /url: /pt-br/plus?referrer=%2Fpt-br%2Ffotografias%2Fhomem-asiatico-sentado-na-sala-de-estar-e-tendo-chamada-de-video-no-computador-portatil-9nTCNTxXVXs
+                  - img [ref=e588]
+                  - text: Download
+            - figure [ref=e590]:
+              - generic [ref=e592]:
+                - link [ref=e593] [cursor=pointer]:
+                  - /url: /pt-br/@samsungmemoryus
+                - link "Samsung Memory US" [ref=e597] [cursor=pointer]:
+                  - /url: /pt-br/@samsungmemoryus
+              - link "Mãos que introduzem o cartão do SD no leitor do portátil" [ref=e599]:
+                - /url: /pt-br/fotografias/maos-que-introduzem-o-cartao-do-sd-no-leitor-do-portatil-t8NAzXH3x0Q
+                - img "Mãos que introduzem o cartão do SD no leitor do portátil" [ref=e600]
+              - generic [ref=e602]:
+                - generic [ref=e603]:
+                  - button "Favorito" [ref=e604] [cursor=pointer]:
+                    - img [ref=e605]
+                  - button "Adicionar à coleção" [ref=e608] [cursor=pointer]:
+                    - img [ref=e609]
+                - generic [ref=e612]:
+                  - link "Download" [ref=e613] [cursor=pointer]:
+                    - /url: https://unsplash.com/photos/t8NAzXH3x0Q/download?force=true
+                  - button "Escolha o tamanho do download" [ref=e614] [cursor=pointer]:
+                    - img [ref=e615]
+            - figure [ref=e617]:
+              - generic [ref=e619]:
+                - link [ref=e620] [cursor=pointer]:
+                  - /url: /pt-br/@samsungmemory
+                - link "Samsung Memory" [ref=e624] [cursor=pointer]:
+                  - /url: /pt-br/@samsungmemory
+              - link "as mãos de uma pessoa em um laptop" [ref=e626]:
+                - /url: /pt-br/fotografias/as-maos-de-uma-pessoa-em-um-laptop-N7U-_EN81tE
+                - img "as mãos de uma pessoa em um laptop" [ref=e627]
+              - generic [ref=e629]:
+                - generic [ref=e630]:
+                  - button "Favorito" [ref=e631] [cursor=pointer]:
+                    - img [ref=e632]
+                  - button "Adicionar à coleção" [ref=e635] [cursor=pointer]:
+                    - img [ref=e636]
+                - generic [ref=e639]:
+                  - link "Download" [ref=e640] [cursor=pointer]:
+                    - /url: https://unsplash.com/photos/N7U-_EN81tE/download?force=true
+                  - button "Escolha o tamanho do download" [ref=e641] [cursor=pointer]:
+                    - img [ref=e642]
+            - figure [ref=e644]:
+              - generic [ref=e646]:
+                - link [ref=e647] [cursor=pointer]:
+                  - /url: /pt-br/@kobuagency
+                - link "KOBU Agency" [ref=e651] [cursor=pointer]:
+                  - /url: /pt-br/@kobuagency
+              - link "Pessoa usando o MacBook Pro na cadeira azul e branca" [ref=e653]:
+                - /url: /pt-br/fotografias/pessoa-usando-o-macbook-pro-na-cadeira-azul-e-branca-f0QiOMWdP-o
+                - img "Pessoa usando o MacBook Pro na cadeira azul e branca" [ref=e654]
+              - generic [ref=e656]:
+                - generic [ref=e657]:
+                  - button "Favorito" [ref=e658] [cursor=pointer]:
+                    - img [ref=e659]
+                  - button "Adicionar à coleção" [ref=e662] [cursor=pointer]:
+                    - img [ref=e663]
+                - generic [ref=e666]:
+                  - link "Download" [ref=e667] [cursor=pointer]:
+                    - /url: https://unsplash.com/photos/f0QiOMWdP-o/download?force=true
+                  - button "Escolha o tamanho do download" [ref=e668] [cursor=pointer]:
+                    - img [ref=e669]
+          - generic [ref=e673]:
+            - heading "Pesquise imagens premium na iStock | Pegue seu desconto agora" [level=2] [ref=e674]:
+              - text: Pesquise imagens premium na iStock
+              - generic [ref=e675]: "| Pegue seu desconto agora"
+            - generic [ref=e677]:
+              - link "voo de reserva de viagens página de férias de reserva de pesquisa de viajante" [ref=e678] [cursor=pointer]:
+                - /url: https://www.istockphoto.com/photo/booking-flight-travel-traveler-search-reservation-holiday-page-gm842446672-137643929?utm_source=unsplash&utm_medium=affiliate&utm_campaign=srp_photos_bottom&utm_content=https%3A%2F%2Funsplash.com%2Fpt-br%2Fs%2Ffotografias%2Flaptop-buying-tickets-online&utm_term=laptop+buying+tickets+online%3A%3A%3A%3A
+                - img "voo de reserva de viagens página de férias de reserva de pesquisa de viajante" [ref=e679]
+              - link "Busca por informações sobre viagens aéreas.,Reserva de passagens aéreas para viagens" [ref=e680] [cursor=pointer]:
+                - /url: https://www.istockphoto.com/photo/search-for-air-travel-information-air-ticket-booking-for-travel-gm1393093359-449113919?utm_source=unsplash&utm_medium=affiliate&utm_campaign=srp_photos_bottom&utm_content=https%3A%2F%2Funsplash.com%2Fpt-br%2Fs%2Ffotografias%2Flaptop-buying-tickets-online&utm_term=laptop+buying+tickets+online%3A%3A%3A%3A
+                - img "Busca por informações sobre viagens aéreas.,Reserva de passagens aéreas para viagens" [ref=e681]
+              - link "Conceito de página web de reservas de viagens. Reserva na internet." [ref=e682] [cursor=pointer]:
+                - /url: https://www.istockphoto.com/photo/travel-booking-web-page-concept-booking-on-the-internet-gm1256620949-367997772?utm_source=unsplash&utm_medium=affiliate&utm_campaign=srp_photos_bottom&utm_content=https%3A%2F%2Funsplash.com%2Fpt-br%2Fs%2Ffotografias%2Flaptop-buying-tickets-online&utm_term=laptop+buying+tickets+online%3A%3A%3A%3A
+                - img "Conceito de página web de reservas de viagens. Reserva na internet." [ref=e683]
+              - generic [ref=e684]:
+                - link "Casal de idosos planejando viagem de férias e pesquisando informações na internet" [ref=e685] [cursor=pointer]:
+                  - /url: https://www.istockphoto.com/photo/senior-couple-planning-vacation-trip-and-searching-information-on-internet-gm1480152264-507929291?utm_source=unsplash&utm_medium=affiliate&utm_campaign=srp_photos_bottom&utm_content=https%3A%2F%2Funsplash.com%2Fpt-br%2Fs%2Ffotografias%2Flaptop-buying-tickets-online&utm_term=laptop+buying+tickets+online%3A%3A%3A%3A
+                  - img "Casal de idosos planejando viagem de férias e pesquisando informações na internet" [ref=e686]
+                - link "Ver mais na iStock ↗" [ref=e687] [cursor=pointer]:
+                  - /url: https://www.istockphoto.com/search/2/image?utm_source=unsplash&utm_medium=affiliate&utm_campaign=srp_photos_bottom&utm_content=https%3A%2F%2Funsplash.com%2Fpt-br%2Fs%2Ffotografias%2Flaptop-buying-tickets-online&utm_term=laptop+buying+tickets+online%3A%3A%3A%3A&phrase=laptop+buying+tickets+online&alloweduse=availableforalluses&excludenudity=true&sort=best&mediatype=photography
+          - button "Carregar mais" [ref=e691] [cursor=pointer]
+          - generic [ref=e692]:
+            - link [ref=e693] [cursor=pointer]:
+              - /url: /pt-br
+              - img [ref=e694]
+            - paragraph [ref=e696]: Crie algo incrível
+    - generic:
+      - region "Notifications"

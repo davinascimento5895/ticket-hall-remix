@@ -18,7 +18,7 @@ export const blogPosts: BlogPost[] = [
     date: "2026-03-01",
     readTime: "8 min",
     tags: ["Vendas", "Produtores", "Guia"],
-    imageUrl: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80",
+    imageUrl: "/images/blog/vender-ingressos.webp",
     author: "Equipe TicketHall",
     content: `Vender ingressos online deixou de ser um diferencial e se tornou uma necessidade para qualquer produtor de eventos no Brasil. Seja para shows, festivais, peças de teatro, palestras ou eventos corporativos, a bilheteria digital é o caminho mais eficiente para alcançar seu público e maximizar a receita.
 
@@ -73,7 +73,7 @@ Vender ingressos online é simples quando você tem as ferramentas certas. Escol
     date: "2026-02-20",
     readTime: "10 min",
     tags: ["Planejamento", "Produtores", "Checklist"],
-    imageUrl: "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800&q=80",
+    imageUrl: "/images/blog/organizar-evento.webp",
     author: "Equipe TicketHall",
     content: `Organizar um evento pode parecer uma tarefa complexa, mas com o planejamento certo, qualquer pessoa pode produzir uma experiência memorável. Neste guia, vamos te mostrar o passo a passo completo para organizar um evento do zero — seja ele um show, um workshop, uma festa ou um evento corporativo.
 
@@ -154,7 +154,7 @@ Organizar um evento exige dedicação, mas o processo se torna mais simples quan
     date: "2026-02-10",
     readTime: "6 min",
     tags: ["Vendas", "Estratégia", "Precificação"],
-    imageUrl: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80",
+    imageUrl: "/images/blog/precificacao.webp",
     author: "Equipe TicketHall",
     content: `Definir o preço dos ingressos é uma das decisões mais importantes na produção de um evento. Cobrar demais pode afastar o público; cobrar de menos pode comprometer sua receita. A boa notícia é que existem estratégias testadas para encontrar o equilíbrio perfeito.
 
@@ -221,7 +221,7 @@ A precificação ideal combina análise de mercado, estratégia de lotes e aten�
     date: "2026-01-28",
     readTime: "5 min",
     tags: ["Tecnologia", "Check-in", "Produtores"],
-    imageUrl: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80",
+    imageUrl: "/images/blog/qr-code.webp",
     author: "Equipe TicketHall",
     content: `O check-in por QR Code revolucionou a forma como eventos gerenciam a entrada de participantes. O que antes exigia listas impressas, nomes conferidos manualmente e filas intermináveis, agora acontece em segundos com a leitura de um código no celular.
 
@@ -287,7 +287,7 @@ O check-in por QR Code é essencial para qualquer evento profissional. Ele acele
     date: "2026-01-15",
     readTime: "5 min",
     tags: ["Pagamentos", "PIX", "Conversão"],
-    imageUrl: "https://images.unsplash.com/photo-1556742044-3c52d6e88c62?w=800&q=80",
+    imageUrl: "/images/blog/pix.webp",
     author: "Equipe TicketHall",
     content: `Desde seu lançamento em 2020, o PIX se tornou o meio de pagamento mais utilizado no Brasil, com mais de 150 milhões de usuários cadastrados. Para produtores de eventos, oferecer PIX como forma de pagamento não é mais opcional — é obrigatório.
 
@@ -349,7 +349,7 @@ O PIX transformou o mercado de ingressos no Brasil. Oferecer pagamento por PIX �
     date: "2026-01-05",
     readTime: "7 min",
     tags: ["Marketing", "Redes Sociais", "Divulgação"],
-    imageUrl: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800&q=80",
+    imageUrl: "/images/blog/redes-sociais.webp",
     author: "Equipe TicketHall",
     content: `A divulgação nas redes sociais é o motor de vendas de qualquer evento moderno. Com a estratégia certa, você pode alcançar milhares de pessoas sem gastar uma fortuna em publicidade. Neste guia, vamos explorar as táticas que realmente funcionam para vender ingressos em 2026.
 
@@ -448,7 +448,7 @@ A divulgação eficiente combina presença em múltiplas redes sociais, conteúd
     date: "2025-12-20",
     readTime: "6 min",
     tags: ["Tendências", "Mercado", "Inovação"],
-    imageUrl: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&q=80",
+    imageUrl: "/images/blog/tendencias.webp",
     author: "Equipe TicketHall",
     content: `O mercado de eventos no Brasil está em constante evolução. Após anos de transformação acelerada pela tecnologia, 2026 promete ser um ano de consolidação de novas práticas e inovações. Confira as principais tendências que vão moldar o setor.
 
