@@ -9,14 +9,14 @@ import {
   isSoundEnabled, toggleSound,
 } from "@/lib/audio-feedback";
 import { Html5Qrcode } from "html5-qrcode";
-import { LogOut, Volume2, VolumeX, Search, History, CheckCircle2, AlertTriangle, XCircle, ChevronLeft, ClipboardList } from "lucide-react";
+import { Volume2, VolumeX, Search, History, CheckCircle2, AlertTriangle, XCircle, ChevronLeft, ClipboardList, ArrowRightLeft, CalendarDays, Clock, MapPin, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import {
   Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger,
 } from "@/components/ui/drawer";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { StaffPortalHeader } from "@/components/staff/StaffPortalHeader";
 
 type ScanResult = "success" | "already_used" | "invalid_qr" | "not_found" | "inactive" | "wrong_list" | "error" | "rate_limited" | "config_error" | "unauthorized";
 
@@ -70,14 +71,33 @@ function normalizeSearchText(text: string) {
 
 const SCANNER_ID = "staff-qr-reader";
 
+const roleLabels: Record<string, string> = {
+  admin: "Administrador",
+  producer: "Produtor",
+  staff: "Equipe",
+  buyer: "Comprador",
+};
+
 export default function StaffCheckinScreen() {
   const { eventId } = useParams<{ eventId: string }>();
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, signOut, profile, allRoles, role, switchRole } = useAuth();
   const navigate = useNavigate();
 
   // Event info
-  const [event, setEvent] = useState<{ title: string } | null>(null);
+  const [event, setEvent] = useState<{
+    id: string;
+    title: string;
+    start_date: string;
+    end_date: string;
+    venue_name: string | null;
+    venue_city: string | null;
+    cover_image_url: string | null;
+    status: string | null;
+    doors_open_time: string | null;
+  } | null>(null);
   const [staffCheckinListId, setStaffCheckinListId] = useState<string | null>(null);
+  const [staffCheckinListName, setStaffCheckinListName] = useState<string | null>(null);
+  const [staffCheckinListActive, setStaffCheckinListActive] = useState<boolean | null>(null);
 
   // Counters
   const [checkedInCount, setCheckedInCount] = useState(0);
@@ -138,7 +158,16 @@ export default function StaffCheckinScreen() {
   useEffect(() => {
     if (loading || !user || !eventId) return;
 
-    supabase.from("events").select("title").eq("id", eventId).single().then(({ data }) => setEvent(data));
+    setStaffCheckinListId(null);
+    setStaffCheckinListName(null);
+    setStaffCheckinListActive(null);
+
+    supabase
+      .from("events")
+      .select("id, title, start_date, end_date, venue_name, venue_city, cover_image_url, status, doors_open_time")
+      .eq("id", eventId)
+      .single()
+      .then(({ data }) => setEvent(data as any));
 
     // Fetch staff assignment to get assigned checkin_list_id
     if (user?.id) {
@@ -148,7 +177,25 @@ export default function StaffCheckinScreen() {
         .eq("event_id", eventId)
         .eq("user_id", user.id)
         .maybeSingle()
-        .then(({ data }) => setStaffCheckinListId(data?.checkin_list_id || null));
+        .then(async ({ data }) => {
+          const nextListId = data?.checkin_list_id || null;
+          setStaffCheckinListId(nextListId);
+
+          if (!nextListId) {
+            setStaffCheckinListName(null);
+            setStaffCheckinListActive(null);
+            return;
+          }
+
+          const { data: listData } = await supabase
+            .from("checkin_lists")
+            .select("name, is_active")
+            .eq("id", nextListId)
+            .maybeSingle();
+
+          setStaffCheckinListName(listData?.name || null);
+          setStaffCheckinListActive(listData?.is_active ?? null);
+        });
     }
 
     fetchCounters();
@@ -350,6 +397,47 @@ export default function StaffCheckinScreen() {
 
   // ─── Derived ───
   const pct = totalTickets > 0 ? Math.round((checkedInCount / totalTickets) * 100) : 0;
+  const canSwitchToBuyer = allRoles.includes("buyer");
+  const accountName = profile?.full_name || user?.email || "Usuário";
+  const accountEmail = user?.email || profile?.full_name || null;
+  const activeRoleLabel = role ? roleLabels[role] || role : "Equipe";
+  const eventBadge = event ? getEventBadge(event.start_date, event.end_date) : null;
+  const eventDateLabel = event ? format(new Date(event.start_date), "dd MMM yyyy", { locale: ptBR }) : "—";
+  const eventTimeLabel = event ? format(new Date(event.start_date), "HH:mm", { locale: ptBR }) : "—";
+  const venueLabel = event?.venue_name
+    ? `${event.venue_name}${event.venue_city ? `, ${event.venue_city}` : ""}`
+    : "Local não informado";
+  const checkinListLabel = staffCheckinListName || (staffCheckinListId ? "Lista vinculada" : "Lista padrão");
+  const checkinListStatusLabel = staffCheckinListActive === false ? "Lista inativa" : "Lista ativa";
+
+  const handleSwitchToBuyer = () => {
+    if (!canSwitchToBuyer) return;
+    switchRole("buyer");
+    navigate("/meus-ingressos");
+  };
+
+  const headerMetrics = [
+    {
+      label: "Entradas",
+      value: String(checkedInCount),
+      helper: `de ${totalTickets} válidas`,
+    },
+    {
+      label: "Progresso",
+      value: `${pct}%`,
+      helper: pct > 0 ? "Sessão em andamento" : "Ainda sem check-ins", 
+    },
+    {
+      label: "Lista",
+      value: checkinListLabel,
+      helper: checkinListStatusLabel,
+    },
+    {
+      label: "Local",
+      value: venueLabel,
+      helper: event?.doors_open_time ? `Portas às ${event.doors_open_time}` : `${eventDateLabel} • ${eventTimeLabel}`,
+    },
+  ];
 
   if (loading) {
     return (
@@ -361,203 +449,252 @@ export default function StaffCheckinScreen() {
 
   return (
     <div className="min-h-[100dvh] bg-background flex flex-col relative overflow-hidden">
-      {/* ── Header ── */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-3 py-2 border-b border-border bg-card">
-        <button onClick={() => navigate("/staff")} className="p-1" aria-label="Voltar">
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <div className="flex-1 text-center min-w-0 px-1">
-          <p className="text-sm font-semibold truncate font-[family-name:var(--font-display)]">
-            {event?.title || "Carregando..."}
-          </p>
-        </div>
-        <Button variant="ghost" size="icon" onClick={signOut} className="h-8 w-8" aria-label="Sair">
-          <LogOut className="h-4 w-4" />
-        </Button>
-      </header>
-
-      {/* ── Counters ── */}
-      <div className="px-4 py-2 bg-card border-b border-border">
-        <div className="flex items-center justify-between text-sm mb-1">
-          <span className="flex items-center gap-1">
-            <CheckCircle2 className="h-4 w-4 text-accent" />
-            <strong>{checkedInCount}</strong> entradas
-          </span>
-          <span className="text-muted-foreground">🎟 {totalTickets} total</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Progress value={pct} className="h-2 flex-1" />
-          <span className="text-xs font-medium text-muted-foreground w-10 text-right">{pct}%</span>
-        </div>
-      </div>
-
-      {/* ── Instruções rápidas ── */}
-      {showInstructions ? (
-        <section className="px-4 py-3 border-b border-border bg-muted/20">
-          <div className="flex items-start gap-2">
-            <ClipboardList className="h-4 w-4 mt-0.5 text-primary" />
-            <div className="min-w-0 flex-1">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="text-sm font-semibold">Instruções para a equipe</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Fluxo rápido para check-in sem erro. A confirmação final sempre aparece antes de efetivar a busca manual.
-                  </p>
-                </div>
-                <Button variant="ghost" size="sm" className="h-7 px-2 text-[11px]" onClick={() => setInstructionsVisible(false)}>
-                  Ocultar
-                </Button>
-              </div>
-              <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-                <li>1. Aponte a câmera para o QR Code inteiro e aguarde o retorno na tela.</li>
-                <li>2. Se o ingresso falhar, use a busca manual por nome, e-mail ou código.</li>
-                <li>3. Em caso de "já utilizado", confirme documento com o participante.</li>
-                <li>4. Mantenha uma fila por vez para acelerar o check-in.</li>
-              </ul>
-            </div>
-          </div>
-        </section>
-      ) : (
-        <div className="px-4 py-2 border-b border-border bg-muted/10">
-          <Button variant="ghost" size="sm" className="h-8 px-3 text-xs" onClick={() => setInstructionsVisible(true)}>
-            <ClipboardList className="h-4 w-4 mr-2" /> Mostrar instruções
+      <StaffPortalHeader
+        breadcrumb={[
+          { label: "Portal da equipe", href: "/staff" },
+          { label: "Eventos atribuídos", href: "/staff" },
+          { label: "Check-in" },
+        ]}
+        eyebrow="Operação de acesso"
+        title={event?.title || "Carregando evento..."}
+        description="Leitura de QR em tempo real, com busca manual e histórico da sessão no mesmo fluxo."
+        accountName={accountName}
+        accountEmail={accountEmail}
+        accountAvatarUrl={profile?.avatar_url}
+        activeRoleLabel={activeRoleLabel}
+        canSwitchToBuyer={canSwitchToBuyer}
+        onSwitchToBuyer={handleSwitchToBuyer}
+        onSignOut={signOut}
+        actions={
+          <Button type="button" variant="outline" onClick={() => navigate("/staff")} className="gap-2">
+            <ChevronLeft className="h-4 w-4" />
+            Voltar aos eventos
           </Button>
-        </div>
-      )}
+        }
+        metrics={headerMetrics}
+      />
 
-      {/* ── Scanner area (always mounted, hidden behind feedback) ── */}
-      <div className="flex-1 flex flex-col items-center justify-center p-3 relative min-h-0">
-        <div className={`w-full max-w-sm aspect-square relative rounded-xl overflow-hidden border-2 border-primary/30 ${feedback ? "invisible" : "visible"}`}>
-          <div id={SCANNER_ID} className="w-full h-full" />
-          {/* Corner markers */}
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-lg" />
-            <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-primary rounded-tr-lg" />
-            <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-primary rounded-bl-lg" />
-            <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-primary rounded-br-lg" />
-            <div className="absolute left-4 right-4 h-0.5 bg-primary/80 animate-[scan_2s_ease-in-out_infinite]" />
-          </div>
-        </div>
+      <main className="flex-1 min-h-0">
+        <div className="mx-auto flex h-full w-full max-w-6xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8 lg:py-6">
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="space-y-4">
+              <Card className="border-border/80 bg-card/80 shadow-sm">
+                <CardContent className="flex flex-col gap-3 p-4 sm:p-5 md:flex-row md:items-start md:justify-between">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                      Fluxo de entrada
+                    </p>
+                    <h2 className="mt-1 font-display text-lg font-semibold text-foreground sm:text-xl">
+                      Leitor QR e busca manual
+                    </h2>
+                    <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">
+                      Confirme a pessoa antes de efetivar. O cabeçalho mostra a conta, o evento atual e a lista vinculada para checagem rápida.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
 
-        {/* ── Feedback overlay ── */}
-        {feedback && (
-          <div
-            className={`absolute inset-0 z-40 flex flex-col items-center justify-center p-6 animate-in fade-in duration-200
-              ${feedback.result === "success" ? "bg-accent text-accent-foreground" : feedback.result === "already_used" || feedback.result === "rate_limited" ? "bg-warning text-warning-foreground" : "bg-destructive text-destructive-foreground"}`}
-            onClick={() => {
-              setFeedback(null);
-              try { scannerRef.current?.resume(); } catch {}
-            }}
-          >
-            {feedback.result === "success" ? <CheckCircle2 className="h-20 w-20" /> : feedback.result === "already_used" || feedback.result === "rate_limited" ? <AlertTriangle className="h-20 w-20" /> : <XCircle className="h-20 w-20" />}
-            <h2 className="text-2xl font-bold mt-4 text-center font-[family-name:var(--font-display)]">
-              {feedback.result === "success" ? "CHECK-IN OK" : feedback.result === "already_used" ? "JÁ UTILIZADO" : "INVÁLIDO"}
-            </h2>
-            {feedback.attendeeName && <p className="text-xl mt-2 font-semibold">{feedback.attendeeName}</p>}
-            {feedback.tierName && <Badge variant="secondary" className="mt-2 text-sm">{feedback.tierName}</Badge>}
-            <p className="mt-3 text-sm opacity-90 text-center">{feedback.message}</p>
-              {feedback.checkedInAt && feedback.result === "already_used" && (
-              <p className="mt-1 text-xs opacity-75">Check-in original: {new Date(feedback.checkedInAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" })}</p>
-            )}
-            <p className="mt-4 text-xs opacity-60">Toque para fechar</p>
-          </div>
-        )}
-      </div>
-
-      {/* ── Bottom controls ── */}
-      <div className="sticky bottom-0 z-30 flex items-center justify-around p-2 border-t border-border bg-card" style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
-        <Button
-          variant={soundOn ? "default" : "outline"}
-          size="sm"
-          onClick={() => { const next = toggleSound(); setSoundOn(next); }}
-          className="flex-col h-auto py-1.5 px-3 gap-0.5"
-        >
-          {soundOn ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
-          <span className="text-[10px]">Som</span>
-        </Button>
-
-        {/* Manual search */}
-        <Drawer open={manualOpen} onOpenChange={(open) => { setManualOpen(open); if (!open) { searchRequestRef.current += 1; setSearchResults([]); setConfirmTicket(null); setSearchQuery(""); setSearching(false); } }}>
-          <DrawerTrigger asChild>
-            <Button variant="outline" size="sm" className="flex-col h-auto py-1.5 px-3 gap-0.5">
-              <Search className="h-5 w-5" />
-              <span className="text-[10px]">Manual</span>
-            </Button>
-          </DrawerTrigger>
-          <DrawerContent className="max-h-[80dvh]">
-            <DrawerHeader>
-              <DrawerTitle>Busca Manual</DrawerTitle>
-            </DrawerHeader>
-            <div className="px-4 pb-4 space-y-3">
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Nome, e-mail, pedido ou código"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && doSearch()}
-                  autoFocus
-                />
-                <Button onClick={() => doSearch()} disabled={searching} size="sm">{searching ? "..." : "Buscar"}</Button>
-              </div>
-
-              <p className="text-[11px] text-muted-foreground">
-                A busca é automática enquanto você digita. Toque em um resultado para abrir a confirmação.
-              </p>
-
-              <div className="space-y-2 max-h-52 overflow-y-auto">
-                {searchResults.map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    className="w-full flex items-center justify-between p-2 rounded-lg border border-border text-left cursor-pointer active:bg-muted/50"
-                    onClick={() => setConfirmTicket(t)}
-                  >
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{t.attendee_name || "Sem nome"}</p>
-                      <p className="text-xs text-muted-foreground">{t.attendee_email ? maskEmail(t.attendee_email) : "—"}</p>
-                      <p className="text-xs text-muted-foreground">{(t as any).ticket_tiers?.name || "—"}</p>
+              {showInstructions ? (
+                <Card className="border-border/80 bg-muted/15 shadow-sm">
+                  <CardContent className="p-4 sm:p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">Instruções para a equipe</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          Fluxo rápido para check-in sem erro. A confirmação final sempre aparece antes de efetivar a busca manual.
+                        </p>
+                      </div>
+                      <Button variant="ghost" size="sm" className="h-7 px-2 text-[11px]" onClick={() => setInstructionsVisible(false)}>
+                        Ocultar
+                      </Button>
                     </div>
-                    <Badge variant={t.status === "used" ? "secondary" : "default"} className="text-[10px]">{t.status === "used" ? "USADO" : "ATIVO"}</Badge>
-                  </button>
-                ))}
 
-                {!searching && searchQuery.trim() && searchResults.length === 0 && (
-                  <p className="text-sm text-muted-foreground py-4 text-center">
-                    Nenhum ingresso encontrado. Verifique nome, e-mail ou código.
+                    <ul className="mt-3 space-y-1.5 text-xs text-muted-foreground">
+                      <li>1. Aponte a câmera para o QR Code inteiro e aguarde o retorno na tela.</li>
+                      <li>2. Se o ingresso falhar, use a busca manual por nome, e-mail ou código.</li>
+                      <li>3. Em caso de "já utilizado", confirme documento com o participante.</li>
+                      <li>4. Mantenha uma fila por vez para acelerar o check-in.</li>
+                    </ul>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card className="border-border/80 bg-card/75 shadow-sm">
+                  <CardContent className="p-4 sm:p-5">
+                    <Button variant="ghost" size="sm" className="h-8 px-3 text-xs" onClick={() => setInstructionsVisible(true)}>
+                      <ClipboardList className="h-4 w-4 mr-2" /> Mostrar instruções
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+
+              <Card className="border-border/80 bg-card/80 shadow-sm">
+                <CardContent className="p-3 sm:p-4">
+                  <div className={`relative mx-auto w-full max-w-sm aspect-square overflow-hidden rounded-xl border-2 border-primary/30 ${feedback ? "invisible" : "visible"}`}>
+                    <div id={SCANNER_ID} className="w-full h-full" />
+                    <div className="absolute inset-0 pointer-events-none">
+                      <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-lg" />
+                      <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-primary rounded-tr-lg" />
+                      <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-primary rounded-bl-lg" />
+                      <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-primary rounded-br-lg" />
+                      <div className="absolute left-4 right-4 h-0.5 bg-primary/80 animate-[scan_2s_ease-in-out_infinite]" />
+                    </div>
+                  </div>
+
+                  <p className="mt-3 text-center text-xs text-muted-foreground">
+                    Centralize o QR dentro da moldura. O retorno aparece acima e o scanner retoma sozinho.
                   </p>
-                )}
+                </CardContent>
+              </Card>
+
+              <div className="sticky bottom-0 z-30 flex items-center justify-around gap-2 border-t border-border bg-card p-2" style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
+                <Button
+                  variant={soundOn ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => { const next = toggleSound(); setSoundOn(next); }}
+                  className="flex-col h-auto gap-0.5 px-3 py-1.5"
+                >
+                  {soundOn ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+                  <span className="text-[10px]">Som</span>
+                </Button>
+
+                <Drawer open={manualOpen} onOpenChange={(open) => { setManualOpen(open); if (!open) { searchRequestRef.current += 1; setSearchResults([]); setConfirmTicket(null); setSearchQuery(""); setSearching(false); } }}>
+                  <DrawerTrigger asChild>
+                    <Button variant="outline" size="sm" className="flex-col h-auto gap-0.5 px-3 py-1.5">
+                      <Search className="h-5 w-5" />
+                      <span className="text-[10px]">Manual</span>
+                    </Button>
+                  </DrawerTrigger>
+                  <DrawerContent className="max-h-[80dvh]">
+                    <DrawerHeader>
+                      <DrawerTitle>Busca Manual</DrawerTitle>
+                    </DrawerHeader>
+                    <div className="space-y-3 px-4 pb-4">
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Nome, e-mail, pedido ou código"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && doSearch()}
+                          autoFocus
+                        />
+                        <Button onClick={() => doSearch()} disabled={searching} size="sm">
+                          {searching ? "..." : "Buscar"}
+                        </Button>
+                      </div>
+
+                      <p className="text-[11px] text-muted-foreground">
+                        A busca é automática enquanto você digita. Toque em um resultado para abrir a confirmação.
+                      </p>
+
+                      <div className="max-h-52 space-y-2 overflow-y-auto">
+                        {searchResults.map((t) => (
+                          <button
+                            key={t.id}
+                            type="button"
+                            className="w-full cursor-pointer rounded-lg border border-border p-2 text-left active:bg-muted/50"
+                            onClick={() => setConfirmTicket(t)}
+                          >
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-medium">{t.attendee_name || "Sem nome"}</p>
+                                <p className="text-xs text-muted-foreground">{t.attendee_email ? maskEmail(t.attendee_email) : "—"}</p>
+                                <p className="text-xs text-muted-foreground">{(t as any).ticket_tiers?.name || "—"}</p>
+                              </div>
+                              <Badge variant={t.status === "used" ? "secondary" : "default"} className="text-[10px]">
+                                {t.status === "used" ? "USADO" : "ATIVO"}
+                              </Badge>
+                            </div>
+                          </button>
+                        ))}
+
+                        {!searching && searchQuery.trim() && searchResults.length === 0 && (
+                          <p className="py-4 text-center text-sm text-muted-foreground">
+                            Nenhum ingresso encontrado. Verifique nome, e-mail ou código.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </DrawerContent>
+                </Drawer>
+
+                <Drawer open={historyOpen} onOpenChange={setHistoryOpen}>
+                  <DrawerTrigger asChild>
+                    <Button variant="outline" size="sm" className="relative flex-col h-auto gap-0.5 px-3 py-1.5">
+                      <History className="h-5 w-5" />
+                      <span className="text-[10px]">Histórico</span>
+                      {history.length > 0 && (
+                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] text-primary-foreground">
+                          {history.length}
+                        </span>
+                      )}
+                    </Button>
+                  </DrawerTrigger>
+                  <DrawerContent className="max-h-[80dvh]">
+                    <DrawerHeader>
+                      <DrawerTitle>Histórico da Sessão</DrawerTitle>
+                    </DrawerHeader>
+                    <div className="max-h-72 space-y-1 overflow-y-auto px-4 pb-4">
+                      {history.length === 0 ? (
+                        <p className="py-4 text-center text-sm text-muted-foreground">Nenhum scan ainda.</p>
+                      ) : history.map((h) => (
+                        <div key={h.id} className="flex items-center gap-2 border-b border-border py-1.5 last:border-0">
+                          {h.result === "success" ? <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-accent" /> : h.result === "already_used" ? <AlertTriangle className="h-4 w-4 flex-shrink-0 text-warning" /> : <XCircle className="h-4 w-4 flex-shrink-0 text-destructive" />}
+                          <p className="min-w-0 flex-1 truncate text-sm">{h.name}</p>
+                          <span className="flex-shrink-0 text-xs text-muted-foreground">{h.time}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </DrawerContent>
+                </Drawer>
               </div>
             </div>
-          </DrawerContent>
-        </Drawer>
 
-        {/* History */}
-        <Drawer open={historyOpen} onOpenChange={setHistoryOpen}>
-          <DrawerTrigger asChild>
-            <Button variant="outline" size="sm" className="flex-col h-auto py-1.5 px-3 gap-0.5 relative">
-              <History className="h-5 w-5" />
-              <span className="text-[10px]">Histórico</span>
-              {history.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[9px] rounded-full h-4 w-4 flex items-center justify-center">{history.length}</span>
-              )}
-            </Button>
-          </DrawerTrigger>
-          <DrawerContent className="max-h-[80dvh]">
-            <DrawerHeader><DrawerTitle>Histórico da Sessão</DrawerTitle></DrawerHeader>
-            <div className="px-4 pb-4 space-y-1 max-h-72 overflow-y-auto">
-              {history.length === 0 ? (
-                <p className="text-center text-muted-foreground text-sm py-4">Nenhum scan ainda.</p>
-              ) : history.map((h) => (
-                <div key={h.id} className="flex items-center gap-2 py-1.5 border-b border-border last:border-0">
-                  {h.result === "success" ? <CheckCircle2 className="h-4 w-4 text-accent flex-shrink-0" /> : h.result === "already_used" ? <AlertTriangle className="h-4 w-4 text-warning flex-shrink-0" /> : <XCircle className="h-4 w-4 text-destructive flex-shrink-0" />}
-                  <p className="text-sm truncate flex-1 min-w-0">{h.name}</p>
-                  <span className="text-xs text-muted-foreground flex-shrink-0">{h.time}</span>
-                </div>
-              ))}
-            </div>
-          </DrawerContent>
-        </Drawer>
-      </div>
+            <aside className="hidden space-y-4 xl:block xl:sticky xl:top-24">
+              <Card className="overflow-hidden border-border/80 bg-card/80 shadow-sm">
+                {event?.cover_image_url && (
+                  <img src={event.cover_image_url} alt={event.title} className="h-36 w-full object-cover" loading="lazy" />
+                )}
+                <CardContent className="space-y-3 p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                      Evento atual
+                    </p>
+                    {eventBadge && (
+                      <Badge variant={eventBadge.variant} className="text-[10px] whitespace-nowrap">
+                        {eventBadge.label}
+                      </Badge>
+                    )}
+                  </div>
+
+                  <h3 className="truncate text-base font-semibold text-foreground">
+                    {event?.title || "Carregando..."}
+                  </h3>
+
+                  <div className="space-y-1.5 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                      <CalendarDays className="h-4 w-4 shrink-0" />
+                      {eventDateLabel}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="h-4 w-4 shrink-0" />
+                      {eventTimeLabel}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <MapPin className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{venueLabel}</span>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+                    <p className="font-medium text-foreground">{checkinListLabel}</p>
+                    <p>{checkinListStatusLabel}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </aside>
+          </div>
+        </div>
+      </main>
 
       <Dialog open={!!confirmTicket} onOpenChange={(open) => !open && setConfirmTicket(null)}>
         <DialogContent className="sm:max-w-md">
@@ -571,11 +708,11 @@ export default function StaffCheckinScreen() {
           {confirmTicket && (
             <div className="space-y-3">
               <div className="rounded-lg border border-border bg-muted/30 p-3">
-                <p className="text-sm font-semibold truncate">{confirmTicket.attendee_name || "Sem nome"}</p>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="truncate text-sm font-semibold">{confirmTicket.attendee_name || "Sem nome"}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
                   {confirmTicket.attendee_email ? maskEmail(confirmTicket.attendee_email) : "—"}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">{(confirmTicket as any).ticket_tiers?.name || "Sem lote"}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{(confirmTicket as any).ticket_tiers?.name || "Sem lote"}</p>
                 <div className="mt-2 flex items-center gap-2">
                   <Badge variant={confirmTicket.status === "used" ? "secondary" : "default"} className="text-[10px]">
                     {confirmTicket.status === "used" ? "JÁ UTILIZADO" : "PRONTO PARA CHECK-IN"}

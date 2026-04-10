@@ -17,6 +17,9 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -209,21 +212,23 @@ export function Navbar() {
                       <Plus className="h-4 w-4 mr-2" />
                       Criar evento
                     </DropdownMenuItem>
-                    {switchableRoles.length > 0 && (
+                    {allRoles.length > 1 && (
                       <>
                         <DropdownMenuSeparator />
-                        {switchableRoles.map((r) => (
-                          <DropdownMenuItem
-                            key={r}
-                            onClick={() => {
-                              switchRole(r);
-                              navigate(roleDashboardLinks[r]);
-                            }}
-                          >
-                            <ArrowRightLeft className="h-4 w-4 mr-2" />
-                            Alterar para {roleLabels[r]}
-                          </DropdownMenuItem>
-                        ))}
+                        <DropdownMenuLabel>Alterar conta</DropdownMenuLabel>
+                        <DropdownMenuRadioGroup
+                          value={role || ""}
+                          onValueChange={(val) => {
+                            switchRole(val as any);
+                            navigate(roleDashboardLinks[val as any]);
+                          }}
+                        >
+                          {allRoles.map((r) => (
+                            <DropdownMenuRadioItem key={r} value={r}>
+                              {roleLabels[r] ?? r}
+                            </DropdownMenuRadioItem>
+                          ))}
+                        </DropdownMenuRadioGroup>
                       </>
                     )}
                     <DropdownMenuSeparator />
@@ -356,19 +361,27 @@ export function Navbar() {
               <Link to="/meus-ingressos" className="block text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 transition-colors" onClick={() => setMobileOpen(false)}>Meus Ingressos</Link>
               <Link to="/meus-pedidos" className="block text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 transition-colors" onClick={() => setMobileOpen(false)}>Meus Pedidos</Link>
               <Link to="/favoritos" className="block text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 transition-colors" onClick={() => setMobileOpen(false)}>Favoritos</Link>
-              {switchableRoles.length > 0 && (
+              {allRoles.length > 1 && (
                 <>
                   <div className="border-t border-border my-2" />
-                  {switchableRoles.map((r) => (
-                    <button
-                      key={r}
-                      className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 w-full transition-colors"
-                      onClick={() => { switchRole(r); navigate(roleDashboardLinks[r]); setMobileOpen(false); }}
-                    >
-                      <ArrowRightLeft className="h-4 w-4 mr-2" />
-                      Alterar para {roleLabels[r]}
-                    </button>
-                  ))}
+                  <div className="px-2">
+                    <div className="text-sm font-semibold px-2 py-1.5">Alterar conta</div>
+                    {allRoles.map((r) => (
+                      <label
+                        key={r}
+                        className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground py-2.5 w-full transition-colors cursor-pointer"
+                      >
+                        <input
+                          type="radio"
+                          name="user-role"
+                          className="mr-3 h-4 w-4"
+                          checked={role === r}
+                          onChange={() => { switchRole(r); navigate(roleDashboardLinks[r]); setMobileOpen(false); }}
+                        />
+                        <span>{roleLabels[r] ?? r}</span>
+                      </label>
+                    ))}
+                  </div>
                 </>
               )}
               <div className="border-t border-border my-2" />

@@ -6,8 +6,6 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import { SearchBar } from "@/components/SearchBar";
-import { Spotlight } from "@/components/core/spotlight";
-import { WordRotate } from "@/components/ui/word-rotate";
 import { cn } from "@/lib/utils";
 
 type HeroSlide = {
@@ -105,6 +103,60 @@ function usePrefersReducedMotion() {
   return prefersReducedMotion;
 }
 
+function useHeroCarousel() {
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+  const [activeIndex, setActiveIndex] = useState(0);
+  const prefersReducedMotion = usePrefersReducedMotion();
+
+  useEffect(() => {
+    if (!carouselApi) return;
+
+    const handleSelect = () => setActiveIndex(carouselApi.selectedScrollSnap());
+
+    handleSelect();
+    carouselApi.on("select", handleSelect);
+    carouselApi.on("reInit", handleSelect);
+
+    return () => {
+      carouselApi.off("select", handleSelect);
+      carouselApi.off("reInit", handleSelect);
+    };
+  }, [carouselApi]);
+
+  useEffect(() => {
+    if (prefersReducedMotion || heroSlides.length < 2) return;
+
+    const interval = window.setInterval(() => {
+      if (!document.hidden) {
+        if (carouselApi) {
+          carouselApi.scrollNext();
+        } else {
+          setActiveIndex((current) => (current + 1) % heroSlides.length);
+        }
+      }
+    }, 3800);
+
+    return () => window.clearInterval(interval);
+  }, [carouselApi, prefersReducedMotion]);
+
+  const goToSlide = (index: number) => {
+    if (carouselApi) {
+      carouselApi.scrollTo(index);
+      return;
+    }
+
+    setActiveIndex(index);
+  };
+
+  return {
+    carouselApi,
+    setCarouselApi,
+    activeIndex,
+    activeSlide: heroSlides[activeIndex] ?? heroSlides[0],
+    goToSlide,
+  };
+}
+
 function MobileHeroCard({ slide, index }: { slide: HeroSlide; index: number }) {
   return (
     <div className="overflow-hidden rounded-[1.6rem] border border-border/60 bg-card shadow-sm">
@@ -131,38 +183,7 @@ function MobileHeroCard({ slide, index }: { slide: HeroSlide; index: number }) {
 }
 
 function MobileHero() {
-  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
-  const [activeIndex, setActiveIndex] = useState(0);
-  const prefersReducedMotion = usePrefersReducedMotion();
-
-  useEffect(() => {
-    if (!carouselApi) return;
-
-    const handleSelect = () => setActiveIndex(carouselApi.selectedScrollSnap());
-
-    handleSelect();
-    carouselApi.on("select", handleSelect);
-    carouselApi.on("reInit", handleSelect);
-
-    return () => {
-      carouselApi.off("select", handleSelect);
-      carouselApi.off("reInit", handleSelect);
-    };
-  }, [carouselApi]);
-
-  useEffect(() => {
-    if (!carouselApi || prefersReducedMotion || heroSlides.length < 2) return;
-
-    const interval = window.setInterval(() => {
-      if (!document.hidden) {
-        carouselApi.scrollNext();
-      }
-    }, 3800);
-
-    return () => window.clearInterval(interval);
-  }, [carouselApi, prefersReducedMotion]);
-
-  const activeSlide = heroSlides[activeIndex] ?? heroSlides[0];
+  const { carouselApi, setCarouselApi, activeIndex, activeSlide, goToSlide } = useHeroCarousel();
 
   return (
     <section className="md:hidden bg-gradient-to-b from-background via-secondary/15 to-background">
@@ -177,7 +198,7 @@ function MobileHero() {
             >
               Seus ingressos para
               <span className="mt-1 block text-primary">
-                <AnimatePresence mode="wait">
+                <AnimatePresence mode="wait" initial={false}>
                   <motion.span
                     key={activeSlide.word}
                     initial={{ opacity: 0, y: 10 }}
@@ -214,7 +235,7 @@ function MobileHero() {
                   key={slide.word}
                   type="button"
                   aria-label={`Ir para ${slide.word}`}
-                  onClick={() => carouselApi?.scrollTo(index)}
+                  onClick={() => goToSlide(index)}
                   className={cn(
                     "h-2 rounded-full transition-all duration-300",
                     index === activeIndex ? "w-6 bg-primary" : "w-2 bg-border"
@@ -229,57 +250,102 @@ function MobileHero() {
   );
 }
 
-function DesktopHero() {
+function DesktopHeroCard({ slide, index }: { slide: HeroSlide; index: number }) {
   return (
-    <section className="relative hidden min-h-[85vh] items-center justify-center overflow-hidden md:flex">
-      <Spotlight size={500} className="z-0" />
-      <div className="container relative z-10 text-center space-y-6 py-20">
-        <motion.h1
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="font-display text-4xl lg:text-6xl xl:text-7xl font-bold leading-tight"
-        >
-          Seus ingressos para{" "}
-          <WordRotate
-            words={["shows", "festivais", "eventos", "summits", "teatros", "congressos", "workshops"]}
-            duration={2500}
-            className="text-primary"
-          />
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.05 }}
-          className="text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto"
-        >
-          Compre, transfira e gerencie seus ingressos com segurança. A plataforma completa para produtores e compradores.
-        </motion.p>
+    <div className="overflow-hidden rounded-[1.75rem] border border-border/60 bg-card">
+      <motion.img
+        key={slide.word}
+        src={slide.imageUrl}
+        alt={slide.alt}
+        className="h-[min(48vh,460px)] w-full object-cover"
+        initial={{ opacity: 0, scale: 1.01 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 1.01 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        loading={index === 0 ? "eager" : "lazy"}
+        decoding="async"
+      />
+    </div>
+  );
+}
 
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-          className="max-w-2xl mx-auto w-full"
-        >
-          <SearchBar variant="hero" placeholder="Buscar eventos, shows, cidades..." />
-        </motion.div>
+function DesktopHero() {
+  const { activeIndex, activeSlide } = useHeroCarousel();
 
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.15 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4"
-        >
-          <Button variant="default" size="lg" asChild>
-            <Link to="/eventos">
-              Explorar eventos <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
-          <Button variant="outline" size="lg" asChild>
-            <Link to="/produtores">Sou produtor</Link>
-          </Button>
-        </motion.div>
+  return (
+    <section className="relative hidden min-h-[85vh] overflow-hidden bg-background md:flex">
+      <div className="container relative z-10 flex w-full items-center py-14 lg:py-20">
+        <div className="grid w-full items-center gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(340px,0.95fr)] lg:gap-12">
+          <div className="mx-auto max-w-3xl space-y-6 text-center lg:mx-0 lg:text-left">
+            <motion.h1
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl"
+            >
+              Seus ingressos para
+              <span className="mt-2 block text-primary">
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.span
+                    key={activeSlide.word}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    className="inline-block"
+                  >
+                    {activeSlide.word}
+                  </motion.span>
+                </AnimatePresence>
+              </span>
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.05 }}
+              className="mx-auto max-w-2xl text-lg text-muted-foreground lg:mx-0 lg:text-xl"
+            >
+              Compre, transfira e gerencie seus ingressos com segurança. A plataforma completa para produtores e compradores.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+              className="mx-auto w-full max-w-2xl lg:mx-0"
+            >
+              <SearchBar variant="hero" placeholder="Buscar eventos, shows, cidades..." />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.15 }}
+              className="flex flex-col items-center justify-center gap-4 sm:flex-row lg:justify-start"
+            >
+              <Button variant="default" size="lg" asChild>
+                <Link to="/eventos">
+                  Explorar eventos <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+              <Button variant="outline" size="lg" asChild>
+                <Link to="/produtores">Sou produtor</Link>
+              </Button>
+            </motion.div>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.18 }}
+            className="w-full"
+          >
+            <AnimatePresence mode="wait" initial={false}>
+              <DesktopHeroCard slide={activeSlide} index={activeIndex} />
+            </AnimatePresence>
+          </motion.div>
+        </div>
       </div>
     </section>
   );
