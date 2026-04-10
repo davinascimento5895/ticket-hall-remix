@@ -101,9 +101,16 @@ export default function Checkout() {
           setPaymentCreated(false);
         }
       })
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "CHANNEL_ERROR") {
+          console.warn("Realtime channel error for order:", orderId);
+        }
+      });
 
-    return () => { supabase.removeChannel(channel); };
+    return () => { 
+      channel.unsubscribe().catch(() => {});
+      supabase.removeChannel(channel).catch(() => {}); 
+    };
   }, [orderId, awaitingPayment, clearCart]);
 
   // Create order using server-side RPC for price validation

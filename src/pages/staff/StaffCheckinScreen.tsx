@@ -26,6 +26,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { StaffPortalHeader } from "@/components/staff/StaffPortalHeader";
+import { format, isPast, isWithinInterval } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
+function getEventBadge(start: string, end: string) {
+  const now = new Date();
+  const s = new Date(start);
+  const e = new Date(end);
+  if (isPast(e)) return { label: "ENCERRADO", variant: "secondary" as const };
+  if (isWithinInterval(now, { start: s, end: e })) return { label: "EM ANDAMENTO", variant: "default" as const };
+  return { label: "EM BREVE", variant: "outline" as const };
+}
 
 type ScanResult = "success" | "already_used" | "invalid_qr" | "not_found" | "inactive" | "wrong_list" | "error" | "rate_limited" | "config_error" | "unauthorized";
 
@@ -203,9 +214,16 @@ export default function StaffCheckinScreen() {
     const channel = supabase
       .channel(`staff-tickets-${eventId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "tickets", filter: `event_id=eq.${eventId}` }, () => fetchCounters())
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "CHANNEL_ERROR") {
+          console.warn("Realtime channel error for event:", eventId);
+        }
+      });
 
-    return () => { supabase.removeChannel(channel); };
+    return () => { 
+      channel.unsubscribe().catch(() => {});
+      supabase.removeChannel(channel).catch(() => {}); 
+    };
   }, [user, loading, eventId, fetchCounters]);
 
   // ─── Show feedback (stable ref-based) ───

@@ -52,9 +52,16 @@ export default function PedidoRecuperacao() {
           navigate("/meus-ingressos");
         }
       })
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "CHANNEL_ERROR") {
+          console.warn("Realtime channel error for order:", orderId);
+        }
+      });
 
-    return () => { supabase.removeChannel(channel); };
+    return () => { 
+      channel.unsubscribe().catch(() => {});
+      supabase.removeChannel(channel).catch(() => {}); 
+    };
   }, [orderId, navigate]);
 
   const copyToClipboard = (text: string) => {

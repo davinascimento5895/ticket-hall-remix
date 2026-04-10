@@ -35,10 +35,15 @@ export function useRealtimeSubscription({ table, filter, queryKey, enabled = tru
       .on("postgres_changes", channelConfig, () => {
         queryClient.invalidateQueries({ queryKey });
       })
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "CHANNEL_ERROR") {
+          console.warn("Realtime channel error:", channelName);
+        }
+      });
 
     return () => {
-      supabase.removeChannel(channel);
+      channel.unsubscribe().catch(() => {});
+      supabase.removeChannel(channel).catch(() => {});
     };
   }, [table, filter, queryKey.join(","), enabled, queryClient]);
 }
