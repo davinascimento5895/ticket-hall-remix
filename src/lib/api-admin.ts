@@ -664,20 +664,39 @@ function getFunctionStatus(error: unknown) {
 }
 
 export async function adminDeleteEvent(eventId: string) {
-  const { error: edgeError } = await supabase.functions.invoke("admin-force-delete-event", {
-    body: { eventId },
-  });
+  // Tenta usar a edge function primeiro (se existir)
+  try {
+    const { error: edgeError } = await supabase.functions.invoke("admin-force-delete-event", {
+      body: { eventId },
+    });
 
-  if (!edgeError) return;
+    if (!edgeError) return;
 
-  const status = getFunctionStatus(edgeError);
-  if (status === 404) {
-    const { error: rpcError } = await supabase.rpc("admin_force_delete_event", { p_event_id: eventId });
-    if (!rpcError) return;
-    throw rpcError;
+    const status = getFunctionStatus(edgeError);
+    // Se 404, cai no fallback SQL abaixo
+    if (status !== 404) {
+      throw edgeError instanceof Error ? edgeError : new Error("Erro ao remover evento");
+    }
+  } catch (err) {
+    // Erro de rede/CORS (function não existe ou indisponível) - faz fallback para SQL
+    const errorMsg = err instanceof Error ? err.message : "";
+    const isNetworkError = 
+      errorMsg.includes("Failed to fetch") ||
+      errorMsg.includes("NetworkError") ||
+      errorMsg.includes("CORS") ||
+      errorMsg.includes("ERR_FAILED");
+    
+    if (!isNetworkError) {
+      // Se não é erro de rede, propaga o erro
+      throw err;
+    }
+    // Continua para o fallback SQL
   }
 
-  throw edgeError instanceof Error ? edgeError : new Error("Erro ao remover evento");
+  // Fallback: usa função SQL diretamente
+  const { error: rpcError } = await supabase.rpc("admin_force_delete_event", { p_event_id: eventId });
+  if (!rpcError) return;
+  throw rpcError;
 }
 
 // ============================================================
