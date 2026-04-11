@@ -63,6 +63,15 @@ export interface Event {
   views_count: number;
   created_at: string;
   updated_at: string;
+  // Certificate configuration fields
+  has_certificates?: boolean;
+  certificate_config?: Record<string, any>;
+  selected_template_id?: string | null;
+  custom_background_url?: string | null;
+  certificate_text_config?: CertificateTextConfig;
+  certificate_colors?: CertificateColors;
+  certificate_fields?: CertificateFields;
+  workload_hours?: number | null;
 }
 
 export interface TicketTier {
@@ -362,4 +371,112 @@ export interface CartItem {
     eventTitle: string;
     eventDate: string;
   };
+}
+
+// ============================================================
+// Certificate System Types
+// ============================================================
+
+export interface CertificateTemplate {
+  id: string;
+  name: string;
+  description: string | null;
+  default_config: Record<string, any>;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface CertificateSigner {
+  id: string;
+  event_id: string;
+  name: string;
+  role: string | null;
+  signature_url: string | null;
+  display_order: number;
+  created_at: string;
+}
+
+export interface CertificateParticipantPref {
+  id: string;
+  event_id: string;
+  user_id: string;
+  opt_out: boolean;
+  preferred_name: string | null;
+  consent_cpf: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Certificate {
+  id: string;
+  event_id: string;
+  ticket_id: string;
+  user_id: string;
+  certificate_code: string;
+  attendee_name: string;
+  issued_at: string;
+  workload_hours: number | null;
+  revoked_at: string | null;
+  revoked_reason: string | null;
+  revoked_by: string | null;
+  version: number;
+  qr_code_url: string | null;
+  linkedin_url: string | null;
+  created_at: string;
+}
+
+export interface CertificateColors {
+  primary: string;
+  secondary: string;
+  background: string;
+  text: string;
+}
+
+export interface CertificateTextConfig {
+  title: string;
+  subtitle: string;
+  bodyText: string;
+  showDate: boolean;
+  showLocation: boolean;
+  showWorkload: boolean;
+  footerText: string;
+}
+
+export interface CertificateFields {
+  showParticipantName: boolean;
+  showEventTitle: boolean;
+  showEventDate: boolean;
+  showEventLocation: boolean;
+  showWorkload: boolean;
+  showVerificationCode: boolean;
+  showQrCode: boolean;
+  showSigners: boolean;
+  showLogo: boolean;
+  showBorder?: boolean;
+}
+
+export interface CertificateVerificationResult {
+  valid: boolean;
+  revoked: boolean;
+  certificateCode: string;
+  eventName?: string;
+  participantName?: string;
+  eventDate?: string;
+  eventEndDate?: string;
+  eventLocation?: string;
+  workload?: number | null;
+  issuedAt?: string;
+  version?: number;
+  revokedAt?: string | null;
+  reason?: string | null;
+  message: string;
+  verificationUrl?: string;
+}
+
+export interface CertificateEventConfig {
+  selected_template_id: string | null;
+  custom_background_url: string | null;
+  certificate_text_config: CertificateTextConfig;
+  certificate_colors: CertificateColors;
+  certificate_fields: CertificateFields;
 }

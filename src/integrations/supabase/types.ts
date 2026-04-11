@@ -222,8 +222,14 @@ export type Database = {
           event_id: string
           id: string
           issued_at: string | null
+          previous_version_id: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          revoked_reason: string | null
           ticket_id: string
           user_id: string
+          version: number | null
+          workload_hours: number | null
         }
         Insert: {
           attendee_name: string
@@ -233,8 +239,14 @@ export type Database = {
           event_id: string
           id?: string
           issued_at?: string | null
+          previous_version_id?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          revoked_reason?: string | null
           ticket_id: string
           user_id: string
+          version?: number | null
+          workload_hours?: number | null
         }
         Update: {
           attendee_name?: string
@@ -244,8 +256,14 @@ export type Database = {
           event_id?: string
           id?: string
           issued_at?: string | null
+          previous_version_id?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          revoked_reason?: string | null
           ticket_id?: string
           user_id?: string
+          version?: number | null
+          workload_hours?: number | null
         }
         Relationships: [
           {
@@ -790,10 +808,12 @@ export type Database = {
           venue_state: string | null
           venue_zip: string | null
           views_count: number | null
+          certificate_config: Json | null
         }
         Insert: {
           banner_image_url?: string | null
           category?: string | null
+          certificate_config?: Json | null
           certificate_template?: string | null
           cover_image_url?: string | null
           created_at?: string | null
@@ -837,6 +857,7 @@ export type Database = {
         Update: {
           banner_image_url?: string | null
           category?: string | null
+          certificate_config?: Json | null
           certificate_template?: string | null
           cover_image_url?: string | null
           created_at?: string | null
@@ -1296,6 +1317,51 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      participant_certificate_prefs: {
+        Row: {
+          created_at: string | null
+          event_id: string
+          id: string
+          opt_out: boolean | null
+          preferred_name: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_id: string
+          id?: string
+          opt_out?: boolean | null
+          preferred_name?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string
+          id?: string
+          opt_out?: boolean | null
+          preferred_name?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "participant_certificate_prefs_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "participant_certificate_prefs_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"

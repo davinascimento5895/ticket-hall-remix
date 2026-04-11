@@ -47,6 +47,7 @@ const PoliticaPrivacidade = lazy(() => import("./pages/PoliticaPrivacidade"));
 const TermosDeUso = lazy(() => import("./pages/TermosDeUso"));
 const FilaVirtual = lazy(() => import("./pages/FilaVirtual"));
 const MeusCertificados = lazy(() => import("./pages/MeusCertificados"));
+const VerificarCertificado = lazy(() => import("./pages/VerificarCertificado"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const Changelog = lazy(() => import("./pages/Changelog"));
@@ -121,6 +122,7 @@ const StaffEventList = lazy(() => import("./pages/staff/StaffEventList"));
 const StaffCheckinScreen = lazy(() => import("./pages/staff/StaffCheckinScreen"));
 const StaffJoin = lazy(() => import("./pages/staff/StaffJoin"));
 const ProducerEventStaff = lazy(() => import("./pages/producer/ProducerEventStaff"));
+const ProducerEventCertificates = lazy(() => import("./pages/producer/ProducerEventCertificates"));
 
 
 const LazyFallback = () => (
@@ -189,6 +191,7 @@ const App = () => {
                 <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
                 <Route path="/termos-de-uso" element={<TermosDeUso />} />
                 <Route path="/meus-certificados" element={<ProtectedRoute><MeusCertificados /></ProtectedRoute>} />
+                <Route path="/verificar-certificado" element={<VerificarCertificado />} />
                 <Route path="/fila/:slug" element={<FilaVirtual />} />
                 <Route path="/changelog" element={<Changelog />} />
                 <Route path="/blog" element={<Blog />} />
@@ -249,6 +252,7 @@ const App = () => {
                   <Route path="coupons" element={<ProducerEventCoupons />} />
                   <Route path="promoters" element={<ProducerEventPromoters />} />
                   <Route path="staff" element={<ProducerEventStaff />} />
+                  <Route path="certificates" element={<ProducerEventCertificates />} />
                 </Route>
                 <Route path="inbox" element={<ProducerInbox />} />
                 <Route path="interest-lists" element={<ProducerInterestLists />} />
@@ -285,6 +289,7 @@ const App = () => {
                   <Route path="coupons" element={<ProducerEventCoupons />} />
                   <Route path="promoters" element={<ProducerEventPromoters />} />
                   <Route path="staff" element={<ProducerEventStaff />} />
+                  <Route path="certificates" element={<ProducerEventCertificates />} />
                 </Route>
                 <Route path="users" element={<AdminUsers />} />
                 <Route path="producers" element={<AdminProducers />} />

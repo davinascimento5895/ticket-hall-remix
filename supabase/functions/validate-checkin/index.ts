@@ -203,13 +203,85 @@ serve(async (req) => {
     // 8. Update analytics
     try { await supabase.rpc("confirm_checkin_analytics", { p_event_id: ticket.event_id }); } catch {}
 
-    // 9. Log success
+    // 9. Generate certificate if event has certificates enabled
+    let certificateGenerated = false;
+    try {
+      const { data: event } = await supabase
+        .from("events")
+        .select("has_certificates, title, certificate_config")
+        .eq("id", ticket.event_id)
+        .single();
+      
+      if (event?.has_certificates) {
+        // Check if participant opted out
+        const { data: participantPref } = await supabase
+          .from("participant_certificate_prefs")
+          .select("opt_out")
+          .eq("event_id", ticket.event_id)
+          .eq("user_id", ticket.owner_id)
+          .maybeSingle();
+        
+        if (participantPref?.opt_out) {
+          console.log(`Participant ${ticket.owner_id} opted out of certificate`);
+        } else {
+          // Check if certificate already exists
+          const { data: existingCert } = await supabase
+            .from("certificates")
+            .select("id")
+            .eq("ticket_id", ticketId)
+            .maybeSingle();
+          
+          if (!existingCert) {
+            const certCode = `CERT-${ticket.event_id.slice(0, 4).toUpperCase()}-${ticketId.slice(0, 8).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+            const attendeeName = ticket.attendee_name || "Participante";
+            
+            // Get workload from config
+            const config = event.certificate_config || {};
+            const workloadHours = config.showWorkload ? (config.workloadHours || 0) : null;
+            
+            const { error: certError } = await supabase
+              .from("certificates")
+              .insert({
+                event_id: ticket.event_id,
+                ticket_id: ticketId,
+                user_id: ticket.owner_id,
+                certificate_code: certCode,
+                attendee_name: attendeeName,
+                issued_at: now,
+                workload_hours: workloadHours,
+              });
+            
+            if (!certError) {
+              certificateGenerated = true;
+              // Send notification to user
+              try {
+                await supabase.from("notifications").insert({
+                  user_id: ticket.owner_id,
+                  type: "certificate_issued",
+                  title: "Certificado disponível!",
+                  body: `Seu certificado de participação em "${event.title}" está disponível em Meus Certificados.`,
+                  data: { eventId: ticket.event_id },
+                });
+              } catch (notifErr) {
+                console.error("Failed to send certificate notification:", notifErr);
+              }
+            }
+          }
+        }
+      }
+    } catch (certErr) {
+      console.error("Failed to generate certificate:", certErr);
+      // Don't fail the check-in if certificate generation fails
+    }
+
+    // 10. Log success
     await logScan(supabase, { checkinListId, checkinListName, ticketId, qrCode, result: "success", deviceId, scannedBy: effectiveScannedBy, operatorName, operatorEmail, verificationMethod: verificationMethod || "qr_scan" });
 
     return jsonResponse({
       success: true, result: "success", message: "Check-in realizado!",
       attendeeName: ticket.attendee_name, attendeeEmail: ticket.attendee_email,
       tierName: (ticket as any).ticket_tiers?.name, checkedInAt: now,
+      certificateGenerated,
     });
   } catch (error) {
     console.error("validate-checkin error:", error);

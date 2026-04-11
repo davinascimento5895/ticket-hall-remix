@@ -2,7 +2,7 @@ import { useState, Suspense, useLayoutEffect } from "react";
 import { EmbedSnippetGenerator } from "@/components/EmbedSnippetGenerator";
 import { useParams, useNavigate, useLocation, Link, Outlet, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, LayoutDashboard, Ticket, Users, ScanLine, DollarSign, Mail, Tag, Globe, MapPin, Calendar, Megaphone, Code, FileText, ClipboardList, Package, Settings, Eye, ArrowRight, CheckCircle2, Circle, Link as LinkIcon, PencilLine } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, Ticket, Users, ScanLine, DollarSign, Mail, Tag, Globe, MapPin, Calendar, Megaphone, Code, FileText, ClipboardList, Package, Settings, Eye, ArrowRight, CheckCircle2, Circle, Link as LinkIcon, PencilLine, Award } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -27,6 +27,7 @@ const EVENT_OPERATIONS = [
   { key: "participants", label: "Participantes", icon: Users, path: "/participants", hint: "Base de compradores" },
   { key: "guestlist", label: "Guest List", icon: Users, path: "/guestlist", hint: "Convidados" },
   { key: "checkin", label: "Check-in", icon: ScanLine, path: "/checkin", hint: "Acesso no evento" },
+  { key: "certificates", label: "Certificados", icon: Award, path: "/certificates", hint: "Certificados de participação" },
   { key: "staff", label: "Equipe", icon: Users, path: "/staff", hint: "Permissões" },
   { key: "financial", label: "Financeiro", icon: DollarSign, path: "/financial", hint: "Receita e repasses" },
   { key: "promoters", label: "Promoters", icon: Megaphone, path: "/promoters", hint: "Afiliados" },
@@ -213,13 +214,13 @@ export default function ProducerEventPanel({ eventsBasePath = "/producer/events"
       {/* Layout: Sidebar + Content */}
       <div className="flex flex-1 gap-6 min-h-0 px-4">
         {/* Tab Navigation - Sidebar (Desktop) */}
-        <div className="hidden lg:flex flex-col w-72 shrink-0 border-r border-border/70 pr-5 overflow-y-auto -ml-4">
-          <Card className="border-border/70 shadow-sm">
+        <div className="hidden lg:flex flex-col w-72 shrink-0 border-r border-border/70 pr-5 -ml-4">
+          <Card className="border-border/70 shadow-sm h-[calc(100vh-11rem)] max-h-[820px] min-h-[520px] flex flex-col overflow-hidden">
             <CardHeader className="pb-3">
               <CardTitle className="text-base">Navegação do evento</CardTitle>
               <CardDescription>Alterne entre operação e edição estrutural do evento.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="flex min-h-0 flex-1 flex-col gap-3">
               <div className="grid grid-cols-2 gap-2">
                 <Button
                   size="sm"
@@ -239,85 +240,91 @@ export default function ProducerEventPanel({ eventsBasePath = "/producer/events"
                 </Button>
               </div>
 
-              <div className="space-y-1.5">
-                {(activeMode === "operations" ? EVENT_OPERATIONS : EDIT_SECTIONS).map((item) => {
-                  const Icon = item.icon;
-                  const isActive = activeMode === "operations" ? activeTab.key === item.key : editorStep === item.key;
+              <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    {(activeMode === "operations" ? EVENT_OPERATIONS : EDIT_SECTIONS).map((item) => {
+                      const Icon = item.icon;
+                      const isActive = activeMode === "operations" ? activeTab.key === item.key : editorStep === item.key;
 
-                  return (
-                    <button
-                      key={item.key}
-                      title={item.hint}
-                      onClick={() => activeMode === "operations" ? navigateToTab(item as (typeof EVENT_OPERATIONS)[number]) : navigateToEditStep(item.key as (typeof EDIT_SECTIONS)[number]["key"])}
-                      className={cn(
-                        "flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition-all",
-                        isActive
-                          ? "border-primary/30 bg-primary/10 text-primary"
-                          : "border-transparent text-muted-foreground hover:bg-muted hover:text-foreground"
-                      )}
-                    >
-                      <Icon className="mt-0.5 h-4 w-4 shrink-0" />
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">{item.label}</p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {isInlineEditing && (
-                <div className="border-t border-border/70 pt-3 space-y-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={!hasPreviousEditStep}
-                      onClick={() => navigateEditByOffset(-1)}
-                    >
-                      Anterior
-                    </Button>
-                    <Button
-                      size="sm"
-                      disabled={!hasNextEditStep}
-                      onClick={() => navigateEditByOffset(1)}
-                    >
-                      Próximo
-                    </Button>
+                      return (
+                        <button
+                          key={item.key}
+                          title={item.hint}
+                          onClick={() => activeMode === "operations" ? navigateToTab(item as (typeof EVENT_OPERATIONS)[number]) : navigateToEditStep(item.key as (typeof EDIT_SECTIONS)[number]["key"])}
+                          className={cn(
+                            "flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition-all",
+                            isActive
+                              ? "border-primary/30 bg-primary/10 text-primary"
+                              : "border-transparent text-muted-foreground hover:bg-muted hover:text-foreground"
+                          )}
+                        >
+                          <Icon className="mt-0.5 h-4 w-4 shrink-0" />
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium">{item.label}</p>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
-                  <Button size="sm" variant="secondary" className="w-full" onClick={navigateToReview}>
-                    Revisar edição
-                  </Button>
-                  <Button size="sm" variant="ghost" className="w-full text-muted-foreground" onClick={closeInlineEditor}>
-                    Voltar para operação
-                  </Button>
-                </div>
-              )}
 
-              <div className="border-t border-border/70 pt-3 space-y-2">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Checklist de prontidão</p>
-                <Progress value={readinessPercent} className="h-2" />
-                <div className="space-y-1.5">
-                  {readinessChecklist.slice(0, 4).map((item) => (
-                    <div key={item.label} className="flex items-center gap-2 text-xs text-muted-foreground">
-                      {item.done ? <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> : <Circle className="h-3.5 w-3.5" />}
-                      <span>{item.label}</span>
+                  {isInlineEditing && (
+                    <div className="border-t border-border/70 pt-3 space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={!hasPreviousEditStep}
+                          onClick={() => navigateEditByOffset(-1)}
+                        >
+                          Anterior
+                        </Button>
+                        <Button
+                          size="sm"
+                          disabled={!hasNextEditStep}
+                          onClick={() => navigateEditByOffset(1)}
+                        >
+                          Próximo
+                        </Button>
+                      </div>
+                      <Button size="sm" variant="secondary" className="w-full" onClick={navigateToReview}>
+                        Revisar edição
+                      </Button>
+                      <Button size="sm" variant="ghost" className="w-full text-muted-foreground" onClick={closeInlineEditor}>
+                        Voltar para operação
+                      </Button>
                     </div>
-                  ))}
+                  )}
                 </div>
-                <p className="text-xs text-muted-foreground">{readinessDone}/{readinessChecklist.length} itens completos</p>
               </div>
 
-              <div className="border-t border-border/70 pt-3 space-y-2">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Ações rápidas</p>
-                <Button size="sm" variant="outline" className="w-full justify-start" onClick={openPublicPage}>
-                  <LinkIcon className="h-3.5 w-3.5 mr-1.5" /> Pré-visualizar página pública
-                </Button>
-                <Button size="sm" variant="outline" className="w-full justify-start" onClick={copyPublicLink}>
-                  <LinkIcon className="h-3.5 w-3.5 mr-1.5" /> Copiar link de divulgação
-                </Button>
-                <Button size="sm" variant="outline" className="w-full justify-start" onClick={enterEditMode}>
-                  <PencilLine className="h-3.5 w-3.5 mr-1.5" /> Abrir edição guiada
-                </Button>
+              <div className="shrink-0 border-t border-border/70 bg-card/95 pt-3 space-y-3 backdrop-blur-sm">
+                <div className="space-y-2">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Checklist de prontidão</p>
+                  <Progress value={readinessPercent} className="h-2" />
+                  <div className="space-y-1.5">
+                    {readinessChecklist.slice(0, 4).map((item) => (
+                      <div key={item.label} className="flex items-center gap-2 text-xs text-muted-foreground">
+                        {item.done ? <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> : <Circle className="h-3.5 w-3.5" />}
+                        <span>{item.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{readinessDone}/{readinessChecklist.length} itens completos</p>
+                </div>
+
+                <div className="border-t border-border/70 pt-3 space-y-2">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Ações rápidas</p>
+                  <Button size="sm" variant="outline" className="w-full justify-start" onClick={openPublicPage}>
+                    <LinkIcon className="h-3.5 w-3.5 mr-1.5" /> Pré-visualizar página pública
+                  </Button>
+                  <Button size="sm" variant="outline" className="w-full justify-start" onClick={copyPublicLink}>
+                    <LinkIcon className="h-3.5 w-3.5 mr-1.5" /> Copiar link de divulgação
+                  </Button>
+                  <Button size="sm" variant="outline" className="w-full justify-start" onClick={enterEditMode}>
+                    <PencilLine className="h-3.5 w-3.5 mr-1.5" /> Abrir edição guiada
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
