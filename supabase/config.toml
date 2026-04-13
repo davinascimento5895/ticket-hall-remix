@@ -2,3 +2,6 @@ project_id = "nccxtycidhfqkzmvjkaf"
 
 [functions.asaas-webhook]
 verify_jwt = false
+
+[functions.toggle-event-certificates]
+verify_jwt = true

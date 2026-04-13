@@ -249,7 +249,7 @@ export function TextConfigurator({
 
         {getTemplateHint() && (
           <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
-            💡 {getTemplateHint()}
+            {getTemplateHint()}
           </p>
         )}
       </div>

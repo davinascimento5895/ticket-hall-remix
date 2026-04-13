@@ -1897,15 +1897,47 @@ export default function ProducerEventCertificates() {
   // Enable certificates mutation (via Edge Function to bypass RLS issues)
   const enableCertificatesMutation = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke("toggle-event-certificates", {
-        body: { eventId: id, enabled: true },
-      });
+      // Try Edge Function first (bypasses RLS using service role)
+      try {
+        const { data, error } = await supabase.functions.invoke("toggle-event-certificates", {
+          body: { eventId: id, enabled: true },
+        });
 
-      if (error) throw error;
-      if (!data?.success || data?.event?.has_certificates !== true) {
-        throw new Error(
-          data?.error || "Nenhuma linha foi atualizada. Possíveis causas: permissão negada, o evento não existe ou o ID está incorreto."
-        );
+        if (error) {
+          // If it's a network/CORS error (function not deployed), fall through to direct update
+          const errMsg = (error as Error).message || "";
+          if (errMsg.includes("Failed to send") || errMsg.includes("fetch") || errMsg.includes("NetworkError") || errMsg.includes("CORS")) {
+            throw new Error("EDGE_FUNCTION_UNAVAILABLE");
+          }
+          throw error;
+        }
+
+        if (!data?.success || data?.event?.has_certificates !== true) {
+          throw new Error(
+            data?.error || "Nenhuma linha foi atualizada. Possíveis causas: permissão negada, o evento não existe ou o ID está incorreto."
+          );
+        }
+        return { source: "edge" as const };
+      } catch (err) {
+        const msg = (err as Error).message || "";
+        if (msg === "EDGE_FUNCTION_UNAVAILABLE" || msg.includes("Failed to send") || msg.includes("fetch") || msg.includes("NetworkError") || msg.includes("CORS")) {
+          // Fallback: try direct Supabase update
+          const { data, error } = await supabase
+            .from("events")
+            .update({ has_certificates: true })
+            .eq("id", id!)
+            .select("has_certificates")
+            .single();
+
+          if (error) throw error;
+          if (!data || data.has_certificates !== true) {
+            throw new Error(
+              "Nenhuma linha foi atualizada. Possíveis causas: permissão negada (RLS), o evento não existe ou o ID está incorreto."
+            );
+          }
+          return { source: "direct" as const };
+        }
+        throw err;
       }
     },
     onMutate: async () => {

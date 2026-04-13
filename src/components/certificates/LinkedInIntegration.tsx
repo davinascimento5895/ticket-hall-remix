@@ -83,7 +83,7 @@ function LinkedInPostPreview({
       <div className="space-y-3">
         <p className="text-sm text-slate-800 dark:text-slate-200">
           Estou feliz em compartilhar que concluí o evento{" "}
-          <strong>"{eventName}"</strong>! 🎉
+          <strong>"{eventName}"</strong>.
         </p>
 
         {/* Certificate Card */}
