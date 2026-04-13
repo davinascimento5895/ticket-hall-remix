@@ -17,6 +17,7 @@ export interface BackgroundUploaderProps {
   backgroundUrl: string | null;
   onUpload: (url: string) => void;
   onRemove: () => void;
+  compact?: boolean;
 }
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -49,6 +50,7 @@ export function BackgroundUploader({
   backgroundUrl,
   onUpload,
   onRemove,
+  compact = false,
 }: BackgroundUploaderProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -151,13 +153,13 @@ export function BackgroundUploader({
     <div className="space-y-4">
       {/* Error Alert */}
       {error && (
-        <Alert variant="destructive" className="py-2">
+        <Alert className="py-2 border-orange-300/60 bg-orange-50/80 dark:bg-orange-950/20">
           <AlertTriangle className="w-4 h-4" />
-          <AlertDescription className="text-xs flex items-center justify-between">
+          <AlertDescription className="text-xs flex items-center justify-between text-orange-800 dark:text-orange-200">
             {error}
             <button
               onClick={() => setError(null)}
-              className="ml-2 text-destructive-foreground/80 hover:text-destructive-foreground"
+              className="ml-2 text-orange-700/80 hover:text-orange-900 dark:text-orange-200/80 dark:hover:text-orange-100"
             >
               ×
             </button>
@@ -167,48 +169,61 @@ export function BackgroundUploader({
 
       {/* Upload Area or Preview */}
       {backgroundUrl ? (
-        <Card className="p-0 overflow-hidden">
-          <div className="relative">
-            <div className="aspect-[297/210] bg-muted">
-              <img
-                src={backgroundUrl}
-                alt="Background do certificado"
-                className="w-full h-full object-cover"
-              />
-            </div>
+        <Card className="overflow-hidden">
+          <div className="aspect-[297/210] bg-muted">
+            <img
+              src={backgroundUrl}
+              alt="Background do certificado"
+              className="w-full h-full object-cover"
+            />
+          </div>
 
-            <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-              <label className="cursor-pointer">
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png"
-                  onChange={handleInputChange}
-                  className="hidden"
-                />
-                <Button variant="secondary" size="sm" asChild>
-                  <span>
-                    <Upload className="w-4 h-4 mr-1" />
-                    Alterar
-                  </span>
+          {compact ? (
+            <div className="p-3 bg-muted/30 space-y-3 text-xs">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-muted-foreground min-w-0">
+                  <ImageIcon className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">Imagem de fundo ativa</span>
+                </div>
+                <div className="flex items-center gap-1 text-orange-600 shrink-0">
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Ativo</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <label className="cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png"
+                    onChange={handleInputChange}
+                    className="hidden"
+                  />
+                  <Button variant="outline" size="sm" className="w-full" asChild>
+                    <span>
+                      <Upload className="w-4 h-4 mr-1" />
+                      Alterar
+                    </span>
+                  </Button>
+                </label>
+                <Button variant="outline" size="sm" onClick={onRemove} className="w-full">
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Remover
                 </Button>
-              </label>
-              <Button variant="destructive" size="sm" onClick={onRemove}>
-                <Trash2 className="w-4 h-4 mr-1" />
-                Remover
-              </Button>
+              </div>
             </div>
-          </div>
-
-          <div className="p-3 bg-muted/30 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <ImageIcon className="w-3.5 h-3.5" />
-              <span>Imagem de fundo do certificado</span>
+          ) : (
+            <div className="p-3 bg-muted/30 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <ImageIcon className="w-3.5 h-3.5" />
+                <span>Imagem de fundo do certificado</span>
+              </div>
+              <div className="flex items-center gap-1 text-orange-600">
+                <Check className="w-3.5 h-3.5" />
+                <span>Ativo</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1 text-green-600">
-              <Check className="w-3.5 h-3.5" />
-              <span>Ativo</span>
-            </div>
-          </div>
+          )}
         </Card>
       ) : (
         <label
@@ -217,6 +232,7 @@ export function BackgroundUploader({
           onDragLeave={handleDragLeave}
           className={cn(
             "flex flex-col items-center justify-center w-full h-48",
+            compact && "h-36",
             "border-2 border-dashed rounded-lg cursor-pointer",
             "transition-colors duration-200",
             isDragging
@@ -246,21 +262,24 @@ export function BackgroundUploader({
               />
             </div>
             <p className="mb-1 text-sm text-foreground">
-              <span className="font-medium">Clique para upload</span> ou arraste
+              <span className="font-medium">Clique para enviar</span> ou arraste
             </p>
-            <p className="text-xs text-muted-foreground">JPG, PNG ate 5MB</p>
+            <p className="text-xs text-muted-foreground">JPG, PNG até 5MB</p>
           </div>
         </label>
       )}
 
       {/* Quality Warning */}
-      <Alert className="bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900 py-2">
-        <AlertTriangle className="w-4 h-4 text-amber-600" />
-        <AlertDescription className="text-xs text-amber-800 dark:text-amber-200">
-          <strong>Recomendacao:</strong> Use imagens com min. 300 DPI para
-          impressao de qualidade. Resolucao ideal: 3508 x 2480px (A4 paisagem).
-        </AlertDescription>
-      </Alert>
+      {compact ? (
+        <p className="text-[11px] text-muted-foreground">JPG ou PNG, até 5MB.</p>
+      ) : (
+        <Alert className="bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900 py-2">
+          <AlertTriangle className="w-4 h-4 text-amber-600" />
+          <AlertDescription className="text-xs text-amber-800 dark:text-amber-200">
+            <strong>Recomendação:</strong> Use imagens com min. 300 DPI para impressão de qualidade. Resolução ideal: 3508 x 2480px (A4 paisagem).
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Crop Dialog */}
       {previewUrl && (

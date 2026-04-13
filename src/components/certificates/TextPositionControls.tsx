@@ -24,9 +24,9 @@ export function TextPositionControls({ textColor, textPositions, fontSizes, onCh
 
   const presets = [
     { label: "Preto", value: "#1f2937" },
-    { label: "Branco", value: "#ffffff" },
     { label: "Cinza escuro", value: "#374151" },
-    { label: "Azul escuro", value: "#1e3a8a" },
+    { label: "Laranja", value: "#ff6b00" },
+    { label: "Branco", value: "#ffffff" },
   ];
 
   return (

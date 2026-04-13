@@ -44,7 +44,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -95,6 +95,7 @@ import {
   CertificateFontSizes,
 } from "@/components/certificates/CertificatePreview";
 import { TextPositionControls } from "@/components/certificates/TextPositionControls";
+import { FieldConfigurator } from "@/components/certificates/FieldConfigurator";
 import { format, isAfter, isBefore, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -134,6 +135,22 @@ interface CertificateStats {
   issuedToday: number;
 }
 
+interface DailyIssuance {
+  label: string;
+  count: number;
+}
+
+interface TopParticipant {
+  name: string;
+  count: number;
+  lastIssuedAt: string;
+}
+
+interface CertificateAnalytics {
+  issuanceByDay: DailyIssuance[];
+  topParticipants: TopParticipant[];
+}
+
 interface Filters {
   search: string;
   status: "all" | "valid" | "revoked";
@@ -151,10 +168,13 @@ const DEFAULT_CONFIG: CertificateConfig = {
     showParticipantName: true,
     showParticipantLastName: true,
     showCPF: false,
+    maskCPF: false,
     showEventDate: true,
+    showEventTime: false,
     showEventLocation: true,
     showWorkload: false,
     showSigners: true,
+    showQRCode: true,
   },
   textConfig: {
     title: "CERTIFICADO DE PARTICIPAÇÃO",
@@ -223,6 +243,8 @@ const configFromLegacy = (): CertificateConfig => {
 function useCertificateConfig(eventId: string | undefined) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [schemaError, setSchemaError] = useState<string | null>(null);
+  const hasShownSchemaToastRef = useRef(false);
 
   const { data: config, isLoading } = useQuery({
     queryKey: ["certificate-config", eventId],
@@ -236,6 +258,16 @@ function useCertificateConfig(eventId: string | undefined) {
         .single();
 
       if (error && isMissingColumnError(error, "certificate_config")) {
+        const msg = "Coluna certificate_config não disponível no banco de dados. Execute as migrações do Supabase.";
+        setSchemaError(msg);
+        if (!hasShownSchemaToastRef.current) {
+          hasShownSchemaToastRef.current = true;
+          toast({
+            title: "Sistema de certificados não configurado",
+            description: msg,
+            variant: "destructive",
+          });
+        }
         return configFromLegacy();
       }
 
@@ -243,6 +275,8 @@ function useCertificateConfig(eventId: string | undefined) {
 
       // Se a consulta funcionou, limpa qualquer marcação antiga de coluna ausente.
       missingColumnsCache.delete("certificate_config");
+      setSchemaError(null);
+      hasShownSchemaToastRef.current = false;
 
       return data?.certificate_config
         ? { ...DEFAULT_CONFIG, ...(data.certificate_config as Partial<CertificateConfig>) }
@@ -258,20 +292,32 @@ function useCertificateConfig(eventId: string | undefined) {
   const updateMutation = useMutation({
     mutationFn: async (newConfig: CertificateConfig) => {
       if (!eventId) throw new Error("Event ID required");
+      if (missingColumnsCache.has("certificate_config")) {
+        throw new Error("Coluna certificate_config não disponível no banco de dados. Execute as migrações do Supabase.");
+      }
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("events")
-        .update({ certificate_config: newConfig })
-        .eq("id", eventId);
+        .update({ certificate_config: newConfig as any })
+        .eq("id", eventId)
+        .select("certificate_config")
+        .single();
 
       if (error && isMissingColumnError(error, "certificate_config")) {
         throw new Error("Coluna certificate_config não disponível no banco de dados. Execute as migrações do Supabase.");
       }
 
       if (error) throw error;
+      if (!data) {
+        throw new Error(
+          "Nenhuma linha foi atualizada. Possíveis causas: permissão negada (RLS), o evento não existe ou o ID está incorreto."
+        );
+      }
 
       // Se o update funcionou, limpa qualquer marcação antiga de coluna ausente.
       missingColumnsCache.delete("certificate_config");
+      setSchemaError(null);
+      hasShownSchemaToastRef.current = false;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["certificate-config", eventId] });
@@ -279,6 +325,10 @@ function useCertificateConfig(eventId: string | undefined) {
     },
     onError: (err) => {
       const msg = (err as Error).message || "";
+      if (missingColumnsCache.has("certificate_config")) {
+        // já reportado no banner/toast único; não spammar
+        return;
+      }
       if (isSchemaMissingError(err)) {
         toast({
           title: "Sistema de certificados não configurado",
@@ -296,6 +346,12 @@ function useCertificateConfig(eventId: string | undefined) {
     isLoading,
     updateConfig: updateMutation.mutate,
     isUpdating: updateMutation.isPending,
+    schemaError,
+    clearSchemaError: () => {
+      setSchemaError(null);
+      hasShownSchemaToastRef.current = false;
+      missingColumnsCache.delete("certificate_config");
+    },
   };
 }
 
@@ -442,52 +498,72 @@ function useCertificateStats(eventId: string | undefined) {
   });
 }
 
+function useCertificateAnalytics(eventId: string | undefined) {
+  return useQuery<CertificateAnalytics>({
+    queryKey: ["certificate-analytics", eventId],
+    queryFn: async () => {
+      if (!eventId) {
+        return { issuanceByDay: [], topParticipants: [] };
+      }
+
+      const { data: certificates, error } = await supabase
+        .from("certificates")
+        .select("attendee_name, issued_at, revoked_at")
+        .eq("event_id", eventId)
+        .order("issued_at", { ascending: false });
+
+      if (error) throw error;
+
+      const validCertificates = (certificates || []).filter((c) => !c.revoked_at);
+      const byDay = new Map<string, number>();
+
+      validCertificates.forEach((cert) => {
+        const key = format(new Date(cert.issued_at), "dd/MM");
+        byDay.set(key, (byDay.get(key) || 0) + 1);
+      });
+
+      const issuanceByDay = Array.from(byDay.entries())
+        .slice(-14)
+        .map(([label, count]) => ({ label, count }));
+
+      const byParticipant = new Map<string, { count: number; lastIssuedAt: string }>();
+      validCertificates.forEach((cert) => {
+        const current = byParticipant.get(cert.attendee_name);
+        if (!current) {
+          byParticipant.set(cert.attendee_name, { count: 1, lastIssuedAt: cert.issued_at });
+          return;
+        }
+
+        byParticipant.set(cert.attendee_name, {
+          count: current.count + 1,
+          lastIssuedAt: isAfter(new Date(cert.issued_at), new Date(current.lastIssuedAt))
+            ? cert.issued_at
+            : current.lastIssuedAt,
+        });
+      });
+
+      const topParticipants = Array.from(byParticipant.entries())
+        .map(([name, data]) => ({ name, count: data.count, lastIssuedAt: data.lastIssuedAt }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+
+      return {
+        issuanceByDay,
+        topParticipants,
+      };
+    },
+    enabled: !!eventId,
+    retry: (failureCount, error) => {
+      if (isSchemaMissingError(error)) return false;
+      return failureCount < 2;
+    },
+    refetchInterval: 30000,
+  });
+}
+
 // =============================================================================
 // Sub-Components
 // =============================================================================
-
-function FieldConfigurator({
-  fields,
-  onChange,
-}: {
-  fields: CertificateFields;
-  onChange: (fields: CertificateFields) => void;
-}) {
-  const toggleField = (key: keyof CertificateFields) => {
-    onChange({ ...fields, [key]: !fields[key] });
-  };
-
-  const fieldItems = [
-    { key: "showEventName" as const, label: "Nome do Evento", icon: FileCheck },
-    { key: "showParticipantName" as const, label: "Nome do Participante", icon: Users },
-    { key: "showParticipantLastName" as const, label: "Sobrenome Completo", icon: Users },
-    { key: "showCPF" as const, label: "CPF do Participante", icon: UserCheck },
-    { key: "showEventDate" as const, label: "Data do Evento", icon: Calendar },
-    { key: "showEventLocation" as const, label: "Local do Evento", icon: ExternalLink },
-    { key: "showWorkload" as const, label: "Carga Horária", icon: Clock },
-    { key: "showSigners" as const, label: "Signatários", icon: UserCheck },
-  ];
-
-  return (
-    <div className="space-y-3">
-      <Label>Campos do Certificado</Label>
-      <div className="space-y-2">
-        {fieldItems.map(({ key, label, icon: Icon }) => (
-          <label
-            key={key}
-            className="flex items-center justify-between p-3 rounded-lg border border-border/50 hover:bg-muted/30 cursor-pointer transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <Icon className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">{label}</span>
-            </div>
-            <Switch checked={fields[key]} onCheckedChange={() => toggleField(key)} />
-          </label>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 function TextConfigurator({
   config,
@@ -595,7 +671,7 @@ function SignersManager({
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+              className="h-8 w-8 p-0 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100"
               onClick={() => removeSigner(index)}
             >
               <Trash2 className="h-4 w-4" />
@@ -638,39 +714,6 @@ function SignersManager({
   );
 }
 
-function WorkloadInput({
-  value,
-  showWorkload,
-  onChange,
-}: {
-  value: number;
-  showWorkload: boolean;
-  onChange: (value: number, show: boolean) => void;
-}) {
-  return (
-    <div className="space-y-3">
-      <Label>Carga Horária</Label>
-      <div className="flex items-center justify-between p-3 rounded-lg border border-border/50">
-        <span className="text-sm">Mostrar carga horária</span>
-        <Switch checked={showWorkload} onCheckedChange={(checked) => onChange(value, checked)} />
-      </div>
-      {showWorkload && (
-        <div className="pl-4 border-l-2 border-primary/20">
-          <Label className="text-xs text-muted-foreground mb-1.5 block">Horas</Label>
-          <Input
-            type="number"
-            min={0}
-            max={999}
-            value={value}
-            onChange={(e) => onChange(parseInt(e.target.value) || 0, showWorkload)}
-            className="h-9 w-24"
-          />
-        </div>
-      )}
-    </div>
-  );
-}
-
 // =============================================================================
 // Tab Components
 // =============================================================================
@@ -680,17 +723,22 @@ function ConfigurarTab({
   onConfigChange,
   eventId,
   event,
+  schemaError,
+  clearSchemaError,
 }: {
   config: CertificateConfig;
   onConfigChange: (config: CertificateConfig) => void;
   eventId: string;
   event: any;
+  schemaError: string | null;
+  clearSchemaError: () => void;
 }) {
   const { toast } = useToast();
   const [localConfig, setLocalConfig] = useState(config);
   const [hasChanges, setHasChanges] = useState(false);
   const [isGeneratingSample, setIsGeneratingSample] = useState(false);
-  const previewRef = useRef<HTMLDivElement>(null);
+  const desktopPreviewRef = useRef<HTMLDivElement>(null);
+  const mobilePreviewRef = useRef<HTMLDivElement>(null);
   const lastSyncedConfigRef = useRef(config);
   const debouncedConfig = useDebounce(localConfig, 2000);
 
@@ -716,39 +764,28 @@ function ConfigurarTab({
     setHasChanges(true);
   };
 
-  // Undo functionality
-  const handleUndo = () => {
-    setLocalConfig(config);
-    setHasChanges(false);
-  };
-
-  // Keyboard shortcut for undo
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "z") {
-        e.preventDefault();
-        handleUndo();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [config]);
-
   const sampleData: CertificateSampleData = {
     ...DEFAULT_SAMPLE_DATA,
     eventName: event?.title || DEFAULT_SAMPLE_DATA.eventName,
     eventDate: event?.start_date
       ? format(new Date(event.start_date), "dd/MM/yyyy")
       : DEFAULT_SAMPLE_DATA.eventDate,
+    eventTime: event?.start_date
+      ? format(new Date(event.start_date), "HH:mm")
+      : undefined,
     eventLocation: event?.venue_name || DEFAULT_SAMPLE_DATA.eventLocation,
   };
 
+  const normalizedFields = { ...DEFAULT_CONFIG.fields, ...localConfig.fields } as any;
+
   const handleDownloadSample = async () => {
-    if (isGeneratingSample || !eventId || !previewRef.current) return;
+    const isMobile = window.matchMedia("(max-width: 1023px)").matches;
+    const previewContainer = isMobile ? mobilePreviewRef.current : desktopPreviewRef.current;
+    if (isGeneratingSample || !eventId || !previewContainer) return;
 
     setIsGeneratingSample(true);
     try {
-      const previewElement = previewRef.current.querySelector("[data-testid='certificate-preview']") as HTMLElement;
+      const previewElement = previewContainer.querySelector("[data-testid='certificate-preview']") as HTMLElement;
       if (previewElement) {
         await generateCertificatePDF(previewElement, `certificado-preview-${eventId}.pdf`);
         toast({
@@ -769,7 +806,154 @@ function ConfigurarTab({
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+    <div className="space-y-4 overflow-x-hidden">
+      {schemaError && (
+        <Alert className="animate-in fade-in slide-in-from-top-2 border-orange-300/60 bg-orange-50/70 dark:bg-orange-950/20">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="flex flex-col gap-2">
+            <span>Configuração indisponível no banco de dados para este evento.</span>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={clearSchemaError}>
+                Ocultar aviso
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <div className="lg:hidden space-y-4">
+        <Card className="overflow-hidden border-border/60 bg-zinc-950 text-white shadow-sm">
+          <CardHeader className="pb-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Eye className="h-4 w-4 text-orange-400" />
+                  Pré-visualização
+                </CardTitle>
+                <CardDescription className="text-zinc-400">
+                  Salvamento automático ativo
+                </CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0 border-zinc-700 bg-zinc-900 text-white hover:bg-zinc-800"
+                onClick={handleDownloadSample}
+                disabled={isGeneratingSample}
+              >
+                {isGeneratingSample ? "PDF..." : "PDF"}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div
+              ref={mobilePreviewRef}
+              className="mx-auto w-full max-w-[340px] overflow-hidden rounded-2xl border border-white/10 bg-zinc-900 p-2"
+            >
+              <CertificatePreview
+                backgroundUrl={localConfig.backgroundUrl || undefined}
+                fields={normalizedFields}
+                textConfig={localConfig.textConfig}
+                signers={localConfig.signers}
+                workloadHours={localConfig.workloadHours}
+                sampleData={sampleData}
+                textColor={localConfig.textColor}
+                textPositions={localConfig.textPositions}
+                fontSizes={localConfig.fontSizes}
+                mode="producer"
+                className="w-full"
+              />
+            </div>
+            <p className="text-center text-[11px] text-zinc-400">
+              {hasChanges ? "Salvando automaticamente..." : "Alterações salvas automaticamente"}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Accordion type="multiple" defaultValue={["fundo", "textos", "campos", "assinantes"]} className="space-y-3">
+          <AccordionItem value="fundo" className="overflow-hidden rounded-2xl border border-border/60 border-b-0 bg-card px-4">
+            <AccordionTrigger className="py-4 text-sm hover:no-underline">
+              Imagem de fundo
+            </AccordionTrigger>
+            <AccordionContent className="space-y-3">
+              <BackgroundUploader
+                backgroundUrl={localConfig.backgroundUrl}
+                onUpload={(url) => updateConfig({ backgroundUrl: url })}
+                onRemove={() => updateConfig({ backgroundUrl: null })}
+                compact
+              />
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="textos" className="overflow-hidden rounded-2xl border border-border/60 border-b-0 bg-card px-4">
+            <AccordionTrigger className="py-4 text-sm hover:no-underline">
+              Textos e posição
+            </AccordionTrigger>
+            <AccordionContent className="space-y-5">
+              <TextConfigurator
+                config={localConfig.textConfig}
+                onChange={(textConfig) => updateConfig({ textConfig })}
+              />
+              <TextPositionControls
+                textColor={localConfig.textColor}
+                textPositions={localConfig.textPositions}
+                fontSizes={localConfig.fontSizes}
+                onChange={({ textColor, textPositions, fontSizes }) =>
+                  updateConfig({
+                    ...(textColor !== undefined && { textColor }),
+                    ...(textPositions !== undefined && { textPositions }),
+                    ...(fontSizes !== undefined && { fontSizes }),
+                  })
+                }
+              />
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="campos" className="overflow-hidden rounded-2xl border border-border/60 border-b-0 bg-card px-4">
+            <AccordionTrigger className="py-4 text-sm hover:no-underline">
+              Campos e carga horária
+            </AccordionTrigger>
+            <AccordionContent className="space-y-4">
+              <FieldConfigurator
+                fields={normalizedFields}
+                workloadHours={localConfig.workloadHours}
+                onChange={(fields) => updateConfig({ fields })}
+                onWorkloadChange={(hours) => updateConfig({ workloadHours: hours })}
+              />
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="assinantes" className="overflow-hidden rounded-2xl border border-border/60 border-b-0 bg-card px-4">
+            <AccordionTrigger className="py-4 text-sm hover:no-underline">
+              Assinaturas
+            </AccordionTrigger>
+            <AccordionContent className="space-y-4">
+              <SignersManager
+                signers={localConfig.signers}
+                onChange={(signers) => updateConfig({ signers })}
+              />
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+
+        <Card className="border-border/60 bg-card">
+          <CardContent className="space-y-3 p-4">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Estado</span>
+              <span>{hasChanges ? "Salvando..." : "Salvo automaticamente"}</span>
+            </div>
+            <Button
+              className="w-full bg-orange-500 text-black hover:bg-orange-400"
+              onClick={handleDownloadSample}
+              disabled={isGeneratingSample}
+            >
+              {isGeneratingSample ? "Gerando PDF..." : "Baixar PDF de exemplo"}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="hidden lg:grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6 overflow-x-hidden">
       {/* Left Column - Configuration */}
       <div className="lg:col-span-3 space-y-6">
         <Card>
@@ -835,19 +1019,10 @@ function ConfigurarTab({
           </CardHeader>
           <CardContent className="space-y-6">
             <FieldConfigurator
-              fields={localConfig.fields}
+              fields={normalizedFields}
+              workloadHours={localConfig.workloadHours}
               onChange={(fields) => updateConfig({ fields })}
-            />
-            <Separator />
-            <WorkloadInput
-              value={localConfig.workloadHours}
-              showWorkload={localConfig.fields.showWorkload}
-              onChange={(hours, show) =>
-                updateConfig({
-                  workloadHours: hours,
-                  fields: { ...localConfig.fields, showWorkload: show },
-                })
-              }
+              onWorkloadChange={(hours) => updateConfig({ workloadHours: hours })}
             />
           </CardContent>
         </Card>
@@ -870,23 +1045,25 @@ function ConfigurarTab({
 
       {/* Right Column - Preview */}
       <div className="lg:col-span-2">
-        <div className="sticky top-6 space-y-4 max-h-[calc(100vh-3rem)] overflow-y-auto pr-1">
+        <div className="sticky top-4 space-y-4 lg:max-h-[calc(100vh-2rem)] overflow-y-auto pr-1">
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <Eye className="h-4 w-4" />
-                Preview ao Vivo
+                Pré-visualização
               </CardTitle>
-              <CardDescription>Visualize as alterações em tempo real</CardDescription>
+              <CardDescription>
+                {hasChanges ? "Salvando automaticamente..." : "Alterações salvas automaticamente"}
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div
-                ref={previewRef}
-                className="overflow-x-auto pb-2 scrollbar-thin"
+                ref={desktopPreviewRef}
+                className="overflow-hidden pb-2"
               >
                 <CertificatePreview
                   backgroundUrl={localConfig.backgroundUrl || undefined}
-                  fields={localConfig.fields}
+                  fields={normalizedFields}
                   textConfig={localConfig.textConfig}
                   signers={localConfig.signers}
                   workloadHours={localConfig.workloadHours}
@@ -896,17 +1073,6 @@ function ConfigurarTab({
                   fontSizes={localConfig.fontSizes}
                   mode="producer"
                 />
-              </div>
-
-              <div className="flex gap-2">
-                <Button variant="outline" className="flex-1" onClick={handleUndo}>
-                  <Undo2 className="h-4 w-4 mr-2" />
-                  Desfazer (Ctrl+Z)
-                </Button>
-                <Button className="flex-1" onClick={() => onConfigChange(localConfig)}>
-                  <Save className="h-4 w-4 mr-2" />
-                  Salvar Agora
-                </Button>
               </div>
 
               <Button
@@ -923,6 +1089,7 @@ function ConfigurarTab({
         </div>
       </div>
     </div>
+    </div>
   );
 }
 
@@ -937,6 +1104,7 @@ function EmitidosTab({
   eventConfig: CertificateConfig;
   event: any;
 }) {
+  const { toast } = useToast();
   const [filters, setFilters] = useState<Filters>({
     search: "",
     status: "all",
@@ -958,7 +1126,7 @@ function EmitidosTab({
   const revokeMutation = useMutation({
     mutationFn: async ({ certId, reason }: { certId: string; reason: string }) => {
       const { data: userData } = await supabase.auth.getUser();
-      const { data, error } = await supabase.rpc("revoke_certificate", {
+      const { data, error } = await (supabase as any).rpc("revoke_certificate", {
         cert_id: certId,
         reason,
         revoked_by_user: userData.user?.id,
@@ -1146,7 +1314,7 @@ function EmitidosTab({
       {/* Data Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div className="hidden md:block overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -1186,13 +1354,13 @@ function EmitidosTab({
                           <div
                             className={cn(
                               "h-8 w-8 rounded-full flex items-center justify-center",
-                              cert.revoked_at ? "bg-red-100" : "bg-green-100"
+                              cert.revoked_at ? "bg-zinc-200" : "bg-orange-100"
                             )}
                           >
                             <Award
                               className={cn(
                                 "h-4 w-4",
-                                cert.revoked_at ? "text-red-500" : "text-green-600"
+                                cert.revoked_at ? "text-zinc-500" : "text-orange-600"
                               )}
                             />
                           </div>
@@ -1207,12 +1375,12 @@ function EmitidosTab({
                       </TableCell>
                       <TableCell>
                         {cert.revoked_at ? (
-                          <Badge variant="destructive">
+                          <Badge className="bg-zinc-600 text-white hover:bg-zinc-600">
                             <Ban className="h-3 w-3 mr-1" />
                             Revogado
                           </Badge>
                         ) : (
-                          <Badge variant="default" className="bg-green-100 text-green-700 hover:bg-green-100">
+                          <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100">
                             <CheckCircle2 className="h-3 w-3 mr-1" />
                             Válido
                           </Badge>
@@ -1226,7 +1394,7 @@ function EmitidosTab({
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleDownloadPDF(cert)}
-                                title="Download PDF"
+                                title="Baixar PDF"
                               >
                                 <Download className="h-4 w-4" />
                               </Button>
@@ -1250,7 +1418,7 @@ function EmitidosTab({
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setCertToRevoke(cert)}
-                                className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                                className="text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100"
                                 title="Revogar"
                               >
                                 <Ban className="h-4 w-4" />
@@ -1264,6 +1432,61 @@ function EmitidosTab({
                 )}
               </TableBody>
             </Table>
+          </div>
+
+          <div className="md:hidden divide-y divide-border/60">
+            {isLoading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="p-4 space-y-3">
+                  <Skeleton className="h-4 w-1/2" />
+                  <Skeleton className="h-4 w-2/3" />
+                  <Skeleton className="h-8 w-full" />
+                </div>
+              ))
+            ) : certificates.length === 0 ? (
+              <div className="text-center py-10 px-4">
+                <Award className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground">Nenhum certificado encontrado</p>
+              </div>
+            ) : (
+              certificates.map((cert) => (
+                <div key={cert.id} className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{cert.attendee_name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{cert.certificate_code}</p>
+                    </div>
+                    <Badge className={cert.revoked_at ? "bg-zinc-600 text-white" : "bg-orange-100 text-orange-700"}>
+                      {cert.revoked_at ? "Revogado" : "Válido"}
+                    </Badge>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground">
+                    {format(new Date(cert.issued_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button variant="outline" size="sm" onClick={() => handleDownloadPDF(cert)} disabled={!!cert.revoked_at}>
+                      Baixar
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => handleCopyLink(cert.certificate_code)}>
+                      Copiar link
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setSelectedCert(cert)}>
+                      Ver
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCertToRevoke(cert)}
+                      disabled={!!cert.revoked_at}
+                    >
+                      Revogar
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
           {/* Pagination */}
@@ -1312,7 +1535,7 @@ function EmitidosTab({
       <Dialog open={!!certToRevoke} onOpenChange={() => setCertToRevoke(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-red-600">
+            <DialogTitle className="flex items-center gap-2">
               <Ban className="h-5 w-5" />
               Revogar Certificado
             </DialogTitle>
@@ -1333,9 +1556,9 @@ function EmitidosTab({
               />
             </div>
 
-            <Alert variant="destructive">
+            <Alert className="border-orange-300/60 bg-orange-50/80 dark:bg-orange-950/20">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
+              <AlertDescription className="text-orange-800 dark:text-orange-200">
                 A revogação é irreversível. O certificado será marcado como inválido na verificação
                 online.
               </AlertDescription>
@@ -1347,7 +1570,7 @@ function EmitidosTab({
               Cancelar
             </Button>
             <Button
-              variant="destructive"
+              className="bg-zinc-900 hover:bg-zinc-800 text-white"
               onClick={() => {
                 if (certToRevoke && revokeReason.trim()) {
                   revokeMutation.mutate({ certId: certToRevoke.id, reason: revokeReason.trim() });
@@ -1399,17 +1622,17 @@ function EmitidosTab({
                 <Label className="text-xs text-muted-foreground">Status</Label>
                 <div>
                   {selectedCert?.revoked_at ? (
-                    <Badge variant="destructive">Revogado</Badge>
+                    <Badge className="bg-zinc-600 text-white hover:bg-zinc-600">Revogado</Badge>
                   ) : (
-                    <Badge className="bg-green-100 text-green-700">Válido</Badge>
+                    <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100">Válido</Badge>
                   )}
                 </div>
               </div>
             </div>
 
             {selectedCert?.revoked_at && (
-              <Alert variant="destructive">
-                <AlertDescription>
+              <Alert className="border-orange-300/60 bg-orange-50/80 dark:bg-orange-950/20">
+                <AlertDescription className="text-orange-800 dark:text-orange-200">
                   Revogado em: {format(new Date(selectedCert.revoked_at), "dd/MM/yyyy HH:mm")}
                 </AlertDescription>
               </Alert>
@@ -1446,7 +1669,7 @@ function EmitidosTab({
         >
           <CertificatePreview
             backgroundUrl={eventConfig.backgroundUrl || undefined}
-            fields={eventConfig.fields}
+            fields={{ ...DEFAULT_CONFIG.fields, ...eventConfig.fields } as any}
             textConfig={eventConfig.textConfig}
             signers={eventConfig.signers}
             workloadHours={eventConfig.workloadHours}
@@ -1456,6 +1679,9 @@ function EmitidosTab({
               participantCPF: "",
               eventDate: event?.start_date
                 ? format(new Date(event.start_date), "dd/MM/yyyy")
+                : "",
+              eventTime: event?.start_date
+                ? format(new Date(event.start_date), "HH:mm")
                 : "",
               eventLocation: event?.venue_name || "",
               certificateCode: downloadingCert.certificate_code,
@@ -1472,22 +1698,12 @@ function EmitidosTab({
 }
 
 function EstatisticasTab({ eventId, stats }: { eventId: string; stats: CertificateStats | undefined }) {
-  // Mock data for charts - in a real app, this would come from the backend
-  const issuanceData = [
-    { date: "2024-01", count: 45 },
-    { date: "2024-02", count: 62 },
-    { date: "2024-03", count: 38 },
-    { date: "2024-04", count: 89 },
-    { date: "2024-05", count: 124 },
-    { date: "2024-06", count: 156 },
-  ];
-
-  const templateUsage = [
-    { template: "Executive", count: 245 },
-    { template: "Modern", count: 189 },
-    { template: "Academic", count: 134 },
-    { template: "Creative", count: 67 },
-  ];
+  const { data: analytics, isLoading } = useCertificateAnalytics(eventId);
+  const maxIssuance = useMemo(() => {
+    const values = analytics?.issuanceByDay || [];
+    if (values.length === 0) return 1;
+    return Math.max(...values.map((item) => item.count), 1);
+  }, [analytics]);
 
   return (
     <div className="space-y-6">
@@ -1496,8 +1712,8 @@ function EstatisticasTab({ eventId, stats }: { eventId: string; stats: Certifica
         <Card>
           <CardContent className="pt-5">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                <FileCheck className="h-5 w-5 text-blue-600" />
+              <div className="h-10 w-10 rounded-xl bg-zinc-100 flex items-center justify-center">
+                <FileCheck className="h-5 w-5 text-zinc-800" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Total Emitidos</p>
@@ -1510,12 +1726,12 @@ function EstatisticasTab({ eventId, stats }: { eventId: string; stats: Certifica
         <Card>
           <CardContent className="pt-5">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-green-100 flex items-center justify-center">
-                <Download className="h-5 w-5 text-green-600" />
+              <div className="h-10 w-10 rounded-xl bg-orange-100 flex items-center justify-center">
+                <Download className="h-5 w-5 text-orange-600" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Taxa de Download</p>
-                <p className="text-2xl font-display font-bold">~78%</p>
+                <p className="text-xs text-muted-foreground">Emitidos Hoje</p>
+                <p className="text-2xl font-display font-bold">{stats?.issuedToday || 0}</p>
               </div>
             </div>
           </CardContent>
@@ -1524,12 +1740,12 @@ function EstatisticasTab({ eventId, stats }: { eventId: string; stats: Certifica
         <Card>
           <CardContent className="pt-5">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                <Linkedin className="h-5 w-5 text-blue-600" />
+              <div className="h-10 w-10 rounded-xl bg-zinc-100 flex items-center justify-center">
+                <Ban className="h-5 w-5 text-zinc-700" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Compartilhamentos</p>
-                <p className="text-2xl font-display font-bold">142</p>
+                <p className="text-xs text-muted-foreground">Revogados</p>
+                <p className="text-2xl font-display font-bold">{stats?.revokedCount || 0}</p>
               </div>
             </div>
           </CardContent>
@@ -1538,12 +1754,12 @@ function EstatisticasTab({ eventId, stats }: { eventId: string; stats: Certifica
         <Card>
           <CardContent className="pt-5">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-purple-100 flex items-center justify-center">
-                <EyeIcon className="h-5 w-5 text-purple-600" />
+              <div className="h-10 w-10 rounded-xl bg-orange-100 flex items-center justify-center">
+                <Clock className="h-5 w-5 text-orange-600" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Verificações</p>
-                <p className="text-2xl font-display font-bold">892</p>
+                <p className="text-xs text-muted-foreground">Pendentes</p>
+                <p className="text-2xl font-display font-bold">{stats?.pendingCertificates || 0}</p>
               </div>
             </div>
           </CardContent>
@@ -1556,50 +1772,29 @@ function EstatisticasTab({ eventId, stats }: { eventId: string; stats: Certifica
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
-              Emissões ao Longo do Tempo
+              Emissões por Dia
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {issuanceData.map((item) => (
-                <div key={item.date} className="flex items-center gap-3">
-                  <span className="text-sm text-muted-foreground w-16">
-                    {format(new Date(item.date), "MMM/yy", { locale: ptBR })}
-                  </span>
-                  <div className="flex-1 h-6 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary rounded-full transition-all"
-                      style={{ width: `${(item.count / 156) * 100}%` }}
-                    />
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, idx) => <Skeleton key={idx} className="h-6 w-full" />)
+              ) : analytics?.issuanceByDay.length ? (
+                analytics.issuanceByDay.map((item) => (
+                  <div key={item.label} className="flex items-center gap-3">
+                    <span className="text-sm text-muted-foreground w-12">{item.label}</span>
+                    <div className="flex-1 h-6 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-orange-500 rounded-full transition-all"
+                        style={{ width: `${(item.count / maxIssuance) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-medium w-8 text-right">{item.count}</span>
                   </div>
-                  <span className="text-sm font-medium w-10 text-right">{item.count}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Palette className="h-4 w-4" />
-              Templates Mais Usados
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {templateUsage.map((item) => (
-                <div key={item.template} className="flex items-center gap-3">
-                  <span className="text-sm text-muted-foreground w-20">{item.template}</span>
-                  <div className="flex-1 h-6 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-secondary rounded-full transition-all"
-                      style={{ width: `${(item.count / 245) * 100}%` }}
-                    />
-                  </div>
-                  <span className="text-sm font-medium w-10 text-right">{item.count}</span>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">Sem emissões registradas.</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -1612,36 +1807,38 @@ function EstatisticasTab({ eventId, stats }: { eventId: string; stats: Certifica
             <TrendingUp className="h-4 w-4" />
             Top Participantes
           </CardTitle>
-          <CardDescription>Participantes com mais certificados emitidos</CardDescription>
+          <CardDescription>Ranking baseado em certificados válidos deste evento</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {[
-              { name: "Ana Carolina Silva", count: 5, lastEvent: "Workshop de Marketing Digital" },
-              { name: "Pedro Henrique Costa", count: 4, lastEvent: "Conferência de Tecnologia 2024" },
-              { name: "Mariana Oliveira", count: 4, lastEvent: "Curso de Gestão Ágil" },
-              { name: "Lucas Mendes", count: 3, lastEvent: "Workshop de Design Thinking" },
-              { name: "Julia Santos", count: 3, lastEvent: "Palestra de Inovação" },
-            ].map((participant, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-3 rounded-lg border border-border/50"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center font-medium text-sm">
-                    {index + 1}
+            {isLoading ? (
+              Array.from({ length: 4 }).map((_, idx) => <Skeleton key={idx} className="h-14 w-full" />)
+            ) : analytics?.topParticipants.length ? (
+              analytics.topParticipants.map((participant, index) => (
+                <div
+                  key={`${participant.name}-${index}`}
+                  className="flex items-center justify-between p-3 rounded-lg border border-border/50"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="h-8 w-8 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-medium text-sm shrink-0">
+                      {index + 1}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm truncate">{participant.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Última emissão: {format(new Date(participant.lastIssuedAt), "dd/MM/yyyy HH:mm")}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-sm">{participant.name}</p>
-                    <p className="text-xs text-muted-foreground">{participant.lastEvent}</p>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Award className="h-4 w-4 text-orange-600" />
+                    <span className="font-medium">{participant.count}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Award className="h-4 w-4 text-primary" />
-                  <span className="font-medium">{participant.count}</span>
-                </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">Sem dados suficientes para ranking.</p>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -1692,14 +1889,25 @@ export default function ProducerEventCertificates() {
     },
   });
 
-  const { config, updateConfig, isLoading: isLoadingConfig } = useCertificateConfig(id);
+  const { config, updateConfig, isLoading: isLoadingConfig, schemaError, clearSchemaError } = useCertificateConfig(id);
   const { data: stats, isLoading: isLoadingStats } = useCertificateStats(id);
 
   // Enable certificates mutation
   const enableCertificatesMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("events").update({ has_certificates: true }).eq("id", id!);
+      const { data, error } = await supabase
+        .from("events")
+        .update({ has_certificates: true })
+        .eq("id", id!)
+        .select("has_certificates")
+        .single();
+
       if (error) throw error;
+      if (!data || data.has_certificates !== true) {
+        throw new Error(
+          "Nenhuma linha foi atualizada. Possíveis causas: permissão negada (RLS), o evento não existe ou o ID está incorreto."
+        );
+      }
     },
     onMutate: async () => {
       // Cancel any outgoing refetches
@@ -1888,8 +2096,8 @@ export default function ProducerEventCertificates() {
           <Card>
             <CardContent className="pt-5">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-green-100 flex items-center justify-center">
-                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                <div className="h-10 w-10 rounded-xl bg-zinc-100 flex items-center justify-center">
+                  <CheckCircle2 className="h-5 w-5 text-zinc-700" />
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Check-ins Realizados</p>
@@ -1902,8 +2110,8 @@ export default function ProducerEventCertificates() {
           <Card>
             <CardContent className="pt-5">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                  <FileCheck className="h-5 w-5 text-blue-600" />
+                <div className="h-10 w-10 rounded-xl bg-zinc-100 flex items-center justify-center">
+                  <FileCheck className="h-5 w-5 text-zinc-700" />
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Certificados Emitidos</p>
@@ -1916,8 +2124,8 @@ export default function ProducerEventCertificates() {
           <Card>
             <CardContent className="pt-5">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-amber-100 flex items-center justify-center">
-                  <Award className="h-5 w-5 text-amber-600" />
+                <div className="h-10 w-10 rounded-xl bg-orange-100 flex items-center justify-center">
+                  <Award className="h-5 w-5 text-orange-600" />
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Pendentes</p>
@@ -1949,7 +2157,7 @@ export default function ProducerEventCertificates() {
           <TabsTrigger value="estatisticas" className="gap-2">
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">Estatísticas</span>
-            <span className="sm:hidden">Stats</span>
+            <span className="sm:hidden">Dados</span>
           </TabsTrigger>
         </TabsList>
 
@@ -1959,7 +2167,7 @@ export default function ProducerEventCertificates() {
               <Skeleton className="h-[400px]" />
             </div>
           ) : (
-            <ConfigurarTab config={config} onConfigChange={updateConfig} eventId={id!} event={event} />
+            <ConfigurarTab config={config} onConfigChange={updateConfig} eventId={id!} event={event} schemaError={schemaError} clearSchemaError={clearSchemaError} />
           )}
         </TabsContent>
 

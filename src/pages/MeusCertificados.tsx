@@ -50,10 +50,13 @@ const DEFAULT_FIELDS: CertificateFields = {
   showParticipantName: true,
   showParticipantLastName: true,
   showCPF: false,
+  maskCPF: false,
   showEventDate: true,
+  showEventTime: false,
   showEventLocation: true,
   showWorkload: false,
   showSigners: true,
+  showQRCode: true,
 };
 
 const DEFAULT_TEXT_CONFIG: CertificateTextConfig = {
@@ -145,12 +148,19 @@ function CertificateCard({ cert }: { cert: Certificate }) {
             year: "numeric",
           })
         : "";
+      const eventTime = cert.events?.start_date
+        ? new Date(cert.events.start_date).toLocaleTimeString("pt-BR", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : "";
 
       const sampleData: CertificateSampleData = {
         eventName: cert.events?.title || "Evento",
         participantName: cert.attendee_name || "Participante",
         participantCPF: "",
         eventDate,
+        eventTime,
         eventLocation: cert.events?.venue_name || "",
         certificateCode: cert.certificate_code,
       };

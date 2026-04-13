@@ -7,10 +7,13 @@ export interface CertificateFields {
   showParticipantName: boolean;
   showParticipantLastName: boolean;
   showCPF: boolean;
+  maskCPF?: boolean;
   showEventDate: boolean;
+  showEventTime?: boolean;
   showEventLocation: boolean;
   showWorkload: boolean;
   showSigners: boolean;
+  showQRCode?: boolean;
 }
 
 export interface CertificateTextConfig {
@@ -31,6 +34,7 @@ export interface CertificateSampleData {
   participantName: string;
   participantCPF: string;
   eventDate: string;
+  eventTime?: string;
   eventLocation: string;
   certificateCode: string;
 }
@@ -171,7 +175,9 @@ export const CertificatePreview = memo(function CertificatePreview({
             </h2>
             {fields.showCPF && sampleData.participantCPF ? (
               <p className="text-center text-xs sm:text-sm mt-1 opacity-80" style={{ color: effectiveTextColor }}>
-                CPF: {sampleData.participantCPF}
+                CPF: {fields.maskCPF
+                  ? sampleData.participantCPF.replace(/^(\d{3})\.?(\d{3})\.?(\d{3})-?(\d{2})$/, "***.$2.$3-$4")
+                  : sampleData.participantCPF}
               </p>
             ) : null}
           </div>
@@ -202,13 +208,19 @@ export const CertificatePreview = memo(function CertificatePreview({
                 {sampleData.eventDate}
               </span>
             ) : null}
+            {fields.showEventTime && sampleData.eventTime ? (
+              <span className="inline-flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {sampleData.eventTime}
+              </span>
+            ) : null}
             {fields.showEventLocation && sampleData.eventLocation ? (
               <span className="inline-flex items-center gap-1">
                 <MapPin className="h-3 w-3" />
                 {sampleData.eventLocation}
               </span>
             ) : null}
-            {fields.showWorkload && workloadHours ? (
+            {fields.showWorkload && workloadHours != null ? (
               <span className="inline-flex items-center gap-1">
                 <Clock className="h-3 w-3" />
                 {workloadHours}h
@@ -252,7 +264,7 @@ export const CertificatePreview = memo(function CertificatePreview({
         {/* Footer: QR + Code + URL */}
         <div className="flex flex-wrap items-end justify-between gap-2 pt-2 mt-2 text-[9px] sm:text-[10px] opacity-80">
           <div className="flex items-center gap-1 min-w-0">
-            <QrCode className="h-3 w-3 flex-shrink-0" />
+            {fields.showQRCode !== false && <QrCode className="h-3 w-3 flex-shrink-0 mr-1" />}
             <span className="font-mono truncate">{sampleData.certificateCode}</span>
           </div>
           <span className="truncate">tickethall.com.br/verificar-certificado</span>
