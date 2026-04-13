@@ -531,7 +531,33 @@ No Supabase/PostgREST, quando uma política RLS bloqueia um UPDATE (por exemplo,
 
 ## 🧪 TESTE DE MESA - EDGE CASES
 
-### Cenário 7: Revogação
+### Cenário 7: Desativação de Certificados
+
+**Passo 1: Desativar pelo Produtor**
+```
+1. Produtor está na aba Configurar (ou Emitidos/Estatísticas)
+2. No header superior, clica em "Desativar Certificados"
+3. Sistema abre Dialog de confirmação
+4. Dialog alerta: certificados já emitidos não serão excluídos, mas novos não serão gerados
+5. Produtor confirma
+6. Sistema chama Edge Function toggle-event-certificates com enabled: false
+7. Banco atualiza has_certificates = false
+8. Toast: "Certificados desativados"
+9. UI volta para a tela de ativação (botão "Ativar Certificados")
+```
+✅ **Status:** IMPLEMENTADO
+
+**Passo 2: Reativar depois de desativar**
+```
+1. Produtor clica "Ativar Certificados" novamente
+2. Sistema chama Edge Function com enabled: true
+3. Banco atualiza has_certificates = true
+4. Configurações anteriores (certificate_config) são preservadas
+5. UI exibe novamente as abas de configuração
+```
+✅ **Status:** IMPLEMENTADO
+
+### Cenário 8: Revogação
 
 **Passo 1: Revogação pelo Produtor**
 ```
@@ -558,7 +584,7 @@ No Supabase/PostgREST, quando uma política RLS bloqueia um UPDATE (por exemplo,
 ```
 ✅ **Status:** IMPLEMENTADO
 
-### Cenário 8: Opt-out do Participante
+### Cenário 9: Opt-out do Participante
 
 **Passo 1: Participante Opta por Não Receber**
 ```
@@ -577,7 +603,7 @@ No Supabase/PostgREST, quando uma política RLS bloqueia um UPDATE (por exemplo,
 ```
 ✅ **Status:** IMPLEMENTADO
 
-### Cenário 9: Upload Inválido
+### Cenário 10: Upload Inválido
 
 **Passo 1: Upload de Imagem Não-A4**
 ```

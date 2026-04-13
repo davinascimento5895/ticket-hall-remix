@@ -1,0 +1,86 @@
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - link "TicketHall":
+          - /url: /
+          - generic:
+            - img "TicketHall"
+        - navigation [ref=e6]:
+          - link "Eventos" [ref=e7] [cursor=pointer]:
+            - /url: /eventos
+          - link "Revenda" [ref=e8] [cursor=pointer]:
+            - /url: /revenda
+          - link "Produtores" [ref=e9] [cursor=pointer]:
+            - /url: /produtores
+          - link "Blog" [ref=e10] [cursor=pointer]:
+            - /url: /blog
+        - generic [ref=e11]:
+          - button "Alternar tema" [ref=e12] [cursor=pointer]:
+            - img [ref=e13]
+            - generic [ref=e15]: Toggle theme
+          - link "Carrinho" [ref=e16] [cursor=pointer]:
+            - /url: /carrinho
+            - img [ref=e17]
+          - button "Crie seu evento" [ref=e20] [cursor=pointer]:
+            - img
+            - text: Crie seu evento
+          - button "Entrar" [ref=e21] [cursor=pointer]
+          - button "Criar Conta" [ref=e22] [cursor=pointer]
+    - main [ref=e23]
+    - contentinfo [ref=e26]:
+      - generic [ref=e27]:
+        - generic [ref=e28]:
+          - generic [ref=e29]:
+            - generic:
+              - img "TicketHall"
+            - paragraph [ref=e30]: A plataforma de ingressos com a menor taxa do Brasil.
+            - button "Crie seu evento" [ref=e31] [cursor=pointer]:
+              - img
+              - text: Crie seu evento
+          - generic [ref=e32]:
+            - heading "Plataforma" [level=4] [ref=e33]
+            - list [ref=e34]:
+              - listitem [ref=e35]:
+                - link "Eventos" [ref=e36] [cursor=pointer]:
+                  - /url: /eventos
+              - listitem [ref=e37]:
+                - link "Para Produtores" [ref=e38] [cursor=pointer]:
+                  - /url: /produtores
+              - listitem [ref=e39]:
+                - link "Blog" [ref=e40] [cursor=pointer]:
+                  - /url: /blog
+              - listitem [ref=e41]:
+                - link "Changelog" [ref=e42] [cursor=pointer]:
+                  - /url: /changelog
+          - generic [ref=e43]:
+            - heading "Legal & Suporte" [level=4] [ref=e44]
+            - list [ref=e45]:
+              - listitem [ref=e46]:
+                - link "Termos para Clientes" [ref=e47] [cursor=pointer]:
+                  - /url: /termos-de-uso/cliente
+              - listitem [ref=e48]:
+                - link "Termos para Produtores" [ref=e49] [cursor=pointer]:
+                  - /url: /termos-de-uso/produtor
+              - listitem [ref=e50]:
+                - link "Política de Privacidade" [ref=e51] [cursor=pointer]:
+                  - /url: /politica-de-privacidade
+              - listitem [ref=e52]:
+                - link "Perguntas Frequentes" [ref=e53] [cursor=pointer]:
+                  - /url: /faq
+          - generic [ref=e54]:
+            - heading "Contato" [level=4] [ref=e55]
+            - list [ref=e56]:
+              - listitem [ref=e57]:
+                - link "contato@tickethall.com.br" [ref=e58] [cursor=pointer]:
+                  - /url: mailto:contato@tickethall.com.br
+            - generic [ref=e59]:
+              - link "Instagram" [ref=e60] [cursor=pointer]:
+                - /url: https://instagram.com/tickethallbrasil
+                - img [ref=e61]
+              - link "LinkedIn" [ref=e63] [cursor=pointer]:
+                - /url: https://linkedin.com/company/tickethall
+                - img [ref=e64]
+        - generic [ref=e66]: © 2026 TicketHall. Todos os direitos reservados. Uma empresa do grupo ioMob Tecnologia LTDA - CNPJ 29.256.741/0001-10

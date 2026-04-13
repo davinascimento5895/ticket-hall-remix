@@ -50,10 +50,18 @@ const routeMeta = [
 ];
 
 function ProducerSidebar() {
-  const { state } = useSidebar();
+  const { state, isMobile, setOpenMobile } = useSidebar();
+  const location = useLocation();
   const collapsed = state === "collapsed";
   const { signOut, profile, allRoles, role, switchRole } = useAuth();
   const navigate = useNavigate();
+  const mobile = isMobile;
+
+  useEffect(() => {
+    if (mobile) {
+      setOpenMobile(false);
+    }
+  }, [location.pathname, mobile, setOpenMobile]);
 
   const initials = profile?.full_name
     ? profile.full_name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
@@ -61,33 +69,49 @@ function ProducerSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarContent className="flex h-full flex-col gap-3 bg-sidebar">
+      <SidebarContent className={cn("flex h-full flex-col gap-3", mobile ? "bg-background text-foreground" : "bg-sidebar") }>
         {/* Brand */}
-        <div className="p-4">
+        <div className={cn("p-4", mobile && "border-b border-border/70 bg-background/95 backdrop-blur") }>
           <Link to="/producer/dashboard" className="flex items-center gap-2">
             {collapsed ? (
               <TicketHallLogo variant="symbol" size="sm" />
             ) : (
               <TicketHallLogo size="sm" />
             )}
+            {mobile && (
+              <span className="rounded-full border border-border/70 bg-muted/50 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Menu
+              </span>
+            )}
           </Link>
         </div>
 
         {/* Navigation */}
-        <SidebarGroup className="px-3">
-          <SidebarGroupLabel className="text-[11px] uppercase tracking-[0.16em] text-sidebar-foreground/45 font-semibold">
+        <SidebarGroup className={cn("px-3", mobile && "px-4") }>
+          <SidebarGroupLabel className={cn(
+            "text-[11px] uppercase tracking-[0.16em] font-semibold",
+            mobile ? "text-muted-foreground" : "text-sidebar-foreground/45",
+          )}>
             Workspace
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-2">
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
                       end={item.url === "/producer/dashboard"}
-                      className="group rounded-xl border border-transparent px-2.5 py-2 hover:bg-sidebar-accent/70 hover:border-sidebar-border/70 transition-all"
-                      activeClassName="bg-primary/10 text-primary border-primary/20 shadow-sm font-semibold"
+                      onClick={() => mobile && setOpenMobile(false)}
+                      className={cn(
+                        "group w-full transition-all",
+                        mobile
+                          ? "flex min-h-12 items-center gap-3 rounded-2xl border border-border/70 bg-background px-4 py-3 text-sm text-foreground shadow-sm hover:border-primary/25 hover:bg-muted/60"
+                          : "rounded-xl border border-transparent px-2.5 py-2 hover:bg-sidebar-accent/70 hover:border-sidebar-border/70",
+                      )}
+                      activeClassName={mobile
+                        ? "border-primary/25 bg-primary/10 text-primary shadow-sm font-semibold"
+                        : "bg-primary/10 text-primary border-primary/20 shadow-sm font-semibold"}
                     >
                       <item.icon className="mr-2 h-4 w-4 transition-transform group-hover:scale-105" />
                       {!collapsed && <span>{item.title}</span>}
@@ -101,9 +125,9 @@ function ProducerSidebar() {
 
         {/* Footer */}
         <div className="mt-auto">
-          <div className="p-3 space-y-2.5">
+          <div className={cn("p-3 space-y-2.5", mobile && "border-t border-border/70 bg-background") }>
             {!collapsed && (
-              <div className="rounded-xl bg-sidebar-accent/30 p-2.5">
+              <div className={cn("p-2.5", mobile ? "rounded-2xl border border-border/70 bg-background shadow-sm" : "rounded-xl bg-sidebar-accent/30") }>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <div className="flex items-center gap-3 cursor-pointer">
@@ -131,10 +155,20 @@ function ProducerSidebar() {
               </div>
             )}
             <Button
-              variant="ghost"
+              variant={mobile ? "outline" : "ghost"}
               size="sm"
-              className="w-full justify-start rounded-lg text-sidebar-foreground/70 hover:text-destructive hover:bg-destructive/10"
-              onClick={signOut}
+              className={cn(
+                "w-full justify-start rounded-xl",
+                mobile
+                  ? "border-border bg-background text-foreground hover:bg-muted"
+                  : "text-sidebar-foreground/70 hover:text-destructive hover:bg-destructive/10",
+              )}
+              onClick={() => {
+                if (mobile) {
+                  setOpenMobile(false);
+                }
+                signOut();
+              }}
             >
               <LogOut className="h-4 w-4 mr-2" />
               {!collapsed && "Sair"}

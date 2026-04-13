@@ -22,7 +22,6 @@ import {
   Image,
   UserCheck,
   FileDown,
-  RotateCcw,
   Copy,
   ExternalLink,
   ChevronLeft,
@@ -975,8 +974,7 @@ function ConfigurarTab({
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Type className="h-4 w-4" />
+            <CardTitle className="text-base">
               Textos
             </CardTitle>
           </CardHeader>
@@ -990,8 +988,7 @@ function ConfigurarTab({
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Palette className="h-4 w-4" />
+            <CardTitle className="text-base">
               Posição e Aparência dos Textos
             </CardTitle>
           </CardHeader>
@@ -1013,8 +1010,7 @@ function ConfigurarTab({
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <FileCheck className="h-4 w-4" />
+            <CardTitle className="text-base">
               Campos e Configurações
             </CardTitle>
           </CardHeader>
@@ -1030,8 +1026,7 @@ function ConfigurarTab({
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <UserCheck className="h-4 w-4" />
+            <CardTitle className="text-base">
               Signatários
             </CardTitle>
           </CardHeader>
@@ -1854,6 +1849,7 @@ function EstatisticasTab({ eventId, stats }: { eventId: string; stats: Certifica
 export default function ProducerEventCertificates() {
   const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState<"configurar" | "emitidos" | "estatisticas">("configurar");
+  const [isDisableDialogOpen, setIsDisableDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -1978,6 +1974,75 @@ export default function ProducerEventCertificates() {
     },
   });
 
+  // Disable certificates mutation
+  const disableCertificatesMutation = useMutation({
+    mutationFn: async () => {
+      // Try Edge Function first
+      try {
+        const { data, error } = await supabase.functions.invoke("toggle-event-certificates", {
+          body: { eventId: id, enabled: false },
+        });
+
+        if (error) {
+          const errMsg = (error as Error).message || "";
+          if (errMsg.includes("Failed to send") || errMsg.includes("fetch") || errMsg.includes("NetworkError") || errMsg.includes("CORS")) {
+            throw new Error("EDGE_FUNCTION_UNAVAILABLE");
+          }
+          throw error;
+        }
+
+        if (!data?.success || data?.event?.has_certificates !== false) {
+          throw new Error(
+            data?.error || "Nenhuma linha foi atualizada. Possíveis causas: permissão negada, o evento não existe ou o ID está incorreto."
+          );
+        }
+        return { source: "edge" as const };
+      } catch (err) {
+        const msg = (err as Error).message || "";
+        if (msg === "EDGE_FUNCTION_UNAVAILABLE" || msg.includes("Failed to send") || msg.includes("fetch") || msg.includes("NetworkError") || msg.includes("CORS")) {
+          const { data, error } = await supabase
+            .from("events")
+            .update({ has_certificates: false })
+            .eq("id", id!)
+            .select("has_certificates")
+            .single();
+
+          if (error) throw error;
+          if (!data || data.has_certificates !== false) {
+            throw new Error(
+              "Nenhuma linha foi atualizada. Possíveis causas: permissão negada (RLS), o evento não existe ou o ID está incorreto."
+            );
+          }
+          return { source: "direct" as const };
+        }
+        throw err;
+      }
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["event-certificates-meta", id] });
+      const previousEvent = queryClient.getQueryData(["event-certificates-meta", id]);
+      queryClient.setQueryData(["event-certificates-meta", id], (old: any) => ({
+        ...old,
+        has_certificates: false,
+      }));
+      return { previousEvent };
+    },
+    onSuccess: () => {
+      queryClient.refetchQueries({ queryKey: ["event-certificates-meta", id], exact: true });
+      queryClient.invalidateQueries({ queryKey: ["certificate-config", id] });
+      toast({ title: "Certificados desativados", description: "Os certificados de participação foram desabilitados para este evento." });
+      setIsDisableDialogOpen(false);
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousEvent) {
+        queryClient.setQueryData(["event-certificates-meta", id], context.previousEvent);
+      }
+      const msg = (err as Error).message || "";
+      toast({ title: "Erro ao desativar certificados", description: msg, variant: "destructive" });
+      setIsDisableDialogOpen(false);
+    },
+  });
+
   // Generate missing certificates mutation
   const generateMutation = useMutation({
     mutationFn: async () => {
@@ -1995,36 +2060,6 @@ export default function ProducerEventCertificates() {
       toast({
         title: "Erro ao gerar certificados",
         description: (err as Error).message || "Não foi possível gerar os certificados pendentes.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Regenerate all certificates
-  const regenerateAllMutation = useMutation({
-    mutationFn: async () => {
-      const { data: session } = await supabase.auth.getSession();
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/regenerate-all-certificates`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session?.session?.access_token}`,
-          },
-          body: JSON.stringify({ eventId: id }),
-        }
-      );
-      if (!response.ok) throw new Error("Erro ao reemitir certificados");
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["issued-certificates"] });
-    },
-    onError: (err) => {
-      toast({
-        title: "Erro ao reemitir",
-        description: (err as Error).message || "Não foi possível reemitir todos os certificados.",
         variant: "destructive",
       });
     },
@@ -2122,6 +2157,15 @@ export default function ProducerEventCertificates() {
               )}
             </Button>
           )}
+          <Button
+            variant="outline"
+            className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+            onClick={() => setIsDisableDialogOpen(true)}
+            disabled={disableCertificatesMutation.isPending}
+          >
+            <Ban className="h-4 w-4 mr-2" />
+            Desativar Certificados
+          </Button>
         </div>
       </div>
 
@@ -2229,37 +2273,53 @@ export default function ProducerEventCertificates() {
         </TabsContent>
       </Tabs>
 
-      {/* Bulk Actions */}
-      <Card className="border-dashed">
-        <CardContent className="p-4">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h4 className="font-medium text-sm">Ações em Massa</h4>
-              <p className="text-xs text-muted-foreground">Opções avançadas para gerenciamento</p>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => regenerateAllMutation.mutate()}
-                disabled={regenerateAllMutation.isPending}
-              >
-                {regenerateAllMutation.isPending ? (
-                  <>
-                    <div className="h-4 w-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin mr-2" />
-                    Reemitindo...
-                  </>
-                ) : (
-                  <>
-                    <RotateCcw className="h-4 w-4 mr-2" />
-                    Reemitir Todos
-                  </>
-                )}
-              </Button>
-            </div>
+      {/* Disable Certificates Confirmation Dialog */}
+      <Dialog open={isDisableDialogOpen} onOpenChange={setIsDisableDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <Ban className="h-5 w-5" />
+              Desativar Certificados
+            </DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja desativar os certificados para este evento?
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Certificados já emitidos <strong>não serão excluídos</strong>, mas novos certificados
+                <strong> não serão gerados</strong> automaticamente no check-in dos participantes.
+              </AlertDescription>
+            </Alert>
           </div>
-        </CardContent>
-      </Card>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDisableDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => disableCertificatesMutation.mutate()}
+              disabled={disableCertificatesMutation.isPending}
+            >
+              {disableCertificatesMutation.isPending ? (
+                <>
+                  <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                  Desativando...
+                </>
+              ) : (
+                <>
+                  <Ban className="h-4 w-4 mr-2" />
+                  Desativar Certificados
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

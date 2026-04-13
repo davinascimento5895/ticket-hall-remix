@@ -111,11 +111,10 @@ export default function LoginSignupModal({
           className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-sm ${open ? "dialog-overlay-fade" : ""}`}
         />
           <DialogPrimitive.Content
-            className={`fixed left-1/2 top-1/2 z-50 w-full max-w-[min(420px,calc(100vw-2rem))] max-h-[calc(100dvh-1rem)] -translate-x-1/2 -translate-y-1/2 ${
-              open ? "dialog-fade" : ""
-            }`}
+            className={`fixed inset-0 z-50 grid place-items-center p-4 ${open ? "dialog-fade" : ""}`}
             onOpenAutoFocus={(event) => event.preventDefault()}
           >
+            <div className="w-full max-w-[min(420px,calc(100vw-2rem))] max-h-[calc(100dvh-1rem)]">
             <Card
               className={`relative overflow-hidden border border-border/60 shadow-xl w-full h-auto max-h-[calc(100dvh-1rem)] ${
                 isUltraCompact ? "max-w-[360px]" : isCompact ? "max-w-[390px]" : ""
@@ -366,7 +365,8 @@ export default function LoginSignupModal({
             </CardFooter>
           </div>
           </Card>
-        </DialogPrimitive.Content>
+          </div>
+          </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>
   );

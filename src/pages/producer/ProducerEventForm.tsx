@@ -444,13 +444,24 @@ export default function ProducerEventForm({ onCancel, returnPath = "/producer/ev
     scrollPageToTop();
   }, [step]);
 
+  useEffect(() => {
+    const onSaveRequest = (event: Event) => {
+      const customEvent = event as CustomEvent<{ publish?: boolean }>;
+      const shouldPublish = !!customEvent.detail?.publish;
+      void handleSave(shouldPublish);
+    };
+
+    window.addEventListener("producer-event-editor-save", onSaveRequest);
+    return () => window.removeEventListener("producer-event-editor-save", onSaveRequest);
+  }, []);
+
   return (
     <div className={cn(
       "flex flex-col gap-6",
       isInlineMode
-        ? "min-h-0 pb-24"
+        ? "min-h-0 pb-32 max-[768px]:pb-44"
         : "lg:flex-row min-h-[calc(100vh-8rem)] lg:h-full lg:min-h-0 lg:overflow-hidden"
-    )}>
+    )} data-event-editor-form>
       {/* Sidebar Steps - Desktop */}
       {!isInlineMode && (
       <nav className="hidden lg:flex flex-col w-72 shrink-0 h-full border-r border-border/60 pr-4">
@@ -1102,7 +1113,7 @@ export default function ProducerEventForm({ onCancel, returnPath = "/producer/ev
 
       {/* Inline bottom action buttons */}
       {isInlineMode && (
-      <div className="space-y-2 pb-2">
+      <div className="space-y-2 pb-2 max-[768px]:fixed max-[768px]:inset-x-0 max-[768px]:bottom-0 max-[768px]:z-40 max-[768px]:border-t max-[768px]:border-border max-[768px]:bg-background/95 max-[768px]:backdrop-blur max-[768px]:px-4 max-[768px]:pt-3 max-[768px]:pb-[calc(env(safe-area-inset-bottom)+0.75rem)]" data-editor-actions-inline>
         <Separator className="!mb-3" />
         <div className="flex flex-wrap gap-2">
           <Button
@@ -1117,15 +1128,15 @@ export default function ProducerEventForm({ onCancel, returnPath = "/producer/ev
 
           {step < reviewStepIndex ? (
             <>
-              <Button size="sm" onClick={() => setStep((s) => s + 1)} className="gap-1 flex-1">
+              <Button size="sm" onClick={() => setStep((s) => s + 1)} className="gap-1 flex-1 min-h-11">
                 Proximo <ArrowRight className="h-4 w-4" />
               </Button>
-              <Button size="sm" variant="secondary" onClick={goToReview} className="gap-1 flex-1">
+                <Button size="sm" variant="secondary" onClick={goToReview} className="gap-1 flex-1 min-h-11">
                 Revisar
               </Button>
             </>
           ) : (
-            <Button size="sm" onClick={() => setIsPublishConfirmOpen(true)} className="flex-1" disabled={!canManageEvent}>
+              <Button size="sm" onClick={() => setIsPublishConfirmOpen(true)} className="flex-1 min-h-11" disabled={!canManageEvent}>
               Publicar evento
             </Button>
           )}
@@ -1136,7 +1147,7 @@ export default function ProducerEventForm({ onCancel, returnPath = "/producer/ev
           </p>
         )}
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={handleDiscard} className="flex-1 text-muted-foreground">
+          <Button variant="ghost" size="sm" onClick={handleDiscard} className="flex-1 text-muted-foreground min-h-11">
             Fechar
           </Button>
         </div>
@@ -1145,7 +1156,7 @@ export default function ProducerEventForm({ onCancel, returnPath = "/producer/ev
 
       {/* Mobile bottom action buttons */}
       {!isInlineMode && (
-      <div className="lg:hidden space-y-2 pb-4">
+      <div className="lg:hidden space-y-2 pb-4 max-[768px]:fixed max-[768px]:inset-x-0 max-[768px]:bottom-0 max-[768px]:z-40 max-[768px]:border-t max-[768px]:border-border max-[768px]:bg-background/95 max-[768px]:backdrop-blur max-[768px]:px-4 max-[768px]:pt-3 max-[768px]:pb-[calc(env(safe-area-inset-bottom)+0.75rem)]" data-editor-actions-mobile>
         <Separator className="!mb-3" />
         <div className="flex flex-wrap gap-2">
           <Button
@@ -1160,15 +1171,15 @@ export default function ProducerEventForm({ onCancel, returnPath = "/producer/ev
 
           {step < reviewStepIndex ? (
             <>
-              <Button size="sm" onClick={() => setStep((s) => s + 1)} className="gap-1 flex-1">
+              <Button size="sm" onClick={() => setStep((s) => s + 1)} className="gap-1 flex-1 min-h-11">
                 Próximo <ArrowRight className="h-4 w-4" />
               </Button>
-              <Button size="sm" variant="secondary" onClick={goToReview} className="gap-1 flex-1">
+              <Button size="sm" variant="secondary" onClick={goToReview} className="gap-1 flex-1 min-h-11">
                 Revisar
               </Button>
             </>
           ) : (
-            <Button size="sm" onClick={() => setIsPublishConfirmOpen(true)} className="flex-1">
+            <Button size="sm" onClick={() => setIsPublishConfirmOpen(true)} className="flex-1 min-h-11">
               Publicar evento
             </Button>
           )}
@@ -1179,7 +1190,7 @@ export default function ProducerEventForm({ onCancel, returnPath = "/producer/ev
           </p>
         )}
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={handleDiscard} className="flex-1 text-muted-foreground">
+          <Button variant="ghost" size="sm" onClick={handleDiscard} className="flex-1 text-muted-foreground min-h-11">
             Descartar
           </Button>
         </div>
@@ -1188,7 +1199,7 @@ export default function ProducerEventForm({ onCancel, returnPath = "/producer/ev
 
 
       <AlertDialog open={isPublishConfirmOpen} onOpenChange={setIsPublishConfirmOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-[768px]:h-[100dvh] max-[768px]:w-screen max-[768px]:max-w-none max-[768px]:rounded-none max-[768px]:p-5">
           <AlertDialogHeader>
             <AlertDialogTitle>Publicar evento?</AlertDialogTitle>
             <AlertDialogDescription>

@@ -154,15 +154,19 @@ export default function ProducerEventPanel({ eventsBasePath = "/producer/events"
     }
   };
 
+  const requestInlineSave = (publish: boolean) => {
+    window.dispatchEvent(new CustomEvent("producer-event-editor-save", { detail: { publish } }));
+  };
+
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
     return d.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" data-event-panel-root>
       {/* Event Header */}
-      <div className="mb-6 pb-4 border-b border-border">
+      <div className="mb-6 pb-4 border-b border-border max-[768px]:sticky max-[768px]:top-0 max-[768px]:z-30 max-[768px]:bg-background/95 max-[768px]:backdrop-blur max-[768px]:-mx-4 max-[768px]:px-4 max-[768px]:pt-2">
         <Link
           to={listPath}
           className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-3"
@@ -183,6 +187,11 @@ export default function ProducerEventPanel({ eventsBasePath = "/producer/events"
                 {event.status === "published" ? "Publicado" : event.status === "draft" ? "Rascunho" : event.status}
               </Badge>
               <div className="ml-auto flex items-center gap-2">
+                {isInlineEditing && (
+                  <Button variant="default" size="sm" onClick={() => requestInlineSave(false)}>
+                    Salvar rascunho
+                  </Button>
+                )}
                 <Button variant="outline" size="sm" onClick={() => setShowEmbed(!showEmbed)}>
                   <Code className="h-3.5 w-3.5 mr-1" /> Embed
                 </Button>
@@ -212,7 +221,7 @@ export default function ProducerEventPanel({ eventsBasePath = "/producer/events"
       )}
 
       {/* Layout: Sidebar + Content */}
-      <div className="flex flex-1 gap-6 min-h-0 px-4">
+      <div className="flex flex-1 gap-6 min-h-0 px-4 max-[768px]:flex-col max-[768px]:gap-4 max-[768px]:px-0 max-[768px]:overflow-x-hidden">
         {/* Tab Navigation - Sidebar (Desktop) */}
         <div className="hidden lg:flex flex-col w-72 shrink-0 border-r border-border/70 pr-5 -ml-4">
           <Card className="border-border/70 shadow-sm h-[calc(100vh-11rem)] max-h-[820px] min-h-[520px] flex flex-col overflow-hidden">
@@ -332,13 +341,14 @@ export default function ProducerEventPanel({ eventsBasePath = "/producer/events"
 
         {/* Mobile Tab Selector */}
         {isMobile && (
-          <div className="lg:hidden w-full mb-4">
+          <div className="lg:hidden w-full mb-4" data-mobile-nav>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-2">
                 <Button
                   size="sm"
                   variant={activeMode === "operations" ? "default" : "outline"}
                   onClick={closeInlineEditor}
+                  className="min-h-11"
                 >
                   Evento atual
                 </Button>
@@ -346,12 +356,13 @@ export default function ProducerEventPanel({ eventsBasePath = "/producer/events"
                   size="sm"
                   variant={activeMode === "edit" ? "default" : "outline"}
                   onClick={enterEditMode}
+                  className="min-h-11"
                 >
                   Editar evento
                 </Button>
               </div>
 
-              <div className="flex gap-2 overflow-x-auto pb-1">
+              <div className="grid grid-cols-2 gap-2" data-mobile-tabs-grid>
                 {(activeMode === "operations" ? EVENT_OPERATIONS : EDIT_SECTIONS).map((item) => {
                   const Icon = item.icon;
                   const isActive = activeMode === "operations" ? activeTab.key === item.key : editorStep === item.key;
@@ -361,7 +372,7 @@ export default function ProducerEventPanel({ eventsBasePath = "/producer/events"
                       key={item.key}
                       onClick={() => activeMode === "operations" ? navigateToTab(item as (typeof EVENT_OPERATIONS)[number]) : navigateToEditStep(item.key as (typeof EDIT_SECTIONS)[number]["key"])}
                       className={cn(
-                        "shrink-0 rounded-lg border px-3 py-2 text-sm transition-colors",
+                        "rounded-lg border px-3 py-2 text-sm transition-colors min-h-11",
                         isActive
                           ? "border-primary bg-primary/10 text-primary"
                           : "border-border bg-background text-muted-foreground"
@@ -399,7 +410,7 @@ export default function ProducerEventPanel({ eventsBasePath = "/producer/events"
         )}
 
         {/* Tab Content - Main Area */}
-        <div className="flex-1 min-w-0 overflow-y-auto pr-2 lg:pr-4" data-scroll-container>
+        <div className="flex-1 min-w-0 overflow-y-auto pr-2 lg:pr-4 max-[768px]:overflow-visible max-[768px]:pr-0" data-scroll-container>
           {isInlineEditing && (
             <div className="mb-4 rounded-xl border border-border/70 bg-muted/20 p-3 sm:p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
