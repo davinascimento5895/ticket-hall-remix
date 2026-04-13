@@ -216,7 +216,7 @@ export function trackPurchase(_orderId: string, _value: number, _items: any[]) {
 export async function getMyCertificates(userId: string) {
   const { data, error } = await supabase
     .from("certificates")
-    .select("*, events(title, start_date, venue_name)")
+    .select("*, events(title, start_date, venue_name, certificate_config)")
     .eq("user_id", userId)
     .order("issued_at", { ascending: false });
   if (error) throw error;

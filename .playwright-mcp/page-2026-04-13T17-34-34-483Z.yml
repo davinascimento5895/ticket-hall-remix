@@ -1,0 +1,13 @@
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - generic [ref=e5]:
+    - button [ref=e6] [cursor=pointer]:
+      - img [ref=e7]
+    - generic [ref=e10]:
+      - generic [ref=e11]:
+        - img [ref=e13]
+        - heading "Descubra eventos incríveis" [level=2] [ref=e16]
+        - paragraph [ref=e17]: Encontre shows, festivais, peças e muito mais perto de você. Filtre por data, categoria e cidade.
+      - button "Próximo" [ref=e23] [cursor=pointer]
+      - button "Pular" [ref=e24] [cursor=pointer]

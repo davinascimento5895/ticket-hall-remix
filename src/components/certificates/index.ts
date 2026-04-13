@@ -1,16 +1,8 @@
 /**
  * Certificate Configuration Components
- * 
+ *
  * Comprehensive UI components for configuring certificates in the producer panel.
  */
-
-// Template Selection
-export { TemplateSelector } from "./TemplateSelector";
-export type { TemplateSelectorProps } from "./TemplateSelector";
-
-// Color Configuration
-export { ColorConfigurator } from "./ColorConfigurator";
-export type { ColorConfiguratorProps } from "./ColorConfigurator";
 
 // Field Configuration
 export { FieldConfigurator } from "./FieldConfigurator";
@@ -20,6 +12,9 @@ export type { FieldConfiguratorProps } from "./FieldConfigurator";
 export { TextConfigurator } from "./TextConfigurator";
 export type { TextConfiguratorProps } from "./TextConfigurator";
 
+// Text Position Controls
+export { TextPositionControls } from "./TextPositionControls";
+
 // Signers Management
 export { SignersManager } from "./SignersManager";
 export type { Signer, SignersManagerProps } from "./SignersManager";
@@ -28,11 +23,14 @@ export type { Signer, SignersManagerProps } from "./SignersManager";
 export { BackgroundUploader } from "./BackgroundUploader";
 export type { BackgroundUploaderProps } from "./BackgroundUploader";
 
+// Image Crop for certificate background
+export { CertificateImageCrop } from "./CertificateImageCrop";
+
 // LinkedIn Integration
 export { LinkedInIntegration } from "./LinkedInIntegration";
 export type { LinkedInIntegrationProps } from "./LinkedInIntegration";
 
-// Certificate Preview (existing)
+// Certificate Preview
 export {
   CertificatePreview,
   type CertificatePreviewProps,
@@ -40,20 +38,6 @@ export {
   type CertificateTextConfig,
   type CertificateSigner,
   type CertificateSampleData,
+  type CertificateTextPositions,
+  type CertificateFontSizes,
 } from "./CertificatePreview";
-
-// Re-export types from templates
-export type {
-  CertificateTemplate,
-  CertificateTemplateId,
-  CertificateColors,
-  CertificateConfig,
-  CertificateData,
-} from "@/lib/certificates/templates";
-export {
-  CERTIFICATE_TEMPLATES,
-  getCertificateTemplate,
-  getTemplateDefaultColors,
-  DEFAULT_CERTIFICATE_CONFIG,
-  SAMPLE_CERTIFICATE_DATA,
-} from "@/lib/certificates/templates";

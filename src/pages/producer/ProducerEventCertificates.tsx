@@ -51,6 +51,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { generateCertificatePDF } from "@/lib/certificate-pdf-client";
+import { BackgroundUploader } from "@/components/certificates/BackgroundUploader";
 
 import { cn } from "@/lib/utils";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -90,8 +91,10 @@ import {
   CertificateTextConfig,
   CertificateSigner,
   CertificateSampleData,
+  CertificateTextPositions,
+  CertificateFontSizes,
 } from "@/components/certificates/CertificatePreview";
-import { CERTIFICATE_TEMPLATES, CertificateTemplateId } from "@/lib/certificates/templates";
+import { TextPositionControls } from "@/components/certificates/TextPositionControls";
 import { format, isAfter, isBefore, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -100,14 +103,14 @@ import { ptBR } from "date-fns/locale";
 // =============================================================================
 
 interface CertificateConfig {
-  templateId: CertificateTemplateId;
-  primaryColor: string;
-  secondaryColor: string;
   fields: CertificateFields;
   textConfig: CertificateTextConfig;
   signers: CertificateSigner[];
   backgroundUrl: string | null;
   workloadHours: number;
+  textColor: string;
+  textPositions: CertificateTextPositions;
+  fontSizes: CertificateFontSizes;
 }
 
 interface Certificate {
@@ -143,9 +146,6 @@ interface Filters {
 // =============================================================================
 
 const DEFAULT_CONFIG: CertificateConfig = {
-  templateId: "executive",
-  primaryColor: "#1a365d",
-  secondaryColor: "#c9a227",
   fields: {
     showEventName: true,
     showParticipantName: true,
@@ -165,6 +165,17 @@ const DEFAULT_CONFIG: CertificateConfig = {
   signers: [],
   backgroundUrl: null,
   workloadHours: 0,
+  textColor: "#1f2937",
+  textPositions: {
+    titleTop: 8,
+    nameTop: 28,
+    metadataTop: 55,
+  },
+  fontSizes: {
+    title: "xl",
+    name: "4xl",
+    event: "2xl",
+  },
 };
 
 const DEFAULT_SAMPLE_DATA: CertificateSampleData = {
@@ -174,28 +185,6 @@ const DEFAULT_SAMPLE_DATA: CertificateSampleData = {
   eventDate: format(new Date(), "dd/MM/yyyy"),
   eventLocation: "São Paulo, SP",
   certificateCode: "CERT-XXXX-XXXXXXXX-XXX",
-};
-
-const TEMPLATE_LIST = CERTIFICATE_TEMPLATES;
-const TEMPLATE_IDS: CertificateTemplateId[] = TEMPLATE_LIST.map((t) => t.id);
-const TEMPLATE_BY_ID = new Map<CertificateTemplateId, (typeof TEMPLATE_LIST)[number]>(
-  TEMPLATE_LIST.map((t) => [t.id, t])
-);
-
-const normalizeTemplateId = (value: unknown): CertificateTemplateId => {
-  if (typeof value === "string") {
-    if (TEMPLATE_IDS.includes(value as CertificateTemplateId)) {
-      return value as CertificateTemplateId;
-    }
-    const asIndex = Number.parseInt(value, 10);
-    if (!Number.isNaN(asIndex) && TEMPLATE_LIST[asIndex]) {
-      return TEMPLATE_LIST[asIndex].id;
-    }
-  }
-  if (typeof value === "number" && TEMPLATE_LIST[value]) {
-    return TEMPLATE_LIST[value].id;
-  }
-  return "executive";
 };
 
 const missingColumnsCache = new Set<string>();
@@ -210,15 +199,21 @@ const isMissingColumnError = (error: unknown, columnName: string): boolean => {
   return isMissing;
 };
 
-const configFromLegacyTemplate = (template: string | null | undefined): CertificateConfig => {
-  const templateId = normalizeTemplateId(template || "executive");
-  const defaults = TEMPLATE_BY_ID.get(templateId)?.defaultColors;
-  return {
-    ...DEFAULT_CONFIG,
-    templateId,
-    primaryColor: defaults?.primary || DEFAULT_CONFIG.primaryColor,
-    secondaryColor: defaults?.secondary || DEFAULT_CONFIG.secondaryColor,
-  };
+const isSchemaMissingError = (error: unknown): boolean => {
+  const err = error as { code?: string; message?: string } | null;
+  if (!err) return false;
+  const msg = (err.message || "").toLowerCase();
+  return (
+    err.code === "PGRST204" ||
+    err.code === "PGRST116" ||
+    (msg.includes("column") && msg.includes("not found")) ||
+    (msg.includes("relation") && msg.includes("not found")) ||
+    msg.includes("does not exist")
+  );
+};
+
+const configFromLegacy = (): CertificateConfig => {
+  return { ...DEFAULT_CONFIG };
 };
 
 // =============================================================================
@@ -227,6 +222,7 @@ const configFromLegacyTemplate = (template: string | null | undefined): Certific
 
 function useCertificateConfig(eventId: string | undefined) {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data: config, isLoading } = useQuery({
     queryKey: ["certificate-config", eventId],
@@ -234,38 +230,30 @@ function useCertificateConfig(eventId: string | undefined) {
       if (!eventId) return DEFAULT_CONFIG;
 
       if (missingColumnsCache.has("certificate_config")) {
-        const { data: legacyData, error: legacyError } = await supabase
-          .from("events")
-          .select("certificate_template")
-          .eq("id", eventId)
-          .single();
-        if (legacyError) throw legacyError;
-        return configFromLegacyTemplate(legacyData?.certificate_template);
+        return configFromLegacy();
       }
 
       const { data, error } = await supabase
         .from("events")
-        .select("certificate_config, certificate_template")
+        .select("certificate_config")
         .eq("id", eventId)
         .single();
 
       if (error && isMissingColumnError(error, "certificate_config")) {
-        const { data: legacyData, error: legacyError } = await supabase
-          .from("events")
-          .select("certificate_template")
-          .eq("id", eventId)
-          .single();
-        if (legacyError) throw legacyError;
-        return configFromLegacyTemplate(legacyData?.certificate_template);
+        return configFromLegacy();
       }
 
       if (error) throw error;
 
       return data?.certificate_config
         ? { ...DEFAULT_CONFIG, ...(data.certificate_config as Partial<CertificateConfig>) }
-        : configFromLegacyTemplate(data?.certificate_template);
+        : configFromLegacy();
     },
     enabled: !!eventId,
+    retry: (failureCount, error) => {
+      if (isSchemaMissingError(error)) return false;
+      return failureCount < 2;
+    },
   });
 
   const updateMutation = useMutation({
@@ -273,12 +261,7 @@ function useCertificateConfig(eventId: string | undefined) {
       if (!eventId) throw new Error("Event ID required");
 
       if (missingColumnsCache.has("certificate_config")) {
-        const { error: legacyError } = await supabase
-          .from("events")
-          .update({ certificate_template: newConfig.templateId })
-          .eq("id", eventId);
-        if (legacyError) throw legacyError;
-        return;
+        throw new Error("Coluna certificate_config não disponível no banco de dados. Execute as migrações do Supabase.");
       }
 
       const { error } = await supabase
@@ -287,18 +270,26 @@ function useCertificateConfig(eventId: string | undefined) {
         .eq("id", eventId);
 
       if (error && isMissingColumnError(error, "certificate_config")) {
-        const { error: legacyError } = await supabase
-          .from("events")
-          .update({ certificate_template: newConfig.templateId })
-          .eq("id", eventId);
-        if (legacyError) throw legacyError;
-        return;
+        throw new Error("Coluna certificate_config não disponível no banco de dados. Execute as migrações do Supabase.");
       }
 
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["certificate-config", eventId] });
+      toast({ title: "Configuração salva", description: "As alterações do certificado foram salvas com sucesso." });
+    },
+    onError: (err) => {
+      const msg = (err as Error).message || "";
+      if (isSchemaMissingError(err)) {
+        toast({
+          title: "Sistema de certificados não configurado",
+          description: "O banco de dados ainda não possui as colunas necessárias (certificate_config, has_certificates, etc.). Execute as migrações do Supabase.",
+          variant: "destructive",
+        });
+      } else {
+        toast({ title: "Erro ao salvar", description: msg, variant: "destructive" });
+      }
     },
   });
 
@@ -319,40 +310,51 @@ function useIssuedCertificates(eventId: string | undefined, filters: Filters) {
     queryFn: async () => {
       if (!eventId) return { certificates: [], totalCount: 0 };
 
-      let query = supabase
-        .from("certificates")
-        .select("*, tickets!inner(event_id)", { count: "exact" })
-        .eq("tickets.event_id", eventId);
+      try {
+        let query = supabase
+          .from("certificates")
+          .select("*, tickets!inner(event_id)", { count: "exact" })
+          .eq("tickets.event_id", eventId);
 
-      // Apply filters
-      if (filters.status === "valid") {
-        query = query.is("revoked_at", null);
-      } else if (filters.status === "revoked") {
-        query = query.not("revoked_at", "is", null);
+        // Apply filters
+        if (filters.status === "valid") {
+          query = query.is("revoked_at", null);
+        } else if (filters.status === "revoked") {
+          query = query.not("revoked_at", "is", null);
+        }
+
+        if (filters.search) {
+          query = query.ilike("attendee_name", `%${filters.search}%`);
+        }
+
+        if (filters.dateFrom) {
+          query = query.gte("issued_at", filters.dateFrom.toISOString());
+        }
+        if (filters.dateTo) {
+          query = query.lte("issued_at", filters.dateTo.toISOString());
+        }
+
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize - 1;
+
+        const { data: certificates, error, count } = await query
+          .order("issued_at", { ascending: false })
+          .range(from, to);
+
+        if (error) throw error;
+        return { certificates: certificates || [], totalCount: count || 0 };
+      } catch (err) {
+        if (isSchemaMissingError(err)) {
+          return { certificates: [], totalCount: 0 };
+        }
+        throw err;
       }
-
-      if (filters.search) {
-        query = query.ilike("attendee_name", `%${filters.search}%`);
-      }
-
-      if (filters.dateFrom) {
-        query = query.gte("issued_at", filters.dateFrom.toISOString());
-      }
-      if (filters.dateTo) {
-        query = query.lte("issued_at", filters.dateTo.toISOString());
-      }
-
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize - 1;
-
-      const { data: certificates, error, count } = await query
-        .order("issued_at", { ascending: false })
-        .range(from, to);
-
-      if (error) throw error;
-      return { certificates: certificates || [], totalCount: count || 0 };
     },
     enabled: !!eventId,
+    retry: (failureCount, error) => {
+      if (isSchemaMissingError(error)) return false;
+      return failureCount < 2;
+    },
   });
 
   return {
@@ -381,45 +383,63 @@ function useCertificateStats(eventId: string | undefined) {
         };
       }
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-      const { data: tickets, error: ticketsError } = await supabase
-        .from("tickets")
-        .select("id, status, owner_id, attendee_name")
-        .eq("event_id", eventId)
-        .in("status", ["active", "used"]);
+        const { data: tickets, error: ticketsError } = await supabase
+          .from("tickets")
+          .select("id, status, owner_id, attendee_name")
+          .eq("event_id", eventId)
+          .in("status", ["active", "used"]);
 
-      if (ticketsError) throw ticketsError;
+        if (ticketsError) throw ticketsError;
 
-      const { data: certificates, error: certsError } = await supabase
-        .from("certificates")
-        .select("ticket_id, revoked_at, issued_at")
-        .eq("event_id", eventId);
+        const { data: certificates, error: certsError } = await supabase
+          .from("certificates")
+          .select("ticket_id, revoked_at, issued_at")
+          .eq("event_id", eventId);
 
-      if (certsError) throw certsError;
+        if (certsError) throw certsError;
 
-      const checkedInTickets = tickets?.filter((t) => t.status === "used") || [];
-      const validCerts = certificates?.filter((c) => !c.revoked_at) || [];
-      const certTicketIds = new Set(validCerts.map((c) => c.ticket_id));
-      const pendingCerts = checkedInTickets.filter((t) => !certTicketIds.has(t.id));
-      const revokedCount = certificates?.filter((c) => c.revoked_at).length || 0;
-      const issuedToday = validCerts.filter((c) => {
-        const issuedDate = new Date(c.issued_at);
-        issuedDate.setHours(0, 0, 0, 0);
-        return isSameDay(issuedDate, today);
-      }).length;
+        const checkedInTickets = tickets?.filter((t) => t.status === "used") || [];
+        const validCerts = certificates?.filter((c) => !c.revoked_at) || [];
+        const certTicketIds = new Set(validCerts.map((c) => c.ticket_id));
+        const pendingCerts = checkedInTickets.filter((t) => !certTicketIds.has(t.id));
+        const revokedCount = certificates?.filter((c) => c.revoked_at).length || 0;
+        const issuedToday = validCerts.filter((c) => {
+          const issuedDate = new Date(c.issued_at);
+          issuedDate.setHours(0, 0, 0, 0);
+          return isSameDay(issuedDate, today);
+        }).length;
 
-      return {
-        totalParticipants: tickets?.length || 0,
-        checkedInCount: checkedInTickets.length,
-        certificatesIssued: certTicketIds.size,
-        pendingCertificates: pendingCerts.length,
-        revokedCount,
-        issuedToday,
-      };
+        return {
+          totalParticipants: tickets?.length || 0,
+          checkedInCount: checkedInTickets.length,
+          certificatesIssued: certTicketIds.size,
+          pendingCertificates: pendingCerts.length,
+          revokedCount,
+          issuedToday,
+        };
+      } catch (err) {
+        if (isSchemaMissingError(err)) {
+          return {
+            totalParticipants: 0,
+            checkedInCount: 0,
+            certificatesIssued: 0,
+            pendingCertificates: 0,
+            revokedCount: 0,
+            issuedToday: 0,
+          };
+        }
+        throw err;
+      }
     },
     enabled: !!eventId,
+    retry: (failureCount, error) => {
+      if (isSchemaMissingError(error)) return false;
+      return failureCount < 2;
+    },
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 }
@@ -427,143 +447,6 @@ function useCertificateStats(eventId: string | undefined) {
 // =============================================================================
 // Sub-Components
 // =============================================================================
-
-function TemplateSelector({
-  value,
-  onChange,
-}: {
-  value: CertificateTemplateId;
-  onChange: (template: CertificateTemplateId) => void;
-}) {
-  return (
-    <div className="space-y-3">
-      <Label>Template do Certificado</Label>
-      <div className="grid grid-cols-2 gap-3">
-        {TEMPLATE_LIST.map((template) => {
-          const templateId = template.id;
-          return (
-            <button
-              key={templateId}
-              onClick={() => onChange(templateId)}
-              className={cn(
-                "relative p-4 rounded-lg border-2 text-left transition-all",
-                value === templateId
-                  ? "border-primary bg-primary/5"
-                  : "border-border hover:border-primary/50"
-              )}
-            >
-              <div className="font-medium text-sm">{template.name}</div>
-              <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                {template.description}
-              </div>
-              <div className="flex gap-2 mt-2">
-                <div
-                  className="w-4 h-4 rounded-full border"
-                  style={{ backgroundColor: template.defaultColors.primary }}
-                />
-                <div
-                  className="w-4 h-4 rounded-full border"
-                  style={{ backgroundColor: template.defaultColors.secondary }}
-                />
-              </div>
-              {value === templateId && (
-                <div className="absolute top-2 right-2">
-                  <CheckCircle2 className="h-4 w-4 text-primary" />
-                </div>
-              )}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function ColorConfigurator({
-  primaryColor,
-  secondaryColor,
-  onChange,
-}: {
-  primaryColor: string;
-  secondaryColor: string;
-  onChange: (colors: { primaryColor: string; secondaryColor: string }) => void;
-}) {
-  const presetColors = [
-    { primary: "#1a365d", secondary: "#c9a227", name: "Executive" },
-    { primary: "#ea580b", secondary: "#1f2937", name: "Modern" },
-    { primary: "#064e3b", secondary: "#d4af37", name: "Academic" },
-    { primary: "#7c3aed", secondary: "#f59e0b", name: "Creative" },
-    { primary: "#0f172a", secondary: "#3b82f6", name: "Dark Blue" },
-    { primary: "#881337", secondary: "#fb7185", name: "Rose" },
-  ];
-
-  return (
-    <div className="space-y-4">
-      <Label>Cores Personalizadas</Label>
-
-      <div className="space-y-3">
-        <div className="flex items-center gap-3">
-          <input
-            type="color"
-            value={primaryColor}
-            onChange={(e) => onChange({ primaryColor: e.target.value, secondaryColor })}
-            className="w-10 h-10 rounded cursor-pointer border-0 p-0"
-          />
-          <div className="flex-1">
-            <Label className="text-xs">Cor Primária</Label>
-            <Input
-              value={primaryColor}
-              onChange={(e) => onChange({ primaryColor: e.target.value, secondaryColor })}
-              className="h-8 text-xs"
-            />
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <input
-            type="color"
-            value={secondaryColor}
-            onChange={(e) => onChange({ primaryColor, secondaryColor: e.target.value })}
-            className="w-10 h-10 rounded cursor-pointer border-0 p-0"
-          />
-          <div className="flex-1">
-            <Label className="text-xs">Cor Secundária</Label>
-            <Input
-              value={secondaryColor}
-              onChange={(e) => onChange({ primaryColor, secondaryColor: e.target.value })}
-              className="h-8 text-xs"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label className="text-xs text-muted-foreground">Predefinições</Label>
-        <div className="flex flex-wrap gap-2">
-          {presetColors.map((preset) => (
-            <button
-              key={preset.name}
-              onClick={() =>
-                onChange({ primaryColor: preset.primary, secondaryColor: preset.secondary })
-              }
-              className="flex items-center gap-1.5 px-2 py-1.5 rounded-md border hover:bg-muted transition-colors"
-              title={preset.name}
-            >
-              <div
-                className="w-4 h-4 rounded-full border"
-                style={{ backgroundColor: preset.primary }}
-              />
-              <div
-                className="w-4 h-4 rounded-full border"
-                style={{ backgroundColor: preset.secondary }}
-              />
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function FieldConfigurator({
   fields,
@@ -757,84 +640,6 @@ function SignersManager({
   );
 }
 
-function BackgroundUploader({
-  value,
-  onChange,
-}: {
-  value: string | null;
-  onChange: (url: string | null) => void;
-}) {
-  const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-    try {
-      const fileName = `certificate-bg-${Date.now()}-${file.name}`;
-      const { data, error } = await supabase.storage
-        .from("event-assets")
-        .upload(fileName, file, { upsert: true });
-
-      if (error) throw error;
-
-      const { data: publicUrlData } = supabase.storage.from("event-assets").getPublicUrl(fileName);
-      onChange(publicUrlData.publicUrl);
-    } catch {
-      // Silently handle error - user will see failed state
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  return (
-    <div className="space-y-3">
-      <Label>Background Personalizado</Label>
-
-      {value ? (
-        <div className="relative aspect-video rounded-lg overflow-hidden border">
-          <img src={value} alt="Background" className="w-full h-full object-cover" />
-          <button
-            onClick={() => onChange(null)}
-            className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      ) : (
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading}
-          className="w-full aspect-video rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-2 transition-colors"
-        >
-          {isUploading ? (
-            <>
-              <div className="h-8 w-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-              <span className="text-sm text-muted-foreground">Enviando...</span>
-            </>
-          ) : (
-            <>
-              <Upload className="h-8 w-8 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Clique para fazer upload</span>
-              <span className="text-xs text-muted-foreground">PNG, JPG até 5MB</span>
-            </>
-          )}
-        </button>
-      )}
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleFileChange}
-        className="hidden"
-      />
-    </div>
-  );
-}
-
 function WorkloadInput({
   value,
   showWorkload,
@@ -944,102 +749,15 @@ function ConfigurarTab({
     if (isGeneratingSample || !eventId || !previewRef.current) return;
 
     setIsGeneratingSample(true);
-    
-    // ESTRATÉGIA 1: Gerar PDF localmente a partir do preview visível
-    // Isso garante 100% de fidelidade com o que o usuário está vendo
     try {
-      console.log("[PDF] Gerando PDF localmente do preview...");
-      
       const previewElement = previewRef.current.querySelector("[data-testid='certificate-preview']") as HTMLElement;
-      
       if (previewElement) {
-        await generateCertificatePDF(
-          previewElement,
-          `certificado-preview-${eventId}.pdf`
-        );
-        
+        await generateCertificatePDF(previewElement, `certificado-preview-${eventId}.pdf`);
         toast({
           title: "PDF gerado!",
           description: "Certificado de exemplo baixado com sucesso.",
         });
-        
-        setIsGeneratingSample(false);
-        return;
       }
-    } catch (localError) {
-      console.warn("[PDF] Falha na geração local, tentando Edge Function:", localError);
-    }
-
-    // ESTRATÉGIA 2: Fallback para Edge Function (se configurada)
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error("Sessão não encontrada.");
-      }
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-certificate-pdf`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            previewData: {
-              eventId,
-              participantName: sampleData.participantName,
-              eventName: sampleData.eventName,
-              eventDate: event?.start_date,
-              eventLocation: sampleData.eventLocation,
-              workloadHours: localConfig.workloadHours,
-              fields: {
-                showParticipantName: localConfig.fields.showParticipantName,
-                showEventTitle: localConfig.fields.showEventName,
-                showEventDate: localConfig.fields.showEventDate,
-                showEventLocation: localConfig.fields.showEventLocation,
-                showWorkload: localConfig.fields.showWorkload,
-                showSigners: localConfig.fields.showSigners,
-                showLogo: true,
-                showVerificationCode: true,
-                showQrCode: true,
-              },
-              textConfig: {
-                title: localConfig.textConfig.title,
-                subtitle: localConfig.textConfig.introText,
-                bodyText: localConfig.textConfig.participationText,
-                footerText: localConfig.textConfig.conclusionText,
-              },
-              signers: localConfig.signers,
-            },
-            templateId: localConfig.templateId,
-            customColors: {
-              primary: localConfig.primaryColor,
-              secondary: localConfig.secondaryColor,
-            },
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Erro ${response.status}: ${errorText}`);
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `certificado-preview-${eventId}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-      
-      toast({
-        title: "PDF gerado!",
-        description: "Certificado baixado via servidor.",
-      });
     } catch (err) {
       console.error("Erro ao gerar PDF:", err);
       toast({
@@ -1059,21 +777,52 @@ function ConfigurarTab({
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Palette className="h-4 w-4" />
-              Template e Cores
+              <Image className="h-4 w-4" />
+              Imagem de Fundo (PNG)
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <TemplateSelector
-              value={localConfig.templateId}
-              onChange={(templateId) => updateConfig({ templateId })}
+          <CardContent>
+            <BackgroundUploader
+              backgroundUrl={localConfig.backgroundUrl}
+              onUpload={(url) => updateConfig({ backgroundUrl: url })}
+              onRemove={() => updateConfig({ backgroundUrl: null })}
             />
-            <Separator />
-            <ColorConfigurator
-              primaryColor={localConfig.primaryColor}
-              secondaryColor={localConfig.secondaryColor}
-              onChange={({ primaryColor, secondaryColor }) =>
-                updateConfig({ primaryColor, secondaryColor })
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Type className="h-4 w-4" />
+              Textos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TextConfigurator
+              config={localConfig.textConfig}
+              onChange={(textConfig) => updateConfig({ textConfig })}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Palette className="h-4 w-4" />
+              Posição e Aparência dos Textos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TextPositionControls
+              textColor={localConfig.textColor}
+              textPositions={localConfig.textPositions}
+              fontSizes={localConfig.fontSizes}
+              onChange={({ textColor, textPositions, fontSizes }) =>
+                updateConfig({
+                  ...(textColor !== undefined && { textColor }),
+                  ...(textPositions !== undefined && { textPositions }),
+                  ...(fontSizes !== undefined && { fontSizes }),
+                })
               }
             />
           </CardContent>
@@ -1108,21 +857,6 @@ function ConfigurarTab({
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Type className="h-4 w-4" />
-              Textos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <TextConfigurator
-              config={localConfig.textConfig}
-              onChange={(textConfig) => updateConfig({ textConfig })}
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
               <UserCheck className="h-4 w-4" />
               Signatários
             </CardTitle>
@@ -1134,26 +868,11 @@ function ConfigurarTab({
             />
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Image className="h-4 w-4" />
-              Background Personalizado
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <BackgroundUploader
-              value={localConfig.backgroundUrl}
-              onChange={(backgroundUrl) => updateConfig({ backgroundUrl })}
-            />
-          </CardContent>
-        </Card>
       </div>
 
       {/* Right Column - Preview */}
       <div className="lg:col-span-2">
-        <div className="sticky top-6 space-y-4">
+        <div className="sticky top-6 space-y-4 max-h-[calc(100vh-3rem)] overflow-y-auto pr-1">
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
@@ -1163,21 +882,21 @@ function ConfigurarTab({
               <CardDescription>Visualize as alterações em tempo real</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div 
-                ref={previewRef} 
+              <div
+                ref={previewRef}
                 className="overflow-x-auto pb-2 scrollbar-thin"
               >
                 <CertificatePreview
-                  key={`preview-${localConfig.templateId}`}
-                  templateId={localConfig.templateId}
-                  primaryColor={localConfig.primaryColor}
-                  secondaryColor={localConfig.secondaryColor}
                   backgroundUrl={localConfig.backgroundUrl || undefined}
                   fields={localConfig.fields}
                   textConfig={localConfig.textConfig}
                   signers={localConfig.signers}
                   workloadHours={localConfig.workloadHours}
                   sampleData={sampleData}
+                  textColor={localConfig.textColor}
+                  textPositions={localConfig.textPositions}
+                  fontSizes={localConfig.fontSizes}
+                  mode="producer"
                 />
               </div>
 
@@ -1212,9 +931,13 @@ function ConfigurarTab({
 function EmitidosTab({
   eventId,
   stats,
+  eventConfig,
+  event,
 }: {
   eventId: string;
   stats: CertificateStats | undefined;
+  eventConfig: CertificateConfig;
+  event: any;
 }) {
   const [filters, setFilters] = useState<Filters>({
     search: "",
@@ -1251,8 +974,12 @@ function EmitidosTab({
       queryClient.invalidateQueries({ queryKey: ["issued-certificates"] });
       queryClient.invalidateQueries({ queryKey: ["certificate-stats"] });
     },
-    onError: () => {
-      // Error handled in UI
+    onError: (err) => {
+      toast({
+        title: "Erro ao revogar",
+        description: (err as Error).message || "Não foi possível revogar o certificado.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -1260,44 +987,39 @@ function EmitidosTab({
   const [revokeReason, setRevokeReason] = useState("");
   const [selectedCert, setSelectedCert] = useState<Certificate | null>(null);
 
-  const handleDownloadPDF = async (cert: Certificate) => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error("Sessão não encontrada");
-      }
-      
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-certificate-pdf`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({ certificateId: cert.id }),
+  const [downloadingCert, setDownloadingCert] = useState<Certificate | null>(null);
+  const hiddenPreviewRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!downloadingCert || !hiddenPreviewRef.current) return;
+
+    const run = async () => {
+      try {
+        const previewEl = hiddenPreviewRef.current!.querySelector("[data-testid='certificate-preview']") as HTMLElement;
+        if (previewEl) {
+          await generateCertificatePDF(previewEl, `certificado-${downloadingCert.certificate_code}.pdf`);
         }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("PDF generation error:", errorText);
-        throw new Error(`Erro ao gerar PDF: ${response.status}`);
+      } catch (err) {
+        console.error("Download error:", err);
+      } finally {
+        setDownloadingCert(null);
       }
+    };
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `certificado-${cert.certificate_code}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("Download error:", err);
-      // Error handled silently - UI shows error state
+    const timer = setTimeout(run, 100);
+    return () => clearTimeout(timer);
+  }, [downloadingCert]);
+
+  const handleDownloadPDF = async (cert: Certificate) => {
+    if (!eventConfig.backgroundUrl) {
+      toast({
+        title: "Certificado indisponível",
+        description: "O organizador ainda não configurou a imagem de fundo do certificado.",
+        variant: "destructive",
+      });
+      return;
     }
+    setDownloadingCert(cert);
   };
 
   const handleCopyLink = (code: string) => {
@@ -1426,123 +1148,125 @@ function EmitidosTab({
       {/* Data Table */}
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Participante</TableHead>
-                <TableHead>Código</TableHead>
-                <TableHead>Data de Emissão</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i}>
-                    {Array.from({ length: 5 }).map((_, j) => (
-                      <TableCell key={j}>
-                        <Skeleton className="h-4 w-full" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : certificates.length === 0 ? (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
-                    <Award className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
-                    <p className="text-sm text-muted-foreground">Nenhum certificado encontrado</p>
-                  </TableCell>
+                  <TableHead>Participante</TableHead>
+                  <TableHead>Código</TableHead>
+                  <TableHead>Data de Emissão</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
-              ) : (
-                certificates.map((cert) => (
-                  <TableRow
-                    key={cert.id}
-                    className={cn(cert.revoked_at && "opacity-50 bg-muted/30")}
-                  >
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={cn(
-                            "h-8 w-8 rounded-full flex items-center justify-center",
-                            cert.revoked_at ? "bg-red-100" : "bg-green-100"
-                          )}
-                        >
-                          <Award
-                            className={cn(
-                              "h-4 w-4",
-                              cert.revoked_at ? "text-red-500" : "text-green-600"
-                            )}
-                          />
-                        </div>
-                        <span className="font-medium">{cert.attendee_name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <code className="text-xs bg-muted px-2 py-1 rounded">{cert.certificate_code}</code>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {format(new Date(cert.issued_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                    </TableCell>
-                    <TableCell>
-                      {cert.revoked_at ? (
-                        <Badge variant="destructive">
-                          <Ban className="h-3 w-3 mr-1" />
-                          Revogado
-                        </Badge>
-                      ) : (
-                        <Badge variant="default" className="bg-green-100 text-green-700 hover:bg-green-100">
-                          <CheckCircle2 className="h-3 w-3 mr-1" />
-                          Válido
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end gap-1">
-                        {!cert.revoked_at && (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDownloadPDF(cert)}
-                              title="Download PDF"
-                            >
-                              <Download className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleCopyLink(cert.certificate_code)}
-                              title="Copiar link de verificação"
-                            >
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setSelectedCert(cert)}
-                              title="Ver detalhes"
-                            >
-                              <EyeIcon className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setCertToRevoke(cert)}
-                              className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                              title="Revogar"
-                            >
-                              <Ban className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
-                      </div>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}>
+                      {Array.from({ length: 5 }).map((_, j) => (
+                        <TableCell key={j}>
+                          <Skeleton className="h-4 w-full" />
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : certificates.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8">
+                      <Award className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
+                      <p className="text-sm text-muted-foreground">Nenhum certificado encontrado</p>
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  certificates.map((cert) => (
+                    <TableRow
+                      key={cert.id}
+                      className={cn(cert.revoked_at && "opacity-50 bg-muted/30")}
+                    >
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={cn(
+                              "h-8 w-8 rounded-full flex items-center justify-center",
+                              cert.revoked_at ? "bg-red-100" : "bg-green-100"
+                            )}
+                          >
+                            <Award
+                              className={cn(
+                                "h-4 w-4",
+                                cert.revoked_at ? "text-red-500" : "text-green-600"
+                              )}
+                            />
+                          </div>
+                          <span className="font-medium">{cert.attendee_name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <code className="text-xs bg-muted px-2 py-1 rounded">{cert.certificate_code}</code>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {format(new Date(cert.issued_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                      </TableCell>
+                      <TableCell>
+                        {cert.revoked_at ? (
+                          <Badge variant="destructive">
+                            <Ban className="h-3 w-3 mr-1" />
+                            Revogado
+                          </Badge>
+                        ) : (
+                          <Badge variant="default" className="bg-green-100 text-green-700 hover:bg-green-100">
+                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                            Válido
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-1">
+                          {!cert.revoked_at && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDownloadPDF(cert)}
+                                title="Download PDF"
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleCopyLink(cert.certificate_code)}
+                                title="Copiar link de verificação"
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setSelectedCert(cert)}
+                                title="Ver detalhes"
+                              >
+                                <EyeIcon className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setCertToRevoke(cert)}
+                                className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                                title="Revogar"
+                              >
+                                <Ban className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
 
           {/* Pagination */}
           {totalPages > 1 && (
@@ -1654,6 +1378,7 @@ function EmitidosTab({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Detalhes do Certificado</DialogTitle>
+            <DialogDescription>Informações do certificado selecionado</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -1713,6 +1438,37 @@ function EmitidosTab({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Hidden certificate render for PDF generation */}
+      {downloadingCert && (
+        <div
+          ref={hiddenPreviewRef}
+          className="fixed opacity-0 pointer-events-none"
+          style={{ left: "-9999px", top: 0, width: "841.89pt", height: "595.28pt" }}
+        >
+          <CertificatePreview
+            backgroundUrl={eventConfig.backgroundUrl || undefined}
+            fields={eventConfig.fields}
+            textConfig={eventConfig.textConfig}
+            signers={eventConfig.signers}
+            workloadHours={eventConfig.workloadHours}
+            sampleData={{
+              eventName: event?.title || "Evento",
+              participantName: downloadingCert.attendee_name,
+              participantCPF: "",
+              eventDate: event?.start_date
+                ? format(new Date(event.start_date), "dd/MM/yyyy")
+                : "",
+              eventLocation: event?.venue_name || "",
+              certificateCode: downloadingCert.certificate_code,
+            }}
+            textColor={eventConfig.textColor}
+            textPositions={eventConfig.textPositions}
+            fontSizes={eventConfig.fontSizes}
+            mode="production"
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -1911,11 +1667,11 @@ export default function ProducerEventCertificates() {
       if (missingColumnsCache.has("certificate_config")) {
         const { data: legacyData, error: legacyError } = await supabase
           .from("events")
-          .select("id, title, has_certificates, start_date, venue_name, producer_id, certificate_template")
+          .select("id, title, start_date, venue_name, producer_id")
           .eq("id", id!)
           .single();
         if (legacyError) throw legacyError;
-        return legacyData;
+        return { ...legacyData, has_certificates: true as any };
       }
 
       const { data, error } = await supabase
@@ -1927,17 +1683,21 @@ export default function ProducerEventCertificates() {
       if (error && isMissingColumnError(error, "certificate_config")) {
         const { data: legacyData, error: legacyError } = await supabase
           .from("events")
-          .select("id, title, has_certificates, start_date, venue_name, producer_id, certificate_template")
+          .select("id, title, start_date, venue_name, producer_id")
           .eq("id", id!)
           .single();
         if (legacyError) throw legacyError;
-        return legacyData;
+        return { ...legacyData, has_certificates: true as any };
       }
 
       if (error) throw error;
       return data;
     },
     enabled: !!id,
+    retry: (failureCount, error) => {
+      if (isSchemaMissingError(error)) return false;
+      return failureCount < 2;
+    },
   });
 
   const { config, updateConfig, isLoading: isLoadingConfig } = useCertificateConfig(id);
@@ -1967,13 +1727,23 @@ export default function ProducerEventCertificates() {
     onSuccess: () => {
       // Refetch to ensure consistency
       queryClient.refetchQueries({ queryKey: ["event-certificates-meta", id], exact: true });
+      toast({ title: "Certificados ativados", description: "Os certificados de participação foram habilitados para este evento." });
     },
     onError: (err, variables, context) => {
       // Rollback on error
       if (context?.previousEvent) {
         queryClient.setQueryData(["event-certificates-meta", id], context.previousEvent);
       }
-      // Error shown in UI state
+      const msg = (err as Error).message || "";
+      if (isSchemaMissingError(err)) {
+        toast({
+          title: "Sistema de certificados não configurado",
+          description: "O banco de dados ainda não possui as colunas necessárias (has_certificates, certificate_config, etc.). Execute as migrações do Supabase.",
+          variant: "destructive",
+        });
+      } else {
+        toast({ title: "Erro ao ativar certificados", description: msg, variant: "destructive" });
+      }
     },
   });
 
@@ -1990,8 +1760,12 @@ export default function ProducerEventCertificates() {
       queryClient.invalidateQueries({ queryKey: ["certificate-stats"] });
       queryClient.invalidateQueries({ queryKey: ["issued-certificates"] });
     },
-    onError: () => {
-      // Error shown in UI
+    onError: (err) => {
+      toast({
+        title: "Erro ao gerar certificados",
+        description: (err as Error).message || "Não foi possível gerar os certificados pendentes.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -2016,8 +1790,12 @@ export default function ProducerEventCertificates() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["issued-certificates"] });
     },
-    onError: () => {
-      // Error shown in UI
+    onError: (err) => {
+      toast({
+        title: "Erro ao reemitir",
+        description: (err as Error).message || "Não foi possível reemitir todos os certificados.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -2194,7 +1972,7 @@ export default function ProducerEventCertificates() {
         </TabsContent>
 
         <TabsContent value="emitidos" className="space-y-6">
-          <EmitidosTab eventId={id!} stats={stats} />
+          <EmitidosTab eventId={id!} stats={stats} eventConfig={config} event={event} />
         </TabsContent>
 
         <TabsContent value="estatisticas" className="space-y-6">

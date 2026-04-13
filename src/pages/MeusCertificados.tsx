@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { useAuth } from "@/contexts/AuthContext";
 import { getMyCertificates } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,16 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { generateCertificatePDF } from "@/lib/certificate-pdf-client";
+import {
+  CertificatePreview,
+  type CertificateSampleData,
+  type CertificateFields,
+  type CertificateTextConfig,
+  type CertificateSigner,
+  type CertificateTextPositions,
+  type CertificateFontSizes,
+} from "@/components/certificates/CertificatePreview";
 
 interface Certificate {
   id: string;
@@ -27,65 +37,160 @@ interface Certificate {
   created_at: string;
   download_url?: string;
   events?: {
+    id: string;
     title: string;
     start_date: string;
     venue_name?: string;
+    certificate_config?: Record<string, any>;
   };
 }
+
+const DEFAULT_FIELDS: CertificateFields = {
+  showEventName: true,
+  showParticipantName: true,
+  showParticipantLastName: true,
+  showCPF: false,
+  showEventDate: true,
+  showEventLocation: true,
+  showWorkload: false,
+  showSigners: true,
+};
+
+const DEFAULT_TEXT_CONFIG: CertificateTextConfig = {
+  title: "CERTIFICADO DE PARTICIPAÇÃO",
+  introText: "Certificamos que",
+  participationText: "participou do evento",
+  conclusionText: "Comprove sua participação através do código de verificação.",
+};
+
+const DEFAULT_POSITIONS: CertificateTextPositions = {
+  titleTop: 8,
+  nameTop: 28,
+  metadataTop: 55,
+};
+
+const DEFAULT_FONT_SIZES: CertificateFontSizes = {
+  title: "xl",
+  name: "4xl",
+  event: "2xl",
+};
 
 function CertificateCard({ cert }: { cert: Certificate }) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [downloadData, setDownloadData] = useState<{
+    sampleData: CertificateSampleData;
+    config: {
+      backgroundUrl?: string;
+      fields: CertificateFields;
+      textConfig: CertificateTextConfig;
+      signers: CertificateSigner[];
+      workloadHours?: number;
+      textColor: string;
+      textPositions: CertificateTextPositions;
+      fontSizes: CertificateFontSizes;
+    };
+  } | null>(null);
+  const hiddenPreviewRef = useRef<HTMLDivElement>(null);
+
+  // Trigger PDF generation when downloadData is set
+  useEffect(() => {
+    if (!downloadData || !hiddenPreviewRef.current) return;
+
+    const run = async () => {
+      try {
+        const previewEl = hiddenPreviewRef.current!.querySelector("[data-testid='certificate-preview']") as HTMLElement;
+        if (previewEl) {
+          await generateCertificatePDF(previewEl, `certificado-${cert.certificate_code}.pdf`);
+          toast({
+            title: "Certificado baixado!",
+            description: "O PDF foi salvo em seus downloads.",
+          });
+        }
+      } catch (err) {
+        console.error("PDF generation error:", err);
+        toast({
+          title: "Erro ao baixar",
+          description: "Não foi possível gerar o PDF. Tente novamente.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsDownloading(false);
+        setDownloadData(null);
+      }
+    };
+
+    // Small delay to ensure DOM render
+    const timer = setTimeout(run, 100);
+    return () => clearTimeout(timer);
+  }, [downloadData, cert.certificate_code]);
 
   const handleDownload = async () => {
     setIsDownloading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-certificate-pdf`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session?.access_token}`,
-          },
-          body: JSON.stringify({ certificateId: cert.id }),
-        }
-      );
+      const eventConfig = cert.events?.certificate_config || {};
+      const backgroundUrl = eventConfig.backgroundUrl || null;
+      const fields = { ...DEFAULT_FIELDS, ...(eventConfig.fields || {}) };
+      const textConfig = { ...DEFAULT_TEXT_CONFIG, ...(eventConfig.textConfig || {}) };
+      const signers = Array.isArray(eventConfig.signers) ? eventConfig.signers : [];
+      const workloadHours = eventConfig.workloadHours || 0;
+      const textColor = eventConfig.textColor || "#1f2937";
+      const textPositions = { ...DEFAULT_POSITIONS, ...(eventConfig.textPositions || {}) };
+      const fontSizes = { ...DEFAULT_FONT_SIZES, ...(eventConfig.fontSizes || {}) };
 
-      if (!response.ok) {
-        throw new Error("Erro ao gerar PDF");
+      const eventDate = cert.events?.start_date
+        ? new Date(cert.events.start_date).toLocaleDateString("pt-BR", {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+          })
+        : "";
+
+      const sampleData: CertificateSampleData = {
+        eventName: cert.events?.title || "Evento",
+        participantName: cert.attendee_name || "Participante",
+        participantCPF: "",
+        eventDate,
+        eventLocation: cert.events?.venue_name || "",
+        certificateCode: cert.certificate_code,
+      };
+
+      if (!backgroundUrl) {
+        toast({
+          title: "Certificado indisponível",
+          description: "O organizador ainda não configurou a imagem de fundo do certificado.",
+          variant: "destructive",
+        });
+        setIsDownloading(false);
+        return;
       }
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `certificado-${cert.certificate_code}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-
-      toast({
-        title: "Certificado baixado!",
-        description: "O PDF foi salvo em seus downloads.",
+      setDownloadData({
+        sampleData,
+        config: {
+          backgroundUrl,
+          fields,
+          textConfig,
+          signers,
+          workloadHours,
+          textColor,
+          textPositions,
+          fontSizes,
+        },
       });
     } catch (error) {
+      setIsDownloading(false);
       toast({
         title: "Erro ao baixar",
         description: "Não foi possível gerar o PDF. Tente novamente.",
         variant: "destructive",
       });
-    } finally {
-      setIsDownloading(false);
     }
   };
 
   const handleShare = async () => {
     const shareUrl = `${window.location.origin}/verificar-certificado?code=${cert.certificate_code}`;
-    
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -105,7 +210,7 @@ function CertificateCard({ cert }: { cert: Certificate }) {
     }
   };
 
-  const eventDate = cert.events?.start_date 
+  const eventDate = cert.events?.start_date
     ? new Date(cert.events.start_date).toLocaleDateString("pt-BR", {
         day: "2-digit",
         month: "long",
@@ -128,8 +233,8 @@ function CertificateCard({ cert }: { cert: Certificate }) {
               </svg>
             </div>
             <Award className="h-12 w-12 text-white/90 relative z-10" />
-            <Badge 
-              variant="secondary" 
+            <Badge
+              variant="secondary"
               className="absolute top-3 right-3 bg-white/20 text-white border-0 backdrop-blur-sm"
             >
               <FileCheck className="h-3 w-3 mr-1" />
@@ -143,9 +248,7 @@ function CertificateCard({ cert }: { cert: Certificate }) {
               <h3 className="font-display font-semibold text-lg text-foreground line-clamp-2 leading-tight">
                 {cert.events?.title || "Evento"}
               </h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                {cert.attendee_name}
-              </p>
+              <p className="text-sm text-muted-foreground mt-1">{cert.attendee_name}</p>
             </div>
 
             <div className="space-y-2 text-xs text-muted-foreground">
@@ -209,6 +312,28 @@ function CertificateCard({ cert }: { cert: Certificate }) {
         </CardContent>
       </Card>
 
+      {/* Hidden certificate render for PDF generation */}
+      {downloadData && (
+        <div
+          ref={hiddenPreviewRef}
+          className="fixed"
+          style={{ left: "-9999px", top: 0, width: "841.89pt", height: "595.28pt" }}
+        >
+          <CertificatePreview
+            backgroundUrl={downloadData.config.backgroundUrl}
+            fields={downloadData.config.fields}
+            textConfig={downloadData.config.textConfig}
+            signers={downloadData.config.signers}
+            workloadHours={downloadData.config.workloadHours}
+            sampleData={downloadData.sampleData}
+            textColor={downloadData.config.textColor}
+            textPositions={downloadData.config.textPositions}
+            fontSizes={downloadData.config.fontSizes}
+            mode="production"
+          />
+        </div>
+      )}
+
       {/* Certificate Details Dialog */}
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
         <DialogContent className="sm:max-w-md">
@@ -217,11 +342,9 @@ function CertificateCard({ cert }: { cert: Certificate }) {
               <Award className="h-5 w-5 text-primary" />
               Detalhes do Certificado
             </DialogTitle>
-            <DialogDescription>
-              Informações de verificação do certificado
-            </DialogDescription>
+            <DialogDescription>Informações de verificação do certificado</DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 pt-2">
             <div className="p-4 bg-muted/50 rounded-lg space-y-3">
               <div>
@@ -253,8 +376,8 @@ function CertificateCard({ cert }: { cert: Certificate }) {
             </div>
 
             <div className="flex gap-2">
-              <Button 
-                className="flex-1" 
+              <Button
+                className="flex-1"
                 onClick={() => {
                   setShowDetails(false);
                   handleDownload();
@@ -267,7 +390,7 @@ function CertificateCard({ cert }: { cert: Certificate }) {
 
             <p className="text-xs text-muted-foreground text-center">
               Verifique a autenticidade em:{" "}
-              <a 
+              <a
                 href={`/verificar-certificado?code=${cert.certificate_code}`}
                 className="text-primary hover:underline"
                 target="_blank"
@@ -295,7 +418,7 @@ export default function MeusCertificados() {
   return (
     <>
       <SEOHead title="Meus Certificados" description="Seus certificados de eventos na TicketHall." />
-      
+
       {/* Header Section */}
       <div className="bg-gradient-to-b from-primary/5 to-background border-b border-primary/10">
         <div className="container pt-8 pb-12">
@@ -347,7 +470,7 @@ export default function MeusCertificados() {
                 {certificates.length === 1 ? "" : "is"}
               </p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {certificates.map((cert: Certificate) => (
                 <CertificateCard key={cert.id} cert={cert} />

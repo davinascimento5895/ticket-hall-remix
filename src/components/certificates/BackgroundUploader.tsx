@@ -1,86 +1,48 @@
 /**
  * BackgroundUploader Component
- * 
- * Upload button with file picker, A4 landscape validation,
- * crop interface, preview, and image quality warnings.
+ *
+ * Upload button with file picker, always shows A4 landscape crop,
+ * preview, and image quality warnings.
  */
 
 import { useState, useCallback } from "react";
-import {
-  Upload,
-  ImageIcon,
-  Trash2,
-  AlertTriangle,
-  Check,
-  X,
-  Crop,
-} from "lucide-react";
+import { Upload, ImageIcon, Trash2, AlertTriangle, Check } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { CertificateImageCrop } from "./CertificateImageCrop";
 
 export interface BackgroundUploaderProps {
   backgroundUrl: string | null;
   onUpload: (url: string) => void;
   onRemove: () => void;
-  eventId: string;
 }
 
-// A4 Landscape aspect ratio
-const A4_ASPECT_RATIO = 297 / 210;
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_TYPES = ["image/jpeg", "image/png"];
 
 interface ImageValidationResult {
   valid: boolean;
   error?: string;
-  aspectRatio?: number;
 }
 
-function validateImage(file: File): Promise<ImageValidationResult> {
-  return new Promise((resolve) => {
-    if (!ACCEPTED_TYPES.includes(file.type)) {
-      resolve({
-        valid: false,
-        error: "Formato invalido. Use JPG ou PNG.",
-      });
-      return;
-    }
-
-    if (file.size > MAX_FILE_SIZE) {
-      resolve({
-        valid: false,
-        error: "Arquivo muito grande. Maximo 5MB.",
-      });
-      return;
-    }
-
-    const img = new Image();
-    img.onload = () => {
-      const aspectRatio = img.width / img.height;
-      URL.revokeObjectURL(img.src);
-
-      resolve({
-        valid: true,
-        aspectRatio,
-      });
+function validateImage(file: File): ImageValidationResult {
+  if (!ACCEPTED_TYPES.includes(file.type)) {
+    return {
+      valid: false,
+      error: "Formato invalido. Use JPG ou PNG.",
     };
-    img.onerror = () => {
-      resolve({
-        valid: false,
-        error: "Erro ao carregar imagem.",
-      });
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    return {
+      valid: false,
+      error: "Arquivo muito grande. Maximo 5MB.",
     };
-    img.src = URL.createObjectURL(file);
-  });
+  }
+
+  return { valid: true };
 }
 
 export function BackgroundUploader({
@@ -93,14 +55,12 @@ export function BackgroundUploader({
   const [error, setError] = useState<string | null>(null);
   const [showCropDialog, setShowCropDialog] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [pendingFile, setPendingFile] = useState<File | null>(null);
 
   const handleFileSelect = useCallback(
     async (file: File) => {
       setError(null);
 
-      const validation = await validateImage(file);
-
+      const validation = validateImage(file);
       if (!validation.valid) {
         setError(validation.error || "Erro de validacao");
         return;
@@ -108,44 +68,57 @@ export function BackgroundUploader({
 
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
-      setPendingFile(file);
-
-      if (
-        validation.aspectRatio &&
-        Math.abs(validation.aspectRatio - A4_ASPECT_RATIO) > 0.05
-      ) {
-        setShowCropDialog(true);
-      } else {
-        handleUpload(url, file);
-      }
+      setShowCropDialog(true);
     },
     []
   );
 
-  const handleUpload = useCallback(
-    async (url: string, _file?: File) => {
+  const handleCropDone = useCallback(
+    async (croppedFile: File) => {
       setIsUploading(true);
-
       try {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        onUpload(url);
+        const fileName = `certificate-bg-${Date.now()}-${croppedFile.name}`;
+        const { supabase } = await import("@/integrations/supabase/client");
+        const { data, error: uploadError } = await supabase.storage
+          .from("event-assets")
+          .upload(fileName, croppedFile, { upsert: true, contentType: croppedFile.type });
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase.storage.from("event-assets").getPublicUrl(fileName);
+        onUpload(publicUrlData.publicUrl);
         setShowCropDialog(false);
+        if (previewUrl) {
+          URL.revokeObjectURL(previewUrl);
+        }
         setPreviewUrl(null);
-        setPendingFile(null);
-      } catch {
-        setError("Erro ao fazer upload. Tente novamente.");
+      } catch (err: any) {
+        console.error("Upload error:", err);
+        const message = err?.message || err?.error_description || "Erro desconhecido";
+        if (message.toLowerCase().includes("bucket") || message.toLowerCase().includes("not found") || message.toLowerCase().includes("não encontrado")) {
+          setError("Bucket 'event-assets' não encontrado no Supabase. Crie o bucket para fazer upload de imagens.");
+        } else {
+          setError(`Erro ao fazer upload: ${message}`);
+        }
       } finally {
         setIsUploading(false);
       }
     },
-    [onUpload]
+    [onUpload, previewUrl]
   );
+
+  const handleCropCancel = useCallback(() => {
+    setShowCropDialog(false);
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewUrl(null);
+  }, [previewUrl]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
       setIsDragging(false);
-
       const file = e.dataTransfer.files[0];
       if (file) {
         handleFileSelect(file);
@@ -174,21 +147,6 @@ export function BackgroundUploader({
     [handleFileSelect]
   );
 
-  const handleCancelCrop = () => {
-    setShowCropDialog(false);
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
-    setPreviewUrl(null);
-    setPendingFile(null);
-  };
-
-  const handleConfirmCrop = () => {
-    if (previewUrl && pendingFile) {
-      handleUpload(previewUrl, pendingFile);
-    }
-  };
-
   return (
     <div className="space-y-4">
       {/* Error Alert */}
@@ -201,7 +159,7 @@ export function BackgroundUploader({
               onClick={() => setError(null)}
               className="ml-2 text-destructive-foreground/80 hover:text-destructive-foreground"
             >
-              <X className="w-3 h-3" />
+              ×
             </button>
           </AlertDescription>
         </Alert>
@@ -211,7 +169,7 @@ export function BackgroundUploader({
       {backgroundUrl ? (
         <Card className="p-0 overflow-hidden">
           <div className="relative">
-            <div className="aspect-[1.414/1] bg-muted">
+            <div className="aspect-[297/210] bg-muted">
               <img
                 src={backgroundUrl}
                 alt="Background do certificado"
@@ -234,11 +192,7 @@ export function BackgroundUploader({
                   </span>
                 </Button>
               </label>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={onRemove}
-              >
+              <Button variant="destructive" size="sm" onClick={onRemove}>
                 <Trash2 className="w-4 h-4 mr-1" />
                 Remover
               </Button>
@@ -248,7 +202,7 @@ export function BackgroundUploader({
           <div className="p-3 bg-muted/30 flex items-center justify-between text-xs">
             <div className="flex items-center gap-2 text-muted-foreground">
               <ImageIcon className="w-3.5 h-3.5" />
-              <span>Background personalizado</span>
+              <span>Imagem de fundo do certificado</span>
             </div>
             <div className="flex items-center gap-1 text-green-600">
               <Check className="w-3.5 h-3.5" />
@@ -294,9 +248,7 @@ export function BackgroundUploader({
             <p className="mb-1 text-sm text-foreground">
               <span className="font-medium">Clique para upload</span> ou arraste
             </p>
-            <p className="text-xs text-muted-foreground">
-              JPG, PNG ate 5MB
-            </p>
+            <p className="text-xs text-muted-foreground">JPG, PNG ate 5MB</p>
           </div>
         </label>
       )}
@@ -311,63 +263,17 @@ export function BackgroundUploader({
       </Alert>
 
       {/* Crop Dialog */}
-      <Dialog open={showCropDialog} onOpenChange={setShowCropDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Crop className="w-5 h-5" />
-              Ajustar Imagem
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <Alert className="py-2">
-              <AlertDescription className="text-xs">
-                A imagem selecionada nao possui proporcao A4 (297:210).
-                Voce pode prosseguir ou selecionar outra imagem.
-              </AlertDescription>
-            </Alert>
-
-            {previewUrl && (
-              <div className="relative aspect-[1.414/1] bg-muted rounded-lg overflow-hidden">
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="w-full h-full object-contain"
-                />
-                <div className="absolute inset-4 border-2 border-dashed border-primary/50 pointer-events-none rounded">
-                  <span className="absolute -top-5 left-0 text-[10px] text-muted-foreground bg-background px-1">
-                    Proporcao A4
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={handleCancelCrop}
-              disabled={isUploading}
-            >
-              Cancelar
-            </Button>
-            <Button onClick={handleConfirmCrop} disabled={isUploading}>
-              {isUploading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-                  Enviando...
-                </>
-              ) : (
-                <>
-                  <Check className="w-4 h-4 mr-2" />
-                  Usar Imagem
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {previewUrl && (
+        <CertificateImageCrop
+          open={showCropDialog}
+          onOpenChange={(open) => {
+            if (!open) handleCropCancel();
+            else setShowCropDialog(open);
+          }}
+          imageSrc={previewUrl}
+          onCropDone={handleCropDone}
+        />
+      )}
     </div>
   );
 }

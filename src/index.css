@@ -96,9 +96,8 @@
     --ring: 7 100% 59%;
   }
 
-  * {
-    @apply border-border;
-  }
+  /* Removed global border reset - applying borders to every element
+     caused unwanted black outlines across the app. */
 
   html {
     scroll-behavior: smooth;

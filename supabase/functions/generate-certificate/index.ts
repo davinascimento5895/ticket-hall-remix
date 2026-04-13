@@ -139,7 +139,14 @@ async function generateCertificate(supabase: any, ticketId: string) {
   }
 
   const attendeeName = ticket.attendee_name || ticket.profiles?.full_name || "Participante";
-  const certCode = `CERT-${ticket.event_id.slice(0, 4).toUpperCase()}-${ticketId.slice(0, 8).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+  // Generate code matching the SQL function format: TICK-{8hex}-{YYMMDD}{3chars}
+  const now = new Date();
+  const yy = now.getFullYear().toString().slice(2);
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  const rand3 = Math.random().toString(36).substring(2, 5).toUpperCase();
+  const eventPrefix = ticket.event_id.replace(/-/g, "").slice(0, 8).toUpperCase();
+  const certCode = `TICK-${eventPrefix}-${yy}${mm}${dd}${rand3}`;
 
   const { data: cert, error: insertErr } = await supabase
     .from("certificates")

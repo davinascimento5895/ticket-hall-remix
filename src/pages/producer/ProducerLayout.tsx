@@ -60,10 +60,10 @@ function ProducerSidebar() {
     : "P";
 
   return (
-    <Sidebar variant="floating" collapsible="icon">
+    <Sidebar collapsible="icon">
       <SidebarContent className="flex h-full flex-col gap-3 bg-sidebar">
         {/* Brand */}
-        <div className="p-4 border-b border-sidebar-border/70">
+        <div className="p-4">
           <Link to="/producer/dashboard" className="flex items-center gap-2">
             {collapsed ? (
               <TicketHallLogo variant="symbol" size="sm" />
@@ -100,10 +100,10 @@ function ProducerSidebar() {
         </SidebarGroup>
 
         {/* Footer */}
-        <div className="mt-auto border-t border-sidebar-border/70">
+        <div className="mt-auto">
           <div className="p-3 space-y-2.5">
             {!collapsed && (
-              <div className="rounded-xl border border-sidebar-border/70 bg-sidebar-accent/30 p-2.5">
+              <div className="rounded-xl bg-sidebar-accent/30 p-2.5">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <div className="flex items-center gap-3 cursor-pointer">
@@ -169,7 +169,7 @@ export default function ProducerLayout() {
         <ProducerSidebar />
         <div className="flex-1 flex flex-col min-w-0 min-h-0">
           {/* Top bar */}
-          <header className="h-16 flex items-center justify-between border-b border-border px-4 md:px-6 shrink-0 bg-background/75 backdrop-blur-lg">
+          <header className="h-16 flex items-center justify-between px-4 md:px-6 shrink-0 bg-background/75 backdrop-blur-lg">
             <div className="flex min-w-0 items-center gap-3">
               <SidebarTrigger className="h-9 w-9 rounded-lg border border-border bg-card hover:bg-muted" />
               <Separator orientation="vertical" className="h-6" />
