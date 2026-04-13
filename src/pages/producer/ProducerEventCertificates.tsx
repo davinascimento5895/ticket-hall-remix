@@ -56,6 +56,7 @@ import { BackgroundUploader } from "@/components/certificates/BackgroundUploader
 import { cn } from "@/lib/utils";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Dialog,
   DialogContent,
@@ -1855,6 +1856,7 @@ export default function ProducerEventCertificates() {
   const [activeTab, setActiveTab] = useState<"configurar" | "emitidos" | "estatisticas">("configurar");
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const { data: event } = useQuery({
     queryKey: ["event-certificates-meta", id],
@@ -1892,20 +1894,17 @@ export default function ProducerEventCertificates() {
   const { config, updateConfig, isLoading: isLoadingConfig, schemaError, clearSchemaError } = useCertificateConfig(id);
   const { data: stats, isLoading: isLoadingStats } = useCertificateStats(id);
 
-  // Enable certificates mutation
+  // Enable certificates mutation (via Edge Function to bypass RLS issues)
   const enableCertificatesMutation = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase
-        .from("events")
-        .update({ has_certificates: true })
-        .eq("id", id!)
-        .select("has_certificates")
-        .single();
+      const { data, error } = await supabase.functions.invoke("toggle-event-certificates", {
+        body: { eventId: id, enabled: true },
+      });
 
       if (error) throw error;
-      if (!data || data.has_certificates !== true) {
+      if (!data?.success || data?.event?.has_certificates !== true) {
         throw new Error(
-          "Nenhuma linha foi atualizada. Possíveis causas: permissão negada (RLS), o evento não existe ou o ID está incorreto."
+          data?.error || "Nenhuma linha foi atualizada. Possíveis causas: permissão negada, o evento não existe ou o ID está incorreto."
         );
       }
     },
@@ -1999,6 +1998,8 @@ export default function ProducerEventCertificates() {
     },
   });
 
+  const producerMismatch = !!event && !!user && event.producer_id !== user.id;
+
   if (!event?.has_certificates) {
     return (
       <div className="space-y-6">
@@ -2009,6 +2010,22 @@ export default function ProducerEventCertificates() {
             emitir certificados de participação.
           </AlertDescription>
         </Alert>
+
+        {producerMismatch && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="flex flex-col gap-1">
+              <span className="font-medium">Aviso de propriedade do evento</span>
+              <span>
+                Você não é o produtor registrado deste evento. Se a ativação falhar, entre em contato
+                com o administrador.
+              </span>
+              <span className="text-[10px] opacity-80 font-mono mt-1">
+                Seu ID: {user.id} | Producer ID do evento: {event.producer_id || "null"}
+              </span>
+            </AlertDescription>
+          </Alert>
+        )}
 
         <Card className="border-dashed">
           <CardContent className="p-8 text-center">

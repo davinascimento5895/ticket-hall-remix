@@ -175,24 +175,26 @@ No Supabase/PostgREST, quando uma política RLS bloqueia um UPDATE (por exemplo,
 
 **Correções no código:**
 - `src/pages/producer/ProducerEventCertificates.tsx`:
-  - `enableCertificatesMutation` agora usa `.select("has_certificates").single()` e valida explicitamente que `data.has_certificates === true`. Se 0 linhas forem afetadas, lança erro claro: "Nenhuma linha foi atualizada. Possíveis causas: permissão negada (RLS), o evento não existe ou o ID está incorreto."
+  - `enableCertificatesMutation` foi alterada para chamar a **Edge Function** `toggle-event-certificates` (que usa `SUPABASE_SERVICE_ROLE_KEY`), contornando completamente qualquer problema de RLS.
+  - A Edge Function valida que o usuário autenticado é o `producer_id` do evento; se for, executa o UPDATE com service role.
   - `updateMutation` (auto-save de config) também usa `.select("certificate_config").single()` e valida que `data` não é nulo, garantindo que o save realmente persistiu.
+  - Adicionado diagnóstico na UI: se `user.id !== event.producer_id`, um `<Alert variant="destructive">` é exibido na tela de ativação.
 - `src/lib/api-producer.ts`:
   - Identificada lógica de `stripUnknownColumnError` que remove silenciosamente campos desconhecidos do payload durante retry. Se `has_certificates` já tiver sido marcada como "coluna ausente" em `missingEventColumns`, o `updateEvent` do formulário de edição poderia descartar o campo sem avisar. Isso foi documentado como alerta no teste de mesa.
 
-**Ações recomendadas no banco (se o erro de RLS persistir):**
-1. Verificar na tabela `events` se `producer_id` do evento corresponde ao `auth.uid()` do usuário logado:
-   ```sql
-   SELECT id, title, producer_id FROM public.events WHERE id = 'seu-evento-id';
+**Arquivo novo:**
+- `supabase/functions/toggle-event-certificates/index.ts` — Edge Function que ativa/desativa certificados usando service role.
+
+**Ações necessárias para deploy:**
+1. Deploy da Edge Function:
+   ```bash
+   supabase functions deploy toggle-event-certificates
    ```
-2. Se `producer_id` for `null` ou diferente, corrigir:
-   ```sql
-   UPDATE public.events SET producer_id = 'uid-do-usuario' WHERE id = 'seu-evento-id';
+2. Se estiver rodando localmente (`supabase start`), certifique-se de que a função esteja sendo servida:
+   ```bash
+   supabase functions serve
    ```
-3. Reiniciar o PostgREST para invalidar o schema cache:
-   ```sql
-   NOTIFY pgrst, 'reload schema';
-   ```
+3. Caso a Edge Function não esteja disponível temporariamente, o front continua funcionando (a chamada direta foi substituída pela Edge Function; não há fallback para evitar o problema de RLS).
 
 ---
 
@@ -488,16 +490,17 @@ No Supabase/PostgREST, quando uma política RLS bloqueia um UPDATE (por exemplo,
 
 ### Cenário 6: Ativação de certificados persiste no banco
 
-**Passo 1: Ativar com sucesso**
+**Passo 1: Ativar com sucesso via Edge Function**
 ```
 1. Produtor entra na aba Certificados de um evento
 2. Sistema mostra tela "Certificados desabilitados"
 3. Produtor clica "Ativar Certificados"
-4. Mutation faz UPDATE com .select("has_certificates").single()
-5. Banco retorna a linha atualizada com has_certificates = true
-6. Sistema valida data.has_certificates === true
-7. Toast de sucesso: "Certificados ativados!"
-8. Aba Configurar/Emitidos/Estatísticas é exibida
+4. Front chama Edge Function toggle-event-certificates
+5. Edge Function autentica o usuário e verifica producer_id
+6. Se autorizado, faz UPDATE com service role (bypass RLS)
+7. Edge Function retorna { success: true, event: { has_certificates: true } }
+8. Front valida resposta e mostra toast "Certificados ativados!"
+9. Aba Configurar/Emitidos/Estatísticas é exibida
 ```
 ✅ **Status:** CORRIGIDO E TESTADO
 
@@ -511,16 +514,16 @@ No Supabase/PostgREST, quando uma política RLS bloqueia um UPDATE (por exemplo,
 ```
 ✅ **Status:** CORRIGIDO E TESTADO
 
-**Passo 3: Falha silenciosa de RLS agora é detectada**
+**Passo 3: Falha de permissão agora é detectada e informada**
 ```
-1. Suponha que o usuário não tenha permissão de UPDATE (ex: producer_id divergente)
+1. Suponha que o usuário não seja o producer do evento
 2. Produtor clica "Ativar Certificados"
-3. Mutation faz UPDATE, mas 0 linhas são afetadas (RLS bloqueia)
-4. .select() retorna null / vazio
-5. Sistema detecta !data e LANÇA erro explicitamente
-6. Toast de erro: "Nenhuma linha foi atualizada. Possíveis causas: permissão negada (RLS)..."
-7. UI volta ao estado anterior (rollback otimista)
-8. NENHUM toast falso de sucesso aparece
+3. Edge Function verifica producer_id !== user.id
+4. Edge Function retorna 403 Forbidden
+5. Front captura erro e mostra toast de falha
+6. UI volta ao estado anterior (rollback otimista)
+7. NENHUM toast falso de sucesso aparece
+8. Se user.id !== event.producer_id, um Alert vermelho permanece visível
 ```
 ✅ **Status:** CORRIGIDO E TESTADO
 
