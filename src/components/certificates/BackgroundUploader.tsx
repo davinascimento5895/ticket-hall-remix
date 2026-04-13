@@ -80,12 +80,12 @@ export function BackgroundUploader({
         const fileName = `certificate-bg-${Date.now()}-${croppedFile.name}`;
         const { supabase } = await import("@/integrations/supabase/client");
         const { data, error: uploadError } = await supabase.storage
-          .from("event-assets")
+          .from("event-images")
           .upload(fileName, croppedFile, { upsert: true, contentType: croppedFile.type });
 
         if (uploadError) throw uploadError;
 
-        const { data: publicUrlData } = supabase.storage.from("event-assets").getPublicUrl(fileName);
+        const { data: publicUrlData } = supabase.storage.from("event-images").getPublicUrl(fileName);
         onUpload(publicUrlData.publicUrl);
         setShowCropDialog(false);
         if (previewUrl) {
@@ -96,7 +96,7 @@ export function BackgroundUploader({
         console.error("Upload error:", err);
         const message = err?.message || err?.error_description || "Erro desconhecido";
         if (message.toLowerCase().includes("bucket") || message.toLowerCase().includes("not found") || message.toLowerCase().includes("não encontrado")) {
-          setError("Bucket 'event-assets' não encontrado no Supabase. Crie o bucket para fazer upload de imagens.");
+          setError("Bucket 'event-images' não encontrado no Supabase. Crie o bucket para fazer upload de imagens.");
         } else {
           setError(`Erro ao fazer upload: ${message}`);
         }
