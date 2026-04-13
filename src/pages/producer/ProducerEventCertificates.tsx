@@ -229,10 +229,6 @@ function useCertificateConfig(eventId: string | undefined) {
     queryFn: async () => {
       if (!eventId) return DEFAULT_CONFIG;
 
-      if (missingColumnsCache.has("certificate_config")) {
-        return configFromLegacy();
-      }
-
       const { data, error } = await supabase
         .from("events")
         .select("certificate_config")
@@ -244,6 +240,9 @@ function useCertificateConfig(eventId: string | undefined) {
       }
 
       if (error) throw error;
+
+      // Se a consulta funcionou, limpa qualquer marcação antiga de coluna ausente.
+      missingColumnsCache.delete("certificate_config");
 
       return data?.certificate_config
         ? { ...DEFAULT_CONFIG, ...(data.certificate_config as Partial<CertificateConfig>) }
@@ -260,10 +259,6 @@ function useCertificateConfig(eventId: string | undefined) {
     mutationFn: async (newConfig: CertificateConfig) => {
       if (!eventId) throw new Error("Event ID required");
 
-      if (missingColumnsCache.has("certificate_config")) {
-        throw new Error("Coluna certificate_config não disponível no banco de dados. Execute as migrações do Supabase.");
-      }
-
       const { error } = await supabase
         .from("events")
         .update({ certificate_config: newConfig })
@@ -274,6 +269,9 @@ function useCertificateConfig(eventId: string | undefined) {
       }
 
       if (error) throw error;
+
+      // Se o update funcionou, limpa qualquer marcação antiga de coluna ausente.
+      missingColumnsCache.delete("certificate_config");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["certificate-config", eventId] });
@@ -1664,16 +1662,6 @@ export default function ProducerEventCertificates() {
   const { data: event } = useQuery({
     queryKey: ["event-certificates-meta", id],
     queryFn: async () => {
-      if (missingColumnsCache.has("certificate_config")) {
-        const { data: legacyData, error: legacyError } = await supabase
-          .from("events")
-          .select("id, title, start_date, venue_name, producer_id")
-          .eq("id", id!)
-          .single();
-        if (legacyError) throw legacyError;
-        return { ...legacyData, has_certificates: true as any };
-      }
-
       const { data, error } = await supabase
         .from("events")
         .select("id, title, has_certificates, start_date, venue_name, certificate_config, producer_id")
@@ -1691,6 +1679,10 @@ export default function ProducerEventCertificates() {
       }
 
       if (error) throw error;
+
+      // Se a consulta funcionou, limpa qualquer marcação antiga de coluna ausente.
+      missingColumnsCache.delete("certificate_config");
+
       return data;
     },
     enabled: !!id,
