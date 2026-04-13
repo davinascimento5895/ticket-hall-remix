@@ -1092,7 +1092,7 @@ export default function ProducerEventForm({ onCancel, returnPath = "/producer/ev
 
               <Separator />
               <p className="text-xs text-muted-foreground">
-                Ao publicar este evento, declaro estar de acordo com os Termos de Uso e Política de Privacidade da plataforma.
+                Ao publicar este evento, declaro estar de acordo com os Termos de Uso do Produtor e com a Política de Privacidade da plataforma.
               </p>
             </CardContent>
           </Card>

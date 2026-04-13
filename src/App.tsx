@@ -45,6 +45,8 @@ const EmbedWidget = lazy(() => import("./pages/EmbedWidget"));
 const Privacidade = lazy(() => import("./pages/Privacidade"));
 const PoliticaPrivacidade = lazy(() => import("./pages/PoliticaPrivacidade"));
 const TermosDeUso = lazy(() => import("./pages/TermosDeUso"));
+const TermosCliente = lazy(() => import("./pages/TermosCliente"));
+const TermosProdutor = lazy(() => import("./pages/TermosProdutor"));
 const FilaVirtual = lazy(() => import("./pages/FilaVirtual"));
 const MeusCertificados = lazy(() => import("./pages/MeusCertificados"));
 const VerificarCertificado = lazy(() => import("./pages/VerificarCertificado"));
@@ -190,6 +192,9 @@ const App = () => {
                 <Route path="/minha-conta/privacidade" element={<ProtectedRoute><Privacidade /></ProtectedRoute>} />
                 <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
                 <Route path="/termos-de-uso" element={<TermosDeUso />} />
+                <Route path="/termos-de-uso/cliente" element={<TermosCliente />} />
+                <Route path="/termos-de-uso/produtor" element={<TermosProdutor />} />
+                <Route path="/termos" element={<Navigate to="/termos-de-uso/cliente" replace />} />
                 <Route path="/meus-certificados" element={<ProtectedRoute><MeusCertificados /></ProtectedRoute>} />
                 <Route path="/verificar-certificado" element={<VerificarCertificado />} />
                 <Route path="/fila/:slug" element={<FilaVirtual />} />

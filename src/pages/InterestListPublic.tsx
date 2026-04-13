@@ -217,7 +217,7 @@ export default function InterestListPublic() {
 
                   <p className="text-xs text-muted-foreground pt-2">
                     Ao entrar na lista, você aceita os{" "}
-                    <Link to="/termos-de-uso" className="font-semibold text-foreground underline underline-offset-2">Termos e Condições da TicketHall</Link>
+                    <Link to="/termos-de-uso/cliente" className="font-semibold text-foreground underline underline-offset-2">Termos e Condições da TicketHall</Link>
                     {" "}e concorda em compartilhar os dados preenchidos com o produtor.
                   </p>
 

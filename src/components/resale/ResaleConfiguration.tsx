@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -120,29 +121,20 @@ export function ResaleConfiguration({ eventId, initialConfig }: ResaleConfigurat
                   <strong>Revenda de Ingressos</strong>
                 </p>
                 <p>
-                  11.5.1. A TicketHall disponibiliza um marketplace interno de revenda de ingressos, 
-                  permitindo que Compradores anunciem ingressos para venda a outros usuários da plataforma. 
-                  A disponibilidade da revenda é determinada exclusivamente pelo Produtor do evento.
+                  A revenda só funciona quando o evento habilita esse recurso. Quando habilitada, a operação acontece apenas pelo fluxo oficial da TicketHall e pode seguir limites de preço, prazo, taxa e elegibilidade definidos para o evento.
                 </p>
                 <p>
-                  11.5.2. <strong>Limites de preço</strong> Quando habilitada pelo Produtor, a revenda está sujeita a 
-                  limites mínimos e máximos definidos pelo Produtor, baseados em percentuais do valor original 
-                  do ingresso.
+                  Ingressos comprados fora da plataforma, em mercado paralelo ou por canal não autorizado ficam por conta e risco do usuário. A TicketHall não garante autenticidade nem validade nessas hipóteses.
                 </p>
                 <p>
-                  11.5.3. <strong>Taxa de revenda</strong> A TicketHall cobra uma taxa de serviço de 10% (dez por cento) 
-                  sobre o valor de revenda definido pelo vendedor.
+                  Quando a revenda oficial é concluída, o ingresso original pode ser invalidado e um novo código pode ser emitido ao comprador final.
                 </p>
                 <p>
-                  11.5.4. <strong>Carteira digital</strong> O valor líquido da revenda é 
-                  creditado na carteira digital do vendedor na TicketHall. O saque deste valor pode ser 
-                  solicitado a qualquer momento, sujeito à verificação manual pela equipe TicketHall em até 
-                  2 (dois) dias úteis.
+                  Veja o texto completo da política de revenda no termo do cliente final.
                 </p>
-                <p>
-                  11.5.5. <strong>Invalidação do QR Code</strong> Ao ser concretizada a venda, o QR Code do ingresso 
-                  original é imediatamente invalidado e um novo QR Code exclusivo é gerado para o comprador.
-                </p>
+                <Button asChild variant="outline" className="w-full">
+                  <Link to="/termos-de-uso/cliente#revenda">Abrir termo do cliente final</Link>
+                </Button>
               </div>
             </DialogContent>
           </Dialog>

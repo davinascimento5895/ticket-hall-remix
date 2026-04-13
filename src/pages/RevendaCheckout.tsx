@@ -321,7 +321,7 @@ export default function RevendaCheckout() {
               />
               <span className="text-xs text-muted-foreground">
                 Li e concordo com os{" "}
-                <a href="/termos-de-uso#revenda" className="text-primary hover:underline">termos de revenda</a>.
+                <a href="/termos-de-uso/cliente#revenda" className="text-primary hover:underline">termos de revenda</a>.
                 Entendo que a compra é definitiva e que a plataforma não garante reembolso em revendas.
               </span>
             </label>

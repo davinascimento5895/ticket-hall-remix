@@ -337,7 +337,7 @@ export function CheckoutStepPayment({
       </div>
 
       <div className="text-xs text-muted-foreground">
-        Ao prosseguir com a compra, você concorda com os <Link to="/termos-de-uso" className="text-primary hover:underline">Termos de Uso</Link> e a <Link to="/politica-de-privacidade" className="text-primary hover:underline">Política de Privacidade</Link> da Ticket Hall.
+        Ao prosseguir com a compra, você concorda com os <Link to="/termos-de-uso/cliente" className="text-primary hover:underline">Termos de Uso do Cliente Final</Link> e a <Link to="/politica-de-privacidade" className="text-primary hover:underline">Política de Privacidade</Link> da Ticket Hall.
       </div>
 
       <div className="flex gap-3">

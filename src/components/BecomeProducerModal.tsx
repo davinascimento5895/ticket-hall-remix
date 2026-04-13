@@ -346,7 +346,7 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
                   </Button>
                   <p className={`${isUltraCompact ? "text-[10px]" : "text-[11px]"} text-muted-foreground text-center`}>
                     Ao criar sua conta, você concorda com os{" "}
-                    <Link to="/termos-de-uso" className="text-primary hover:underline">Termos de Uso</Link>
+                    <Link to="/termos-de-uso/produtor" className="text-primary hover:underline">Termos de Uso do Produtor</Link>
                     {" "}e{" "}
                     <Link to="/politica-de-privacidade" className="text-primary hover:underline">Política de Privacidade</Link>.
                   </p>

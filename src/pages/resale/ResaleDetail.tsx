@@ -380,7 +380,7 @@ export default function ResaleDetail() {
 
                   <p className="text-xs text-muted-foreground text-center">
                     Ao comprar, você concorda com os{" "}
-                    <a href="/termos" className="underline">{t('terms.termsOfUse')}</a>
+                    <a href="/termos-de-uso/cliente#revenda" className="underline">{t('terms.termsOfUse')}</a>
                     {" "}de revenda.
                   </p>
                 </CardContent>

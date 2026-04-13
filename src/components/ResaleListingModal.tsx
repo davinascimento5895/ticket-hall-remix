@@ -145,7 +145,7 @@ export function ResaleListingModal({ open, onOpenChange, ticket }: ResaleListing
           {/* Terms notice */}
           <p className="text-xs text-muted-foreground">
             Ao anunciar, você concorda com os{" "}
-            <a href="/termos-de-uso#revenda" className="text-primary hover:underline">termos de revenda</a>.
+            <a href="/termos-de-uso/cliente#revenda" className="text-primary hover:underline">termos de revenda</a>.
             Após a venda, seu QR Code será invalidado e um novo será gerado para o comprador.
           </p>
 

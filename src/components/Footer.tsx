@@ -50,7 +50,8 @@ export function Footer() {
           <div>
             <h4 className="font-display font-semibold text-sm mb-4">Legal & Suporte</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link to="/termos-de-uso" className="hover:text-foreground transition-colors">Termos de Uso</Link></li>
+              <li><Link to="/termos-de-uso/cliente" className="hover:text-foreground transition-colors">Termos para Clientes</Link></li>
+              <li><Link to="/termos-de-uso/produtor" className="hover:text-foreground transition-colors">Termos para Produtores</Link></li>
               <li><Link to="/politica-de-privacidade" className="hover:text-foreground transition-colors">Política de Privacidade</Link></li>
               <li><Link to="/faq" className="hover:text-foreground transition-colors">Perguntas Frequentes</Link></li>
             </ul>
@@ -60,7 +61,7 @@ export function Footer() {
           <div>
             <h4 className="font-display font-semibold text-sm mb-4">Contato</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="mailto:contato@tickethall.com" className="hover:text-foreground transition-colors">contato@tickethall.com</a></li>
+              <li><a href="mailto:contato@tickethall.com.br" className="hover:text-foreground transition-colors">contato@tickethall.com.br</a></li>
             </ul>
             <div className="flex items-center gap-3 mt-4">
               <a href="https://instagram.com/tickethallbrasil" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Instagram">

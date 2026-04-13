@@ -964,7 +964,7 @@ export default function VerificarCertificado() {
                 Política de Privacidade
               </a>
               <span className="text-border">|</span>
-              <a href="/termos-de-uso" className="hover:text-primary transition-colors flex items-center gap-1">
+              <a href="/termos-de-uso/cliente" className="hover:text-primary transition-colors flex items-center gap-1">
                 <ExternalLink className="h-3 w-3" />
                 Termos de Uso
               </a>
