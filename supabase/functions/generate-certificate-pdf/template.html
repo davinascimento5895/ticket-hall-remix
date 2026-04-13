@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Certificado {{certificateCode}}</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    @page {
+      size: A4 landscape;
+      margin: 0;
+    }
+    
+    body {
+      width: 297mm;
+      height: 210mm;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* Template Executive */
+    .template-executive {
+      width: 100%;
+      height: 100%;
+      background: var(--bg-color, #faf8f3);
+      position: relative;
+      padding: 12mm;
+    }
+    
+    .template-executive .outer-frame {
+      position: absolute;
+      inset: 12px;
+      border: 3px double var(--secondary-color, #c9a227);
+      pointer-events: none;
+    }
+    
+    .template-executive .inner-frame {
+      position: absolute;
+      inset: 20px;
+      border: 1px solid var(--secondary-color, #c9a227);
+      opacity: 0.6;
+      pointer-events: none;
+    }
+    
+    .template-executive .corner {
+      position: absolute;
+      width: 48px;
+      height: 48px;
+      pointer-events: none;
+    }
+    
+    .template-executive .corner-tl { top: 16px; left: 16px; }
+    .template-executive .corner-tr { top: 16px; right: 16px; transform: rotate(90deg); }
+    .template-executive .corner-br { bottom: 16px; right: 16px; transform: rotate(180deg); }
+    .template-executive .corner-bl { bottom: 16px; left: 16px; transform: rotate(270deg); }
+    
+    .template-executive .content {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 72px;
+      text-align: center;
+    }
+    
+    .template-executive .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      letter-spacing: 0.2em;
+      color: var(--text-color, #1a202c);
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    
+    .template-executive .logo span:first-child {
+      font-weight: 600;
+    }
+    
+    .template-executive .logo span:last-child {
+      font-weight: 300;
+      color: var(--secondary-color, #c9a227);
+    }
+    
+    .template-executive h1 {
+      font-size: 32px;
+      font-weight: 600;
+      color: var(--primary-color, #1a365d);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin: 0 0 8px 0;
+    }
+    
+    .template-executive .subtitle {
+      font-size: 14px;
+      font-style: italic;
+      color: var(--accent-color, #8b6914);
+      margin: 0 0 32px 0;
+    }
+    
+    .template-executive .divider {
+      width: 120px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--secondary-color, #c9a227), transparent);
+      margin: 0 auto 32px;
+    }
+    
+    .template-executive .intro {
+      font-size: 13px;
+      color: var(--text-color, #1a202c);
+      opacity: 0.7;
+      margin: 0 0 16px 0;
+      letter-spacing: 0.05em;
+    }
+    
+    .template-executive .participant {
+      font-size: 38px;
+      font-weight: 600;
+      color: var(--primary-color, #1a365d);
+      margin: 0 0 24px 0;
+      line-height: 1.2;
+    }
+    
+    .template-executive .participated {
+      font-size: 14px;
+      color: var(--text-color, #1a202c);
+      opacity: 0.8;
+      margin: 0 0 16px 0;
+    }
+    
+    .template-executive .event-name {
+      font-size: 24px;
+      font-weight: 500;
+      color: var(--primary-color, #1a365d);
+      margin: 0 0 8px 0;
+    }
+    
+    .template-executive .details {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      margin: 24px 0;
+      font-size: 12px;
+      color: var(--text-color, #1a202c);
+      opacity: 0.7;
+    }
+    
+    .template-executive .workload {
+      font-size: 13px;
+      color: var(--accent-color, #8b6914);
+      margin: 16px 0;
+      font-style: italic;
+    }
+    
+    .template-executive .bottom {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      width: 100%;
+      padding-top: 24px;
+      border-top: 1px solid rgba(201, 162, 39, 0.3);
+      margin-top: auto;
+    }
+    
+    .template-executive .signature {
+      text-align: center;
+      flex: 1;
+    }
+    
+    .template-executive .signature-line {
+      width: 160px;
+      height: 1px;
+      background: var(--primary-color, #1a365d);
+      margin: 0 auto 8px;
+    }
+    
+    .template-executive .signature-label {
+      font-size: 11px;
+      color: var(--text-color, #1a202c);
+      opacity: 0.6;
+    }
+    
+    .template-executive .seal {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #d4af37, #8b6914);
+      box-shadow: inset -3px -3px 8px rgba(0,0,0,0.3), 2px 2px 6px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    
+    .template-executive .seal-inner {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: rgba(255,255,255,0.9);
+    }
+    
+    .template-executive .code-section {
+      text-align: center;
+      flex: 1;
+    }
+    
+    .template-executive .code-label {
+      font-size: 10px;
+      color: var(--text-color, #1a202c);
+      opacity: 0.5;
+      letter-spacing: 0.1em;
+    }
+    
+    .template-executive .code-value {
+      font-size: 11px;
+      font-family: monospace;
+      color: var(--primary-color, #1a365d);
+      margin-top: 4px;
+    }
+    
+    .template-executive .qr-section {
+      position: absolute;
+      bottom: 40px;
+      right: 40px;
+      text-align: center;
+    }
+    
+    .template-executive .qr-code {
+      width: 80px;
+      height: 80px;
+      background: white;
+      padding: 4px;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+    
+    /* Template Modern */
+    .template-modern {
+      width: 100%;
+      height: 100%;
+      background: var(--bg-color, #ffffff);
+      position: relative;
+      overflow: hidden;
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+    
+    .template-modern .top-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 40%;
+      height: 8px;
+      background: var(--primary-color, #ea580b);
+    }
+    
+    .template-modern .side-line {
+      position: absolute;
+      top: 15%;
+      left: 40px;
+      width: 3px;
+      height: 70%;
+      background: linear-gradient(180deg, var(--primary-color, #ea580b) 0%, transparent 100%);
+    }
+    
+    .template-modern .content {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 48px;
+      padding: 48px 56px;
+    }
+    
+    .template-modern .left {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    
+    .template-modern .label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--primary-color, #ea580b);
+      margin: 0 0 16px 0;
+    }
+    
+    .template-modern .participant {
+      font-size: 44px;
+      font-weight: 600;
+      color: var(--text-color, #111827);
+      margin: 0 0 24px 0;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+    
+    .template-modern .participated {
+      font-size: 14px;
+      color: var(--text-color, #111827);
+      opacity: 0.6;
+      margin: 0 0 8px 0;
+    }
+    
+    .template-modern .event-name {
+      font-size: 24px;
+      font-weight: 500;
+      color: var(--secondary-color, #1f2937);
+      margin: 0 0 32px 0;
+      line-height: 1.3;
+    }
+    
+    .template-modern .workload {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(234, 88, 11, 0.1);
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--primary-color, #ea580b);
+      width: fit-content;
+    }
+    
+    .template-modern .right {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding-left: 32px;
+      border-left: 1px solid rgba(0,0,0,0.1);
+    }
+    
+    .template-modern .logo {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 32px;
+    }
+    
+    .template-modern .logo-ticket {
+      color: var(--text-color, #111827);
+    }
+    
+    .template-modern .logo-hall {
+      color: var(--primary-color, #ea580b);
+    }
+    
+    .template-modern .details {
+      margin-bottom: auto;
+      padding-top: 48px;
+    }
+    
+    .template-modern .detail-item {
+      margin-bottom: 16px;
+    }
+    
+    .template-modern .detail-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-color, #111827);
+      opacity: 0.4;
+      margin: 0 0 4px 0;
+    }
+    
+    .template-modern .detail-value {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-color, #111827);
+      margin: 0;
+      line-height: 1.4;
+    }
+    
+    .template-modern .bottom {
+      margin-top: auto;
+    }
+    
+    .template-modern .signature {
+      margin-bottom: 24px;
+    }
+    
+    .template-modern .signature-line {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, var(--secondary-color, #1f2937), transparent);
+      margin-bottom: 8px;
+    }
+    
+    .template-modern .verification {
+      padding: 12px;
+      background: rgba(0,0,0,0.03);
+      border-radius: 6px;
+    }
+    
+    .template-modern .qr-code {
+      width: 60px;
+      height: 60px;
+      background: white;
+      margin-top: 8px;
+    }
+    
+    /* Utility classes */
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="template-{{templateId}}" style="
+    --primary-color: {{primaryColor}};
+    --secondary-color: {{secondaryColor}};
+    --bg-color: {{backgroundColor}};
+    --text-color: {{textColor}};
+    --accent-color: {{accentColor}};
+  ">
+    {{#if isExecutive}}
+    <!-- Executive Template -->
+    <div class="outer-frame"></div>
+    <div class="inner-frame"></div>
+    
+    <svg class="corner corner-tl" viewBox="0 0 48 48">
+      <path d="M4 4 L4 32 Q4 44 16 44 L44 44 M4 4 L20 4 M4 4 L4 20" fill="none" stroke="var(--secondary-color)" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <svg class="corner corner-tr" viewBox="0 0 48 48">
+      <path d="M4 4 L4 32 Q4 44 16 44 L44 44 M4 4 L20 4 M4 4 L4 20" fill="none" stroke="var(--secondary-color)" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <svg class="corner corner-br" viewBox="0 0 48 48">
+      <path d="M4 4 L4 32 Q4 44 16 44 L44 44 M4 4 L20 4 M4 4 L4 20" fill="none" stroke="var(--secondary-color)" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <svg class="corner corner-bl" viewBox="0 0 48 48">
+      <path d="M4 4 L4 32 Q4 44 16 44 L44 44 M4 4 L20 4 M4 4 L4 20" fill="none" stroke="var(--secondary-color)" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    
+    <div class="content">
+      {{#if showLogo}}
+      <div class="logo">
+        <span>TICKET</span>
+        <span>HALL</span>
+      </div>
+      {{/if}}
+      
+      <h1>{{title}}</h1>
+      <p class="subtitle">{{subtitle}}</p>
+      <div class="divider"></div>
+      
+      <p class="intro">{{introText}}</p>
+      <h2 class="participant">{{participantName}}</h2>
+      
+      <p class="participated">{{participationText}}</p>
+      <h3 class="event-name">{{eventName}}</h3>
+      
+      <div class="details">
+        {{#if showEventDate}}<span>📅 {{eventDate}}</span>{{/if}}
+        {{#if showEventLocation}}<span>📍 {{eventLocation}}</span>{{/if}}
+      </div>
+      
+      {{#if showWorkload}}
+      <p class="workload">Carga horária: {{workloadHours}} horas</p>
+      {{/if}}
+      
+      <div class="bottom">
+        <div class="signature">
+          <div class="signature-line"></div>
+          <p class="signature-label">Assinatura do Organizador</p>
+        </div>
+        
+        <div class="seal">
+          <div class="seal-inner">✓</div>
+        </div>
+        
+        <div class="code-section">
+          <p class="code-label">CÓDIGO DE VERIFICAÇÃO</p>
+          <p class="code-value">{{certificateCode}}</p>
+          {{#if qrCodeDataUrl}}
+          <img src="{{qrCodeDataUrl}}" class="qr-code" alt="QR Code">
+          {{/if}}
+        </div>
+      </div>
+    </div>
+    {{/if}}
+    
+    {{#if isModern}}
+    <!-- Modern Template -->
+    <div class="top-bar"></div>
+    <div class="side-line"></div>
+    
+    <div class="content">
+      <div class="left">
+        <p class="label">{{title}}</p>
+        <h1 class="participant">{{participantName}}</h1>
+        <p class="participated">Participou de</p>
+        <h2 class="event-name">{{eventName}}</h2>
+        
+        {{#if showWorkload}}
+        <div class="workload">
+          <span>⏱</span>
+          <span>{{workloadHours}} horas de carga horária</span>
+        </div>
+        {{/if}}
+      </div>
+      
+      <div class="right">
+        {{#if showLogo}}
+        <div class="logo">
+          <span class="logo-ticket">TICKET</span>
+          <span class="logo-hall">HALL</span>
+        </div>
+        {{/if}}
+        
+        <div class="details">
+          {{#if showEventDate}}
+          <div class="detail-item">
+            <p class="detail-label">Data</p>
+            <p class="detail-value">{{eventDate}}</p>
+          </div>
+          {{/if}}
+          
+          {{#if showEventLocation}}
+          <div class="detail-item">
+            <p class="detail-label">Local</p>
+            <p class="detail-value">{{eventLocation}}</p>
+          </div>
+          {{/if}}
+        </div>
+        
+        <div class="bottom">
+          <div class="verification">
+            <p class="detail-label">Verificação</p>
+            <p class="detail-value" style="font-family: monospace; font-size: 11px;">{{certificateCode}}</p>
+            {{#if qrCodeDataUrl}}
+            <img src="{{qrCodeDataUrl}}" class="qr-code" alt="QR Code">
+            {{/if}}
+          </div>
+        </div>
+      </div>
+    </div>
+    {{/if}}
+  </div>
+</body>
+</html>

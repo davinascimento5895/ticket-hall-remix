@@ -1,27 +1,9 @@
-/**
- * CertificatePreview Component
- * 
- * High-performance real-time certificate preview with:
- * - React.memo for render optimization
- * - Debounced updates (500ms)
- * - useMemo for expensive computations
- * - CSS transforms for smooth animations
- * - Lazy-loaded background images
- * - A4 landscape aspect ratio
- */
-
-import React, { useMemo, useRef, useEffect, useState, useCallback } from 'react';
-import { Award, Calendar, MapPin, Clock, User, FileText, CheckCircle2, QrCode } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import {
-  CERTIFICATE_TEMPLATES,
-  ColorUtils,
-  type CertificateTemplateId,
-} from '@/lib/certificates/templates';
-
-// =============================================================================
-// Types & Interfaces
-// =============================================================================
+import React, { memo, useEffect } from "react";
+import { Calendar, Clock, MapPin, QrCode } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { type CertificateTemplateId } from "@/lib/certificates/templates";
+import logoFullBlackSvg from "@/assets/logo-full-black.svg";
+import logoFullWhiteSvg from "@/assets/logo-full-white.svg";
 
 export interface CertificateFields {
   showEventName: boolean;
@@ -67,1129 +49,352 @@ export interface CertificatePreviewProps {
   workloadHours?: number;
   sampleData: CertificateSampleData;
   className?: string;
-  /** Debounce delay in milliseconds (default: 500ms) */
   debounceMs?: number;
-  /** Callback when preview is ready */
   onPreviewReady?: () => void;
 }
 
-// =============================================================================
-// Utility Hooks
-// =============================================================================
+const normalizeTemplateId = (value: unknown): CertificateTemplateId => {
+  if (value === "executive" || value === "modern" || value === "academic" || value === "creative") {
+    return value;
+  }
+  if (value === 0 || value === "0") return "executive";
+  if (value === 1 || value === "1") return "modern";
+  if (value === 2 || value === "2") return "academic";
+  if (value === 3 || value === "3") return "creative";
+  return "executive";
+};
 
-/**
- * Custom hook for debouncing values
- */
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-
-    timeoutRef.current = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
-
-/**
- * Custom hook for lazy loading background images
- */
-function useLazyBackground(imageUrl: string | undefined): {
-  loaded: boolean;
-  backgroundStyle: React.CSSProperties;
-} {
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    if (!imageUrl) {
-      setLoaded(false);
-      return;
-    }
-
-    const img = new Image();
-    img.onload = () => setLoaded(true);
-    img.onerror = () => setLoaded(false);
-    img.src = imageUrl;
-
-    return () => {
-      img.onload = null;
-      img.onerror = null;
-    };
-  }, [imageUrl]);
-
-  const backgroundStyle = useMemo<React.CSSProperties>(() => {
-    if (!imageUrl) return {};
-    
-    return {
-      backgroundImage: `url(${imageUrl})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat',
-      opacity: loaded ? 1 : 0,
-      transition: 'opacity 300ms ease-out',
-    };
-  }, [imageUrl, loaded]);
-
-  return { loaded, backgroundStyle };
-}
-
-// =============================================================================
-// Sub-Components (Memoized)
-// =============================================================================
-
-interface CornerDecorationProps {
-  style: 'classic' | 'modern' | 'minimal' | 'ornate';
+type TemplateProps = {
   primaryColor: string;
   secondaryColor: string;
-}
-
-/**
- * Corner decorations - memoized to prevent re-renders
- */
-const CornerDecorations = React.memo<CornerDecorationProps>(function CornerDecorations({
-  style,
-  primaryColor,
-  secondaryColor,
-}) {
-  const corners = useMemo(() => {
-    const basePositions = [
-      { position: 'top-0 left-0', h: 'w-16 h-1.5', v: 'w-1.5 h-16' },
-      { position: 'top-0 right-0', h: 'w-16 h-1.5', v: 'w-1.5 h-16' },
-      { position: 'bottom-0 left-0', h: 'w-16 h-1.5', v: 'w-1.5 h-16' },
-      { position: 'bottom-0 right-0', h: 'w-16 h-1.5', v: 'w-1.5 h-16' },
-    ];
-
-    if (style === 'minimal') return null;
-
-    return basePositions.map((corner, index) => (
-      <React.Fragment key={index}>
-        <div
-          className={cn('absolute', corner.position)}
-          style={{
-            transform: style === 'ornate' ? 'scale(1.3)' : undefined,
-          }}
-        >
-          <div
-            className={cn(corner.h)}
-            style={{ backgroundColor: primaryColor }}
-          />
-          <div
-            className={cn(corner.v)}
-            style={{ backgroundColor: style === 'ornate' ? secondaryColor : primaryColor }}
-          />
-        </div>
-      </React.Fragment>
-    ));
-  }, [style, primaryColor, secondaryColor]);
-
-  if (style === 'minimal') return null;
-
-  return <>{corners}</>;
-});
-
-interface SignerSectionProps {
-  signers: CertificateSigner[];
-  layout: 'row' | 'column' | 'grid';
-  primaryColor: string;
-  secondaryColor: string;
-}
-
-/**
- * Signers section - memoized to prevent re-renders
- */
-const SignersSection = React.memo<SignerSectionProps>(function SignersSection({
-  signers,
-  layout,
-  primaryColor,
-  secondaryColor,
-}) {
-  const containerClasses = useMemo(() => {
-    switch (layout) {
-      case 'column':
-        return 'flex flex-col items-center gap-6';
-      case 'grid':
-        return 'grid grid-cols-2 gap-6';
-      case 'row':
-      default:
-        return 'flex flex-row justify-center gap-8 flex-wrap';
-    }
-  }, [layout]);
-
-  if (signers.length === 0) return null;
-
-  return (
-    <div className={cn('mt-6', containerClasses)}>
-      {signers.map((signer, index) => (
-        <div
-          key={`${signer.name}-${index}`}
-          className="flex flex-col items-center text-center"
-          style={{ minWidth: '120px' }}
-        >
-          {/* Signature Line */}
-          <div
-            className="w-32 h-px mb-2"
-            style={{ backgroundColor: primaryColor }}
-          />
-          
-          {/* Signature Image or Placeholder */}
-          {signer.signatureUrl ? (
-            <img
-              src={signer.signatureUrl}
-              alt={`Assinatura de ${signer.name}`}
-              className="h-12 object-contain mb-1"
-              loading="lazy"
-            />
-          ) : (
-            <div
-              className="h-8 w-24 border-b-2 border-dashed mb-2"
-              style={{ borderColor: secondaryColor, opacity: 0.5 }}
-            />
-          )}
-          
-          {/* Signer Name */}
-          <span
-            className="text-sm font-semibold"
-            style={{ color: primaryColor }}
-          >
-            {signer.name}
-          </span>
-          
-          {/* Signer Role */}
-          <span
-            className="text-xs"
-            style={{ color: secondaryColor }}
-          >
-            {signer.role}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-});
-
-interface QRCodeSectionProps {
-  certificateCode: string;
-  position: 'bottom-left' | 'bottom-right' | 'bottom-center';
-}
-
-/**
- * QR Code placeholder section - memoized
- */
-const QRCodeSection = React.memo<QRCodeSectionProps>(function QRCodeSection({
-  certificateCode,
-  position,
-}) {
-  const positionClasses = useMemo(() => {
-    switch (position) {
-      case 'bottom-left':
-        return 'absolute bottom-4 left-4';
-      case 'bottom-center':
-        return 'absolute bottom-4 left-1/2 -translate-x-1/2';
-      case 'bottom-right':
-      default:
-        return 'absolute bottom-4 right-4';
-    }
-  }, [position]);
-
-  return (
-    <div
-      className={cn(
-        'flex flex-col items-center gap-1 p-2 rounded bg-white/80 backdrop-blur-sm',
-        positionClasses
-      )}
-      style={{ willChange: 'transform' }}
-    >
-      <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center">
-        <QrCode className="w-10 h-10 text-gray-400" />
-      </div>
-      <span className="text-[9px] text-gray-500 font-mono truncate max-w-[80px]">
-        {certificateCode.slice(-8)}
-      </span>
-    </div>
-  );
-});
-
-// =============================================================================
-// Template Renderers (Memoized Components)
-// =============================================================================
-
-interface TemplateRendererProps {
-  templateId: CertificateTemplateId;
-  cssVariables: Record<string, string>;
-  backgroundStyle: React.CSSProperties;
-  primaryColor: string;
-  secondaryColor: string;
+  backgroundUrl?: string;
   fields: CertificateFields;
   textConfig: CertificateTextConfig;
   signers: CertificateSigner[];
   workloadHours?: number;
   sampleData: CertificateSampleData;
+};
+
+function Logo({ dark }: { dark?: boolean }) {
+  return (
+    <img
+      src={dark ? logoFullWhiteSvg : logoFullBlackSvg}
+      alt="TicketHall"
+      className="h-8 w-auto"
+      draggable={false}
+    />
+  );
 }
 
-/**
- * Executive template renderer
- */
-const ExecutiveTemplate = React.memo<TemplateRendererProps>(function ExecutiveTemplate(props) {
-  const {
-    cssVariables,
-    backgroundStyle,
-    primaryColor,
-    secondaryColor,
-    fields,
-    textConfig,
-    signers,
-    workloadHours,
-    sampleData,
-  } = props;
+function EventMeta({ fields, workloadHours, sampleData, tone = "default" }: {
+  fields: CertificateFields;
+  workloadHours?: number;
+  sampleData: CertificateSampleData;
+  tone?: "default" | "light";
+}) {
+  const isLight = tone === "light";
+  const itemClass = isLight ? "text-white/85" : "text-slate-600";
 
   return (
-    <div
-      className="relative w-full h-full overflow-hidden"
-      style={{
-        ...cssVariables,
-        background: 'linear-gradient(135deg, #fafafa 0%, #f5f5f5 50%, #fafafa 100%)',
-      }}
-    >
-      {/* Background Layer */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={backgroundStyle}
-      />
+    <div className={cn("flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs", itemClass)}>
+      {fields.showEventDate ? (
+        <span className="inline-flex items-center gap-1.5">
+          <Calendar className="h-3.5 w-3.5" />
+          {sampleData.eventDate}
+        </span>
+      ) : null}
 
-      {/* Corner Decorations */}
-      <CornerDecorations
-        style="classic"
-        primaryColor={primaryColor}
-        secondaryColor={secondaryColor}
-      />
+      {fields.showEventLocation ? (
+        <span className="inline-flex items-center gap-1.5">
+          <MapPin className="h-3.5 w-3.5" />
+          {sampleData.eventLocation}
+        </span>
+      ) : null}
 
-      {/* Inner Border */}
-      <div
-        className="absolute inset-6 border pointer-events-none"
-        style={{ borderColor: `${primaryColor}20` }}
-      />
+      {fields.showWorkload && workloadHours ? (
+        <span className="inline-flex items-center gap-1.5">
+          <Clock className="h-3.5 w-3.5" />
+          {workloadHours}h
+        </span>
+      ) : null}
+    </div>
+  );
+}
 
-      {/* Content */}
-      <div className="relative h-full flex flex-col items-center justify-center px-12 py-8 text-center">
-        {/* Header Icon */}
-        <div
-          className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
-          style={{ backgroundColor: `${primaryColor}15` }}
-        >
-          <Award className="w-8 h-8" style={{ color: primaryColor }} />
+function Signers({ signers, show, colorClass = "text-slate-700", lineColor = "#cbd5e1" }: {
+  signers: CertificateSigner[];
+  show: boolean;
+  colorClass?: string;
+  lineColor?: string;
+}) {
+  if (!show || signers.length === 0) return null;
+
+  return (
+    <div className="mt-5 flex flex-wrap justify-center gap-8">
+      {signers.map((signer, index) => (
+        <div key={`${signer.name}-${index}`} className={cn("min-w-28 text-center", colorClass)}>
+          <div className="mx-auto mb-2 h-px w-28" style={{ backgroundColor: lineColor }} />
+          <p className="text-sm font-semibold leading-tight">{signer.name}</p>
+          <p className="text-xs opacity-80">{signer.role}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function FooterCode({ sampleData, light = false }: { sampleData: CertificateSampleData; light?: boolean }) {
+  return (
+    <div className={cn("mt-auto flex items-end justify-between pt-5 text-[10px]", light ? "text-white/80" : "text-slate-500")}> 
+      <div className="flex items-center gap-1.5">
+        <QrCode className="h-3.5 w-3.5" />
+        <span className="font-mono">{sampleData.certificateCode}</span>
+      </div>
+      <span>tickethall.com.br/verificar-certificado</span>
+    </div>
+  );
+}
+
+function participantName(sampleData: CertificateSampleData, fields: CertificateFields): string {
+  if (fields.showParticipantLastName) return sampleData.participantName;
+  const [first] = sampleData.participantName.split(" ");
+  return first || sampleData.participantName;
+}
+
+const ExecutiveTemplate = memo(function ExecutiveTemplate(props: TemplateProps) {
+  const { primaryColor, secondaryColor, backgroundUrl, fields, textConfig, signers, workloadHours, sampleData } = props;
+
+  return (
+    <div data-testid="certificate-template-executive" className="relative h-full w-full overflow-hidden bg-[#f8f7f3]">
+      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1414 1000" preserveAspectRatio="none" aria-hidden>
+        <rect x="25" y="25" width="1364" height="950" fill="none" stroke={primaryColor} strokeWidth="3" />
+        <rect x="48" y="48" width="1318" height="904" fill="none" stroke={secondaryColor} strokeWidth="1.5" strokeDasharray="8 6" />
+        <path d="M100 100h170M100 100v170M1314 100h-170M1314 100v170M100 900h170M100 900v-170M1314 900h-170M1314 900v-170" stroke={secondaryColor} strokeWidth="4" fill="none" />
+      </svg>
+
+      {backgroundUrl ? (
+        <div className="absolute inset-0 opacity-15" style={{ backgroundImage: `url(${backgroundUrl})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+      ) : null}
+
+      <div className="relative z-10 flex h-full flex-col px-14 py-10 text-center text-slate-800">
+        <div className="mb-5 flex items-center justify-center">
+          <Logo />
         </div>
 
-        {/* Title */}
-        <h1
-          className="text-2xl md:text-3xl font-bold tracking-wider mb-2"
-          style={{ color: primaryColor, fontFamily: 'Georgia, serif' }}
-        >
-          {textConfig.title}
-        </h1>
+        <h2 className="text-[30px] font-semibold uppercase tracking-[0.14em]" style={{ color: primaryColor, fontFamily: "Georgia, serif" }}>
+          {textConfig.title || "Certificado de Participacao"}
+        </h2>
 
-        {/* Decorative Line */}
-        <div
-          className="w-32 h-0.5 mb-6"
-          style={{ backgroundColor: secondaryColor }}
-        />
-
-        {/* Intro Text */}
-        <p className="text-base text-gray-600 mb-4" style={{ fontFamily: 'Georgia, serif' }}>
-          {textConfig.introText}
+        <p className="mt-2 text-sm" style={{ color: "#5b6472" }}>
+          {textConfig.introText || "Certificamos que"}
         </p>
 
-        {/* Participant Name */}
-        {fields.showParticipantName && (
-          <h2
-            className="text-xl md:text-2xl font-bold mb-3"
-            style={{ color: primaryColor, fontFamily: 'Georgia, serif' }}
-          >
-            {fields.showParticipantLastName
-              ? `${sampleData.participantName} Santos`
-              : sampleData.participantName}
-            {fields.showCPF && (
-              <span className="block text-sm font-normal text-gray-500 mt-1">
-                CPF: {sampleData.participantCPF}
+        {fields.showParticipantName ? (
+          <h3 className="mt-4 text-[44px] font-semibold leading-tight" style={{ color: primaryColor, fontFamily: "Georgia, serif" }}>
+            {participantName(sampleData, fields)}
+          </h3>
+        ) : null}
+
+        {fields.showCPF ? <p className="mt-1 text-sm text-slate-500">CPF: {sampleData.participantCPF}</p> : null}
+
+        <p className="mt-4 text-base text-slate-600">{textConfig.participationText || "participou do evento"}</p>
+
+        {fields.showEventName ? (
+          <h4 className="mt-2 text-[28px] font-medium" style={{ color: primaryColor, fontFamily: "Georgia, serif" }}>
+            {sampleData.eventName}
+          </h4>
+        ) : null}
+
+        <div className="mt-5">
+          <EventMeta fields={fields} workloadHours={workloadHours} sampleData={sampleData} />
+        </div>
+
+        <p className="mx-auto mt-5 max-w-xl text-xs text-slate-600">
+          {textConfig.conclusionText || "Comprove sua participacao atraves do codigo de verificacao."}
+        </p>
+
+        <Signers signers={signers} show={fields.showSigners} lineColor={`${primaryColor}66`} />
+
+        <FooterCode sampleData={sampleData} />
+      </div>
+    </div>
+  );
+});
+
+const ModernTemplate = memo(function ModernTemplate(props: TemplateProps) {
+  const { primaryColor, secondaryColor, backgroundUrl, fields, textConfig, signers, workloadHours, sampleData } = props;
+
+  return (
+    <div data-testid="certificate-template-modern" className="relative h-full w-full overflow-hidden bg-slate-950 text-white">
+      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1414 1000" preserveAspectRatio="none" aria-hidden>
+        <polygon points="0,0 510,0 310,1000 0,1000" fill={primaryColor} opacity="0.92" />
+        <polygon points="1414,0 1414,1000 595,1000 865,0" fill={secondaryColor} opacity="0.2" />
+        <circle cx="1175" cy="170" r="130" fill="none" stroke={secondaryColor} strokeWidth="3" opacity="0.6" />
+        <circle cx="1245" cy="870" r="170" fill="none" stroke={primaryColor} strokeWidth="2" opacity="0.35" />
+      </svg>
+
+      {backgroundUrl ? (
+        <div className="absolute inset-0 opacity-10 mix-blend-screen" style={{ backgroundImage: `url(${backgroundUrl})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+      ) : null}
+
+      <div className="relative z-10 grid h-full grid-cols-[320px_1fr] gap-6 px-8 py-8">
+        <div className="flex flex-col rounded-xl border border-white/20 bg-black/25 p-5 backdrop-blur-sm">
+          <Logo dark />
+          <p className="mt-8 text-[11px] uppercase tracking-[0.24em] text-white/70">Template Modern</p>
+          <h2 className="mt-3 text-[26px] font-bold leading-tight uppercase">{textConfig.title || "Certificado"}</h2>
+          <p className="mt-3 text-sm text-white/80">{textConfig.introText || "Certificamos que"}</p>
+          {fields.showParticipantName ? (
+            <p className="mt-6 text-[28px] font-semibold leading-tight">{participantName(sampleData, fields)}</p>
+          ) : null}
+          {fields.showCPF ? <p className="mt-2 text-xs text-white/70">CPF: {sampleData.participantCPF}</p> : null}
+          <div className="mt-auto text-xs text-white/70">#{sampleData.certificateCode}</div>
+        </div>
+
+        <div className="flex flex-col justify-center rounded-2xl border border-white/20 bg-white/6 px-8 py-7 backdrop-blur-sm">
+          <p className="text-base text-white/85">{textConfig.participationText || "participou do evento"}</p>
+          {fields.showEventName ? <h3 className="mt-3 text-[36px] font-semibold leading-tight">{sampleData.eventName}</h3> : null}
+          <div className="mt-5">
+            <EventMeta tone="light" fields={fields} workloadHours={workloadHours} sampleData={sampleData} />
+          </div>
+          <p className="mt-5 max-w-xl text-sm text-white/80">
+            {textConfig.conclusionText || "Comprove sua participacao atraves do codigo de verificacao."}
+          </p>
+          <Signers signers={signers} show={fields.showSigners} colorClass="text-white" lineColor="rgba(255,255,255,0.45)" />
+          <FooterCode sampleData={sampleData} light />
+        </div>
+      </div>
+    </div>
+  );
+});
+
+const AcademicTemplate = memo(function AcademicTemplate(props: TemplateProps) {
+  const { primaryColor, secondaryColor, backgroundUrl, fields, textConfig, signers, workloadHours, sampleData } = props;
+
+  return (
+    <div data-testid="certificate-template-academic" className="relative h-full w-full overflow-hidden bg-[#f5f0e6]">
+      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1414 1000" preserveAspectRatio="none" aria-hidden>
+        <rect x="34" y="34" width="1346" height="932" fill="#fffaf0" stroke={secondaryColor} strokeWidth="2" />
+        <rect x="74" y="74" width="1266" height="852" fill="none" stroke={primaryColor} strokeWidth="1.4" />
+        <path d="M110 134h1194" stroke={secondaryColor} strokeWidth="2" opacity="0.55" />
+        <path d="M110 866h1194" stroke={secondaryColor} strokeWidth="2" opacity="0.55" />
+      </svg>
+
+      {backgroundUrl ? (
+        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `url(${backgroundUrl})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+      ) : null}
+
+      <div className="relative z-10 flex h-full flex-col px-16 py-10 text-center text-[#2f2a24]">
+        <div className="mb-1 flex items-center justify-center">
+          <Logo />
+        </div>
+
+        <div className="mx-auto mt-3 flex h-16 w-16 items-center justify-center rounded-full border-2" style={{ borderColor: secondaryColor }}>
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path d="M12 3l7 4v5c0 5-3.2 7.7-7 9-3.8-1.3-7-4-7-9V7l7-4z" stroke={primaryColor} strokeWidth="1.8" />
+            <path d="M9 12l2 2 4-4" stroke={secondaryColor} strokeWidth="1.8" />
+          </svg>
+        </div>
+
+        <h2 className="mt-4 text-[32px] font-semibold uppercase tracking-[0.12em]" style={{ color: primaryColor, fontFamily: "Georgia, serif" }}>
+          {textConfig.title || "Certificado de Participacao"}
+        </h2>
+
+        <p className="mt-2 text-sm text-[#6e6255]">{textConfig.introText || "Certificamos que"}</p>
+
+        {fields.showParticipantName ? (
+          <h3 className="mt-4 text-[42px] font-semibold leading-tight" style={{ color: primaryColor, fontFamily: "Georgia, serif" }}>
+            {participantName(sampleData, fields)}
+          </h3>
+        ) : null}
+
+        {fields.showCPF ? <p className="mt-1 text-xs text-[#7a6e61]">CPF: {sampleData.participantCPF}</p> : null}
+
+        <p className="mt-4 text-base text-[#6e6255]">{textConfig.participationText || "participou do evento"}</p>
+
+        {fields.showEventName ? (
+          <h4 className="mt-2 text-[30px] font-medium" style={{ color: secondaryColor, fontFamily: "Georgia, serif" }}>
+            {sampleData.eventName}
+          </h4>
+        ) : null}
+
+        <div className="mt-5">
+          <EventMeta fields={fields} workloadHours={workloadHours} sampleData={sampleData} />
+        </div>
+
+        <p className="mx-auto mt-4 max-w-xl text-xs text-[#6e6255]">
+          {textConfig.conclusionText || "Comprove sua participacao atraves do codigo de verificacao."}
+        </p>
+
+        <Signers signers={signers} show={fields.showSigners} colorClass="text-[#3a3129]" lineColor={`${secondaryColor}88`} />
+
+        <FooterCode sampleData={sampleData} />
+      </div>
+    </div>
+  );
+});
+
+const CreativeTemplate = memo(function CreativeTemplate(props: TemplateProps) {
+  const { primaryColor, secondaryColor, backgroundUrl, fields, textConfig, signers, workloadHours, sampleData } = props;
+
+  return (
+    <div data-testid="certificate-template-creative" className="relative h-full w-full overflow-hidden bg-[#fffdf8]">
+      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 1414 1000" preserveAspectRatio="none" aria-hidden>
+        <path d="M0 186 C212 57 466 114 594 214 C734 329 904 300 1074 200 C1216 114 1314 71 1414 100 L1414 0 L0 0 Z" fill={primaryColor} opacity="0.14" />
+        <path d="M0 1000 L0 743 C226 614 424 671 594 800 C790 943 974 914 1186 771 C1300 700 1364 671 1414 689 L1414 1000 Z" fill={secondaryColor} opacity="0.2" />
+        <circle cx="240" cy="829" r="100" fill={primaryColor} opacity="0.25" />
+        <circle cx="1188" cy="171" r="68" fill={secondaryColor} opacity="0.3" />
+      </svg>
+
+      {backgroundUrl ? (
+        <div className="absolute inset-0 opacity-14" style={{ backgroundImage: `url(${backgroundUrl})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+      ) : null}
+
+      <div className="relative z-10 flex h-full items-center justify-center px-12 py-8">
+        <div className="grid h-full w-full max-w-[900px] grid-cols-[1.08fr_0.92fr] gap-5 rounded-[28px] border border-slate-200 bg-white/92 p-6 shadow-[0_14px_45px_rgba(15,23,42,0.08)]">
+          <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white px-6 py-5">
+            <div className="absolute -left-10 -top-10 h-28 w-28 rounded-full" style={{ backgroundColor: `${primaryColor}24` }} />
+            <div className="relative z-10 flex items-center justify-between">
+              <Logo />
+              <span className="rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em]" style={{ backgroundColor: `${secondaryColor}2e`, color: "#1f2937" }}>
+                Creative
               </span>
-            )}
-          </h2>
-        )}
-
-        {/* Participation Text */}
-        <p className="text-base text-gray-600 mb-3" style={{ fontFamily: 'Georgia, serif' }}>
-          {textConfig.participationText}
-        </p>
-
-        {/* Event Name */}
-        {fields.showEventName && (
-          <h3
-            className="text-lg md:text-xl font-semibold mb-4 max-w-2xl"
-            style={{ color: primaryColor }}
-          >
-            {sampleData.eventName}
-          </h3>
-        )}
-
-        {/* Event Details */}
-        <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-gray-600 mb-4">
-          {fields.showEventDate && (
-            <div className="flex items-center gap-1.5">
-              <Calendar className="w-4 h-4" style={{ color: secondaryColor }} />
-              <span>{sampleData.eventDate}</span>
             </div>
-          )}
-          {fields.showEventLocation && (
-            <div className="flex items-center gap-1.5">
-              <MapPin className="w-4 h-4" style={{ color: secondaryColor }} />
-              <span>{sampleData.eventLocation}</span>
-            </div>
-          )}
-          {fields.showWorkload && workloadHours && workloadHours > 0 && (
-            <div className="flex items-center gap-1.5">
-              <Clock className="w-4 h-4" style={{ color: secondaryColor }} />
-              <span>{workloadHours} horas</span>
-            </div>
-          )}
-        </div>
 
-        {/* Conclusion Text */}
-        <p
-          className="text-sm text-gray-600 max-w-xl mb-6"
-          style={{ fontFamily: 'Georgia, serif' }}
-        >
-          {textConfig.conclusionText}
-        </p>
-
-        {/* Signers */}
-        {fields.showSigners && signers.length > 0 && (
-          <SignersSection
-            signers={signers}
-            layout="row"
-            primaryColor={primaryColor}
-            secondaryColor={secondaryColor}
-          />
-        )}
-
-        {/* Spacer */}
-        <div className="flex-1 min-h-8" />
-
-        {/* Footer */}
-        <div className="w-full flex items-center justify-between text-xs text-gray-500 pt-4 border-t border-gray-200">
-          <div className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span className="font-mono">{sampleData.certificateCode}</span>
-          </div>
-          <span>tickethall.com.br</span>
-        </div>
-      </div>
-
-      {/* QR Code */}
-      <QRCodeSection
-        certificateCode={sampleData.certificateCode}
-        position="bottom-right"
-      />
-    </div>
-  );
-});
-
-/**
- * Modern template renderer
- */
-const ModernTemplate = React.memo<TemplateRendererProps>(function ModernTemplate(props) {
-  const {
-    cssVariables,
-    backgroundStyle,
-    primaryColor,
-    secondaryColor,
-    fields,
-    textConfig,
-    signers,
-    workloadHours,
-    sampleData,
-  } = props;
-
-  return (
-    <div
-      className="relative w-full h-full overflow-hidden"
-      style={{
-        ...cssVariables,
-        background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
-      }}
-    >
-      {/* Background Layer */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={backgroundStyle}
-      />
-
-      {/* Side Accent Bar */}
-      <div
-        className="absolute left-0 top-0 bottom-0 w-2"
-        style={{ backgroundColor: primaryColor }}
-      />
-
-      {/* Corner Decorations */}
-      <CornerDecorations
-        style="modern"
-        primaryColor={primaryColor}
-        secondaryColor={secondaryColor}
-      />
-
-      {/* Content */}
-      <div className="relative h-full flex flex-col px-10 py-8 pl-12">
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div
-            className="w-12 h-12 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: primaryColor }}
-          >
-            <Award className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h1
-              className="text-xl font-bold"
-              style={{ color: primaryColor }}
-            >
-              {textConfig.title}
-            </h1>
-            <div
-              className="w-16 h-1 rounded-full mt-1"
-              style={{ backgroundColor: secondaryColor }}
-            />
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1">
-          {/* Intro */}
-          <p className="text-gray-600 mb-2">{textConfig.introText}</p>
-
-          {/* Participant */}
-          {fields.showParticipantName && (
-            <h2
-              className="text-2xl font-bold mb-4"
-              style={{ color: primaryColor }}
-            >
-              {fields.showParticipantLastName
-                ? `${sampleData.participantName} Santos`
-                : sampleData.participantName}
+            <h2 className="mt-6 text-[30px] font-black uppercase leading-none tracking-[0.06em]" style={{ color: primaryColor }}>
+              {textConfig.title || "Certificado"}
             </h2>
-          )}
 
-          {/* Participation */}
-          <p className="text-gray-600 mb-3">{textConfig.participationText}</p>
+            <p className="mt-4 text-sm text-slate-600">{textConfig.introText || "Certificamos que"}</p>
 
-          {/* Event */}
-          {fields.showEventName && (
-            <h3
-              className="text-xl font-semibold mb-6"
-              style={{ color: primaryColor }}
-            >
-              {sampleData.eventName}
-            </h3>
-          )}
+            {fields.showParticipantName ? (
+              <h3 className="mt-3 text-[38px] font-bold leading-[1.05] text-slate-900">{participantName(sampleData, fields)}</h3>
+            ) : null}
 
-          {/* Details Grid */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            {fields.showEventDate && (
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Calendar className="w-4 h-4" style={{ color: secondaryColor }} />
-                <span>{sampleData.eventDate}</span>
-              </div>
-            )}
-            {fields.showEventLocation && (
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <MapPin className="w-4 h-4" style={{ color: secondaryColor }} />
-                <span>{sampleData.eventLocation}</span>
-              </div>
-            )}
-            {fields.showWorkload && workloadHours && workloadHours > 0 && (
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Clock className="w-4 h-4" style={{ color: secondaryColor }} />
-                <span>{workloadHours}h</span>
-              </div>
-            )}
+            {fields.showCPF ? <p className="mt-1 text-xs text-slate-500">CPF: {sampleData.participantCPF}</p> : null}
+
+            <p className="mt-4 text-base text-slate-700">{textConfig.participationText || "participou do evento"}</p>
+            {fields.showEventName ? <h4 className="mt-2 text-2xl font-semibold text-slate-900">{sampleData.eventName}</h4> : null}
           </div>
 
-          {/* CPF */}
-          {fields.showCPF && (
-            <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-              <User className="w-4 h-4" />
-              <span>CPF: {sampleData.participantCPF}</span>
+          <div className="flex flex-col rounded-2xl border border-slate-200 bg-slate-50 px-6 py-5">
+            <div className="rounded-xl p-4" style={{ background: `linear-gradient(120deg, ${primaryColor}22, ${secondaryColor}33)` }}>
+              <EventMeta fields={fields} workloadHours={workloadHours} sampleData={sampleData} />
             </div>
-          )}
 
-          {/* Conclusion */}
-          <p className="text-sm text-gray-600 max-w-xl">
-            {textConfig.conclusionText}
-          </p>
-        </div>
-
-        {/* Signers */}
-        {fields.showSigners && signers.length > 0 && (
-          <SignersSection
-            signers={signers}
-            layout="row"
-            primaryColor={primaryColor}
-            secondaryColor={secondaryColor}
-          />
-        )}
-
-        {/* Footer */}
-        <div className="flex items-center justify-between text-xs text-gray-400 mt-6 pt-4 border-t border-gray-100">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span className="font-mono">{sampleData.certificateCode}</span>
-          </div>
-          <span>tickethall.com.br</span>
-        </div>
-      </div>
-
-      {/* QR Code */}
-      <QRCodeSection
-        certificateCode={sampleData.certificateCode}
-        position="bottom-right"
-      />
-    </div>
-  );
-});
-
-/**
- * Academic template renderer
- */
-const AcademicTemplate = React.memo<TemplateRendererProps>(function AcademicTemplate(props) {
-  const {
-    cssVariables,
-    backgroundStyle,
-    primaryColor,
-    secondaryColor,
-    fields,
-    textConfig,
-    signers,
-    workloadHours,
-    sampleData,
-  } = props;
-
-  return (
-    <div
-      className="relative w-full h-full overflow-hidden"
-      style={{
-        ...cssVariables,
-        background: 'linear-gradient(180deg, #fffef8 0%, #fff9e6 100%)',
-      }}
-    >
-      {/* Background Layer */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={backgroundStyle}
-      />
-
-      {/* Ornate Border */}
-      <div
-        className="absolute inset-3 border-4 pointer-events-none"
-        style={{ borderColor: `${primaryColor}30` }}
-      />
-      <div
-        className="absolute inset-5 border pointer-events-none"
-        style={{ borderColor: `${secondaryColor}40` }}
-      />
-
-      {/* Corner Decorations */}
-      <CornerDecorations
-        style="ornate"
-        primaryColor={primaryColor}
-        secondaryColor={secondaryColor}
-      />
-
-      {/* Content */}
-      <div className="relative h-full flex flex-col items-center justify-center px-12 py-8 text-center">
-        {/* Decorative Top Element */}
-        <div className="mb-4">
-          <div
-            className="w-20 h-20 mx-auto rounded-full flex items-center justify-center border-4"
-            style={{ borderColor: `${primaryColor}30`, backgroundColor: `${primaryColor}10` }}
-          >
-            <Award className="w-10 h-10" style={{ color: primaryColor }} />
-          </div>
-        </div>
-
-        {/* Title */}
-        <h1
-          className="text-2xl md:text-3xl font-bold tracking-wide mb-2"
-          style={{ color: primaryColor, fontFamily: 'Georgia, Times, serif' }}
-        >
-          {textConfig.title}
-        </h1>
-
-        {/* Decorative Divider */}
-        <div className="flex items-center gap-3 mb-6">
-          <div
-            className="w-16 h-px"
-            style={{ backgroundColor: secondaryColor }}
-          />
-          <div
-            className="w-2 h-2 rotate-45"
-            style={{ backgroundColor: primaryColor }}
-          />
-          <div
-            className="w-16 h-px"
-            style={{ backgroundColor: secondaryColor }}
-          />
-        </div>
-
-        {/* Intro */}
-        <p
-          className="text-lg text-gray-700 mb-3"
-          style={{ fontFamily: 'Georgia, serif' }}
-        >
-          {textConfig.introText}
-        </p>
-
-        {/* Participant */}
-        {fields.showParticipantName && (
-          <h2
-            className="text-2xl font-bold mb-2"
-            style={{ color: primaryColor, fontFamily: 'Georgia, serif' }}
-          >
-            {fields.showParticipantLastName
-              ? `${sampleData.participantName} Santos`
-              : sampleData.participantName}
-          </h2>
-        )}
-
-        {fields.showCPF && (
-          <p className="text-sm text-gray-500 mb-4">
-            CPF: {sampleData.participantCPF}
-          </p>
-        )}
-
-        {/* Participation */}
-        <p
-          className="text-lg text-gray-700 mb-3"
-          style={{ fontFamily: 'Georgia, serif' }}
-        >
-          {textConfig.participationText}
-        </p>
-
-        {/* Event */}
-        {fields.showEventName && (
-          <h3
-            className="text-xl font-semibold mb-4 max-w-2xl"
-            style={{ color: primaryColor }}
-          >
-            {sampleData.eventName}
-          </h3>
-        )}
-
-        {/* Details */}
-        <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-600 mb-4">
-          {fields.showEventDate && (
-            <div className="flex items-center gap-1.5">
-              <Calendar className="w-4 h-4" style={{ color: secondaryColor }} />
-              <span style={{ fontFamily: 'Georgia, serif' }}>{sampleData.eventDate}</span>
-            </div>
-          )}
-          {fields.showEventLocation && (
-            <div className="flex items-center gap-1.5">
-              <MapPin className="w-4 h-4" style={{ color: secondaryColor }} />
-              <span style={{ fontFamily: 'Georgia, serif' }}>{sampleData.eventLocation}</span>
-            </div>
-          )}
-          {fields.showWorkload && workloadHours && workloadHours > 0 && (
-            <div className="flex items-center gap-1.5">
-              <Clock className="w-4 h-4" style={{ color: secondaryColor }} />
-              <span style={{ fontFamily: 'Georgia, serif' }}>Carga horária: {workloadHours}h</span>
-            </div>
-          )}
-        </div>
-
-        {/* Conclusion */}
-        <p
-          className="text-sm text-gray-600 max-w-xl mb-6"
-          style={{ fontFamily: 'Georgia, serif' }}
-        >
-          {textConfig.conclusionText}
-        </p>
-
-        {/* Signers Grid */}
-        {fields.showSigners && signers.length > 0 && (
-          <SignersSection
-            signers={signers}
-            layout="grid"
-            primaryColor={primaryColor}
-            secondaryColor={secondaryColor}
-          />
-        )}
-
-        {/* Spacer */}
-        <div className="flex-1 min-h-4" />
-
-        {/* Footer */}
-        <div
-          className="w-full flex items-center justify-between text-xs pt-4 border-t"
-          style={{ borderColor: `${primaryColor}20` }}
-        >
-          <div className="flex items-center gap-1.5" style={{ color: primaryColor }}>
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span className="font-mono">{sampleData.certificateCode}</span>
-          </div>
-          <span style={{ color: secondaryColor }}>tickethall.com.br</span>
-        </div>
-      </div>
-
-      {/* QR Code */}
-      <QRCodeSection
-        certificateCode={sampleData.certificateCode}
-        position="bottom-center"
-      />
-    </div>
-  );
-});
-
-/**
- * Creative template renderer
- */
-const CreativeTemplate = React.memo<TemplateRendererProps>(function CreativeTemplate(props) {
-  const {
-    cssVariables,
-    backgroundStyle,
-    primaryColor,
-    secondaryColor,
-    fields,
-    textConfig,
-    signers,
-    workloadHours,
-    sampleData,
-  } = props;
-
-  return (
-    <div
-      className="relative w-full h-full overflow-hidden"
-      style={{
-        ...cssVariables,
-        background: 'linear-gradient(135deg, #faf5ff 0%, #f3e8ff 50%, #faf5ff 100%)',
-      }}
-    >
-      {/* Background Layer */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={backgroundStyle}
-      />
-
-      {/* Decorative Shapes */}
-      <div
-        className="absolute -top-20 -right-20 w-60 h-60 rounded-full opacity-20"
-        style={{ backgroundColor: secondaryColor }}
-      />
-      <div
-        className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full opacity-15"
-        style={{ backgroundColor: primaryColor }}
-      />
-
-      {/* Corner Decorations */}
-      <CornerDecorations
-        style="modern"
-        primaryColor={primaryColor}
-        secondaryColor={secondaryColor}
-      />
-
-      {/* Content */}
-      <div className="relative h-full flex flex-col items-center justify-center px-10 py-8 text-center">
-        {/* Top Badge */}
-        <div
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
-          style={{ backgroundColor: `${primaryColor}15` }}
-        >
-          <Award className="w-5 h-5" style={{ color: primaryColor }} />
-          <span
-            className="text-sm font-semibold"
-            style={{ color: primaryColor }}
-          >
-            Certificado Oficial
-          </span>
-        </div>
-
-        {/* Title */}
-        <h1
-          className="text-2xl md:text-3xl font-bold mb-6"
-          style={{ color: primaryColor }}
-        >
-          {textConfig.title}
-        </h1>
-
-        {/* Content Card */}
-        <div
-          className="w-full max-w-2xl rounded-2xl p-6 mb-6"
-          style={{ backgroundColor: 'rgba(255, 255, 255, 0.7)', backdropFilter: 'blur(8px)' }}
-        >
-          {/* Intro */}
-          <p className="text-gray-600 mb-2">{textConfig.introText}</p>
-
-          {/* Participant */}
-          {fields.showParticipantName && (
-            <h2
-              className="text-xl font-bold mb-1"
-              style={{ color: primaryColor }}
-            >
-              {fields.showParticipantLastName
-                ? `${sampleData.participantName} Santos`
-                : sampleData.participantName}
-            </h2>
-          )}
-
-          {fields.showCPF && (
-            <p className="text-xs text-gray-500 mb-3">
-              CPF: {sampleData.participantCPF}
+            <p className="mt-5 text-sm text-slate-600">
+              {textConfig.conclusionText || "Comprove sua participacao atraves do codigo de verificacao."}
             </p>
-          )}
 
-          {/* Participation */}
-          <p className="text-gray-600 mb-2">{textConfig.participationText}</p>
+            <Signers signers={signers} show={fields.showSigners} lineColor={`${primaryColor}70`} />
 
-          {/* Event */}
-          {fields.showEventName && (
-            <h3
-              className="text-lg font-semibold mb-4"
-              style={{ color: primaryColor }}
-            >
-              {sampleData.eventName}
-            </h3>
-          )}
-
-          {/* Details */}
-          <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
-            {fields.showEventDate && (
-              <div
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
-                style={{ backgroundColor: `${secondaryColor}20` }}
-              >
-                <Calendar className="w-3.5 h-3.5" style={{ color: secondaryColor }} />
-                <span style={{ color: primaryColor }}>{sampleData.eventDate}</span>
-              </div>
-            )}
-            {fields.showEventLocation && (
-              <div
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
-                style={{ backgroundColor: `${secondaryColor}20` }}
-              >
-                <MapPin className="w-3.5 h-3.5" style={{ color: secondaryColor }} />
-                <span style={{ color: primaryColor }}>{sampleData.eventLocation}</span>
-              </div>
-            )}
-            {fields.showWorkload && workloadHours && workloadHours > 0 && (
-              <div
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
-                style={{ backgroundColor: `${secondaryColor}20` }}
-              >
-                <Clock className="w-3.5 h-3.5" style={{ color: secondaryColor }} />
-                <span style={{ color: primaryColor }}>{workloadHours}h</span>
-              </div>
-            )}
+            <FooterCode sampleData={sampleData} />
           </div>
-        </div>
-
-        {/* Conclusion */}
-        <p className="text-sm text-gray-600 max-w-xl mb-4">
-          {textConfig.conclusionText}
-        </p>
-
-        {/* Signers */}
-        {fields.showSigners && signers.length > 0 && (
-          <SignersSection
-            signers={signers}
-            layout="column"
-            primaryColor={primaryColor}
-            secondaryColor={secondaryColor}
-          />
-        )}
-
-        {/* Spacer */}
-        <div className="flex-1 min-h-4" />
-
-        {/* Footer */}
-        <div className="w-full flex items-center justify-between text-xs text-gray-500 pt-4">
-          <div className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5" style={{ color: secondaryColor }} />
-            <span className="font-mono">{sampleData.certificateCode}</span>
-          </div>
-          <span>tickethall.com.br</span>
         </div>
       </div>
-
-      {/* QR Code */}
-      <QRCodeSection
-        certificateCode={sampleData.certificateCode}
-        position="bottom-right"
-      />
     </div>
   );
 });
 
-/**
- * Custom template renderer
- */
-const CustomTemplate = React.memo<TemplateRendererProps>(function CustomTemplate(props) {
-  const {
-    cssVariables,
-    backgroundStyle,
-    primaryColor,
-    secondaryColor,
-    fields,
-    textConfig,
-    signers,
-    workloadHours,
-    sampleData,
-  } = props;
-
-  // Custom template uses a flexible layout that adapts to custom colors
-  return (
-    <div
-      className="relative w-full h-full overflow-hidden"
-      style={{
-        ...cssVariables,
-        backgroundColor: '#ffffff',
-        ...backgroundStyle,
-      }}
-    >
-      {/* Border Frame */}
-      <div
-        className="absolute inset-4 border-2 pointer-events-none rounded-lg"
-        style={{ borderColor: `${primaryColor}40` }}
-      />
-
-      {/* Content */}
-      <div className="relative h-full flex flex-col items-center justify-center px-10 py-8 text-center">
-        {/* Title */}
-        <h1
-          className="text-2xl font-bold tracking-wide mb-6"
-          style={{ color: primaryColor }}
-        >
-          {textConfig.title}
-        </h1>
-
-        {/* Intro */}
-        <p className="text-base text-gray-600 mb-3">{textConfig.introText}</p>
-
-        {/* Participant */}
-        {fields.showParticipantName && (
-          <h2
-            className="text-2xl font-bold mb-4"
-            style={{ color: primaryColor }}
-          >
-            {fields.showParticipantLastName
-              ? `${sampleData.participantName} Santos`
-              : sampleData.participantName}
-          </h2>
-        )}
-
-        {fields.showCPF && (
-          <p className="text-sm text-gray-500 mb-3">
-            CPF: {sampleData.participantCPF}
-          </p>
-        )}
-
-        {/* Participation */}
-        <p className="text-base text-gray-600 mb-3">{textConfig.participationText}</p>
-
-        {/* Event */}
-        {fields.showEventName && (
-          <h3
-            className="text-xl font-semibold mb-4"
-            style={{ color: primaryColor }}
-          >
-            {sampleData.eventName}
-          </h3>
-        )}
-
-        {/* Details */}
-        <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-gray-600 mb-4">
-          {fields.showEventDate && (
-            <div className="flex items-center gap-1.5">
-              <Calendar className="w-4 h-4" style={{ color: secondaryColor }} />
-              <span>{sampleData.eventDate}</span>
-            </div>
-          )}
-          {fields.showEventLocation && (
-            <div className="flex items-center gap-1.5">
-              <MapPin className="w-4 h-4" style={{ color: secondaryColor }} />
-              <span>{sampleData.eventLocation}</span>
-            </div>
-          )}
-          {fields.showWorkload && workloadHours && workloadHours > 0 && (
-            <div className="flex items-center gap-1.5">
-              <Clock className="w-4 h-4" style={{ color: secondaryColor }} />
-              <span>{workloadHours} horas</span>
-            </div>
-          )}
-        </div>
-
-        {/* Conclusion */}
-        <p className="text-sm text-gray-600 max-w-xl mb-6">
-          {textConfig.conclusionText}
-        </p>
-
-        {/* Signers */}
-        {fields.showSigners && signers.length > 0 && (
-          <SignersSection
-            signers={signers}
-            layout="row"
-            primaryColor={primaryColor}
-            secondaryColor={secondaryColor}
-          />
-        )}
-
-        {/* Spacer */}
-        <div className="flex-1 min-h-4" />
-
-        {/* Footer */}
-        <div
-          className="w-full flex items-center justify-between text-xs text-gray-400 pt-4 border-t"
-          style={{ borderColor: `${primaryColor}20` }}
-        >
-          <div className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span className="font-mono">{sampleData.certificateCode}</span>
-          </div>
-          <span>tickethall.com.br</span>
-        </div>
-      </div>
-
-      {/* QR Code */}
-      <QRCodeSection
-        certificateCode={sampleData.certificateCode}
-        position="bottom-right"
-      />
-    </div>
-  );
-});
-
-// =============================================================================
-// Main Component
-// =============================================================================
-
-/**
- * CertificatePreview - High-performance certificate preview component
- * 
- * Features:
- * - Debounced updates (500ms default)
- * - Memoized computations
- * - Lazy-loaded background images
- * - CSS transforms for smooth animations
- * - A4 landscape aspect ratio (297:210)
- */
-export const CertificatePreview = React.memo<CertificatePreviewProps>(function CertificatePreview({
+export const CertificatePreview = memo(function CertificatePreview({
   templateId,
   primaryColor,
   secondaryColor,
@@ -1200,136 +405,38 @@ export const CertificatePreview = React.memo<CertificatePreviewProps>(function C
   workloadHours,
   sampleData,
   className,
-  debounceMs = 50,
   onPreviewReady,
-}) {
-  // Debounce visual props to prevent rapid re-renders during drag/typing
-  // Note: templateId is NOT debounced - it's a discrete click action
-  const debouncedPrimaryColor = useDebounce(primaryColor, debounceMs);
-  const debouncedSecondaryColor = useDebounce(secondaryColor, debounceMs);
-  const debouncedBackgroundUrl = useDebounce(backgroundUrl, debounceMs);
-  const debouncedFields = useDebounce(fields, debounceMs);
-  const debouncedTextConfig = useDebounce(textConfig, debounceMs);
-  const debouncedSigners = useDebounce(signers, debounceMs);
-  const debouncedWorkloadHours = useDebounce(workloadHours, debounceMs);
-  const debouncedSampleData = useDebounce(sampleData, debounceMs);
+}: CertificatePreviewProps) {
+  const effectiveTemplateId = normalizeTemplateId(templateId);
 
-  // Lazy load background image
-  const { loaded: bgLoaded, backgroundStyle } = useLazyBackground(debouncedBackgroundUrl);
-
-  // Get template configuration (use templateId directly - NOT debounced)
-  const template = useMemo(() => {
-    return CERTIFICATE_TEMPLATES[templateId] || CERTIFICATE_TEMPLATES.executive;
-  }, [templateId]);
-
-  // Generate CSS variables for theming (use templateId directly for instant updates)
-  const cssVariables = useMemo(() => {
-    return ColorUtils.generateCssVariables(
-      debouncedPrimaryColor,
-      debouncedSecondaryColor
-    );
-  }, [debouncedPrimaryColor, debouncedSecondaryColor]);
-
-  // Memoize template props to prevent unnecessary re-renders
-  // Use templateId directly (not debounced) for instant template switching
-  const templateProps = useMemo<TemplateRendererProps>(() => ({
-    templateId,
-    cssVariables,
-    backgroundStyle,
-    primaryColor: debouncedPrimaryColor,
-    secondaryColor: debouncedSecondaryColor,
-    fields: debouncedFields,
-    textConfig: debouncedTextConfig,
-    signers: debouncedSigners,
-    workloadHours: debouncedWorkloadHours,
-    sampleData: debouncedSampleData,
-  }), [
-    templateId,
-    cssVariables,
-    backgroundStyle,
-    debouncedPrimaryColor,
-    debouncedSecondaryColor,
-    debouncedFields,
-    debouncedTextConfig,
-    debouncedSigners,
-    debouncedWorkloadHours,
-    debouncedSampleData,
-  ]);
-
-  // Notify when preview is ready
   useEffect(() => {
     onPreviewReady?.();
-  }, [onPreviewReady, templateProps]);
+  }, [onPreviewReady, effectiveTemplateId, primaryColor, secondaryColor, backgroundUrl, fields, textConfig, signers, workloadHours, sampleData]);
 
-  // Render the appropriate template (use templateId directly - NOT debounced)
-  const renderTemplate = useCallback(() => {
-    switch (templateId) {
-      case 'executive':
-        return <ExecutiveTemplate {...templateProps} />;
-      case 'modern':
-        return <ModernTemplate {...templateProps} />;
-      case 'academic':
-        return <AcademicTemplate {...templateProps} />;
-      case 'creative':
-        return <CreativeTemplate {...templateProps} />;
-      case 'custom':
-        return <CustomTemplate {...templateProps} />;
-      default:
-        return <ExecutiveTemplate {...templateProps} />;
-    }
-  }, [templateId, templateProps]);
+  const templateProps: TemplateProps = {
+    primaryColor,
+    secondaryColor,
+    backgroundUrl,
+    fields,
+    textConfig,
+    signers,
+    workloadHours,
+    sampleData,
+  };
 
   return (
     <div
+      data-testid="certificate-preview"
+      data-template-id={effectiveTemplateId}
       className={cn(
-        'relative w-full',
-        'bg-white rounded-lg shadow-lg overflow-hidden',
+        "certificate-preview relative overflow-hidden rounded-xl border bg-white shadow-sm mx-auto",
         className
       )}
-      style={{
-        // A4 Landscape aspect ratio: 297:210 ≈ 1.414:1
-        aspectRatio: '297/210',
-        willChange: 'transform',
-        transform: 'translateZ(0)', // Force GPU acceleration
-      }}
     >
-      {/* Loading Overlay */}
-      {debouncedBackgroundUrl && !bgLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-50 z-10">
-          <div className="flex flex-col items-center gap-2">
-            <div
-              className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
-              style={{ borderColor: `${debouncedPrimaryColor}40`, borderTopColor: 'transparent' }}
-            />
-            <span className="text-xs text-gray-400">Carregando...</span>
-          </div>
-        </div>
-      )}
-
-      {/* Certificate Content */}
-      <div
-        className="absolute inset-0"
-        style={{
-          opacity: debouncedBackgroundUrl && !bgLoaded ? 0 : 1,
-          transition: 'opacity 200ms ease-out',
-        }}
-      >
-        {renderTemplate()}
-      </div>
+      {effectiveTemplateId === "modern" ? <ModernTemplate {...templateProps} /> : null}
+      {effectiveTemplateId === "academic" ? <AcademicTemplate {...templateProps} /> : null}
+      {effectiveTemplateId === "creative" ? <CreativeTemplate {...templateProps} /> : null}
+      {effectiveTemplateId === "executive" ? <ExecutiveTemplate {...templateProps} /> : null}
     </div>
   );
 });
-
-// =============================================================================
-// Export Types
-// =============================================================================
-
-export type {
-  CertificateTemplateId,
-  CertificateTemplate,
-};
-
-export { CERTIFICATE_TEMPLATES, ColorUtils };
-
-// Default export
-export default CertificatePreview;

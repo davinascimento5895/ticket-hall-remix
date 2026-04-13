@@ -1,18 +1,17 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { PDFDocument, rgb, StandardFonts, PDFImage } from "https://cdn.skypack.dev/pdf-lib@1.17.1";
 import { qrcode } from "https://deno.land/x/qrcode/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Rate limiting cache (simple in-memory, consider Redis for production)
+// Rate limiting
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_MAX = 10;
-const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
+const RATE_LIMIT_WINDOW_MS = 60000;
 
 function checkRateLimit(clientId: string): boolean {
   const now = Date.now();
@@ -23,10 +22,7 @@ function checkRateLimit(clientId: string): boolean {
     return true;
   }
   
-  if (entry.count >= RATE_LIMIT_MAX) {
-    return false;
-  }
-  
+  if (entry.count >= RATE_LIMIT_MAX) return false;
   entry.count++;
   return true;
 }
@@ -38,17 +34,475 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
   });
 }
 
-function hexToRgb(hex: string): { r: number; g: number; b: number } {
-  const cleanHex = hex.replace("#", "");
-  const bigint = parseInt(cleanHex, 16);
-  const r = (bigint >> 16) & 255;
-  const g = (bigint >> 8) & 255;
-  const b = bigint & 255;
-  return { 
-    r: r / 255, 
-    g: g / 255, 
-    b: b / 255 
-  };
+// Generate HTML for certificate
+function generateCertificateHTML(data: {
+  templateId: string;
+  primaryColor: string;
+  secondaryColor: string;
+  backgroundColor: string;
+  textColor: string;
+  title: string;
+  subtitle: string;
+  introText: string;
+  participationText: string;
+  participantName: string;
+  eventName: string;
+  eventDate: string;
+  eventLocation: string;
+  certificateCode: string;
+  workloadHours: number;
+  showWorkload: boolean;
+  showEventDate: boolean;
+  showEventLocation: boolean;
+  qrCodeDataUrl: string;
+}): string {
+  const isModern = data.templateId === 'modern';
+  const isAcademic = data.templateId === 'academic';
+  
+  if (isModern) {
+    return generateModernTemplate(data);
+  }
+  
+  // Default: Executive template
+  return generateExecutiveTemplate(data);
+}
+
+function generateExecutiveTemplate(data: any): string {
+  const showDate = data.showEventDate && data.eventDate ? `<span style="margin: 0 10px;">📅 ${data.eventDate}</span>` : '';
+  const showLocation = data.showEventLocation && data.eventLocation ? `<span style="margin: 0 10px;">📍 ${data.eventLocation}</span>` : '';
+  const showWorkload = data.showWorkload && data.workloadHours ? `<span style="margin: 0 10px;">⏱ ${data.workloadHours}h</span>` : '';
+  const qrCode = data.qrCodeDataUrl ? `<img src="${data.qrCodeDataUrl}" style="width: 70px; height: 70px; margin-top: 8px;" />` : '';
+  
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @page { size: A4 landscape; margin: 0; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      width: 297mm; 
+      height: 210mm; 
+      font-family: Georgia, 'Times New Roman', serif;
+      background: ${data.backgroundColor};
+    }
+    .container {
+      width: 100%;
+      height: 100%;
+      padding: 12mm;
+      position: relative;
+    }
+    .outer-frame {
+      position: absolute;
+      top: 12px; left: 12px; right: 12px; bottom: 12px;
+      border: 3px double ${data.secondaryColor};
+    }
+    .inner-frame {
+      position: absolute;
+      top: 20px; left: 20px; right: 20px; bottom: 20px;
+      border: 1px solid ${data.secondaryColor};
+      opacity: 0.6;
+    }
+    .corner {
+      position: absolute;
+      width: 48px;
+      height: 48px;
+    }
+    .corner-tl { top: 16px; left: 16px; }
+    .corner-tr { top: 16px; right: 16px; transform: rotate(90deg); }
+    .corner-br { bottom: 16px; right: 16px; transform: rotate(180deg); }
+    .corner-bl { bottom: 16px; left: 16px; transform: rotate(270deg); }
+    .content {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 72px;
+      text-align: center;
+    }
+    .logo {
+      font-size: 14px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      color: ${data.textColor};
+    }
+    .logo-ticket { font-weight: 600; }
+    .logo-hall { font-weight: 300; color: ${data.secondaryColor}; }
+    h1 {
+      font-size: 32px;
+      font-weight: 600;
+      color: ${data.primaryColor};
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      font-size: 14px;
+      font-style: italic;
+      color: ${data.secondaryColor};
+      margin-bottom: 28px;
+    }
+    .divider {
+      width: 120px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, ${data.secondaryColor}, transparent);
+      margin: 0 auto 28px;
+    }
+    .intro {
+      font-size: 13px;
+      color: ${data.textColor};
+      opacity: 0.7;
+      margin-bottom: 16px;
+    }
+    .participant {
+      font-size: 36px;
+      font-weight: 600;
+      color: ${data.primaryColor};
+      margin-bottom: 20px;
+      line-height: 1.2;
+    }
+    .event {
+      font-size: 24px;
+      font-weight: 500;
+      color: ${data.primaryColor};
+      margin: 12px 0;
+    }
+    .details {
+      font-size: 12px;
+      color: ${data.textColor};
+      opacity: 0.7;
+      margin: 16px 0;
+    }
+    .bottom {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      width: 100%;
+      padding-top: 32px;
+      border-top: 1px solid ${data.secondaryColor}40;
+      margin-top: auto;
+    }
+    .signature {
+      text-align: center;
+      flex: 1;
+    }
+    .sig-line {
+      width: 140px;
+      height: 1px;
+      background: ${data.primaryColor};
+      margin: 0 auto 8px;
+    }
+    .sig-label {
+      font-size: 10px;
+      color: ${data.textColor};
+      opacity: 0.6;
+    }
+    .seal {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #d4af37, #8b6914);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      color: rgba(255,255,255,0.9);
+    }
+    .code-section {
+      text-align: center;
+      flex: 1;
+    }
+    .code-label {
+      font-size: 9px;
+      color: ${data.textColor};
+      opacity: 0.5;
+      letter-spacing: 0.1em;
+    }
+    .code-value {
+      font-size: 11px;
+      font-family: monospace;
+      color: ${data.primaryColor};
+      margin: 4px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="outer-frame"></div>
+    <div class="inner-frame"></div>
+    
+    <svg class="corner corner-tl" viewBox="0 0 48 48">
+      <path d="M4 4 L4 32 Q4 44 16 44 L44 44 M4 4 L20 4 M4 4 L4 20" 
+        fill="none" stroke="${data.secondaryColor}" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <svg class="corner corner-tr" viewBox="0 0 48 48">
+      <path d="M4 4 L4 32 Q4 44 16 44 L44 44 M4 4 L20 4 M4 4 L4 20" 
+        fill="none" stroke="${data.secondaryColor}" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <svg class="corner corner-br" viewBox="0 0 48 48">
+      <path d="M4 4 L4 32 Q4 44 16 44 L44 44 M4 4 L20 4 M4 4 L4 20" 
+        fill="none" stroke="${data.secondaryColor}" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <svg class="corner corner-bl" viewBox="0 0 48 48">
+      <path d="M4 4 L4 32 Q4 44 16 44 L44 44 M4 4 L20 4 M4 4 L4 20" 
+        fill="none" stroke="${data.secondaryColor}" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    
+    <div class="content">
+      <div class="logo">
+        <span class="logo-ticket">TICKET</span>
+        <span class="logo-hall">HALL</span>
+      </div>
+      
+      <h1>${data.title}</h1>
+      <p class="subtitle">${data.subtitle}</p>
+      <div class="divider"></div>
+      
+      <p class="intro">${data.introText}</p>
+      <p class="participant">${data.participantName}</p>
+      <p class="intro">${data.participationText}</p>
+      <p class="event">${data.eventName}</p>
+      
+      <div class="details">
+        ${showDate}
+        ${showLocation}
+        ${showWorkload}
+      </div>
+      
+      <div class="bottom">
+        <div class="signature">
+          <div class="sig-line"></div>
+          <p class="sig-label">Assinatura do Organizador</p>
+        </div>
+        
+        <div class="seal">✓</div>
+        
+        <div class="code-section">
+          <p class="code-label">CÓDIGO DE VERIFICAÇÃO</p>
+          <p class="code-value">${data.certificateCode}</p>
+          ${qrCode}
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+function generateModernTemplate(data: any): string {
+  const showDate = data.showEventDate && data.eventDate ? `
+    <div style="margin-bottom: 12px;">
+      <p style="font-size: 9px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #111; opacity: 0.4; margin: 0;">Data</p>
+      <p style="font-size: 13px; font-weight: 500; color: #111; margin: 4px 0 0 0;">${data.eventDate}</p>
+    </div>` : '';
+    
+  const showLocation = data.showEventLocation && data.eventLocation ? `
+    <div style="margin-bottom: 12px;">
+      <p style="font-size: 9px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #111; opacity: 0.4; margin: 0;">Local</p>
+      <p style="font-size: 13px; font-weight: 500; color: #111; margin: 4px 0 0 0;">${data.eventLocation}</p>
+    </div>` : '';
+    
+  const qrCode = data.qrCodeDataUrl ? `<img src="${data.qrCodeDataUrl}" style="width: 60px; height: 60px; margin-top: 8px;" />` : '';
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @page { size: A4 landscape; margin: 0; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      width: 297mm; 
+      height: 210mm; 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #fff;
+      position: relative;
+    }
+    .top-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 40%;
+      height: 8px;
+      background: ${data.primaryColor};
+    }
+    .side-line {
+      position: absolute;
+      top: 15%;
+      left: 40px;
+      width: 3px;
+      height: 70%;
+      background: linear-gradient(180deg, ${data.primaryColor} 0%, transparent 100%);
+    }
+    .content {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 48px;
+      height: 100%;
+      padding: 48px 56px;
+    }
+    .left {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: ${data.primaryColor};
+      margin-bottom: 16px;
+    }
+    .participant {
+      font-size: 42px;
+      font-weight: 600;
+      color: #111;
+      margin-bottom: 20px;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+    .participated {
+      font-size: 14px;
+      color: #111;
+      opacity: 0.6;
+      margin-bottom: 8px;
+    }
+    .event {
+      font-size: 24px;
+      font-weight: 500;
+      color: ${data.secondaryColor};
+      margin-bottom: 24px;
+    }
+    .right {
+      border-left: 1px solid rgba(0,0,0,0.1);
+      padding-left: 32px;
+      display: flex;
+      flex-direction: column;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 48px;
+    }
+    .logo-ticket { color: #111; }
+    .logo-hall { color: ${data.primaryColor}; }
+    .details {
+      flex: 1;
+    }
+    .verification {
+      padding: 12px;
+      background: rgba(0,0,0,0.03);
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar"></div>
+  <div class="side-line"></div>
+  
+  <div class="content">
+    <div class="left">
+      <p class="label">${data.title}</p>
+      <p class="participant">${data.participantName}</p>
+      <p class="participated">Participou de</p>
+      <p class="event">${data.eventName}</p>
+    </div>
+    
+    <div class="right">
+      <div class="logo">
+        <span class="logo-ticket">TICKET</span>
+        <span class="logo-hall">HALL</span>
+      </div>
+      
+      <div class="details">
+        ${showDate}
+        ${showLocation}
+      </div>
+      
+      <div class="verification">
+        <p style="font-size: 9px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #111; opacity: 0.4; margin: 0 0 4px 0;">Verificação</p>
+        <p style="font-size: 11px; font-family: monospace; color: ${data.secondaryColor}; margin: 0;">${data.certificateCode}</p>
+        ${qrCode}
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+// Generate PDF using external service
+async function generatePDF(html: string): Promise<Uint8Array> {
+  // Try Browserless first
+  const browserlessToken = Deno.env.get("BROWSERLESS_TOKEN");
+  if (browserlessToken) {
+    return await generateWithBrowserless(html, browserlessToken);
+  }
+  
+  // Try PDFShift (another popular service)
+  const pdfshiftKey = Deno.env.get("PDFSHIFT_API_KEY");
+  if (pdfshiftKey) {
+    return await generateWithPDFShift(html, pdfshiftKey);
+  }
+  
+  // Fallback: return HTML as error message
+  throw new Error(
+    "Nenhum serviço de PDF configurado. " +
+    "Configure BROWSERLESS_TOKEN ou PDFSHIFT_API_KEY nas variáveis de ambiente."
+  );
+}
+
+async function generateWithBrowserless(html: string, token: string): Promise<Uint8Array> {
+  const response = await fetch(`https://chrome.browserless.io/pdf?token=${token}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      html,
+      options: {
+        format: 'A4',
+        landscape: true,
+        printBackground: true,
+        preferCSSPageSize: true,
+        scale: 2,
+        margin: { top: '0px', right: '0px', bottom: '0px', left: '0px' }
+      }
+    }),
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Browserless error: ${response.status}`);
+  }
+  
+  return new Uint8Array(await response.arrayBuffer());
+}
+
+async function generateWithPDFShift(html: string, apiKey: string): Promise<Uint8Array> {
+  const response = await fetch('https://api.pdfshift.io/v3/convert/pdf', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Basic ${btoa(`api:${apiKey}`)}`,
+    },
+    body: JSON.stringify({
+      source: html,
+      landscape: true,
+      format: 'A4',
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    }),
+  });
+  
+  if (!response.ok) {
+    throw new Error(`PDFShift error: ${response.status}`);
+  }
+  
+  return new Uint8Array(await response.arrayBuffer());
 }
 
 serve(async (req) => {
@@ -61,13 +515,13 @@ serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Rate limiting por IP
+    // Rate limiting
     const clientIp = req.headers.get("x-forwarded-for") || "unknown";
     if (!checkRateLimit(clientIp)) {
-      return jsonResponse({ error: "Rate limit exceeded. Please try again later." }, 429);
+      return jsonResponse({ error: "Rate limit exceeded" }, 429);
     }
 
-    // Autenticar chamador
+    // Authentication
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return jsonResponse({ error: "Unauthorized" }, 401);
@@ -89,55 +543,123 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { 
-      certificateId, 
-      templateId, 
-      customColors,
-      backgroundUrl,
-      options = {} 
-    } = body;
-
-    if (!certificateId) {
-      return jsonResponse({ error: "certificateId is required" }, 400);
-    }
-
-    // Validar certificateId (UUID format)
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(certificateId)) {
-      return jsonResponse({ error: "Invalid certificateId format" }, 400);
-    }
+    const { certificateId, previewData, templateId, customColors } = body;
 
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // Buscar certificado com detalhes completos
+    // ============================================================
+    // MODO PREVIEW
+    // ============================================================
+    if (previewData) {
+      console.log("[PDF Preview] Gerando para evento:", previewData.eventId);
+
+      // Authorization
+      if (userId) {
+        const { data: event } = await supabase
+          .from("events")
+          .select("producer_id")
+          .eq("id", previewData.eventId)
+          .single();
+        
+        if (event?.producer_id !== userId) {
+          return jsonResponse({ error: "Not authorized" }, 403);
+        }
+      }
+
+      // Get event config
+      const { data: event } = await supabase
+        .from("events")
+        .select("selected_template_id, certificate_text_config, certificate_colors, workload_hours")
+        .eq("id", previewData.eventId)
+        .single();
+
+      // Build config
+      const effectiveTemplate = templateId || event?.selected_template_id || "executive";
+      const colors = {
+        primary: customColors?.primary || event?.certificate_colors?.primary || "#1a365d",
+        secondary: customColors?.secondary || event?.certificate_colors?.secondary || "#c9a227",
+        background: "#faf8f3",
+        text: "#1a202c",
+      };
+
+      const textConfig = previewData.textConfig || event?.certificate_text_config || {
+        title: "CERTIFICADO DE PARTICIPAÇÃO",
+        subtitle: "de Participação",
+        introText: "Certificamos que",
+        participationText: "participou do evento",
+      };
+
+      // Generate QR
+      const verifyUrl = `${supabaseUrl}/functions/v1/verify-certificate-public?code=PREVIEW-000000`;
+      const qrCodeDataUrl = await qrcode(verifyUrl, { size: 120 });
+
+      // Build data
+      const html = generateCertificateHTML({
+        templateId: effectiveTemplate,
+        primaryColor: colors.primary,
+        secondaryColor: colors.secondary,
+        backgroundColor: colors.background,
+        textColor: colors.text,
+        title: textConfig.title,
+        subtitle: textConfig.subtitle,
+        introText: textConfig.subtitle || textConfig.introText,
+        participationText: textConfig.bodyText || textConfig.participationText,
+        participantName: previewData.participantName || "Nome do Participante",
+        eventName: previewData.eventName || "Nome do Evento",
+        eventDate: previewData.eventDate 
+          ? new Date(previewData.eventDate).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })
+          : new Date().toLocaleDateString("pt-BR"),
+        eventLocation: previewData.eventLocation || "",
+        certificateCode: "PREVIEW-000000",
+        workloadHours: previewData.workloadHours || 0,
+        showWorkload: previewData.fields?.showWorkload,
+        showEventDate: previewData.fields?.showEventDate,
+        showEventLocation: previewData.fields?.showEventLocation,
+        qrCodeDataUrl,
+      });
+
+      // Generate PDF
+      const pdfBytes = await generatePDF(html);
+
+      return new Response(pdfBytes, {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `inline; filename="certificado-preview.pdf"`,
+        },
+      });
+    }
+
+    // ============================================================
+    // MODO CERTIFICADO REAL
+    // ============================================================
+    if (!certificateId) {
+      return jsonResponse({ error: "certificateId required" }, 400);
+    }
+
+    // Fetch certificate
     const { data: cert, error: certError } = await supabase
       .from("certificates")
       .select(`
         *,
         events: event_id (
-          id, title, start_date, end_date, venue_name, producer_id,
-          selected_template_id, custom_background_url, certificate_text_config,
-          certificate_colors, certificate_fields, workload_hours
+          id, title, start_date, venue_name, producer_id,
+          selected_template_id, certificate_text_config, certificate_colors, workload_hours
         )
       `)
       .eq("id", certificateId)
       .single();
 
     if (certError || !cert) {
-      console.error("Certificate fetch error:", certError);
       return jsonResponse({ error: "Certificate not found" }, 404);
     }
 
-    // Verificar se certificado foi revogado
     if (cert.revoked_at) {
-      return jsonResponse({ 
-        error: "Certificate has been revoked",
-        revokedAt: cert.revoked_at,
-        reason: cert.revoked_reason
-      }, 410);
+      return jsonResponse({ error: "Certificate revoked" }, 410);
     }
 
-    // Verificar autorização
+    // Authorization
     if (userId && cert.user_id !== userId) {
       const { data: event } = await supabase
         .from("events")
@@ -146,91 +668,59 @@ serve(async (req) => {
         .single();
       
       if (event?.producer_id !== userId) {
-        // Verificar se é membro da equipe do evento
-        const { data: teamMember } = await supabase
-          .from("event_team_members")
-          .select("id")
-          .eq("event_id", cert.event_id)
-          .eq("user_id", userId)
-          .eq("status", "active")
-          .single();
-        
-        if (!teamMember) {
-          return jsonResponse({ error: "Not authorized" }, 403);
-        }
+        return jsonResponse({ error: "Not authorized" }, 403);
       }
     }
 
-    // Buscar assinantes do evento
-    const { data: signers } = await supabase
-      .from("certificate_signers")
-      .select("name, role, signature_url, display_order")
-      .eq("event_id", cert.event_id)
-      .order("display_order", { ascending: true });
-
-    // Buscar template se especificado
-    const effectiveTemplateId = templateId || cert.events?.selected_template_id || "default";
-    const { data: template } = await supabase
-      .from("certificate_templates")
-      .select("default_config")
-      .eq("id", effectiveTemplateId)
-      .single();
-
-    // Cores efetivas (prioridade: custom > event config > template default > fallback)
-    const effectiveColors = {
-      primary: customColors?.primary || 
-               cert.events?.certificate_colors?.primary || 
-               template?.default_config?.primaryColor || 
-               "#EA580B",
-      secondary: customColors?.secondary || 
-                 cert.events?.certificate_colors?.secondary || 
-                 template?.default_config?.secondaryColor || 
-                 "#1E293B",
-      background: customColors?.background || 
-                  cert.events?.certificate_colors?.background || 
-                  "#FFFFFF",
-      text: customColors?.text || 
-            cert.events?.certificate_colors?.text || 
-            "#1E293B",
+    // Build config
+    const effectiveTemplate = templateId || cert.events?.selected_template_id || "executive";
+    const colors = {
+      primary: customColors?.primary || cert.events?.certificate_colors?.primary || "#1a365d",
+      secondary: customColors?.secondary || cert.events?.certificate_colors?.secondary || "#c9a227",
+      background: "#faf8f3",
+      text: "#1a202c",
     };
 
-    // Background efetivo
-    const effectiveBackgroundUrl = backgroundUrl || 
-                                   cert.events?.custom_background_url || 
-                                   null;
-
-    // Campos a serem exibidos
-    const fields = cert.events?.certificate_fields || {
-      showParticipantName: true,
-      showEventTitle: true,
-      showEventDate: true,
-      showEventLocation: true,
-      showWorkload: true,
-      showVerificationCode: true,
-      showQrCode: true,
-      showSigners: true,
-      showLogo: true,
-    };
-
-    // Text config
     const textConfig = cert.events?.certificate_text_config || {
       title: "CERTIFICADO DE PARTICIPAÇÃO",
-      subtitle: "Certificamos que",
-      bodyText: "participou do evento",
-      footerText: "Emitido pela plataforma TicketHall",
+      subtitle: "de Participação",
+      introText: "Certificamos que",
+      participationText: "participou do evento",
     };
 
-    // Gerar PDF
-    const pdfBytes = await generateCertificatePDF({
-      cert,
-      signers: signers || [],
-      colors: effectiveColors,
-      backgroundUrl: effectiveBackgroundUrl,
-      fields,
-      textConfig,
-      options,
-      supabaseUrl,
+    // Generate QR
+    const verifyUrl = `${supabaseUrl}/functions/v1/verify-certificate-public?code=${encodeURIComponent(cert.certificate_code)}`;
+    const qrCodeDataUrl = await qrcode(verifyUrl, { size: 120 });
+
+    // Build HTML
+    const eventDate = cert.events?.start_date 
+      ? new Date(cert.events.start_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })
+      : "";
+
+    const html = generateCertificateHTML({
+      templateId: effectiveTemplate,
+      primaryColor: colors.primary,
+      secondaryColor: colors.secondary,
+      backgroundColor: colors.background,
+      textColor: colors.text,
+      title: textConfig.title,
+      subtitle: textConfig.subtitle,
+      introText: textConfig.subtitle || textConfig.introText,
+      participationText: textConfig.bodyText || textConfig.participationText,
+      participantName: cert.attendee_name || "Participante",
+      eventName: cert.events?.title || "Evento",
+      eventDate,
+      eventLocation: cert.events?.venue_name || "",
+      certificateCode: cert.certificate_code,
+      workloadHours: cert.workload_hours || cert.events?.workload_hours || 0,
+      showWorkload: cert.events?.certificate_fields?.showWorkload,
+      showEventDate: cert.events?.certificate_fields?.showEventDate,
+      showEventLocation: cert.events?.certificate_fields?.showEventLocation,
+      qrCodeDataUrl,
     });
+
+    // Generate PDF
+    const pdfBytes = await generatePDF(html);
 
     return new Response(pdfBytes, {
       status: 200,
@@ -238,453 +728,14 @@ serve(async (req) => {
         ...corsHeaders,
         "Content-Type": "application/pdf",
         "Content-Disposition": `inline; filename="certificado-${cert.certificate_code}.pdf"`,
-        "Cache-Control": "private, max-age=3600",
       },
     });
+
   } catch (error) {
-    console.error("generate-certificate-pdf error:", error);
+    console.error("PDF generation error:", error);
     return jsonResponse({ 
-      error: "Internal server error",
+      error: "PDF generation failed",
       message: (error as Error).message 
     }, 500);
   }
 });
-
-interface PDFGenerationParams {
-  cert: any;
-  signers: any[];
-  colors: {
-    primary: string;
-    secondary: string;
-    background: string;
-    text: string;
-  };
-  backgroundUrl: string | null;
-  fields: any;
-  textConfig: any;
-  options: any;
-  supabaseUrl: string;
-}
-
-async function generateCertificatePDF(params: PDFGenerationParams): Promise<Uint8Array> {
-  const { cert, signers, colors, backgroundUrl, fields, textConfig, options, supabaseUrl } = params;
-  
-  const pdfDoc = await PDFDocument.create();
-  
-  // Garantir formato A4 landscape
-  // A4 = 210mm x 297mm, landscape = 297mm x 210mm
-  // Em pontos: 841.89 x 595.28
-  const page = pdfDoc.addPage([841.89, 595.28]);
-  const { width, height } = page;
-
-  const primaryRgb = hexToRgb(colors.primary);
-  const secondaryRgb = hexToRgb(colors.secondary);
-  const textRgb = hexToRgb(colors.text);
-  const bgRgb = hexToRgb(colors.background);
-
-  // Fonts
-  const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const helveticaOblique = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
-  const timesRoman = await pdfDoc.embedFont(StandardFonts.TimesRoman);
-
-  // Background
-  page.drawRectangle({
-    x: 0,
-    y: 0,
-    width,
-    height,
-    color: rgb(bgRgb.r, bgRgb.g, bgRgb.b),
-  });
-
-  // Background image se fornecida
-  if (backgroundUrl && options.useBackground !== false) {
-    try {
-      const bgResponse = await fetch(backgroundUrl);
-      if (bgResponse.ok) {
-        const bgBytes = await bgResponse.arrayBuffer();
-        let bgImage: PDFImage | null = null;
-        
-        if (backgroundUrl.endsWith(".png")) {
-          bgImage = await pdfDoc.embedPng(bgBytes);
-        } else if (backgroundUrl.endsWith(".jpg") || backgroundUrl.endsWith(".jpeg")) {
-          bgImage = await pdfDoc.embedJpg(bgBytes);
-        }
-        
-        if (bgImage) {
-          // Escalar para cobrir a página mantendo proporção
-          const imgDims = bgImage.size();
-          const scale = Math.max(width / imgDims.width, height / imgDims.height);
-          page.drawImage(bgImage, {
-            x: (width - imgDims.width * scale) / 2,
-            y: (height - imgDims.height * scale) / 2,
-            width: imgDims.width * scale,
-            height: imgDims.height * scale,
-            opacity: 0.15, // Semitransparente
-          });
-        }
-      }
-    } catch (e) {
-      console.error("Failed to load background image:", e);
-      // Continuar sem background
-    }
-  }
-
-  // Bordas decorativas
-  if (fields.showBorder !== false) {
-    const cornerSize = 80;
-    const borderWidth = 8;
-    
-    // Cantos
-    page.drawRectangle({ x: 0, y: height - borderWidth, width: cornerSize, height: borderWidth, color: rgb(primaryRgb.r, primaryRgb.g, primaryRgb.b) });
-    page.drawRectangle({ x: 0, y: height - cornerSize, width: borderWidth, height: cornerSize - borderWidth, color: rgb(primaryRgb.r, primaryRgb.g, primaryRgb.b) });
-    page.drawRectangle({ x: width - cornerSize, y: height - borderWidth, width: cornerSize, height: borderWidth, color: rgb(primaryRgb.r, primaryRgb.g, primaryRgb.b) });
-    page.drawRectangle({ x: width - borderWidth, y: height - cornerSize, width: borderWidth, height: cornerSize - borderWidth, color: rgb(primaryRgb.r, primaryRgb.g, primaryRgb.b) });
-    page.drawRectangle({ x: 0, y: 0, width: cornerSize, height: borderWidth, color: rgb(primaryRgb.r, primaryRgb.g, primaryRgb.b) });
-    page.drawRectangle({ x: 0, y: borderWidth, width: borderWidth, height: cornerSize - borderWidth, color: rgb(primaryRgb.r, primaryRgb.g, primaryRgb.b) });
-    page.drawRectangle({ x: width - cornerSize, y: 0, width: cornerSize, height: borderWidth, color: rgb(primaryRgb.r, primaryRgb.g, primaryRgb.b) });
-    page.drawRectangle({ x: width - borderWidth, y: borderWidth, width: borderWidth, height: cornerSize - borderWidth, color: rgb(primaryRgb.r, primaryRgb.g, primaryRgb.b) });
-
-    // Moldura interna
-    const margin = 40;
-    page.drawRectangle({
-      x: margin,
-      y: margin,
-      width: width - margin * 2,
-      height: height - margin * 2,
-      borderColor: rgb(primaryRgb.r, primaryRgb.g, primaryRgb.b),
-      borderWidth: 2,
-    });
-  }
-
-  // Logo TicketHall watermark
-  if (fields.showLogo !== false) {
-    const headerY = height - 90;
-    const logoSize = 28;
-    const ticketWidth = helveticaBold.widthOfTextAtSize("TICKET", logoSize);
-    const hallWidth = helveticaBold.widthOfTextAtSize("HALL", logoSize);
-    const totalWidth = ticketWidth + hallWidth + 5;
-    
-    page.drawText("TICKET", {
-      x: (width - totalWidth) / 2,
-      y: headerY,
-      size: logoSize,
-      font: helveticaBold,
-      color: rgb(textRgb.r, textRgb.g, textRgb.b),
-    });
-    page.drawText("HALL", {
-      x: (width - totalWidth) / 2 + ticketWidth + 5,
-      y: headerY,
-      size: logoSize,
-      font: helveticaBold,
-      color: rgb(primaryRgb.r, primaryRgb.g, primaryRgb.b),
-    });
-  }
-
-  // Título do certificado
-  const titleY = height - 140;
-  const titleText = textConfig.title || "CERTIFICADO DE PARTICIPAÇÃO";
-  const titleSize = 24;
-  const titleWidth = helveticaBold.widthOfTextAtSize(titleText, titleSize);
-  
-  page.drawText(titleText, {
-    x: (width - titleWidth) / 2,
-    y: titleY,
-    size: titleSize,
-    font: helveticaBold,
-    color: rgb(primaryRgb.r, primaryRgb.g, primaryRgb.b),
-  });
-
-  // Linha decorativa sob o título
-  const lineWidth = 200;
-  const lineY = titleY - 15;
-  page.drawLine({
-    start: { x: width / 2 - lineWidth / 2, y: lineY },
-    end: { x: width / 2 + lineWidth / 2, y: lineY },
-    thickness: 2,
-    color: rgb(primaryRgb.r, primaryRgb.g, primaryRgb.b),
-  });
-
-  let currentY = lineY - 50;
-
-  // Texto "Certificamos que"
-  if (textConfig.subtitle) {
-    page.drawText(textConfig.subtitle, {
-      x: width / 2,
-      y: currentY,
-      size: 14,
-      font: helvetica,
-      color: rgb(0.4, 0.4, 0.4),
-    });
-    currentY -= 35;
-  }
-
-  // Nome do participante
-  if (fields.showParticipantName !== false) {
-    const attendeeName = cert.attendee_name || "Participante";
-    const nameSize = 26;
-    const nameWidth = helveticaBold.widthOfTextAtSize(attendeeName, nameSize);
-    page.drawText(attendeeName, {
-      x: (width - nameWidth) / 2,
-      y: currentY,
-      size: nameSize,
-      font: helveticaBold,
-      color: rgb(textRgb.r, textRgb.g, textRgb.b),
-    });
-    currentY -= 40;
-  }
-
-  // Texto de participação
-  if (textConfig.bodyText) {
-    page.drawText(textConfig.bodyText, {
-      x: width / 2,
-      y: currentY,
-      size: 14,
-      font: helvetica,
-      color: rgb(0.4, 0.4, 0.4),
-    });
-    currentY -= 30;
-  }
-
-  // Título do evento
-  if (fields.showEventTitle !== false) {
-    const eventTitle = cert.events?.title || "Evento";
-    const eventSize = 18;
-    
-    // Truncar se necessário
-    let displayTitle = eventTitle;
-    let titleFontSize = eventSize;
-    while (helveticaBold.widthOfTextAtSize(displayTitle, titleFontSize) > width - 120 && displayTitle.length > 10) {
-      displayTitle = displayTitle.slice(0, -1);
-    }
-    if (displayTitle !== eventTitle) {
-      displayTitle += "...";
-    }
-    
-    const finalTitleWidth = helveticaBold.widthOfTextAtSize(displayTitle, titleFontSize);
-    page.drawText(displayTitle, {
-      x: (width - finalTitleWidth) / 2,
-      y: currentY,
-      size: titleFontSize,
-      font: helveticaBold,
-      color: rgb(secondaryRgb.r, secondaryRgb.g, secondaryRgb.b),
-    });
-    currentY -= 25;
-  }
-
-  // Data do evento
-  if (fields.showEventDate !== false && cert.events?.start_date) {
-    const eventDate = new Date(cert.events.start_date);
-    const dateStr = eventDate.toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-      timeZone: "America/Sao_Paulo",
-    });
-    const dateText = `realizado em ${dateStr}`;
-    const dateWidth = helvetica.widthOfTextAtSize(dateText, 12);
-    page.drawText(dateText, {
-      x: (width - dateWidth) / 2,
-      y: currentY,
-      size: 12,
-      font: helvetica,
-      color: rgb(0.4, 0.4, 0.4),
-    });
-    currentY -= 20;
-  }
-
-  // Local do evento
-  if (fields.showEventLocation !== false && cert.events?.venue_name) {
-    const locationText = `Local: ${cert.events.venue_name}`;
-    const locationWidth = helvetica.widthOfTextAtSize(locationText, 11);
-    page.drawText(locationText, {
-      x: (width - locationWidth) / 2,
-      y: currentY,
-      size: 11,
-      font: helvetica,
-      color: rgb(0.5, 0.5, 0.5),
-    });
-    currentY -= 20;
-  }
-
-  // Carga horária
-  if (fields.showWorkload !== false && (cert.workload_hours || cert.events?.workload_hours)) {
-    const hours = cert.workload_hours || cert.events?.workload_hours || 0;
-    const workloadText = `Carga horária: ${hours} hora${hours !== 1 ? 's' : ''}`;
-    const workloadWidth = helvetica.widthOfTextAtSize(workloadText, 11);
-    page.drawText(workloadText, {
-      x: (width - workloadWidth) / 2,
-      y: currentY,
-      size: 11,
-      font: helvetica,
-      color: rgb(0.5, 0.5, 0.5),
-    });
-    currentY -= 30;
-  }
-
-  currentY -= 20;
-
-  // Assinantes
-  if (fields.showSigners !== false && signers.length > 0) {
-    const signerSpacing = Math.min(250, (width - 100) / signers.length);
-    const startX = (width - (signers.length - 1) * signerSpacing) / 2;
-    
-    for (let i = 0; i < signers.length; i++) {
-      const signer = signers[i];
-      const x = startX + i * signerSpacing;
-      
-      // Linha de assinatura
-      page.drawLine({
-        start: { x: x - 80, y: currentY },
-        end: { x: x + 80, y: currentY },
-        thickness: 1,
-        color: rgb(0.3, 0.3, 0.3),
-      });
-      
-      // Nome do assinante
-      const nameSize = 10;
-      const nameWidth = helvetica.widthOfTextAtSize(signer.name, nameSize);
-      page.drawText(signer.name, {
-        x: x - nameWidth / 2,
-        y: currentY - 15,
-        size: nameSize,
-        font: helveticaBold,
-        color: rgb(textRgb.r, textRgb.g, textRgb.b),
-      });
-      
-      // Cargo/Role
-      if (signer.role) {
-        const roleSize = 9;
-        const roleWidth = helveticaOblique.widthOfTextAtSize(signer.role, roleSize);
-        page.drawText(signer.role, {
-          x: x - roleWidth / 2,
-          y: currentY - 28,
-          size: roleSize,
-          font: helveticaOblique,
-          color: rgb(0.5, 0.5, 0.5),
-        });
-      }
-    }
-    
-    currentY -= 60;
-  }
-
-  // Seção de verificação com QR code
-  if (fields.showVerificationCode !== false || fields.showQrCode !== false) {
-    const verifyBoxWidth = 350;
-    const verifyBoxHeight = fields.showQrCode !== false ? 80 : 50;
-    const verifyBoxX = (width - verifyBoxWidth) / 2;
-    
-    // Background da caixa
-    page.drawRectangle({
-      x: verifyBoxX,
-      y: currentY - verifyBoxHeight,
-      width: verifyBoxWidth,
-      height: verifyBoxHeight,
-      color: rgb(0.98, 0.98, 0.98),
-      borderColor: rgb(0.85, 0.85, 0.85),
-      borderWidth: 1,
-    });
-
-    // Código de verificação
-    if (fields.showVerificationCode !== false) {
-      page.drawText("CÓDIGO DE VERIFICAÇÃO", {
-        x: width / 2,
-        y: currentY - 15,
-        size: 9,
-        font: helveticaBold,
-        color: rgb(0.6, 0.6, 0.6),
-      });
-      
-      page.drawText(cert.certificate_code, {
-        x: width / 2,
-        y: currentY - 32,
-        size: 11,
-        font: helveticaOblique,
-        color: rgb(0.4, 0.4, 0.4),
-      });
-    }
-
-    // QR Code
-    if (fields.showQrCode !== false) {
-      try {
-        const verifyUrl = `${supabaseUrl}/functions/v1/verify-certificate-public?code=${encodeURIComponent(cert.certificate_code)}`;
-        const qrDataUrl = await qrcode(verifyUrl, { size: 150 });
-        const qrBase64 = qrDataUrl.replace(/^data:image\/png;base64,/, "");
-        const qrBytes = Uint8Array.from(atob(qrBase64), c => c.charCodeAt(0));
-        const qrImage = await pdfDoc.embedPng(qrBytes);
-        
-        const qrSize = 50;
-        page.drawImage(qrImage, {
-          x: verifyBoxX + 10,
-          y: currentY - verifyBoxHeight + 10,
-          width: qrSize,
-          height: qrSize,
-        });
-        
-        // Texto ao lado do QR
-        page.drawText("Escaneie para verificar", {
-          x: verifyBoxX + qrSize + 20,
-          y: currentY - verifyBoxHeight + 35,
-          size: 9,
-          font: helvetica,
-          color: rgb(0.5, 0.5, 0.5),
-        });
-        
-        page.drawText("a autenticidade deste certificado", {
-          x: verifyBoxX + qrSize + 20,
-          y: currentY - verifyBoxHeight + 22,
-          size: 9,
-          font: helvetica,
-          color: rgb(0.5, 0.5, 0.5),
-        });
-      } catch (e) {
-        console.error("Failed to generate QR code:", e);
-      }
-    }
-    
-    currentY -= verifyBoxHeight + 20;
-  }
-
-  // Footer
-  const footerY = 60;
-  const issuedDate = new Date(cert.issued_at || cert.created_at);
-  const issuedStr = issuedDate.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-    timeZone: "America/Sao_Paulo",
-  });
-  
-  page.drawText(`${textConfig.footerText || "Emitido pela plataforma TicketHall"} em ${issuedStr}`, {
-    x: width / 2,
-    y: footerY,
-    size: 10,
-    font: helvetica,
-    color: rgb(0.6, 0.6, 0.6),
-  });
-
-  // Website
-  page.drawText("tickethall.com.br", {
-    x: width / 2,
-    y: footerY - 15,
-    size: 9,
-    font: helveticaOblique,
-    color: rgb(0.7, 0.7, 0.7),
-  });
-
-  // Versão do certificado (se > 1)
-  if (cert.version && cert.version > 1) {
-    page.drawText(`Versão ${cert.version}`, {
-      x: width - 80,
-      y: footerY - 15,
-      size: 8,
-      font: helvetica,
-      color: rgb(0.7, 0.7, 0.7),
-    });
-  }
-
-  // Serialize PDF
-  const pdfBytes = await pdfDoc.save();
-  return pdfBytes;
-}

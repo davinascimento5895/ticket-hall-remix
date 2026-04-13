@@ -50,9 +50,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
+import { generateCertificatePDF } from "@/lib/certificate-pdf-client";
 
 import { cn } from "@/lib/utils";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -174,6 +176,51 @@ const DEFAULT_SAMPLE_DATA: CertificateSampleData = {
   certificateCode: "CERT-XXXX-XXXXXXXX-XXX",
 };
 
+const TEMPLATE_LIST = CERTIFICATE_TEMPLATES;
+const TEMPLATE_IDS: CertificateTemplateId[] = TEMPLATE_LIST.map((t) => t.id);
+const TEMPLATE_BY_ID = new Map<CertificateTemplateId, (typeof TEMPLATE_LIST)[number]>(
+  TEMPLATE_LIST.map((t) => [t.id, t])
+);
+
+const normalizeTemplateId = (value: unknown): CertificateTemplateId => {
+  if (typeof value === "string") {
+    if (TEMPLATE_IDS.includes(value as CertificateTemplateId)) {
+      return value as CertificateTemplateId;
+    }
+    const asIndex = Number.parseInt(value, 10);
+    if (!Number.isNaN(asIndex) && TEMPLATE_LIST[asIndex]) {
+      return TEMPLATE_LIST[asIndex].id;
+    }
+  }
+  if (typeof value === "number" && TEMPLATE_LIST[value]) {
+    return TEMPLATE_LIST[value].id;
+  }
+  return "executive";
+};
+
+const missingColumnsCache = new Set<string>();
+
+const isMissingColumnError = (error: unknown, columnName: string): boolean => {
+  const err = error as { code?: string; message?: string } | null;
+  if (!err) return false;
+  const isMissing = err.code === "PGRST204" && (err.message || "").includes(`'${columnName}'`);
+  if (isMissing) {
+    missingColumnsCache.add(columnName);
+  }
+  return isMissing;
+};
+
+const configFromLegacyTemplate = (template: string | null | undefined): CertificateConfig => {
+  const templateId = normalizeTemplateId(template || "executive");
+  const defaults = TEMPLATE_BY_ID.get(templateId)?.defaultColors;
+  return {
+    ...DEFAULT_CONFIG,
+    templateId,
+    primaryColor: defaults?.primary || DEFAULT_CONFIG.primaryColor,
+    secondaryColor: defaults?.secondary || DEFAULT_CONFIG.secondaryColor,
+  };
+};
+
 // =============================================================================
 // Custom Hooks
 // =============================================================================
@@ -185,15 +232,38 @@ function useCertificateConfig(eventId: string | undefined) {
     queryKey: ["certificate-config", eventId],
     queryFn: async () => {
       if (!eventId) return DEFAULT_CONFIG;
+
+      if (missingColumnsCache.has("certificate_config")) {
+        const { data: legacyData, error: legacyError } = await supabase
+          .from("events")
+          .select("certificate_template")
+          .eq("id", eventId)
+          .single();
+        if (legacyError) throw legacyError;
+        return configFromLegacyTemplate(legacyData?.certificate_template);
+      }
+
       const { data, error } = await supabase
         .from("events")
-        .select("certificate_config")
+        .select("certificate_config, certificate_template")
         .eq("id", eventId)
         .single();
+
+      if (error && isMissingColumnError(error, "certificate_config")) {
+        const { data: legacyData, error: legacyError } = await supabase
+          .from("events")
+          .select("certificate_template")
+          .eq("id", eventId)
+          .single();
+        if (legacyError) throw legacyError;
+        return configFromLegacyTemplate(legacyData?.certificate_template);
+      }
+
       if (error) throw error;
+
       return data?.certificate_config
         ? { ...DEFAULT_CONFIG, ...(data.certificate_config as Partial<CertificateConfig>) }
-        : DEFAULT_CONFIG;
+        : configFromLegacyTemplate(data?.certificate_template);
     },
     enabled: !!eventId,
   });
@@ -201,10 +271,30 @@ function useCertificateConfig(eventId: string | undefined) {
   const updateMutation = useMutation({
     mutationFn: async (newConfig: CertificateConfig) => {
       if (!eventId) throw new Error("Event ID required");
+
+      if (missingColumnsCache.has("certificate_config")) {
+        const { error: legacyError } = await supabase
+          .from("events")
+          .update({ certificate_template: newConfig.templateId })
+          .eq("id", eventId);
+        if (legacyError) throw legacyError;
+        return;
+      }
+
       const { error } = await supabase
         .from("events")
         .update({ certificate_config: newConfig })
         .eq("id", eventId);
+
+      if (error && isMissingColumnError(error, "certificate_config")) {
+        const { error: legacyError } = await supabase
+          .from("events")
+          .update({ certificate_template: newConfig.templateId })
+          .eq("id", eventId);
+        if (legacyError) throw legacyError;
+        return;
+      }
+
       if (error) throw error;
     },
     onSuccess: () => {
@@ -349,8 +439,8 @@ function TemplateSelector({
     <div className="space-y-3">
       <Label>Template do Certificado</Label>
       <div className="grid grid-cols-2 gap-3">
-        {(Object.keys(CERTIFICATE_TEMPLATES) as CertificateTemplateId[]).map((templateId) => {
-          const template = CERTIFICATE_TEMPLATES[templateId];
+        {TEMPLATE_LIST.map((template) => {
+          const templateId = template.id;
           return (
             <button
               key={templateId}
@@ -793,9 +883,22 @@ function ConfigurarTab({
   eventId: string;
   event: any;
 }) {
+  const { toast } = useToast();
   const [localConfig, setLocalConfig] = useState(config);
   const [hasChanges, setHasChanges] = useState(false);
+  const [isGeneratingSample, setIsGeneratingSample] = useState(false);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const lastSyncedConfigRef = useRef(config);
   const debouncedConfig = useDebounce(localConfig, 2000);
+
+  useEffect(() => {
+    const hasRemoteChange = JSON.stringify(config) !== JSON.stringify(lastSyncedConfigRef.current);
+    if (hasRemoteChange) {
+      setLocalConfig(config);
+      lastSyncedConfigRef.current = config;
+      setHasChanges(false);
+    }
+  }, [config]);
 
   // Auto-save with debounce
   useEffect(() => {
@@ -838,25 +941,90 @@ function ConfigurarTab({
   };
 
   const handleDownloadSample = async () => {
+    if (isGeneratingSample || !eventId || !previewRef.current) return;
+
+    setIsGeneratingSample(true);
+    
+    // ESTRATÉGIA 1: Gerar PDF localmente a partir do preview visível
+    // Isso garante 100% de fidelidade com o que o usuário está vendo
     try {
-      const { data: session } = await supabase.auth.getSession();
+      console.log("[PDF] Gerando PDF localmente do preview...");
+      
+      const previewElement = previewRef.current.querySelector("[data-testid='certificate-preview']") as HTMLElement;
+      
+      if (previewElement) {
+        await generateCertificatePDF(
+          previewElement,
+          `certificado-preview-${eventId}.pdf`
+        );
+        
+        toast({
+          title: "PDF gerado!",
+          description: "Certificado de exemplo baixado com sucesso.",
+        });
+        
+        setIsGeneratingSample(false);
+        return;
+      }
+    } catch (localError) {
+      console.warn("[PDF] Falha na geração local, tentando Edge Function:", localError);
+    }
+
+    // ESTRATÉGIA 2: Fallback para Edge Function (se configurada)
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("Sessão não encontrada.");
+      }
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-certificate-pdf`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${session?.session?.access_token}`,
+            Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({
-            eventId,
-            preview: true,
-            config: localConfig,
+            previewData: {
+              eventId,
+              participantName: sampleData.participantName,
+              eventName: sampleData.eventName,
+              eventDate: event?.start_date,
+              eventLocation: sampleData.eventLocation,
+              workloadHours: localConfig.workloadHours,
+              fields: {
+                showParticipantName: localConfig.fields.showParticipantName,
+                showEventTitle: localConfig.fields.showEventName,
+                showEventDate: localConfig.fields.showEventDate,
+                showEventLocation: localConfig.fields.showEventLocation,
+                showWorkload: localConfig.fields.showWorkload,
+                showSigners: localConfig.fields.showSigners,
+                showLogo: true,
+                showVerificationCode: true,
+                showQrCode: true,
+              },
+              textConfig: {
+                title: localConfig.textConfig.title,
+                subtitle: localConfig.textConfig.introText,
+                bodyText: localConfig.textConfig.participationText,
+                footerText: localConfig.textConfig.conclusionText,
+              },
+              signers: localConfig.signers,
+            },
+            templateId: localConfig.templateId,
+            customColors: {
+              primary: localConfig.primaryColor,
+              secondary: localConfig.secondaryColor,
+            },
           }),
         }
       );
 
-      if (!response.ok) throw new Error("Erro ao gerar PDF");
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Erro ${response.status}: ${errorText}`);
+      }
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
@@ -867,8 +1035,20 @@ function ConfigurarTab({
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-    } catch {
-      // Error is shown in UI state
+      
+      toast({
+        title: "PDF gerado!",
+        description: "Certificado baixado via servidor.",
+      });
+    } catch (err) {
+      console.error("Erro ao gerar PDF:", err);
+      toast({
+        title: "Erro ao gerar PDF",
+        description: "Não foi possível gerar o PDF. Verifique o console (F12) para detalhes.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingSample(false);
     }
   };
 
@@ -983,17 +1163,23 @@ function ConfigurarTab({
               <CardDescription>Visualize as alterações em tempo real</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <CertificatePreview
-                templateId={localConfig.templateId}
-                primaryColor={localConfig.primaryColor}
-                secondaryColor={localConfig.secondaryColor}
-                backgroundUrl={localConfig.backgroundUrl || undefined}
-                fields={localConfig.fields}
-                textConfig={localConfig.textConfig}
-                signers={localConfig.signers}
-                workloadHours={localConfig.workloadHours}
-                sampleData={sampleData}
-              />
+              <div 
+                ref={previewRef} 
+                className="overflow-x-auto pb-2 scrollbar-thin"
+              >
+                <CertificatePreview
+                  key={`preview-${localConfig.templateId}`}
+                  templateId={localConfig.templateId}
+                  primaryColor={localConfig.primaryColor}
+                  secondaryColor={localConfig.secondaryColor}
+                  backgroundUrl={localConfig.backgroundUrl || undefined}
+                  fields={localConfig.fields}
+                  textConfig={localConfig.textConfig}
+                  signers={localConfig.signers}
+                  workloadHours={localConfig.workloadHours}
+                  sampleData={sampleData}
+                />
+              </div>
 
               <div className="flex gap-2">
                 <Button variant="outline" className="flex-1" onClick={handleUndo}>
@@ -1006,9 +1192,14 @@ function ConfigurarTab({
                 </Button>
               </div>
 
-              <Button variant="secondary" className="w-full" onClick={handleDownloadSample}>
+              <Button
+                variant="secondary"
+                className="w-full"
+                onClick={handleDownloadSample}
+                disabled={isGeneratingSample}
+              >
                 <Download className="h-4 w-4 mr-2" />
-                Baixar PDF de Exemplo
+                {isGeneratingSample ? "Gerando PDF..." : "Baixar PDF de Exemplo"}
               </Button>
             </CardContent>
           </Card>
@@ -1712,15 +1903,37 @@ export default function ProducerEventCertificates() {
   const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState<"configurar" | "emitidos" | "estatisticas">("configurar");
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data: event } = useQuery({
     queryKey: ["event-certificates-meta", id],
     queryFn: async () => {
+      if (missingColumnsCache.has("certificate_config")) {
+        const { data: legacyData, error: legacyError } = await supabase
+          .from("events")
+          .select("id, title, has_certificates, start_date, venue_name, producer_id, certificate_template")
+          .eq("id", id!)
+          .single();
+        if (legacyError) throw legacyError;
+        return legacyData;
+      }
+
       const { data, error } = await supabase
         .from("events")
         .select("id, title, has_certificates, start_date, venue_name, certificate_config, producer_id")
         .eq("id", id!)
         .single();
+
+      if (error && isMissingColumnError(error, "certificate_config")) {
+        const { data: legacyData, error: legacyError } = await supabase
+          .from("events")
+          .select("id, title, has_certificates, start_date, venue_name, producer_id, certificate_template")
+          .eq("id", id!)
+          .single();
+        if (legacyError) throw legacyError;
+        return legacyData;
+      }
+
       if (error) throw error;
       return data;
     },
