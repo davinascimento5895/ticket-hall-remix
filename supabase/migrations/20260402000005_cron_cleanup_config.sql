@@ -26,16 +26,18 @@ BEGIN
   -- Verificar se pg_cron está disponível
   IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
     -- Remover job existente se houver
-    PERFORM cron.unschedule('cleanup-expired-resale-listings');
+    PERFORM cron.unschedule(jobid)
+    FROM cron.job
+    WHERE jobname = 'cleanup-expired-resale-listings';
     
     -- Criar novo job
     PERFORM cron.schedule(
       'cleanup-expired-resale-listings',
       '0 0 * * *', -- Todo dia à meia-noite
-      $$ SELECT net.http_post(
-        url:='https://' || current_setting('app.settings.project_ref') || '.supabase.co/functions/v1/cleanup-resale-listings',
-        headers:='{"Authorization": "Bearer ' || current_setting('app.settings.cron_secret') || '"}'::jsonb
-      ) $$
+      $job$ SELECT net.http_post(
+        url:='https://' || current_setting('app.settings.project_ref', true) || '.supabase.co/functions/v1/cleanup-resale-listings',
+        headers:='{"Authorization": "Bearer ' || current_setting('app.settings.cron_secret', true) || '"}'::jsonb
+      ) $job$
     );
     
     RAISE NOTICE 'Cron job criado com sucesso';

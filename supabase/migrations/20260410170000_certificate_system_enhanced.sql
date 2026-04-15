@@ -54,7 +54,7 @@ USING (
   EXISTS (
     SELECT 1 FROM user_roles 
     WHERE user_id = auth.uid() 
-    AND role IN ('admin', 'platform_admin')
+    AND role = 'admin'
   )
 );
 
@@ -99,11 +99,9 @@ ON public.certificate_signers
 FOR SELECT TO authenticated
 USING (
   EXISTS (
-    SELECT 1 FROM event_team_members etm
-    JOIN events e ON e.id = etm.event_id
-    WHERE etm.event_id = certificate_signers.event_id 
-    AND etm.user_id = auth.uid()
-    AND etm.status = 'active'
+    SELECT 1 FROM event_staff es
+    WHERE es.event_id = certificate_signers.event_id
+    AND es.user_id = auth.uid()
   )
 );
 
@@ -306,7 +304,7 @@ BEGIN
     new_code := 'TICK-' || 
                 upper(substring(md5(random()::text) from 1 for 8)) || '-' ||
                 upper(to_char(now(), 'YYMMDD')) ||
-                upper(substring(encode(gen_random_bytes(2), 'base64'), 1, 3));
+                upper(substring(md5(random()::text || clock_timestamp()::text) from 1 for 3));
     
     -- Verificar se já existe
     SELECT EXISTS(
@@ -365,6 +363,8 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Função para revogar certificado
+DROP FUNCTION IF EXISTS public.revoke_certificate(UUID, TEXT, UUID);
+
 CREATE OR REPLACE FUNCTION public.revoke_certificate(
   p_cert_id UUID,
   p_reason TEXT,
@@ -450,10 +450,11 @@ SELECT
   e.end_date as event_end_date,
   e.venue_name as event_venue,
   p.full_name as participant_full_name,
-  p.email as participant_email
+  au.email as participant_email
 FROM certificates c
 JOIN events e ON e.id = c.event_id
-LEFT JOIN profiles p ON p.id = c.user_id;
+LEFT JOIN profiles p ON p.id = c.user_id
+LEFT JOIN auth.users au ON au.id = c.user_id;
 
 -- View para certificados válidos apenas
 CREATE OR REPLACE VIEW public.valid_certificates AS

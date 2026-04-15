@@ -1,0 +1,62 @@
+{
+  "summary": {
+    "tables": {
+      "expected": 65,
+      "actual": 65,
+      "missing": []
+    },
+    "functions": {
+      "expected": 55,
+      "actual": 58,
+      "missing": [],
+      "extra": [
+        "create_order_validated",
+        "revoke_certificate",
+        "rls_auto_enable"
+      ]
+    },
+    "triggers": {
+      "expected": 16,
+      "actual_public": 26,
+      "missing_public": [],
+      "auth_only": [
+        "on_auth_user_created"
+      ]
+    },
+    "policies": {
+      "expected": 187,
+      "actual": 181,
+      "missing": [
+        "Anyone can view event images",
+        "Authenticated users can upload event images",
+        "Team members with financial access can view AP",
+        "Team members with financial access can view AR",
+        "Users can delete their own event images",
+        "Users can update their own event images"
+      ],
+      "extra": []
+    },
+    "indexes": {
+      "expected": 94,
+      "actual": 184,
+      "missing": [
+        "idx_wallet_withdrawals_processed"
+      ]
+    },
+    "enums": {
+      "expected": 2,
+      "actual": 2,
+      "missing": []
+    },
+    "constraints": {
+      "actual": 240
+    },
+    "foreign_keys": {
+      "actual": 119
+    },
+    "rls_enabled": {
+      "expected": 65,
+      "actual": 65
+    }
+  }
+}

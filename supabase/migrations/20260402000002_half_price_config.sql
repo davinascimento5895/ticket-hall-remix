@@ -191,7 +191,7 @@ SELECT
   
   -- Dados do operador
   p.full_name AS operator_name,
-  p.email AS operator_email,
+  au.email AS operator_email,
   
   -- Dados do evento
   e.title AS event_title,
@@ -199,17 +199,18 @@ SELECT
   
   -- Último log de scan
   csl.result AS last_scan_result,
-  csl.created_at AS last_scan_at,
+  csl.scanned_at AS last_scan_at,
   csl.verification_method
   
 FROM public.tickets t
 LEFT JOIN public.ticket_tiers tt ON t.tier_id = tt.id
 LEFT JOIN public.profiles p ON t.checked_in_by = p.id
+LEFT JOIN auth.users au ON t.checked_in_by = au.id
 LEFT JOIN public.events e ON t.event_id = e.id
 LEFT JOIN LATERAL (
   SELECT * FROM public.checkin_scan_logs 
   WHERE ticket_id = t.id 
-  ORDER BY created_at DESC 
+  ORDER BY checkin_scan_logs.scanned_at DESC 
   LIMIT 1
 ) csl ON true
 WHERE t.status = 'used';
@@ -222,25 +223,45 @@ WHERE t.status = 'used';
 ALTER TABLE public.half_price_reports ENABLE ROW LEVEL SECURITY;
 
 -- Políticas para relatórios de meia-entrada
-CREATE POLICY "Producers can view their half-price reports"
-  ON public.half_price_reports FOR SELECT
-  TO authenticated
-  USING (producer_id = auth.uid() OR 
-         EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role = 'admin'));
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'half_price_reports'
+      AND policyname = 'Producers can view their half-price reports'
+  ) THEN
+    CREATE POLICY "Producers can view their half-price reports"
+      ON public.half_price_reports FOR SELECT
+      TO authenticated
+      USING (producer_id = auth.uid() OR 
+             EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role = 'admin'));
+  END IF;
+END $$;
 
 -- Política para checkin_scan_logs (já deve existir, mas garantimos)
-CREATE POLICY IF NOT EXISTS "Producers can view scan logs for their events"
-  ON public.checkin_scan_logs FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.events e
-      JOIN public.tickets t ON t.event_id = e.id
-      WHERE t.id = checkin_scan_logs.ticket_id
-      AND e.producer_id = auth.uid()
-    )
-    OR EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role = 'admin')
-  );
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'checkin_scan_logs'
+      AND policyname = 'Producers can view scan logs for their events'
+  ) THEN
+    CREATE POLICY "Producers can view scan logs for their events"
+      ON public.checkin_scan_logs FOR SELECT
+      TO authenticated
+      USING (
+        EXISTS (
+          SELECT 1 FROM public.events e
+          JOIN public.tickets t ON t.event_id = e.id
+          WHERE t.id = checkin_scan_logs.ticket_id
+          AND e.producer_id = auth.uid()
+        )
+        OR EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role = 'admin')
+      );
+  END IF;
+END $$;
 
 -- ============================================
 -- 9. COMENTÁRIOS

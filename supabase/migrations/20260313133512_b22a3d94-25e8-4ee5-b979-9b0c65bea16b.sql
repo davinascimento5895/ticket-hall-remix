@@ -33,7 +33,18 @@ CREATE POLICY "Admins can manage all event staff"
   USING (has_role(auth.uid(), 'admin'::app_role));
 
 -- 3. Enable realtime on tickets
-ALTER PUBLICATION supabase_realtime ADD TABLE public.tickets;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'tickets'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.tickets;
+  END IF;
+END $$;
 
 -- 4. Add RLS for staff to view tickets of their assigned events
 CREATE POLICY "Staff can view tickets for their events"

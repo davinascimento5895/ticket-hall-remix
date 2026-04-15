@@ -200,7 +200,18 @@ CREATE TABLE IF NOT EXISTS public.wallet_withdrawals (
 CREATE INDEX IF NOT EXISTS idx_wallet_withdrawals_user ON public.wallet_withdrawals(user_id);
 CREATE INDEX IF NOT EXISTS idx_wallet_withdrawals_status ON public.wallet_withdrawals(status);
 CREATE INDEX IF NOT EXISTS idx_wallet_withdrawals_requested ON public.wallet_withdrawals(requested_at DESC);
-CREATE INDEX IF NOT EXISTS idx_wallet_withdrawals_processed ON public.wallet_withdrawals(processed_by);
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'wallet_withdrawals'
+      AND column_name = 'processed_by'
+  ) THEN
+    CREATE INDEX IF NOT EXISTS idx_wallet_withdrawals_processed ON public.wallet_withdrawals(processed_by);
+  END IF;
+END $$;
 
 -- ============================================
 -- 7. POLÍTICAS DE SEGURANÇA (RLS)
@@ -213,44 +224,114 @@ ALTER TABLE public.wallet_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.wallet_withdrawals ENABLE ROW LEVEL SECURITY;
 
 -- Resale listings policies
-CREATE POLICY "Users can view active resale listings"
-  ON public.resale_listings FOR SELECT
-  TO authenticated
-  USING (status = 'active' OR seller_id = auth.uid() OR buyer_id = auth.uid());
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'resale_listings'
+      AND policyname = 'Users can view active resale listings'
+  ) THEN
+    CREATE POLICY "Users can view active resale listings"
+      ON public.resale_listings FOR SELECT
+      TO authenticated
+      USING (status = 'active' OR seller_id = auth.uid() OR buyer_id = auth.uid());
+  END IF;
+END $$;
 
-CREATE POLICY "Users can create resale listings for their tickets"
-  ON public.resale_listings FOR INSERT
-  TO authenticated
-  WITH CHECK (seller_id = auth.uid());
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'resale_listings'
+      AND policyname = 'Users can create resale listings for their tickets'
+  ) THEN
+    CREATE POLICY "Users can create resale listings for their tickets"
+      ON public.resale_listings FOR INSERT
+      TO authenticated
+      WITH CHECK (seller_id = auth.uid());
+  END IF;
+END $$;
 
-CREATE POLICY "Sellers can update their own listings"
-  ON public.resale_listings FOR UPDATE
-  TO authenticated
-  USING (seller_id = auth.uid())
-  WITH CHECK (seller_id = auth.uid());
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'resale_listings'
+      AND policyname = 'Sellers can update their own listings'
+  ) THEN
+    CREATE POLICY "Sellers can update their own listings"
+      ON public.resale_listings FOR UPDATE
+      TO authenticated
+      USING (seller_id = auth.uid())
+      WITH CHECK (seller_id = auth.uid());
+  END IF;
+END $$;
 
 -- Wallet policies
-CREATE POLICY "Users can view own wallet"
-  ON public.wallets FOR SELECT
-  TO authenticated
-  USING (user_id = auth.uid());
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'wallets'
+      AND policyname = 'Users can view own wallet'
+  ) THEN
+    CREATE POLICY "Users can view own wallet"
+      ON public.wallets FOR SELECT
+      TO authenticated
+      USING (user_id = auth.uid());
+  END IF;
+END $$;
 
 -- Wallet transactions policies
-CREATE POLICY "Users can view own transactions"
-  ON public.wallet_transactions FOR SELECT
-  TO authenticated
-  USING (user_id = auth.uid());
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'wallet_transactions'
+      AND policyname = 'Users can view own transactions'
+  ) THEN
+    CREATE POLICY "Users can view own transactions"
+      ON public.wallet_transactions FOR SELECT
+      TO authenticated
+      USING (user_id = auth.uid());
+  END IF;
+END $$;
 
 -- Wallet withdrawals policies
-CREATE POLICY "Users can view own withdrawals"
-  ON public.wallet_withdrawals FOR SELECT
-  TO authenticated
-  USING (user_id = auth.uid());
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'wallet_withdrawals'
+      AND policyname = 'Users can view own withdrawals'
+  ) THEN
+    CREATE POLICY "Users can view own withdrawals"
+      ON public.wallet_withdrawals FOR SELECT
+      TO authenticated
+      USING (user_id = auth.uid());
+  END IF;
+END $$;
 
-CREATE POLICY "Users can create withdrawal requests"
-  ON public.wallet_withdrawals FOR INSERT
-  TO authenticated
-  WITH CHECK (user_id = auth.uid());
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'wallet_withdrawals'
+      AND policyname = 'Users can create withdrawal requests'
+  ) THEN
+    CREATE POLICY "Users can create withdrawal requests"
+      ON public.wallet_withdrawals FOR INSERT
+      TO authenticated
+      WITH CHECK (user_id = auth.uid());
+  END IF;
+END $$;
 
 -- ============================================
 -- 8. FUNÇÕES AUXILIARES

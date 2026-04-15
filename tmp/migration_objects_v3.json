@@ -1,0 +1,1880 @@
+{
+  "policies": [
+    "Admins can manage all affiliates",
+    "Admins can manage all analytics",
+    "Admins can manage all answers",
+    "Admins can manage all bank accounts",
+    "Admins can manage all capacity groups",
+    "Admins can manage all checkin lists",
+    "Admins can manage all coupons",
+    "Admins can manage all data requests",
+    "Admins can manage all deliveries",
+    "Admins can manage all event staff",
+    "Admins can manage all events",
+    "Admins can manage all fees",
+    "Admins can manage all financial categories",
+    "Admins can manage all financial transactions",
+    "Admins can manage all guest lists",
+    "Admins can manage all messages",
+    "Admins can manage all order products",
+    "Admins can manage all orders",
+    "Admins can manage all product images",
+    "Admins can manage all product variations",
+    "Admins can manage all products",
+    "Admins can manage all promoter commissions",
+    "Admins can manage all promoter events",
+    "Admins can manage all promoters",
+    "Admins can manage all questions",
+    "Admins can manage all refunds",
+    "Admins can manage all resale listings",
+    "Admins can manage all resale orders",
+    "Admins can manage all roles",
+    "Admins can manage all scan logs",
+    "Admins can manage all sessions",
+    "Admins can manage all teams",
+    "Admins can manage all tickets",
+    "Admins can manage all tiers",
+    "Admins can manage all waitlists",
+    "Admins can manage all wallet ledger",
+    "Admins can manage all wallets",
+    "Admins can manage all webhooks",
+    "Admins can manage all withdrawals",
+    "Admins can manage certificates",
+    "Admins can manage platform settings",
+    "Admins can manage queue",
+    "Admins can read webhook events",
+    "Admins can view all balances",
+    "Admins can view all consents",
+    "Admins can view all profiles",
+    "Admins manage all fields",
+    "Admins manage all lists",
+    "Admins manage all submissions",
+    "Anyone can join queue",
+    "Anyone can submit",
+    "Anyone can validate coupons",
+    "Anyone can view active affiliates",
+    "Anyone can view active checkin lists by access_code",
+    "Anyone can view active resale listings",
+    "Anyone can view capacity groups for published events",
+    "Anyone can view event images",
+    "Anyone can view fees for published events",
+    "Anyone can view fields of published lists",
+    "Anyone can view follows for counting",
+    "Anyone can view product images for published events",
+    "Anyone can view product variations for published events",
+    "Anyone can view products for published events",
+    "Anyone can view published events",
+    "Anyone can view published lists",
+    "Anyone can view questions for published events",
+    "Anyone can view reviews",
+    "Anyone can view visible tiers of published events",
+    "Authenticated users can insert reviews",
+    "Authenticated users can insert scan logs",
+    "Authenticated users can upload event images",
+    "Buyers can create orders",
+    "Buyers can insert their answers",
+    "Buyers can insert their order products",
+    "Buyers can update their pending orders",
+    "Buyers can view purchased listings",
+    "Buyers can view their answers",
+    "Buyers can view their order products",
+    "Buyers can view their own orders",
+    "Buyers can view their refunds",
+    "Buyers can view their resale orders",
+    "Only admins can manage templates",
+    "Operators can manage their sessions",
+    "Owners can view their tickets",
+    "Producers and team members can view events",
+    "Producers and team members can view orders for their events",
+    "Producers and team members can view tickets for their events",
+    "Producers can create events",
+    "Producers can create withdrawal requests",
+    "Producers can delete their own events",
+    "Producers can manage guest lists for their events",
+    "Producers can manage refunds for their events",
+    "Producers can manage signers for their events",
+    "Producers can manage staff for their events",
+    "Producers can manage their affiliates",
+    "Producers can manage their bank accounts",
+    "Producers can manage their capacity groups",
+    "Producers can manage their checkin lists",
+    "Producers can manage their coupons",
+    "Producers can manage their event questions",
+    "Producers can manage their fees",
+    "Producers can manage their financial categories",
+    "Producers can manage their financial transactions",
+    "Producers can manage their messages",
+    "Producers can manage their product images",
+    "Producers can manage their product variations",
+    "Producers can manage their products",
+    "Producers can manage their promoter commissions",
+    "Producers can manage their promoter events",
+    "Producers can manage their promoters",
+    "Producers can manage their team",
+    "Producers can manage their webhooks",
+    "Producers can manage tiers for their events",
+    "Producers can see their follower count",
+    "Producers can update certificate metadata",
+    "Producers can update their messages",
+    "Producers can update their own events",
+    "Producers can view analytics for their events",
+    "Producers can view answers for their events",
+    "Producers can view certificates for their events",
+    "Producers can view order products for their events",
+    "Producers can view own balances",
+    "Producers can view own history",
+    "Producers can view own withdrawals",
+    "Producers can view preferences for their events",
+    "Producers can view queue for their events",
+    "Producers can view scan logs for their events",
+    "Producers can view sessions for their events",
+    "Producers can view their half-price reports",
+    "Producers can view their inbox",
+    "Producers can view their webhook deliveries",
+    "Producers can view waitlist for their events",
+    "Producers manage their list fields",
+    "Producers manage their lists",
+    "Producers view submissions for their lists",
+    "Public profiles are viewable",
+    "Sellers can create resale listings",
+    "Sellers can update their own listings",
+    "Sellers can view their own listings",
+    "Sellers can view their resale orders",
+    "Senders can insert messages",
+    "Senders can view their messages",
+    "Service role can manage webhook events",
+    "Service role only",
+    "Staff can view analytics for their events",
+    "Staff can view checkin lists for their events",
+    "Staff can view their assigned events",
+    "Staff can view their assignments",
+    "Staff can view tickets for their events",
+    "Team members can view signers",
+    "Team members can view their membership",
+    "Team members with financial access can view AP",
+    "Team members with financial access can view AR",
+    "Templates are viewable by everyone",
+    "Users can create data requests",
+    "Users can create resale listings for their tickets",
+    "Users can create withdrawal requests",
+    "Users can delete their own event images",
+    "Users can delete their own favorites",
+    "Users can delete their own reviews",
+    "Users can follow producers",
+    "Users can insert their own favorites",
+    "Users can insert their own profile",
+    "Users can join waitlist",
+    "Users can manage their consents",
+    "Users can manage their own notification preferences",
+    "Users can manage their own preferences",
+    "Users can unfollow",
+    "Users can update their notifications",
+    "Users can update their own event images",
+    "Users can update their own profile",
+    "Users can update their own reviews",
+    "Users can view active resale listings",
+    "Users can view own transactions",
+    "Users can view own wallet",
+    "Users can view own wallet ledger",
+    "Users can view own withdrawals",
+    "Users can view their certificates",
+    "Users can view their consents",
+    "Users can view their data requests",
+    "Users can view their follows",
+    "Users can view their notifications",
+    "Users can view their own favorites",
+    "Users can view their own profile",
+    "Users can view their own roles",
+    "Users can view their queue entry",
+    "Users can view their waitlist entries"
+  ],
+  "indexes": [
+    "idx_cert_participant_prefs_event",
+    "idx_cert_participant_prefs_optout",
+    "idx_cert_participant_prefs_user",
+    "idx_certificate_signers_event",
+    "idx_certificate_signers_order",
+    "idx_certificates_code",
+    "idx_certificates_event",
+    "idx_certificates_event_id",
+    "idx_certificates_revoked",
+    "idx_certificates_user",
+    "idx_certificates_validation",
+    "idx_checkin_scan_logs_half_price",
+    "idx_checkin_scan_logs_operator",
+    "idx_events_category",
+    "idx_events_city",
+    "idx_events_featured",
+    "idx_events_fts",
+    "idx_events_producer",
+    "idx_events_slug",
+    "idx_events_start_date",
+    "idx_events_status",
+    "idx_events_status_start_date",
+    "idx_events_venue_city",
+    "idx_financial_categories_producer_type_value",
+    "idx_half_price_reports_date",
+    "idx_half_price_reports_event",
+    "idx_lgpd_consents_user",
+    "idx_lgpd_data_requests_status",
+    "idx_lgpd_data_requests_user",
+    "idx_notifications_read",
+    "idx_notifications_user",
+    "idx_orders_asaas_payment",
+    "idx_orders_buyer",
+    "idx_orders_buyer_id",
+    "idx_orders_event",
+    "idx_orders_event_id_status",
+    "idx_orders_status",
+    "idx_participant_cert_prefs_event",
+    "idx_participant_cert_prefs_user",
+    "idx_payment_webhook_events_status",
+    "idx_payment_webhook_events_uniq",
+    "idx_producer_balance_history_created",
+    "idx_producer_balance_history_event",
+    "idx_producer_balance_history_producer",
+    "idx_producer_balance_history_type",
+    "idx_producer_balances_event",
+    "idx_producer_balances_producer",
+    "idx_producer_withdrawals_event",
+    "idx_producer_withdrawals_producer",
+    "idx_producer_withdrawals_requested",
+    "idx_producer_withdrawals_status",
+    "idx_rate_limits_expires",
+    "idx_resale_listings_active_ticket",
+    "idx_resale_listings_buyer",
+    "idx_resale_listings_created_at",
+    "idx_resale_listings_event",
+    "idx_resale_listings_event_status",
+    "idx_resale_listings_seller",
+    "idx_resale_listings_status",
+    "idx_resale_listings_ticket",
+    "idx_resale_orders_asaas_payment_id",
+    "idx_resale_orders_buyer",
+    "idx_resale_orders_listing",
+    "idx_resale_orders_seller",
+    "idx_resale_orders_status",
+    "idx_tickets_event",
+    "idx_tickets_event_id",
+    "idx_tickets_order",
+    "idx_tickets_order_id",
+    "idx_tickets_owner",
+    "idx_tickets_owner_id",
+    "idx_tickets_qr",
+    "idx_tickets_qr_code",
+    "idx_tiers_event",
+    "idx_virtual_queue_event_status",
+    "idx_virtual_queue_user",
+    "idx_wallet_ledger_reference",
+    "idx_wallet_ledger_user_created",
+    "idx_wallet_tx_created",
+    "idx_wallet_tx_reference",
+    "idx_wallet_tx_status",
+    "idx_wallet_tx_type",
+    "idx_wallet_tx_user",
+    "idx_wallet_tx_wallet",
+    "idx_wallet_withdrawals_processed",
+    "idx_wallet_withdrawals_requested",
+    "idx_wallet_withdrawals_status",
+    "idx_wallet_withdrawals_user",
+    "idx_wallet_withdrawals_user_created",
+    "idx_wallets_user",
+    "producer_messages_event_id_idx",
+    "producer_messages_is_urgent_idx",
+    "producer_messages_replied_at_idx",
+    "unique_active_resale_per_ticket"
+  ],
+  "triggers": [
+    "for",
+    "function",
+    "on_auth_user_created",
+    "on_interest_list_submission",
+    "on_order_paid_promoter_commission",
+    "on_submission_insert",
+    "prevent_transfer_during_resale",
+    "set_events_updated_at",
+    "set_financial_transactions_updated_at",
+    "set_interest_lists_updated_at",
+    "set_orders_updated_at",
+    "set_profiles_updated_at",
+    "update_cert_participant_prefs_updated_at",
+    "update_events_updated_at",
+    "update_orders_updated_at",
+    "update_platform_settings_updated_at",
+    "update_profiles_updated_at",
+    "validate_resale_price"
+  ],
+  "functions": [
+    "admin_force_delete_event",
+    "apply_coupon",
+    "calculate_producer_balance",
+    "calculate_withdrawal_fee",
+    "can_access_financial",
+    "cleanup_expired_resale_listings",
+    "cleanup_expired_resale_orders",
+    "cleanup_expired_reservations",
+    "confirm_checkin_analytics",
+    "confirm_order_payment",
+    "create_resale_listing_atomic",
+    "create_resale_order_atomic",
+    "ensure_user_wallet",
+    "finalize_wallet_withdrawal_atomic",
+    "generate_certificate_code",
+    "get_or_create_wallet",
+    "get_preferred_certificate_name",
+    "get_team_member_role",
+    "get_user_id_by_email",
+    "get_user_role",
+    "handle_new_user",
+    "handle_promoter_commission",
+    "has_opted_out_certificate",
+    "has_role",
+    "increment_event_views",
+    "increment_list_submissions",
+    "increment_promoter_clicks",
+    "is_certificate_code_valid",
+    "is_certificate_valid",
+    "join_event_as_staff",
+    "mark_payment_webhook_event_failed",
+    "mark_payment_webhook_event_processed",
+    "prevent_transfer_during_resale",
+    "process_producer_withdrawal",
+    "purchase_resale_atomic",
+    "register_payment_webhook_event",
+    "release_producer_balance_after_event",
+    "release_wallet_credits_due",
+    "request_producer_withdrawal",
+    "request_wallet_withdrawal_atomic",
+    "reserve_tickets",
+    "reverse_resale_order_atomic",
+    "set_updated_at_timestamp",
+    "settle_resale_order_atomic",
+    "trigger_update_half_price_report",
+    "update_half_price_report",
+    "update_producer_balance_after_sale",
+    "update_producer_balances_updated_at",
+    "update_resale_listings_updated_at",
+    "update_updated_at_column",
+    "validate_certificate_insert",
+    "validate_resale_price_limits",
+    "validate_unlock_code",
+    "wallet_debit_available_atomic",
+    "wallet_refund_available_atomic"
+  ],
+  "tables": [
+    "affiliates",
+    "bank_accounts",
+    "bulk_messages",
+    "capacity_groups",
+    "certificate_participant_prefs",
+    "certificate_signers",
+    "certificate_templates",
+    "certificates",
+    "checkin_lists",
+    "checkin_scan_logs",
+    "checkin_sessions",
+    "checkout_answers",
+    "checkout_questions",
+    "coupons",
+    "event_analytics",
+    "event_products",
+    "event_reviews",
+    "event_staff",
+    "events",
+    "favorites",
+    "financial_categories",
+    "financial_transactions",
+    "guest_lists",
+    "half_price_reports",
+    "interest_list_fields",
+    "interest_list_submissions",
+    "interest_lists",
+    "lgpd_consents",
+    "lgpd_data_requests",
+    "notification_preferences",
+    "notifications",
+    "order_products",
+    "orders",
+    "participant_certificate_prefs",
+    "payment_webhook_events",
+    "platform_settings",
+    "producer_balance_history",
+    "producer_balances",
+    "producer_follows",
+    "producer_messages",
+    "producer_team_members",
+    "producer_withdrawals",
+    "product_images",
+    "product_variations",
+    "profiles",
+    "promoter_commissions",
+    "promoter_events",
+    "promoters",
+    "rate_limits",
+    "refunds",
+    "resale_listings",
+    "resale_orders",
+    "ticket_taxes_fees",
+    "ticket_tiers",
+    "tickets",
+    "user_roles",
+    "user_wallets",
+    "virtual_queue",
+    "waitlist",
+    "wallet_ledger",
+    "wallet_transactions",
+    "wallet_withdrawals",
+    "wallets",
+    "webhook_deliveries",
+    "webhooks"
+  ],
+  "raw": {
+    "policies": {
+      "Users can view their own roles": {
+        "created": true,
+        "table": "user_roles"
+      },
+      "Admins can manage all roles": {
+        "created": true,
+        "table": "user_roles"
+      },
+      "Users can view their own profile": {
+        "created": true,
+        "table": "profiles"
+      },
+      "Users can update their own profile": {
+        "created": true,
+        "table": "profiles"
+      },
+      "Users can insert their own profile": {
+        "created": true,
+        "table": "profiles"
+      },
+      "Admins can view all profiles": {
+        "created": true,
+        "table": "profiles"
+      },
+      "Public profiles are viewable": {
+        "created": true,
+        "table": "profiles"
+      },
+      "Anyone can view published events": {
+        "created": true,
+        "table": "events"
+      },
+      "Producers can view their own events": {
+        "created": true,
+        "table": "events",
+        "dropped": true
+      },
+      "Producers can create events": {
+        "created": true,
+        "table": "events"
+      },
+      "Producers can update their own events": {
+        "created": true,
+        "table": "events"
+      },
+      "Producers can delete their own events": {
+        "created": true,
+        "table": "events"
+      },
+      "Admins can manage all events": {
+        "created": true,
+        "table": "events"
+      },
+      "Anyone can view visible tiers of published events": {
+        "created": true,
+        "table": "ticket_tiers"
+      },
+      "Producers can manage tiers for their events": {
+        "created": true,
+        "table": "ticket_tiers"
+      },
+      "Admins can manage all tiers": {
+        "created": true,
+        "table": "ticket_tiers"
+      },
+      "Buyers can view their own orders": {
+        "created": true,
+        "table": "orders"
+      },
+      "Buyers can create orders": {
+        "created": true,
+        "table": "orders"
+      },
+      "Producers can view orders for their events": {
+        "created": true,
+        "table": "orders",
+        "dropped": true
+      },
+      "Admins can manage all orders": {
+        "created": true,
+        "table": "orders"
+      },
+      "Owners can view their tickets": {
+        "created": true,
+        "table": "tickets"
+      },
+      "Producers can view tickets for their events": {
+        "created": true,
+        "table": "tickets",
+        "dropped": true
+      },
+      "Admins can manage all tickets": {
+        "created": true,
+        "table": "tickets"
+      },
+      "Anyone can validate coupons": {
+        "created": true,
+        "table": "coupons"
+      },
+      "Producers can manage their coupons": {
+        "created": true,
+        "table": "coupons"
+      },
+      "Admins can manage all coupons": {
+        "created": true,
+        "table": "coupons"
+      },
+      "Users can view their waitlist entries": {
+        "created": true,
+        "table": "waitlist"
+      },
+      "Users can join waitlist": {
+        "created": true,
+        "table": "waitlist"
+      },
+      "Producers can view waitlist for their events": {
+        "created": true,
+        "table": "waitlist"
+      },
+      "Admins can manage all waitlists": {
+        "created": true,
+        "table": "waitlist"
+      },
+      "Operators can manage their sessions": {
+        "created": true,
+        "table": "checkin_sessions"
+      },
+      "Producers can view sessions for their events": {
+        "created": true,
+        "table": "checkin_sessions"
+      },
+      "Admins can manage all sessions": {
+        "created": true,
+        "table": "checkin_sessions"
+      },
+      "Users can view their notifications": {
+        "created": true,
+        "table": "notifications"
+      },
+      "Users can update their notifications": {
+        "created": true,
+        "table": "notifications"
+      },
+      "Producers can view analytics for their events": {
+        "created": true,
+        "table": "event_analytics"
+      },
+      "Admins can manage all analytics": {
+        "created": true,
+        "table": "event_analytics"
+      },
+      "Producers can manage guest lists for their events": {
+        "created": true,
+        "table": "guest_lists"
+      },
+      "Admins can manage all guest lists": {
+        "created": true,
+        "table": "guest_lists"
+      },
+      "Anyone can view event images": {
+        "created": true,
+        "table": "storage"
+      },
+      "Authenticated users can upload event images": {
+        "created": true,
+        "table": "storage"
+      },
+      "Users can update their own event images": {
+        "created": true,
+        "table": "storage"
+      },
+      "Users can delete their own event images": {
+        "created": true,
+        "table": "storage"
+      },
+      "Producers can manage their event questions": {
+        "created": true,
+        "table": "checkout_questions"
+      },
+      "Admins can manage all questions": {
+        "created": true,
+        "table": "checkout_questions"
+      },
+      "Anyone can view questions for published events": {
+        "created": true,
+        "table": "checkout_questions"
+      },
+      "Buyers can insert their answers": {
+        "created": true,
+        "table": "checkout_answers"
+      },
+      "Buyers can view their answers": {
+        "created": true,
+        "table": "checkout_answers"
+      },
+      "Producers can view answers for their events": {
+        "created": true,
+        "table": "checkout_answers"
+      },
+      "Admins can manage all answers": {
+        "created": true,
+        "table": "checkout_answers"
+      },
+      "Producers can manage their fees": {
+        "created": true,
+        "table": "ticket_taxes_fees"
+      },
+      "Admins can manage all fees": {
+        "created": true,
+        "table": "ticket_taxes_fees"
+      },
+      "Anyone can view fees for published events": {
+        "created": true,
+        "table": "ticket_taxes_fees"
+      },
+      "Producers can manage their capacity groups": {
+        "created": true,
+        "table": "capacity_groups"
+      },
+      "Admins can manage all capacity groups": {
+        "created": true,
+        "table": "capacity_groups"
+      },
+      "Anyone can view capacity groups for published events": {
+        "created": true,
+        "table": "capacity_groups"
+      },
+      "Producers can manage their checkin lists": {
+        "created": true,
+        "table": "checkin_lists"
+      },
+      "Admins can manage all checkin lists": {
+        "created": true,
+        "table": "checkin_lists"
+      },
+      "Anyone can view active checkin lists by access_code": {
+        "created": true,
+        "table": "checkin_lists"
+      },
+      "Staff can insert scan logs": {
+        "created": true,
+        "table": "checkin_scan_logs",
+        "dropped": true
+      },
+      "Producers can view scan logs for their events": {
+        "created": true,
+        "table": "checkin_scan_logs"
+      },
+      "Admins can manage all scan logs": {
+        "created": true,
+        "table": "checkin_scan_logs"
+      },
+      "Producers can manage their webhooks": {
+        "created": true,
+        "table": "webhooks"
+      },
+      "Admins can manage all webhooks": {
+        "created": true,
+        "table": "webhooks"
+      },
+      "Producers can view their webhook deliveries": {
+        "created": true,
+        "table": "webhook_deliveries"
+      },
+      "Admins can manage all deliveries": {
+        "created": true,
+        "table": "webhook_deliveries"
+      },
+      "Producers can manage their messages": {
+        "created": true,
+        "table": "bulk_messages"
+      },
+      "Admins can manage all messages": {
+        "created": true,
+        "table": "producer_messages"
+      },
+      "Producers can manage refunds for their events": {
+        "created": true,
+        "table": "refunds"
+      },
+      "Buyers can view their refunds": {
+        "created": true,
+        "table": "refunds"
+      },
+      "Admins can manage all refunds": {
+        "created": true,
+        "table": "refunds"
+      },
+      "Producers can manage their affiliates": {
+        "created": true,
+        "table": "affiliates"
+      },
+      "Admins can manage all affiliates": {
+        "created": true,
+        "table": "affiliates"
+      },
+      "Anyone can view active affiliates": {
+        "created": true,
+        "table": "affiliates"
+      },
+      "Producers can manage their products": {
+        "created": true,
+        "table": "event_products"
+      },
+      "Admins can manage all products": {
+        "created": true,
+        "table": "event_products"
+      },
+      "Anyone can view products for published events": {
+        "created": true,
+        "table": "event_products"
+      },
+      "Buyers can insert their order products": {
+        "created": true,
+        "table": "order_products"
+      },
+      "Buyers can view their order products": {
+        "created": true,
+        "table": "order_products"
+      },
+      "Producers can view order products for their events": {
+        "created": true,
+        "table": "order_products"
+      },
+      "Admins can manage all order products": {
+        "created": true,
+        "table": "order_products"
+      },
+      "Producers can manage their team": {
+        "created": true,
+        "table": "producer_team_members"
+      },
+      "Team members can view their membership": {
+        "created": true,
+        "table": "producer_team_members"
+      },
+      "Admins can manage all teams": {
+        "created": true,
+        "table": "producer_team_members"
+      },
+      "Authenticated users can insert scan logs": {
+        "created": true,
+        "table": "checkin_scan_logs"
+      },
+      "Service role only": {
+        "created": true,
+        "table": "rate_limits"
+      },
+      "Users can view their consents": {
+        "created": true,
+        "table": "lgpd_consents"
+      },
+      "Users can manage their consents": {
+        "created": true,
+        "table": "lgpd_consents"
+      },
+      "Admins can view all consents": {
+        "created": true,
+        "table": "lgpd_consents"
+      },
+      "Users can view their data requests": {
+        "created": true,
+        "table": "lgpd_data_requests"
+      },
+      "Users can create data requests": {
+        "created": true,
+        "table": "lgpd_data_requests"
+      },
+      "Admins can manage all data requests": {
+        "created": true,
+        "table": "lgpd_data_requests"
+      },
+      "Users can view their queue entry": {
+        "created": true,
+        "table": "virtual_queue"
+      },
+      "Anyone can join queue": {
+        "created": true,
+        "table": "virtual_queue"
+      },
+      "Admins can manage queue": {
+        "created": true,
+        "table": "virtual_queue"
+      },
+      "Producers can view queue for their events": {
+        "created": true,
+        "table": "virtual_queue"
+      },
+      "Users can view their certificates": {
+        "created": true,
+        "table": "certificates"
+      },
+      "Admins can manage certificates": {
+        "created": true,
+        "table": "certificates"
+      },
+      "Producers can view certificates for their events": {
+        "created": true,
+        "table": "certificates"
+      },
+      "Producers manage their lists": {
+        "created": true,
+        "table": "interest_lists"
+      },
+      "Anyone can view published lists": {
+        "created": true,
+        "table": "interest_lists"
+      },
+      "Admins manage all lists": {
+        "created": true,
+        "table": "interest_lists"
+      },
+      "Anyone can view fields of published lists": {
+        "created": true,
+        "table": "interest_list_fields"
+      },
+      "Producers manage their list fields": {
+        "created": true,
+        "table": "interest_list_fields"
+      },
+      "Admins manage all fields": {
+        "created": true,
+        "table": "interest_list_fields"
+      },
+      "Anyone can submit": {
+        "created": true,
+        "table": "interest_list_submissions"
+      },
+      "Producers view submissions for their lists": {
+        "created": true,
+        "table": "interest_list_submissions"
+      },
+      "Admins manage all submissions": {
+        "created": true,
+        "table": "interest_list_submissions"
+      },
+      "Users can view their own favorites": {
+        "created": true,
+        "table": "favorites"
+      },
+      "Users can insert their own favorites": {
+        "created": true,
+        "table": "favorites"
+      },
+      "Users can delete their own favorites": {
+        "created": true,
+        "table": "favorites"
+      },
+      "Anyone can view reviews": {
+        "created": true,
+        "table": "event_reviews"
+      },
+      "Authenticated users can insert reviews": {
+        "created": true,
+        "table": "event_reviews"
+      },
+      "Users can update their own reviews": {
+        "created": true,
+        "table": "event_reviews"
+      },
+      "Users can delete their own reviews": {
+        "created": true,
+        "table": "event_reviews"
+      },
+      "Producers can manage their bank accounts": {
+        "created": true,
+        "table": "bank_accounts"
+      },
+      "Admins can manage all bank accounts": {
+        "created": true,
+        "table": "bank_accounts"
+      },
+      "Producers can manage their financial transactions": {
+        "created": true,
+        "table": "financial_transactions"
+      },
+      "Admins can manage all financial transactions": {
+        "created": true,
+        "table": "financial_transactions"
+      },
+      "Producers can manage their promoters": {
+        "created": true,
+        "table": "promoters"
+      },
+      "Admins can manage all promoters": {
+        "created": true,
+        "table": "promoters"
+      },
+      "Producers can manage their promoter events": {
+        "created": true,
+        "table": "promoter_events"
+      },
+      "Admins can manage all promoter events": {
+        "created": true,
+        "table": "promoter_events"
+      },
+      "Producers can manage their promoter commissions": {
+        "created": true,
+        "table": "promoter_commissions"
+      },
+      "Admins can manage all promoter commissions": {
+        "created": true,
+        "table": "promoter_commissions"
+      },
+      "Buyers can update their pending orders": {
+        "created": true,
+        "table": "orders"
+      },
+      "Anyone can view active resale listings": {
+        "created": true,
+        "table": "resale_listings"
+      },
+      "Sellers can view their own listings": {
+        "created": true,
+        "table": "resale_listings"
+      },
+      "Buyers can view purchased listings": {
+        "created": true,
+        "table": "resale_listings"
+      },
+      "Sellers can create resale listings": {
+        "created": true,
+        "table": "resale_listings"
+      },
+      "Sellers can update their own listings": {
+        "created": true,
+        "table": "resale_listings"
+      },
+      "Admins can manage all resale listings": {
+        "created": true,
+        "table": "resale_listings"
+      },
+      "Users can view their follows": {
+        "created": true,
+        "table": "producer_follows"
+      },
+      "Users can follow producers": {
+        "created": true,
+        "table": "producer_follows"
+      },
+      "Users can unfollow": {
+        "created": true,
+        "table": "producer_follows"
+      },
+      "Producers can see their follower count": {
+        "created": true,
+        "table": "producer_follows"
+      },
+      "Senders can insert messages": {
+        "created": true,
+        "table": "producer_messages"
+      },
+      "Senders can view their messages": {
+        "created": true,
+        "table": "producer_messages"
+      },
+      "Producers can view their inbox": {
+        "created": true,
+        "table": "producer_messages"
+      },
+      "Producers can update their messages": {
+        "created": true,
+        "table": "producer_messages"
+      },
+      "Anyone can view follows for counting": {
+        "created": true,
+        "table": "producer_follows"
+      },
+      "Staff can view their assignments": {
+        "created": true,
+        "table": "event_staff"
+      },
+      "Producers can manage staff for their events": {
+        "created": true,
+        "table": "event_staff"
+      },
+      "Admins can manage all event staff": {
+        "created": true,
+        "table": "event_staff"
+      },
+      "Staff can view tickets for their events": {
+        "created": true,
+        "table": "tickets"
+      },
+      "Staff can view their assigned events": {
+        "created": true,
+        "table": "events"
+      },
+      "Staff can view analytics for their events": {
+        "created": true,
+        "table": "event_analytics"
+      },
+      "Staff can view checkin lists for their events": {
+        "created": true,
+        "table": "checkin_lists"
+      },
+      "Anyone can view product images for published events": {
+        "created": true,
+        "table": "product_images"
+      },
+      "Producers can manage their product images": {
+        "created": true,
+        "table": "product_images"
+      },
+      "Admins can manage all product images": {
+        "created": true,
+        "table": "product_images"
+      },
+      "Anyone can view product variations for published events": {
+        "created": true,
+        "table": "product_variations"
+      },
+      "Producers can manage their product variations": {
+        "created": true,
+        "table": "product_variations"
+      },
+      "Admins can manage all product variations": {
+        "created": true,
+        "table": "product_variations"
+      },
+      "Users can manage their own notification preferences": {
+        "created": true,
+        "table": "notification_preferences"
+      },
+      "Team members with financial access can view AP": {
+        "created": true,
+        "table": "accounts_payable"
+      },
+      "Team members with financial access can view AR": {
+        "created": true,
+        "table": "accounts_receivable"
+      },
+      "Buyers can view their resale orders": {
+        "created": true,
+        "table": "resale_orders"
+      },
+      "Sellers can view their resale orders": {
+        "created": true,
+        "table": "resale_orders"
+      },
+      "Admins can manage all resale orders": {
+        "created": true,
+        "table": "resale_orders"
+      },
+      "Users can view own wallet": {
+        "created": true,
+        "table": "wallets"
+      },
+      "Admins can manage all wallets": {
+        "created": true,
+        "table": "user_wallets"
+      },
+      "Users can view own wallet ledger": {
+        "created": true,
+        "table": "wallet_ledger"
+      },
+      "Admins can manage all wallet ledger": {
+        "created": true,
+        "table": "wallet_ledger"
+      },
+      "Users can view own withdrawals": {
+        "created": true,
+        "table": "wallet_withdrawals"
+      },
+      "Admins can manage all withdrawals": {
+        "created": true,
+        "table": "producer_withdrawals"
+      },
+      "Producers can manage their financial categories": {
+        "created": true,
+        "table": "financial_categories"
+      },
+      "Admins can manage all financial categories": {
+        "created": true,
+        "table": "financial_categories"
+      },
+      "Admins can read webhook events": {
+        "created": true,
+        "table": "payment_webhook_events"
+      },
+      "Service role can manage webhook events": {
+        "created": true,
+        "table": "payment_webhook_events"
+      },
+      "Producers and team members can view tickets for their events": {
+        "created": true,
+        "table": "tickets"
+      },
+      "Producers and team members can view orders for their events": {
+        "created": true,
+        "table": "orders"
+      },
+      "Producers and team members can view events": {
+        "created": true,
+        "table": "events"
+      },
+      "Users can view active resale listings": {
+        "created": true,
+        "table": "resale_listings"
+      },
+      "Users can create resale listings for their tickets": {
+        "created": true,
+        "table": "resale_listings"
+      },
+      "Users can view own transactions": {
+        "created": true,
+        "table": "wallet_transactions"
+      },
+      "Users can create withdrawal requests": {
+        "created": true,
+        "table": "wallet_withdrawals"
+      },
+      "Producers can view their half-price reports": {
+        "created": true,
+        "table": "half_price_reports"
+      },
+      "Producers can view own balances": {
+        "created": true,
+        "table": "producer_balances"
+      },
+      "Producers can view own withdrawals": {
+        "created": true,
+        "table": "producer_withdrawals"
+      },
+      "Producers can create withdrawal requests": {
+        "created": true,
+        "table": "producer_withdrawals"
+      },
+      "Producers can view own history": {
+        "created": true,
+        "table": "producer_balance_history"
+      },
+      "Admins can view all balances": {
+        "created": true,
+        "table": "producer_balances"
+      },
+      "Admins can manage platform settings": {
+        "created": true,
+        "table": "platform_settings"
+      },
+      "Users can manage their own preferences": {
+        "created": true,
+        "table": "certificate_participant_prefs"
+      },
+      "Producers can view preferences for their events": {
+        "created": true,
+        "table": "certificate_participant_prefs"
+      },
+      "Templates are viewable by everyone": {
+        "created": true,
+        "table": "certificate_templates"
+      },
+      "Only admins can manage templates": {
+        "created": true,
+        "table": "certificate_templates"
+      },
+      "Producers can manage signers for their events": {
+        "created": true,
+        "table": "certificate_signers"
+      },
+      "Team members can view signers": {
+        "created": true,
+        "table": "certificate_signers"
+      },
+      "Producers can update certificate metadata": {
+        "created": true,
+        "table": "certificates"
+      }
+    },
+    "indexes": {
+      "idx_events_slug": {
+        "created": true,
+        "table": "events"
+      },
+      "idx_events_status": {
+        "created": true,
+        "table": "events"
+      },
+      "idx_events_producer": {
+        "created": true,
+        "table": "events"
+      },
+      "idx_events_start_date": {
+        "created": true,
+        "table": "events"
+      },
+      "idx_events_category": {
+        "created": true,
+        "table": "events"
+      },
+      "idx_events_city": {
+        "created": true,
+        "table": "events"
+      },
+      "idx_events_featured": {
+        "created": true,
+        "table": "events"
+      },
+      "idx_tiers_event": {
+        "created": true,
+        "table": "ticket_tiers"
+      },
+      "idx_orders_buyer": {
+        "created": true,
+        "table": "orders"
+      },
+      "idx_orders_event": {
+        "created": true,
+        "table": "orders"
+      },
+      "idx_orders_status": {
+        "created": true,
+        "table": "orders"
+      },
+      "idx_tickets_owner": {
+        "created": true,
+        "table": "tickets"
+      },
+      "idx_tickets_event": {
+        "created": true,
+        "table": "tickets"
+      },
+      "idx_tickets_order": {
+        "created": true,
+        "table": "tickets"
+      },
+      "idx_tickets_qr": {
+        "created": true,
+        "table": "tickets"
+      },
+      "idx_notifications_user": {
+        "created": true,
+        "table": "notifications"
+      },
+      "idx_notifications_read": {
+        "created": true,
+        "table": "notifications"
+      },
+      "idx_events_status_start_date": {
+        "created": true,
+        "table": "events"
+      },
+      "idx_events_venue_city": {
+        "created": true,
+        "table": "events"
+      },
+      "idx_events_fts": {
+        "created": true,
+        "table": "events"
+      },
+      "idx_orders_buyer_id": {
+        "created": true,
+        "table": "orders"
+      },
+      "idx_orders_event_id_status": {
+        "created": true,
+        "table": "orders"
+      },
+      "idx_orders_asaas_payment": {
+        "created": true,
+        "table": "orders"
+      },
+      "idx_tickets_owner_id": {
+        "created": true,
+        "table": "tickets"
+      },
+      "idx_tickets_event_id": {
+        "created": true,
+        "table": "tickets"
+      },
+      "idx_tickets_order_id": {
+        "created": true,
+        "table": "tickets"
+      },
+      "idx_tickets_qr_code": {
+        "created": true,
+        "table": "tickets"
+      },
+      "idx_rate_limits_expires": {
+        "created": true,
+        "table": "rate_limits"
+      },
+      "idx_lgpd_consents_user": {
+        "created": true,
+        "table": "lgpd_consents"
+      },
+      "idx_lgpd_data_requests_user": {
+        "created": true,
+        "table": "lgpd_data_requests"
+      },
+      "idx_lgpd_data_requests_status": {
+        "created": true,
+        "table": "lgpd_data_requests"
+      },
+      "idx_virtual_queue_event_status": {
+        "created": true,
+        "table": "virtual_queue"
+      },
+      "idx_virtual_queue_user": {
+        "created": true,
+        "table": "virtual_queue"
+      },
+      "idx_certificates_user": {
+        "created": true,
+        "table": "certificates"
+      },
+      "idx_certificates_event": {
+        "created": true,
+        "table": "certificates"
+      },
+      "idx_resale_listings_event_status": {
+        "created": true,
+        "table": "resale_listings"
+      },
+      "idx_resale_listings_seller": {
+        "created": true,
+        "table": "resale_listings"
+      },
+      "idx_resale_listings_ticket": {
+        "created": true,
+        "table": "resale_listings"
+      },
+      "idx_resale_listings_active_ticket": {
+        "created": true,
+        "table": "resale_listings"
+      },
+      "idx_resale_orders_listing": {
+        "created": true,
+        "table": "resale_orders"
+      },
+      "idx_resale_orders_buyer": {
+        "created": true,
+        "table": "resale_orders"
+      },
+      "idx_resale_orders_seller": {
+        "created": true,
+        "table": "resale_orders"
+      },
+      "idx_resale_orders_status": {
+        "created": true,
+        "table": "resale_orders"
+      },
+      "idx_resale_orders_asaas_payment_id": {
+        "created": true,
+        "table": "resale_orders"
+      },
+      "idx_wallet_ledger_user_created": {
+        "created": true,
+        "table": "wallet_ledger"
+      },
+      "idx_wallet_ledger_reference": {
+        "created": true,
+        "table": "wallet_ledger"
+      },
+      "idx_wallet_withdrawals_user_created": {
+        "created": true,
+        "table": "wallet_withdrawals"
+      },
+      "idx_wallet_withdrawals_status": {
+        "created": true,
+        "table": "wallet_withdrawals"
+      },
+      "idx_financial_categories_producer_type_value": {
+        "created": true,
+        "table": "financial_categories"
+      },
+      "idx_payment_webhook_events_uniq": {
+        "created": true,
+        "table": "payment_webhook_events"
+      },
+      "idx_payment_webhook_events_status": {
+        "created": true,
+        "table": "payment_webhook_events"
+      },
+      "producer_messages_event_id_idx": {
+        "created": true,
+        "table": "producer_messages"
+      },
+      "producer_messages_replied_at_idx": {
+        "created": true,
+        "table": "producer_messages"
+      },
+      "producer_messages_is_urgent_idx": {
+        "created": true,
+        "table": "producer_messages"
+      },
+      "idx_resale_listings_event": {
+        "created": true,
+        "table": "resale_listings"
+      },
+      "idx_resale_listings_buyer": {
+        "created": true,
+        "table": "resale_listings"
+      },
+      "idx_resale_listings_status": {
+        "created": true,
+        "table": "resale_listings"
+      },
+      "idx_resale_listings_created_at": {
+        "created": true,
+        "table": "resale_listings"
+      },
+      "idx_wallets_user": {
+        "created": true,
+        "table": "wallets"
+      },
+      "idx_wallet_tx_wallet": {
+        "created": true,
+        "table": "wallet_transactions"
+      },
+      "idx_wallet_tx_user": {
+        "created": true,
+        "table": "wallet_transactions"
+      },
+      "idx_wallet_tx_type": {
+        "created": true,
+        "table": "wallet_transactions"
+      },
+      "idx_wallet_tx_reference": {
+        "created": true,
+        "table": "wallet_transactions"
+      },
+      "idx_wallet_tx_created": {
+        "created": true,
+        "table": "wallet_transactions"
+      },
+      "idx_wallet_tx_status": {
+        "created": true,
+        "table": "wallet_transactions"
+      },
+      "idx_wallet_withdrawals_user": {
+        "created": true,
+        "table": "wallet_withdrawals"
+      },
+      "idx_wallet_withdrawals_requested": {
+        "created": true,
+        "table": "wallet_withdrawals"
+      },
+      "idx_wallet_withdrawals_processed": {
+        "created": true,
+        "table": "wallet_withdrawals"
+      },
+      "idx_checkin_scan_logs_operator": {
+        "created": true,
+        "table": "checkin_scan_logs"
+      },
+      "idx_checkin_scan_logs_half_price": {
+        "created": true,
+        "table": "checkin_scan_logs"
+      },
+      "idx_half_price_reports_event": {
+        "created": true,
+        "table": "half_price_reports"
+      },
+      "idx_half_price_reports_date": {
+        "created": true,
+        "table": "half_price_reports"
+      },
+      "idx_producer_balances_producer": {
+        "created": true,
+        "table": "producer_balances"
+      },
+      "idx_producer_balances_event": {
+        "created": true,
+        "table": "producer_balances"
+      },
+      "idx_producer_withdrawals_producer": {
+        "created": true,
+        "table": "producer_withdrawals"
+      },
+      "idx_producer_withdrawals_event": {
+        "created": true,
+        "table": "producer_withdrawals"
+      },
+      "idx_producer_withdrawals_status": {
+        "created": true,
+        "table": "producer_withdrawals"
+      },
+      "idx_producer_withdrawals_requested": {
+        "created": true,
+        "table": "producer_withdrawals"
+      },
+      "idx_producer_balance_history_producer": {
+        "created": true,
+        "table": "producer_balance_history"
+      },
+      "idx_producer_balance_history_event": {
+        "created": true,
+        "table": "producer_balance_history"
+      },
+      "idx_producer_balance_history_type": {
+        "created": true,
+        "table": "producer_balance_history"
+      },
+      "idx_producer_balance_history_created": {
+        "created": true,
+        "table": "producer_balance_history"
+      },
+      "unique_active_resale_per_ticket": {
+        "created": true,
+        "table": "resale_listings"
+      },
+      "idx_certificates_revoked": {
+        "created": true,
+        "table": "certificates"
+      },
+      "idx_participant_cert_prefs_user": {
+        "created": true,
+        "table": "participant_certificate_prefs"
+      },
+      "idx_participant_cert_prefs_event": {
+        "created": true,
+        "table": "participant_certificate_prefs"
+      },
+      "idx_certificate_signers_event": {
+        "created": true,
+        "table": "certificate_signers"
+      },
+      "idx_certificate_signers_order": {
+        "created": true,
+        "table": "certificate_signers"
+      },
+      "idx_cert_participant_prefs_user": {
+        "created": true,
+        "table": "certificate_participant_prefs"
+      },
+      "idx_cert_participant_prefs_event": {
+        "created": true,
+        "table": "certificate_participant_prefs"
+      },
+      "idx_cert_participant_prefs_optout": {
+        "created": true,
+        "table": "certificate_participant_prefs"
+      },
+      "idx_certificates_event_id": {
+        "created": true,
+        "table": "certificates"
+      },
+      "idx_certificates_code": {
+        "created": true,
+        "table": "certificates"
+      },
+      "idx_certificates_validation": {
+        "created": true,
+        "table": "certificates"
+      }
+    },
+    "triggers": {
+      "on_auth_user_created": {
+        "created": true,
+        "function": "handle_new_user"
+      },
+      "update_profiles_updated_at": {
+        "created": true,
+        "function": "update_updated_at_column"
+      },
+      "update_events_updated_at": {
+        "created": true,
+        "function": "update_updated_at_column"
+      },
+      "update_orders_updated_at": {
+        "created": true,
+        "function": "update_updated_at_column"
+      },
+      "on_submission_insert": {
+        "created": true,
+        "function": "increment_list_submissions"
+      },
+      "function": {
+        "created": true,
+        "function": "handle_promoter_commission"
+      },
+      "for": {
+        "created": true,
+        "function": "handle_promoter_commission"
+      },
+      "set_profiles_updated_at": {
+        "created": true,
+        "function": "update_updated_at_column"
+      },
+      "set_events_updated_at": {
+        "created": true,
+        "function": "update_updated_at_column"
+      },
+      "set_orders_updated_at": {
+        "created": true,
+        "function": "update_updated_at_column"
+      },
+      "on_order_paid_promoter_commission": {
+        "created": true,
+        "function": "handle_promoter_commission"
+      },
+      "on_interest_list_submission": {
+        "created": true,
+        "function": "increment_list_submissions"
+      },
+      "set_financial_transactions_updated_at": {
+        "created": true,
+        "function": "update_updated_at_column"
+      },
+      "set_interest_lists_updated_at": {
+        "created": true,
+        "function": "update_updated_at_column"
+      },
+      "set_resale_orders_updated_at": {
+        "created": true,
+        "function": "set_updated_at_timestamp",
+        "dropped": true
+      },
+      "set_user_wallets_updated_at": {
+        "created": true,
+        "function": "set_updated_at_timestamp",
+        "dropped": true
+      },
+      "set_wallet_ledger_updated_at": {
+        "created": true,
+        "function": "set_updated_at_timestamp",
+        "dropped": true
+      },
+      "set_wallet_withdrawals_updated_at": {
+        "created": true,
+        "function": "set_updated_at_timestamp",
+        "dropped": true
+      },
+      "trigger_update_resale_listings": {
+        "created": true,
+        "function": "update_resale_listings_updated_at",
+        "dropped": true
+      },
+      "trigger_half_price_report": {
+        "created": true,
+        "function": "trigger_update_half_price_report",
+        "dropped": true
+      },
+      "trigger_update_producer_balances": {
+        "created": true,
+        "function": "update_producer_balances_updated_at",
+        "dropped": true
+      },
+      "trigger_update_balance_on_order": {
+        "created": true,
+        "function": "update_producer_balance_after_sale",
+        "dropped": true
+      },
+      "prevent_transfer_during_resale": {
+        "created": true,
+        "function": "prevent_transfer_during_resale"
+      },
+      "validate_resale_price": {
+        "created": true,
+        "function": "validate_resale_price_limits"
+      },
+      "update_platform_settings_updated_at": {
+        "created": true,
+        "function": "update_updated_at_column"
+      },
+      "update_participant_cert_prefs_updated_at": {
+        "created": true,
+        "function": "update_updated_at_column",
+        "dropped": true
+      },
+      "update_cert_participant_prefs_updated_at": {
+        "created": true,
+        "function": "update_updated_at_column"
+      },
+      "validate_certificate_before_insert": {
+        "created": true,
+        "function": "validate_certificate_insert",
+        "dropped": true
+      }
+    },
+    "functions": {
+      "has_role": {
+        "created": true
+      },
+      "get_user_role": {
+        "created": true
+      },
+      "handle_new_user": {
+        "created": true
+      },
+      "update_updated_at_column": {
+        "created": true
+      },
+      "reserve_tickets": {
+        "created": true
+      },
+      "confirm_order_payment": {
+        "created": true
+      },
+      "apply_coupon": {
+        "created": true
+      },
+      "cleanup_expired_reservations": {
+        "created": true
+      },
+      "confirm_checkin_analytics": {
+        "created": true
+      },
+      "increment_list_submissions": {
+        "created": true
+      },
+      "handle_promoter_commission": {
+        "created": true
+      },
+      "purchase_resale_atomic": {
+        "created": true
+      },
+      "create_resale_listing_atomic": {
+        "created": true
+      },
+      "create_order_validated": {
+        "created": true,
+        "dropped": true
+      },
+      "increment_event_views": {
+        "created": true
+      },
+      "increment_promoter_clicks": {
+        "created": true
+      },
+      "validate_unlock_code": {
+        "created": true
+      },
+      "join_event_as_staff": {
+        "created": true
+      },
+      "get_team_member_role": {
+        "created": true
+      },
+      "can_access_financial": {
+        "created": true
+      },
+      "get_user_id_by_email": {
+        "created": true
+      },
+      "set_updated_at_timestamp": {
+        "created": true
+      },
+      "ensure_user_wallet": {
+        "created": true
+      },
+      "create_resale_order_atomic": {
+        "created": true
+      },
+      "settle_resale_order_atomic": {
+        "created": true
+      },
+      "reverse_resale_order_atomic": {
+        "created": true
+      },
+      "release_wallet_credits_due": {
+        "created": true
+      },
+      "request_wallet_withdrawal_atomic": {
+        "created": true
+      },
+      "finalize_wallet_withdrawal_atomic": {
+        "created": true
+      },
+      "cleanup_expired_resale_orders": {
+        "created": true
+      },
+      "wallet_debit_available_atomic": {
+        "created": true
+      },
+      "wallet_refund_available_atomic": {
+        "created": true
+      },
+      "register_payment_webhook_event": {
+        "created": true
+      },
+      "mark_payment_webhook_event_processed": {
+        "created": true
+      },
+      "mark_payment_webhook_event_failed": {
+        "created": true
+      },
+      "update_resale_listings_updated_at": {
+        "created": true
+      },
+      "get_or_create_wallet": {
+        "created": true
+      },
+      "calculate_withdrawal_fee": {
+        "created": true
+      },
+      "update_half_price_report": {
+        "created": true
+      },
+      "trigger_update_half_price_report": {
+        "created": true
+      },
+      "update_producer_balances_updated_at": {
+        "created": true
+      },
+      "calculate_producer_balance": {
+        "created": true
+      },
+      "update_producer_balance_after_sale": {
+        "created": true
+      },
+      "release_producer_balance_after_event": {
+        "created": true
+      },
+      "request_producer_withdrawal": {
+        "created": true
+      },
+      "process_producer_withdrawal": {
+        "created": true
+      },
+      "prevent_transfer_during_resale": {
+        "created": true
+      },
+      "cleanup_expired_resale_listings": {
+        "created": true
+      },
+      "validate_resale_price_limits": {
+        "created": true
+      },
+      "admin_force_delete_event": {
+        "created": true
+      },
+      "is_certificate_valid": {
+        "created": true
+      },
+      "revoke_certificate": {
+        "created": true,
+        "dropped": true
+      },
+      "generate_certificate_code": {
+        "created": true
+      },
+      "is_certificate_code_valid": {
+        "created": true
+      },
+      "has_opted_out_certificate": {
+        "created": true
+      },
+      "get_preferred_certificate_name": {
+        "created": true
+      },
+      "validate_certificate_insert": {
+        "created": true
+      }
+    }
+  }
+}

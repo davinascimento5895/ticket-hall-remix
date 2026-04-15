@@ -1,0 +1,3688 @@
+{
+  "tables": {
+    "label": "Tables",
+    "rows": [],
+    "count": 0
+  },
+  "columns": {
+    "label": "Columns",
+    "rows": [],
+    "count": 0
+  },
+  "indexes": {
+    "label": "Indexes",
+    "rows": [
+      {
+        "schemaname": "public",
+        "tablename": "affiliates",
+        "indexname": "affiliates_code_key",
+        "indexdef": "CREATE UNIQUE INDEX affiliates_code_key ON public.affiliates USING btree (code)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "affiliates",
+        "indexname": "affiliates_pkey",
+        "indexdef": "CREATE UNIQUE INDEX affiliates_pkey ON public.affiliates USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "bank_accounts",
+        "indexname": "bank_accounts_pkey",
+        "indexdef": "CREATE UNIQUE INDEX bank_accounts_pkey ON public.bank_accounts USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "bulk_messages",
+        "indexname": "bulk_messages_pkey",
+        "indexdef": "CREATE UNIQUE INDEX bulk_messages_pkey ON public.bulk_messages USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "capacity_groups",
+        "indexname": "capacity_groups_pkey",
+        "indexdef": "CREATE UNIQUE INDEX capacity_groups_pkey ON public.capacity_groups USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificate_participant_prefs",
+        "indexname": "certificate_participant_prefs_event_id_user_id_key",
+        "indexdef": "CREATE UNIQUE INDEX certificate_participant_prefs_event_id_user_id_key ON public.certificate_participant_prefs USING btree (event_id, user_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificate_participant_prefs",
+        "indexname": "certificate_participant_prefs_pkey",
+        "indexdef": "CREATE UNIQUE INDEX certificate_participant_prefs_pkey ON public.certificate_participant_prefs USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificate_participant_prefs",
+        "indexname": "idx_cert_participant_prefs_event",
+        "indexdef": "CREATE INDEX idx_cert_participant_prefs_event ON public.certificate_participant_prefs USING btree (event_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificate_participant_prefs",
+        "indexname": "idx_cert_participant_prefs_optout",
+        "indexdef": "CREATE INDEX idx_cert_participant_prefs_optout ON public.certificate_participant_prefs USING btree (event_id, opt_out) WHERE (opt_out = true)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificate_participant_prefs",
+        "indexname": "idx_cert_participant_prefs_user",
+        "indexdef": "CREATE INDEX idx_cert_participant_prefs_user ON public.certificate_participant_prefs USING btree (user_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificate_signers",
+        "indexname": "certificate_signers_pkey",
+        "indexdef": "CREATE UNIQUE INDEX certificate_signers_pkey ON public.certificate_signers USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificate_signers",
+        "indexname": "idx_certificate_signers_event",
+        "indexdef": "CREATE INDEX idx_certificate_signers_event ON public.certificate_signers USING btree (event_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificate_signers",
+        "indexname": "idx_certificate_signers_order",
+        "indexdef": "CREATE INDEX idx_certificate_signers_order ON public.certificate_signers USING btree (event_id, display_order)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificate_templates",
+        "indexname": "certificate_templates_pkey",
+        "indexdef": "CREATE UNIQUE INDEX certificate_templates_pkey ON public.certificate_templates USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificates",
+        "indexname": "certificates_certificate_code_key",
+        "indexdef": "CREATE UNIQUE INDEX certificates_certificate_code_key ON public.certificates USING btree (certificate_code)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificates",
+        "indexname": "certificates_pkey",
+        "indexdef": "CREATE UNIQUE INDEX certificates_pkey ON public.certificates USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificates",
+        "indexname": "idx_certificates_code",
+        "indexdef": "CREATE INDEX idx_certificates_code ON public.certificates USING btree (certificate_code)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificates",
+        "indexname": "idx_certificates_event",
+        "indexdef": "CREATE INDEX idx_certificates_event ON public.certificates USING btree (event_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificates",
+        "indexname": "idx_certificates_event_id",
+        "indexdef": "CREATE INDEX idx_certificates_event_id ON public.certificates USING btree (event_id) WHERE (event_id IS NOT NULL)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificates",
+        "indexname": "idx_certificates_revoked",
+        "indexdef": "CREATE INDEX idx_certificates_revoked ON public.certificates USING btree (revoked_at) WHERE (revoked_at IS NOT NULL)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificates",
+        "indexname": "idx_certificates_user",
+        "indexdef": "CREATE INDEX idx_certificates_user ON public.certificates USING btree (user_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificates",
+        "indexname": "idx_certificates_validation",
+        "indexdef": "CREATE INDEX idx_certificates_validation ON public.certificates USING btree (id, revoked_at, certificate_code)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "checkin_lists",
+        "indexname": "checkin_lists_access_code_key",
+        "indexdef": "CREATE UNIQUE INDEX checkin_lists_access_code_key ON public.checkin_lists USING btree (access_code)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "checkin_lists",
+        "indexname": "checkin_lists_pkey",
+        "indexdef": "CREATE UNIQUE INDEX checkin_lists_pkey ON public.checkin_lists USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "checkin_scan_logs",
+        "indexname": "checkin_scan_logs_pkey",
+        "indexdef": "CREATE UNIQUE INDEX checkin_scan_logs_pkey ON public.checkin_scan_logs USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "checkin_scan_logs",
+        "indexname": "idx_checkin_scan_logs_half_price",
+        "indexdef": "CREATE INDEX idx_checkin_scan_logs_half_price ON public.checkin_scan_logs USING btree (half_price_doc_verified)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "checkin_scan_logs",
+        "indexname": "idx_checkin_scan_logs_operator",
+        "indexdef": "CREATE INDEX idx_checkin_scan_logs_operator ON public.checkin_scan_logs USING btree (scanned_by)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "checkin_sessions",
+        "indexname": "checkin_sessions_pkey",
+        "indexdef": "CREATE UNIQUE INDEX checkin_sessions_pkey ON public.checkin_sessions USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "checkout_answers",
+        "indexname": "checkout_answers_pkey",
+        "indexdef": "CREATE UNIQUE INDEX checkout_answers_pkey ON public.checkout_answers USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "checkout_questions",
+        "indexname": "checkout_questions_pkey",
+        "indexdef": "CREATE UNIQUE INDEX checkout_questions_pkey ON public.checkout_questions USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "coupons",
+        "indexname": "coupons_event_id_code_key",
+        "indexdef": "CREATE UNIQUE INDEX coupons_event_id_code_key ON public.coupons USING btree (event_id, code)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "coupons",
+        "indexname": "coupons_pkey",
+        "indexdef": "CREATE UNIQUE INDEX coupons_pkey ON public.coupons USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "event_analytics",
+        "indexname": "event_analytics_event_id_key",
+        "indexdef": "CREATE UNIQUE INDEX event_analytics_event_id_key ON public.event_analytics USING btree (event_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "event_analytics",
+        "indexname": "event_analytics_pkey",
+        "indexdef": "CREATE UNIQUE INDEX event_analytics_pkey ON public.event_analytics USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "event_products",
+        "indexname": "event_products_pkey",
+        "indexdef": "CREATE UNIQUE INDEX event_products_pkey ON public.event_products USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "event_reviews",
+        "indexname": "event_reviews_pkey",
+        "indexdef": "CREATE UNIQUE INDEX event_reviews_pkey ON public.event_reviews USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "event_reviews",
+        "indexname": "event_reviews_user_id_event_id_key",
+        "indexdef": "CREATE UNIQUE INDEX event_reviews_user_id_event_id_key ON public.event_reviews USING btree (user_id, event_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "event_staff",
+        "indexname": "event_staff_event_id_user_id_key",
+        "indexdef": "CREATE UNIQUE INDEX event_staff_event_id_user_id_key ON public.event_staff USING btree (event_id, user_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "event_staff",
+        "indexname": "event_staff_pkey",
+        "indexdef": "CREATE UNIQUE INDEX event_staff_pkey ON public.event_staff USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "events",
+        "indexname": "events_pkey",
+        "indexdef": "CREATE UNIQUE INDEX events_pkey ON public.events USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "events",
+        "indexname": "events_slug_key",
+        "indexdef": "CREATE UNIQUE INDEX events_slug_key ON public.events USING btree (slug)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "events",
+        "indexname": "idx_events_category",
+        "indexdef": "CREATE INDEX idx_events_category ON public.events USING btree (category)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "events",
+        "indexname": "idx_events_city",
+        "indexdef": "CREATE INDEX idx_events_city ON public.events USING btree (venue_city)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "events",
+        "indexname": "idx_events_featured",
+        "indexdef": "CREATE INDEX idx_events_featured ON public.events USING btree (is_featured) WHERE (is_featured = true)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "events",
+        "indexname": "idx_events_fts",
+        "indexdef": "CREATE INDEX idx_events_fts ON public.events USING gin (to_tsvector('portuguese'::regconfig, ((((title || ' '::text) || COALESCE(description, ''::text)) || ' '::text) || COALESCE(venue_name, ''::text))))"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "events",
+        "indexname": "idx_events_producer",
+        "indexdef": "CREATE INDEX idx_events_producer ON public.events USING btree (producer_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "events",
+        "indexname": "idx_events_slug",
+        "indexdef": "CREATE INDEX idx_events_slug ON public.events USING btree (slug)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "events",
+        "indexname": "idx_events_start_date",
+        "indexdef": "CREATE INDEX idx_events_start_date ON public.events USING btree (start_date)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "events",
+        "indexname": "idx_events_status",
+        "indexdef": "CREATE INDEX idx_events_status ON public.events USING btree (status)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "events",
+        "indexname": "idx_events_status_start_date",
+        "indexdef": "CREATE INDEX idx_events_status_start_date ON public.events USING btree (status, start_date)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "events",
+        "indexname": "idx_events_venue_city",
+        "indexdef": "CREATE INDEX idx_events_venue_city ON public.events USING btree (venue_city) WHERE (status = 'published'::text)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "favorites",
+        "indexname": "favorites_pkey",
+        "indexdef": "CREATE UNIQUE INDEX favorites_pkey ON public.favorites USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "favorites",
+        "indexname": "favorites_user_id_event_id_key",
+        "indexdef": "CREATE UNIQUE INDEX favorites_user_id_event_id_key ON public.favorites USING btree (user_id, event_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "financial_categories",
+        "indexname": "financial_categories_pkey",
+        "indexdef": "CREATE UNIQUE INDEX financial_categories_pkey ON public.financial_categories USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "financial_categories",
+        "indexname": "idx_financial_categories_producer_type_value",
+        "indexdef": "CREATE UNIQUE INDEX idx_financial_categories_producer_type_value ON public.financial_categories USING btree (producer_id, type, value)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "financial_transactions",
+        "indexname": "financial_transactions_pkey",
+        "indexdef": "CREATE UNIQUE INDEX financial_transactions_pkey ON public.financial_transactions USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "guest_lists",
+        "indexname": "guest_lists_pkey",
+        "indexdef": "CREATE UNIQUE INDEX guest_lists_pkey ON public.guest_lists USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "half_price_reports",
+        "indexname": "half_price_reports_pkey",
+        "indexdef": "CREATE UNIQUE INDEX half_price_reports_pkey ON public.half_price_reports USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "half_price_reports",
+        "indexname": "idx_half_price_reports_date",
+        "indexdef": "CREATE INDEX idx_half_price_reports_date ON public.half_price_reports USING btree (report_date DESC)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "half_price_reports",
+        "indexname": "idx_half_price_reports_event",
+        "indexdef": "CREATE INDEX idx_half_price_reports_event ON public.half_price_reports USING btree (event_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "interest_list_fields",
+        "indexname": "interest_list_fields_pkey",
+        "indexdef": "CREATE UNIQUE INDEX interest_list_fields_pkey ON public.interest_list_fields USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "interest_list_submissions",
+        "indexname": "interest_list_submissions_pkey",
+        "indexdef": "CREATE UNIQUE INDEX interest_list_submissions_pkey ON public.interest_list_submissions USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "interest_lists",
+        "indexname": "interest_lists_pkey",
+        "indexdef": "CREATE UNIQUE INDEX interest_lists_pkey ON public.interest_lists USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "interest_lists",
+        "indexname": "interest_lists_slug_key",
+        "indexdef": "CREATE UNIQUE INDEX interest_lists_slug_key ON public.interest_lists USING btree (slug)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "lgpd_consents",
+        "indexname": "idx_lgpd_consents_user",
+        "indexdef": "CREATE INDEX idx_lgpd_consents_user ON public.lgpd_consents USING btree (user_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "lgpd_consents",
+        "indexname": "lgpd_consents_pkey",
+        "indexdef": "CREATE UNIQUE INDEX lgpd_consents_pkey ON public.lgpd_consents USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "lgpd_consents",
+        "indexname": "lgpd_consents_user_consent_unique",
+        "indexdef": "CREATE UNIQUE INDEX lgpd_consents_user_consent_unique ON public.lgpd_consents USING btree (user_id, consent_type)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "lgpd_consents",
+        "indexname": "lgpd_consents_user_id_consent_type_key",
+        "indexdef": "CREATE UNIQUE INDEX lgpd_consents_user_id_consent_type_key ON public.lgpd_consents USING btree (user_id, consent_type)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "lgpd_data_requests",
+        "indexname": "idx_lgpd_data_requests_status",
+        "indexdef": "CREATE INDEX idx_lgpd_data_requests_status ON public.lgpd_data_requests USING btree (status)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "lgpd_data_requests",
+        "indexname": "idx_lgpd_data_requests_user",
+        "indexdef": "CREATE INDEX idx_lgpd_data_requests_user ON public.lgpd_data_requests USING btree (user_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "lgpd_data_requests",
+        "indexname": "lgpd_data_requests_pkey",
+        "indexdef": "CREATE UNIQUE INDEX lgpd_data_requests_pkey ON public.lgpd_data_requests USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "notification_preferences",
+        "indexname": "notification_preferences_pkey",
+        "indexdef": "CREATE UNIQUE INDEX notification_preferences_pkey ON public.notification_preferences USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "notification_preferences",
+        "indexname": "notification_preferences_user_id_category_key",
+        "indexdef": "CREATE UNIQUE INDEX notification_preferences_user_id_category_key ON public.notification_preferences USING btree (user_id, category)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "notifications",
+        "indexname": "idx_notifications_read",
+        "indexdef": "CREATE INDEX idx_notifications_read ON public.notifications USING btree (user_id, is_read)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "notifications",
+        "indexname": "idx_notifications_user",
+        "indexdef": "CREATE INDEX idx_notifications_user ON public.notifications USING btree (user_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "notifications",
+        "indexname": "notifications_pkey",
+        "indexdef": "CREATE UNIQUE INDEX notifications_pkey ON public.notifications USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "order_products",
+        "indexname": "order_products_pkey",
+        "indexdef": "CREATE UNIQUE INDEX order_products_pkey ON public.order_products USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "orders",
+        "indexname": "idx_orders_asaas_payment",
+        "indexdef": "CREATE INDEX idx_orders_asaas_payment ON public.orders USING btree (asaas_payment_id) WHERE (asaas_payment_id IS NOT NULL)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "orders",
+        "indexname": "idx_orders_buyer",
+        "indexdef": "CREATE INDEX idx_orders_buyer ON public.orders USING btree (buyer_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "orders",
+        "indexname": "idx_orders_buyer_id",
+        "indexdef": "CREATE INDEX idx_orders_buyer_id ON public.orders USING btree (buyer_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "orders",
+        "indexname": "idx_orders_event",
+        "indexdef": "CREATE INDEX idx_orders_event ON public.orders USING btree (event_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "orders",
+        "indexname": "idx_orders_event_id_status",
+        "indexdef": "CREATE INDEX idx_orders_event_id_status ON public.orders USING btree (event_id, status)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "orders",
+        "indexname": "idx_orders_status",
+        "indexdef": "CREATE INDEX idx_orders_status ON public.orders USING btree (status)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "orders",
+        "indexname": "orders_invoice_number_key",
+        "indexdef": "CREATE UNIQUE INDEX orders_invoice_number_key ON public.orders USING btree (invoice_number)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "orders",
+        "indexname": "orders_pkey",
+        "indexdef": "CREATE UNIQUE INDEX orders_pkey ON public.orders USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "participant_certificate_prefs",
+        "indexname": "idx_participant_cert_prefs_event",
+        "indexdef": "CREATE INDEX idx_participant_cert_prefs_event ON public.participant_certificate_prefs USING btree (event_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "participant_certificate_prefs",
+        "indexname": "idx_participant_cert_prefs_user",
+        "indexdef": "CREATE INDEX idx_participant_cert_prefs_user ON public.participant_certificate_prefs USING btree (user_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "participant_certificate_prefs",
+        "indexname": "participant_certificate_prefs_event_id_user_id_key",
+        "indexdef": "CREATE UNIQUE INDEX participant_certificate_prefs_event_id_user_id_key ON public.participant_certificate_prefs USING btree (event_id, user_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "participant_certificate_prefs",
+        "indexname": "participant_certificate_prefs_pkey",
+        "indexdef": "CREATE UNIQUE INDEX participant_certificate_prefs_pkey ON public.participant_certificate_prefs USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "payment_webhook_events",
+        "indexname": "idx_payment_webhook_events_status",
+        "indexdef": "CREATE INDEX idx_payment_webhook_events_status ON public.payment_webhook_events USING btree (status, last_received_at DESC)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "payment_webhook_events",
+        "indexname": "idx_payment_webhook_events_uniq",
+        "indexdef": "CREATE UNIQUE INDEX idx_payment_webhook_events_uniq ON public.payment_webhook_events USING btree (provider, payment_id, event_type)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "payment_webhook_events",
+        "indexname": "payment_webhook_events_pkey",
+        "indexdef": "CREATE UNIQUE INDEX payment_webhook_events_pkey ON public.payment_webhook_events USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "platform_settings",
+        "indexname": "platform_settings_pkey",
+        "indexdef": "CREATE UNIQUE INDEX platform_settings_pkey ON public.platform_settings USING btree (key)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_balance_history",
+        "indexname": "idx_producer_balance_history_created",
+        "indexdef": "CREATE INDEX idx_producer_balance_history_created ON public.producer_balance_history USING btree (created_at DESC)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_balance_history",
+        "indexname": "idx_producer_balance_history_event",
+        "indexdef": "CREATE INDEX idx_producer_balance_history_event ON public.producer_balance_history USING btree (event_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_balance_history",
+        "indexname": "idx_producer_balance_history_producer",
+        "indexdef": "CREATE INDEX idx_producer_balance_history_producer ON public.producer_balance_history USING btree (producer_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_balance_history",
+        "indexname": "idx_producer_balance_history_type",
+        "indexdef": "CREATE INDEX idx_producer_balance_history_type ON public.producer_balance_history USING btree (movement_type)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_balance_history",
+        "indexname": "producer_balance_history_pkey",
+        "indexdef": "CREATE UNIQUE INDEX producer_balance_history_pkey ON public.producer_balance_history USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_balances",
+        "indexname": "idx_producer_balances_event",
+        "indexdef": "CREATE INDEX idx_producer_balances_event ON public.producer_balances USING btree (event_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_balances",
+        "indexname": "idx_producer_balances_producer",
+        "indexdef": "CREATE INDEX idx_producer_balances_producer ON public.producer_balances USING btree (producer_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_balances",
+        "indexname": "producer_balances_pkey",
+        "indexdef": "CREATE UNIQUE INDEX producer_balances_pkey ON public.producer_balances USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_balances",
+        "indexname": "producer_balances_producer_id_event_id_key",
+        "indexdef": "CREATE UNIQUE INDEX producer_balances_producer_id_event_id_key ON public.producer_balances USING btree (producer_id, event_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_follows",
+        "indexname": "producer_follows_pkey",
+        "indexdef": "CREATE UNIQUE INDEX producer_follows_pkey ON public.producer_follows USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_follows",
+        "indexname": "producer_follows_user_id_producer_id_key",
+        "indexdef": "CREATE UNIQUE INDEX producer_follows_user_id_producer_id_key ON public.producer_follows USING btree (user_id, producer_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_messages",
+        "indexname": "producer_messages_event_id_idx",
+        "indexdef": "CREATE INDEX producer_messages_event_id_idx ON public.producer_messages USING btree (event_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_messages",
+        "indexname": "producer_messages_is_urgent_idx",
+        "indexdef": "CREATE INDEX producer_messages_is_urgent_idx ON public.producer_messages USING btree (is_urgent)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_messages",
+        "indexname": "producer_messages_pkey",
+        "indexdef": "CREATE UNIQUE INDEX producer_messages_pkey ON public.producer_messages USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_messages",
+        "indexname": "producer_messages_replied_at_idx",
+        "indexdef": "CREATE INDEX producer_messages_replied_at_idx ON public.producer_messages USING btree (replied_at)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_team_members",
+        "indexname": "producer_team_members_invite_token_key",
+        "indexdef": "CREATE UNIQUE INDEX producer_team_members_invite_token_key ON public.producer_team_members USING btree (invite_token)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_team_members",
+        "indexname": "producer_team_members_pkey",
+        "indexdef": "CREATE UNIQUE INDEX producer_team_members_pkey ON public.producer_team_members USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_withdrawals",
+        "indexname": "idx_producer_withdrawals_event",
+        "indexdef": "CREATE INDEX idx_producer_withdrawals_event ON public.producer_withdrawals USING btree (event_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_withdrawals",
+        "indexname": "idx_producer_withdrawals_producer",
+        "indexdef": "CREATE INDEX idx_producer_withdrawals_producer ON public.producer_withdrawals USING btree (producer_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_withdrawals",
+        "indexname": "idx_producer_withdrawals_requested",
+        "indexdef": "CREATE INDEX idx_producer_withdrawals_requested ON public.producer_withdrawals USING btree (requested_at DESC)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_withdrawals",
+        "indexname": "idx_producer_withdrawals_status",
+        "indexdef": "CREATE INDEX idx_producer_withdrawals_status ON public.producer_withdrawals USING btree (status)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_withdrawals",
+        "indexname": "producer_withdrawals_pkey",
+        "indexdef": "CREATE UNIQUE INDEX producer_withdrawals_pkey ON public.producer_withdrawals USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "product_images",
+        "indexname": "product_images_pkey",
+        "indexdef": "CREATE UNIQUE INDEX product_images_pkey ON public.product_images USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "product_variations",
+        "indexname": "product_variations_pkey",
+        "indexdef": "CREATE UNIQUE INDEX product_variations_pkey ON public.product_variations USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "profiles",
+        "indexname": "profiles_cpf_key",
+        "indexdef": "CREATE UNIQUE INDEX profiles_cpf_key ON public.profiles USING btree (cpf)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "profiles",
+        "indexname": "profiles_organizer_slug_key",
+        "indexdef": "CREATE UNIQUE INDEX profiles_organizer_slug_key ON public.profiles USING btree (organizer_slug)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "profiles",
+        "indexname": "profiles_pkey",
+        "indexdef": "CREATE UNIQUE INDEX profiles_pkey ON public.profiles USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "promoter_commissions",
+        "indexname": "promoter_commissions_pkey",
+        "indexdef": "CREATE UNIQUE INDEX promoter_commissions_pkey ON public.promoter_commissions USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "promoter_events",
+        "indexname": "promoter_events_pkey",
+        "indexdef": "CREATE UNIQUE INDEX promoter_events_pkey ON public.promoter_events USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "promoter_events",
+        "indexname": "promoter_events_promoter_id_event_id_key",
+        "indexdef": "CREATE UNIQUE INDEX promoter_events_promoter_id_event_id_key ON public.promoter_events USING btree (promoter_id, event_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "promoter_events",
+        "indexname": "promoter_events_tracking_code_event_id_key",
+        "indexdef": "CREATE UNIQUE INDEX promoter_events_tracking_code_event_id_key ON public.promoter_events USING btree (tracking_code, event_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "promoters",
+        "indexname": "promoters_pkey",
+        "indexdef": "CREATE UNIQUE INDEX promoters_pkey ON public.promoters USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "rate_limits",
+        "indexname": "idx_rate_limits_expires",
+        "indexdef": "CREATE INDEX idx_rate_limits_expires ON public.rate_limits USING btree (expires_at)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "rate_limits",
+        "indexname": "rate_limits_pkey",
+        "indexdef": "CREATE UNIQUE INDEX rate_limits_pkey ON public.rate_limits USING btree (key)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "refunds",
+        "indexname": "refunds_pkey",
+        "indexdef": "CREATE UNIQUE INDEX refunds_pkey ON public.refunds USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_listings",
+        "indexname": "idx_resale_listings_active_ticket",
+        "indexdef": "CREATE UNIQUE INDEX idx_resale_listings_active_ticket ON public.resale_listings USING btree (ticket_id) WHERE (status = 'active'::text)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_listings",
+        "indexname": "idx_resale_listings_buyer",
+        "indexdef": "CREATE INDEX idx_resale_listings_buyer ON public.resale_listings USING btree (buyer_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_listings",
+        "indexname": "idx_resale_listings_created_at",
+        "indexdef": "CREATE INDEX idx_resale_listings_created_at ON public.resale_listings USING btree (created_at DESC)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_listings",
+        "indexname": "idx_resale_listings_event",
+        "indexdef": "CREATE INDEX idx_resale_listings_event ON public.resale_listings USING btree (event_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_listings",
+        "indexname": "idx_resale_listings_event_status",
+        "indexdef": "CREATE INDEX idx_resale_listings_event_status ON public.resale_listings USING btree (event_id, status)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_listings",
+        "indexname": "idx_resale_listings_seller",
+        "indexdef": "CREATE INDEX idx_resale_listings_seller ON public.resale_listings USING btree (seller_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_listings",
+        "indexname": "idx_resale_listings_status",
+        "indexdef": "CREATE INDEX idx_resale_listings_status ON public.resale_listings USING btree (status)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_listings",
+        "indexname": "idx_resale_listings_ticket",
+        "indexdef": "CREATE INDEX idx_resale_listings_ticket ON public.resale_listings USING btree (ticket_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_listings",
+        "indexname": "resale_listings_pkey",
+        "indexdef": "CREATE UNIQUE INDEX resale_listings_pkey ON public.resale_listings USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_listings",
+        "indexname": "unique_active_resale_per_ticket",
+        "indexdef": "CREATE UNIQUE INDEX unique_active_resale_per_ticket ON public.resale_listings USING btree (ticket_id) WHERE (status = 'active'::text)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_orders",
+        "indexname": "idx_resale_orders_asaas_payment_id",
+        "indexdef": "CREATE UNIQUE INDEX idx_resale_orders_asaas_payment_id ON public.resale_orders USING btree (asaas_payment_id) WHERE (asaas_payment_id IS NOT NULL)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_orders",
+        "indexname": "idx_resale_orders_buyer",
+        "indexdef": "CREATE INDEX idx_resale_orders_buyer ON public.resale_orders USING btree (buyer_id, created_at DESC)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_orders",
+        "indexname": "idx_resale_orders_listing",
+        "indexdef": "CREATE INDEX idx_resale_orders_listing ON public.resale_orders USING btree (listing_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_orders",
+        "indexname": "idx_resale_orders_seller",
+        "indexdef": "CREATE INDEX idx_resale_orders_seller ON public.resale_orders USING btree (seller_id, created_at DESC)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_orders",
+        "indexname": "idx_resale_orders_status",
+        "indexdef": "CREATE INDEX idx_resale_orders_status ON public.resale_orders USING btree (status)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_orders",
+        "indexname": "resale_orders_pkey",
+        "indexdef": "CREATE UNIQUE INDEX resale_orders_pkey ON public.resale_orders USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "ticket_taxes_fees",
+        "indexname": "ticket_taxes_fees_pkey",
+        "indexdef": "CREATE UNIQUE INDEX ticket_taxes_fees_pkey ON public.ticket_taxes_fees USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "ticket_tiers",
+        "indexname": "idx_tiers_event",
+        "indexdef": "CREATE INDEX idx_tiers_event ON public.ticket_tiers USING btree (event_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "ticket_tiers",
+        "indexname": "ticket_tiers_pkey",
+        "indexdef": "CREATE UNIQUE INDEX ticket_tiers_pkey ON public.ticket_tiers USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "tickets",
+        "indexname": "idx_tickets_event",
+        "indexdef": "CREATE INDEX idx_tickets_event ON public.tickets USING btree (event_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "tickets",
+        "indexname": "idx_tickets_event_id",
+        "indexdef": "CREATE INDEX idx_tickets_event_id ON public.tickets USING btree (event_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "tickets",
+        "indexname": "idx_tickets_order",
+        "indexdef": "CREATE INDEX idx_tickets_order ON public.tickets USING btree (order_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "tickets",
+        "indexname": "idx_tickets_order_id",
+        "indexdef": "CREATE INDEX idx_tickets_order_id ON public.tickets USING btree (order_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "tickets",
+        "indexname": "idx_tickets_owner",
+        "indexdef": "CREATE INDEX idx_tickets_owner ON public.tickets USING btree (owner_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "tickets",
+        "indexname": "idx_tickets_owner_id",
+        "indexdef": "CREATE INDEX idx_tickets_owner_id ON public.tickets USING btree (owner_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "tickets",
+        "indexname": "idx_tickets_qr",
+        "indexdef": "CREATE INDEX idx_tickets_qr ON public.tickets USING btree (qr_code)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "tickets",
+        "indexname": "idx_tickets_qr_code",
+        "indexdef": "CREATE UNIQUE INDEX idx_tickets_qr_code ON public.tickets USING btree (qr_code)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "tickets",
+        "indexname": "tickets_pkey",
+        "indexdef": "CREATE UNIQUE INDEX tickets_pkey ON public.tickets USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "tickets",
+        "indexname": "tickets_qr_code_key",
+        "indexdef": "CREATE UNIQUE INDEX tickets_qr_code_key ON public.tickets USING btree (qr_code)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "user_roles",
+        "indexname": "user_roles_pkey",
+        "indexdef": "CREATE UNIQUE INDEX user_roles_pkey ON public.user_roles USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "user_roles",
+        "indexname": "user_roles_user_id_role_key",
+        "indexdef": "CREATE UNIQUE INDEX user_roles_user_id_role_key ON public.user_roles USING btree (user_id, role)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "user_wallets",
+        "indexname": "user_wallets_pkey",
+        "indexdef": "CREATE UNIQUE INDEX user_wallets_pkey ON public.user_wallets USING btree (user_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "virtual_queue",
+        "indexname": "idx_virtual_queue_event_status",
+        "indexdef": "CREATE INDEX idx_virtual_queue_event_status ON public.virtual_queue USING btree (event_id, status)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "virtual_queue",
+        "indexname": "idx_virtual_queue_user",
+        "indexdef": "CREATE INDEX idx_virtual_queue_user ON public.virtual_queue USING btree (user_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "virtual_queue",
+        "indexname": "virtual_queue_pkey",
+        "indexdef": "CREATE UNIQUE INDEX virtual_queue_pkey ON public.virtual_queue USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "waitlist",
+        "indexname": "waitlist_pkey",
+        "indexdef": "CREATE UNIQUE INDEX waitlist_pkey ON public.waitlist USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "wallet_ledger",
+        "indexname": "idx_wallet_ledger_reference",
+        "indexdef": "CREATE INDEX idx_wallet_ledger_reference ON public.wallet_ledger USING btree (reference_type, reference_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "wallet_ledger",
+        "indexname": "idx_wallet_ledger_user_created",
+        "indexdef": "CREATE INDEX idx_wallet_ledger_user_created ON public.wallet_ledger USING btree (user_id, created_at DESC)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "wallet_ledger",
+        "indexname": "wallet_ledger_pkey",
+        "indexdef": "CREATE UNIQUE INDEX wallet_ledger_pkey ON public.wallet_ledger USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "wallet_transactions",
+        "indexname": "idx_wallet_tx_created",
+        "indexdef": "CREATE INDEX idx_wallet_tx_created ON public.wallet_transactions USING btree (created_at DESC)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "wallet_transactions",
+        "indexname": "idx_wallet_tx_reference",
+        "indexdef": "CREATE INDEX idx_wallet_tx_reference ON public.wallet_transactions USING btree (reference_type, reference_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "wallet_transactions",
+        "indexname": "idx_wallet_tx_status",
+        "indexdef": "CREATE INDEX idx_wallet_tx_status ON public.wallet_transactions USING btree (status)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "wallet_transactions",
+        "indexname": "idx_wallet_tx_type",
+        "indexdef": "CREATE INDEX idx_wallet_tx_type ON public.wallet_transactions USING btree (tx_type)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "wallet_transactions",
+        "indexname": "idx_wallet_tx_user",
+        "indexdef": "CREATE INDEX idx_wallet_tx_user ON public.wallet_transactions USING btree (user_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "wallet_transactions",
+        "indexname": "idx_wallet_tx_wallet",
+        "indexdef": "CREATE INDEX idx_wallet_tx_wallet ON public.wallet_transactions USING btree (wallet_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "wallet_transactions",
+        "indexname": "wallet_transactions_pkey",
+        "indexdef": "CREATE UNIQUE INDEX wallet_transactions_pkey ON public.wallet_transactions USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "wallet_withdrawals",
+        "indexname": "idx_wallet_withdrawals_requested",
+        "indexdef": "CREATE INDEX idx_wallet_withdrawals_requested ON public.wallet_withdrawals USING btree (requested_at DESC)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "wallet_withdrawals",
+        "indexname": "idx_wallet_withdrawals_status",
+        "indexdef": "CREATE INDEX idx_wallet_withdrawals_status ON public.wallet_withdrawals USING btree (status)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "wallet_withdrawals",
+        "indexname": "idx_wallet_withdrawals_user",
+        "indexdef": "CREATE INDEX idx_wallet_withdrawals_user ON public.wallet_withdrawals USING btree (user_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "wallet_withdrawals",
+        "indexname": "idx_wallet_withdrawals_user_created",
+        "indexdef": "CREATE INDEX idx_wallet_withdrawals_user_created ON public.wallet_withdrawals USING btree (user_id, created_at DESC)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "wallet_withdrawals",
+        "indexname": "wallet_withdrawals_pkey",
+        "indexdef": "CREATE UNIQUE INDEX wallet_withdrawals_pkey ON public.wallet_withdrawals USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "wallets",
+        "indexname": "idx_wallets_user",
+        "indexdef": "CREATE INDEX idx_wallets_user ON public.wallets USING btree (user_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "wallets",
+        "indexname": "wallets_pkey",
+        "indexdef": "CREATE UNIQUE INDEX wallets_pkey ON public.wallets USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "wallets",
+        "indexname": "wallets_user_id_key",
+        "indexdef": "CREATE UNIQUE INDEX wallets_user_id_key ON public.wallets USING btree (user_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "webhook_deliveries",
+        "indexname": "webhook_deliveries_pkey",
+        "indexdef": "CREATE UNIQUE INDEX webhook_deliveries_pkey ON public.webhook_deliveries USING btree (id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "webhooks",
+        "indexname": "webhooks_pkey",
+        "indexdef": "CREATE UNIQUE INDEX webhooks_pkey ON public.webhooks USING btree (id)"
+      }
+    ],
+    "count": 184
+  },
+  "constraints": {
+    "label": "Constraints",
+    "rows": [],
+    "count": 0
+  },
+  "functions": {
+    "label": "Functions",
+    "rows": [
+      {
+        "routine_name": "admin_force_delete_event",
+        "routine_type": "FUNCTION",
+        "data_type": "void"
+      },
+      {
+        "routine_name": "apply_coupon",
+        "routine_type": "FUNCTION",
+        "data_type": "boolean"
+      },
+      {
+        "routine_name": "calculate_producer_balance",
+        "routine_type": "FUNCTION",
+        "data_type": "jsonb"
+      },
+      {
+        "routine_name": "calculate_withdrawal_fee",
+        "routine_type": "FUNCTION",
+        "data_type": "numeric"
+      },
+      {
+        "routine_name": "can_access_financial",
+        "routine_type": "FUNCTION",
+        "data_type": "boolean"
+      },
+      {
+        "routine_name": "cleanup_expired_resale_listings",
+        "routine_type": "FUNCTION",
+        "data_type": "integer"
+      },
+      {
+        "routine_name": "cleanup_expired_resale_orders",
+        "routine_type": "FUNCTION",
+        "data_type": "integer"
+      },
+      {
+        "routine_name": "cleanup_expired_reservations",
+        "routine_type": "FUNCTION",
+        "data_type": "void"
+      },
+      {
+        "routine_name": "confirm_checkin_analytics",
+        "routine_type": "FUNCTION",
+        "data_type": "void"
+      },
+      {
+        "routine_name": "confirm_order_payment",
+        "routine_type": "FUNCTION",
+        "data_type": "boolean"
+      },
+      {
+        "routine_name": "create_order_validated",
+        "routine_type": "FUNCTION",
+        "data_type": "jsonb"
+      },
+      {
+        "routine_name": "create_resale_listing_atomic",
+        "routine_type": "FUNCTION",
+        "data_type": "jsonb"
+      },
+      {
+        "routine_name": "create_resale_order_atomic",
+        "routine_type": "FUNCTION",
+        "data_type": "jsonb"
+      },
+      {
+        "routine_name": "ensure_user_wallet",
+        "routine_type": "FUNCTION",
+        "data_type": "void"
+      },
+      {
+        "routine_name": "finalize_wallet_withdrawal_atomic",
+        "routine_type": "FUNCTION",
+        "data_type": "jsonb"
+      },
+      {
+        "routine_name": "generate_certificate_code",
+        "routine_type": "FUNCTION",
+        "data_type": "text"
+      },
+      {
+        "routine_name": "get_or_create_wallet",
+        "routine_type": "FUNCTION",
+        "data_type": "USER-DEFINED"
+      },
+      {
+        "routine_name": "get_preferred_certificate_name",
+        "routine_type": "FUNCTION",
+        "data_type": "text"
+      },
+      {
+        "routine_name": "get_team_member_role",
+        "routine_type": "FUNCTION",
+        "data_type": "text"
+      },
+      {
+        "routine_name": "get_user_id_by_email",
+        "routine_type": "FUNCTION",
+        "data_type": "uuid"
+      },
+      {
+        "routine_name": "get_user_role",
+        "routine_type": "FUNCTION",
+        "data_type": "USER-DEFINED"
+      },
+      {
+        "routine_name": "handle_new_user",
+        "routine_type": "FUNCTION",
+        "data_type": "trigger"
+      },
+      {
+        "routine_name": "handle_promoter_commission",
+        "routine_type": "FUNCTION",
+        "data_type": "trigger"
+      },
+      {
+        "routine_name": "has_opted_out_certificate",
+        "routine_type": "FUNCTION",
+        "data_type": "boolean"
+      },
+      {
+        "routine_name": "has_role",
+        "routine_type": "FUNCTION",
+        "data_type": "boolean"
+      },
+      {
+        "routine_name": "increment_event_views",
+        "routine_type": "FUNCTION",
+        "data_type": "void"
+      },
+      {
+        "routine_name": "increment_list_submissions",
+        "routine_type": "FUNCTION",
+        "data_type": "trigger"
+      },
+      {
+        "routine_name": "increment_promoter_clicks",
+        "routine_type": "FUNCTION",
+        "data_type": "void"
+      },
+      {
+        "routine_name": "is_certificate_code_valid",
+        "routine_type": "FUNCTION",
+        "data_type": "record"
+      },
+      {
+        "routine_name": "is_certificate_valid",
+        "routine_type": "FUNCTION",
+        "data_type": "boolean"
+      },
+      {
+        "routine_name": "join_event_as_staff",
+        "routine_type": "FUNCTION",
+        "data_type": "jsonb"
+      },
+      {
+        "routine_name": "mark_payment_webhook_event_failed",
+        "routine_type": "FUNCTION",
+        "data_type": "void"
+      },
+      {
+        "routine_name": "mark_payment_webhook_event_processed",
+        "routine_type": "FUNCTION",
+        "data_type": "void"
+      },
+      {
+        "routine_name": "prevent_transfer_during_resale",
+        "routine_type": "FUNCTION",
+        "data_type": "trigger"
+      },
+      {
+        "routine_name": "process_producer_withdrawal",
+        "routine_type": "FUNCTION",
+        "data_type": "jsonb"
+      },
+      {
+        "routine_name": "purchase_resale_atomic",
+        "routine_type": "FUNCTION",
+        "data_type": "jsonb"
+      },
+      {
+        "routine_name": "register_payment_webhook_event",
+        "routine_type": "FUNCTION",
+        "data_type": "jsonb"
+      },
+      {
+        "routine_name": "release_producer_balance_after_event",
+        "routine_type": "FUNCTION",
+        "data_type": "jsonb"
+      },
+      {
+        "routine_name": "release_wallet_credits_due",
+        "routine_type": "FUNCTION",
+        "data_type": "integer"
+      },
+      {
+        "routine_name": "request_producer_withdrawal",
+        "routine_type": "FUNCTION",
+        "data_type": "jsonb"
+      },
+      {
+        "routine_name": "request_wallet_withdrawal_atomic",
+        "routine_type": "FUNCTION",
+        "data_type": "jsonb"
+      },
+      {
+        "routine_name": "reserve_tickets",
+        "routine_type": "FUNCTION",
+        "data_type": "boolean"
+      },
+      {
+        "routine_name": "reverse_resale_order_atomic",
+        "routine_type": "FUNCTION",
+        "data_type": "jsonb"
+      },
+      {
+        "routine_name": "revoke_certificate",
+        "routine_type": "FUNCTION",
+        "data_type": "boolean"
+      },
+      {
+        "routine_name": "rls_auto_enable",
+        "routine_type": "FUNCTION",
+        "data_type": "event_trigger"
+      },
+      {
+        "routine_name": "set_updated_at_timestamp",
+        "routine_type": "FUNCTION",
+        "data_type": "trigger"
+      },
+      {
+        "routine_name": "settle_resale_order_atomic",
+        "routine_type": "FUNCTION",
+        "data_type": "jsonb"
+      },
+      {
+        "routine_name": "trigger_update_half_price_report",
+        "routine_type": "FUNCTION",
+        "data_type": "trigger"
+      },
+      {
+        "routine_name": "update_half_price_report",
+        "routine_type": "FUNCTION",
+        "data_type": "void"
+      },
+      {
+        "routine_name": "update_producer_balance_after_sale",
+        "routine_type": "FUNCTION",
+        "data_type": "trigger"
+      },
+      {
+        "routine_name": "update_producer_balances_updated_at",
+        "routine_type": "FUNCTION",
+        "data_type": "trigger"
+      },
+      {
+        "routine_name": "update_resale_listings_updated_at",
+        "routine_type": "FUNCTION",
+        "data_type": "trigger"
+      },
+      {
+        "routine_name": "update_updated_at_column",
+        "routine_type": "FUNCTION",
+        "data_type": "trigger"
+      },
+      {
+        "routine_name": "validate_certificate_insert",
+        "routine_type": "FUNCTION",
+        "data_type": "trigger"
+      },
+      {
+        "routine_name": "validate_resale_price_limits",
+        "routine_type": "FUNCTION",
+        "data_type": "trigger"
+      },
+      {
+        "routine_name": "validate_unlock_code",
+        "routine_type": "FUNCTION",
+        "data_type": "ARRAY"
+      },
+      {
+        "routine_name": "wallet_debit_available_atomic",
+        "routine_type": "FUNCTION",
+        "data_type": "jsonb"
+      },
+      {
+        "routine_name": "wallet_refund_available_atomic",
+        "routine_type": "FUNCTION",
+        "data_type": "jsonb"
+      }
+    ],
+    "count": 58
+  },
+  "triggers": {
+    "label": "Triggers",
+    "rows": [],
+    "count": 0
+  },
+  "rls_policies": {
+    "label": "RLS Policies",
+    "rows": [
+      {
+        "schemaname": "public",
+        "tablename": "affiliates",
+        "policyname": "Admins can manage all affiliates",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "affiliates",
+        "policyname": "Anyone can view active affiliates",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(is_active = true)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "affiliates",
+        "policyname": "Producers can manage their affiliates",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "(auth.uid() = producer_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "bank_accounts",
+        "policyname": "Admins can manage all bank accounts",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "bank_accounts",
+        "policyname": "Producers can manage their bank accounts",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "(auth.uid() = producer_id)",
+        "with_check": "(auth.uid() = producer_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "bulk_messages",
+        "policyname": "Admins can manage all messages",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "bulk_messages",
+        "policyname": "Producers can manage their messages",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "(auth.uid() = producer_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "capacity_groups",
+        "policyname": "Admins can manage all capacity groups",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "capacity_groups",
+        "policyname": "Anyone can view capacity groups for published events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM events\n  WHERE ((events.id = capacity_groups.event_id) AND (events.status = 'published'::text))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "capacity_groups",
+        "policyname": "Producers can manage their capacity groups",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "(EXISTS ( SELECT 1\n   FROM events\n  WHERE ((events.id = capacity_groups.event_id) AND (events.producer_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificate_participant_prefs",
+        "policyname": "Producers can view preferences for their events",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM events\n  WHERE ((events.id = certificate_participant_prefs.event_id) AND (events.producer_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificate_participant_prefs",
+        "policyname": "Users can manage their own preferences",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "ALL",
+        "qual": "(auth.uid() = user_id)",
+        "with_check": "(auth.uid() = user_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificate_signers",
+        "policyname": "Producers can manage signers for their events",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "ALL",
+        "qual": "(EXISTS ( SELECT 1\n   FROM events\n  WHERE ((events.id = certificate_signers.event_id) AND (events.producer_id = auth.uid()))))",
+        "with_check": "(EXISTS ( SELECT 1\n   FROM events\n  WHERE ((events.id = certificate_signers.event_id) AND (events.producer_id = auth.uid()))))"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificate_signers",
+        "policyname": "Team members can view signers",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM event_staff es\n  WHERE ((es.event_id = certificate_signers.event_id) AND (es.user_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificate_templates",
+        "policyname": "Only admins can manage templates",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "ALL",
+        "qual": "(EXISTS ( SELECT 1\n   FROM user_roles\n  WHERE ((user_roles.user_id = auth.uid()) AND (user_roles.role = 'admin'::app_role))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificate_templates",
+        "policyname": "Templates are viewable by everyone",
+        "permissive": "PERMISSIVE",
+        "roles": "{anon,authenticated}",
+        "cmd": "SELECT",
+        "qual": "(is_active = true)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificates",
+        "policyname": "Admins can manage certificates",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": "has_role(auth.uid(), 'admin'::app_role)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificates",
+        "policyname": "Producers can update certificate metadata",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "UPDATE",
+        "qual": "(EXISTS ( SELECT 1\n   FROM events\n  WHERE ((events.id = certificates.event_id) AND (events.producer_id = auth.uid()))))",
+        "with_check": "(EXISTS ( SELECT 1\n   FROM events\n  WHERE ((events.id = certificates.event_id) AND (events.producer_id = auth.uid()))))"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificates",
+        "policyname": "Producers can view certificates for their events",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM events\n  WHERE ((events.id = certificates.event_id) AND (events.producer_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "certificates",
+        "policyname": "Users can view their certificates",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(auth.uid() = user_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "checkin_lists",
+        "policyname": "Admins can manage all checkin lists",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "checkin_lists",
+        "policyname": "Anyone can view active checkin lists by access_code",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(is_active = true)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "checkin_lists",
+        "policyname": "Producers can manage their checkin lists",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "(EXISTS ( SELECT 1\n   FROM events\n  WHERE ((events.id = checkin_lists.event_id) AND (events.producer_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "checkin_lists",
+        "policyname": "Staff can view checkin lists for their events",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM event_staff es\n  WHERE ((es.event_id = checkin_lists.event_id) AND (es.user_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "checkin_scan_logs",
+        "policyname": "Admins can manage all scan logs",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "checkin_scan_logs",
+        "policyname": "Authenticated users can insert scan logs",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "INSERT",
+        "qual": null,
+        "with_check": "true"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "checkin_scan_logs",
+        "policyname": "Producers can view scan logs for their events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM (checkin_lists cl\n     JOIN events e ON ((e.id = cl.event_id)))\n  WHERE ((cl.id = checkin_scan_logs.checkin_list_id) AND (e.producer_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "checkin_sessions",
+        "policyname": "Admins can manage all sessions",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "checkin_sessions",
+        "policyname": "Operators can manage their sessions",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "(auth.uid() = operator_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "checkin_sessions",
+        "policyname": "Producers can view sessions for their events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM events\n  WHERE ((events.id = checkin_sessions.event_id) AND (events.producer_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "checkout_answers",
+        "policyname": "Admins can manage all answers",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "checkout_answers",
+        "policyname": "Buyers can insert their answers",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "INSERT",
+        "qual": null,
+        "with_check": "(EXISTS ( SELECT 1\n   FROM orders\n  WHERE ((orders.id = checkout_answers.order_id) AND (orders.buyer_id = auth.uid()))))"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "checkout_answers",
+        "policyname": "Buyers can view their answers",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM orders\n  WHERE ((orders.id = checkout_answers.order_id) AND (orders.buyer_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "checkout_answers",
+        "policyname": "Producers can view answers for their events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM (orders o\n     JOIN events e ON ((e.id = o.event_id)))\n  WHERE ((o.id = checkout_answers.order_id) AND (e.producer_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "checkout_questions",
+        "policyname": "Admins can manage all questions",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "checkout_questions",
+        "policyname": "Anyone can view questions for published events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM events\n  WHERE ((events.id = checkout_questions.event_id) AND (events.status = 'published'::text))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "checkout_questions",
+        "policyname": "Producers can manage their event questions",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "(EXISTS ( SELECT 1\n   FROM events\n  WHERE ((events.id = checkout_questions.event_id) AND (events.producer_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "coupons",
+        "policyname": "Admins can manage all coupons",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "coupons",
+        "policyname": "Anyone can validate coupons",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(is_active = true)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "coupons",
+        "policyname": "Producers can manage their coupons",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "(auth.uid() = producer_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "event_analytics",
+        "policyname": "Admins can manage all analytics",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "event_analytics",
+        "policyname": "Producers can view analytics for their events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM events\n  WHERE ((events.id = event_analytics.event_id) AND (events.producer_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "event_analytics",
+        "policyname": "Staff can view analytics for their events",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM event_staff es\n  WHERE ((es.event_id = event_analytics.event_id) AND (es.user_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "event_products",
+        "policyname": "Admins can manage all products",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "event_products",
+        "policyname": "Anyone can view products for published events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM events\n  WHERE ((events.id = event_products.event_id) AND (events.status = 'published'::text))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "event_products",
+        "policyname": "Producers can manage their products",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "(EXISTS ( SELECT 1\n   FROM events\n  WHERE ((events.id = event_products.event_id) AND (events.producer_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "event_reviews",
+        "policyname": "Anyone can view reviews",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "true",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "event_reviews",
+        "policyname": "Authenticated users can insert reviews",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "INSERT",
+        "qual": null,
+        "with_check": "(auth.uid() = user_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "event_reviews",
+        "policyname": "Users can delete their own reviews",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "DELETE",
+        "qual": "(auth.uid() = user_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "event_reviews",
+        "policyname": "Users can update their own reviews",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "UPDATE",
+        "qual": "(auth.uid() = user_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "event_staff",
+        "policyname": "Admins can manage all event staff",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "event_staff",
+        "policyname": "Producers can manage staff for their events",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "ALL",
+        "qual": "(auth.uid() = producer_id)",
+        "with_check": "(auth.uid() = producer_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "event_staff",
+        "policyname": "Staff can view their assignments",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(auth.uid() = user_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "events",
+        "policyname": "Admins can manage all events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "events",
+        "policyname": "Anyone can view published events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(status = 'published'::text)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "events",
+        "policyname": "Producers and team members can view events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "((producer_id = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM producer_team_members m\n  WHERE ((m.producer_id = m.producer_id) AND (m.user_id = auth.uid()) AND (m.status = 'active'::text)))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "events",
+        "policyname": "Producers can create events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "INSERT",
+        "qual": null,
+        "with_check": "((auth.uid() = producer_id) AND has_role(auth.uid(), 'producer'::app_role))"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "events",
+        "policyname": "Producers can delete their own events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "DELETE",
+        "qual": "(auth.uid() = producer_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "events",
+        "policyname": "Producers can update their own events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "UPDATE",
+        "qual": "(auth.uid() = producer_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "events",
+        "policyname": "Staff can view their assigned events",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM event_staff es\n  WHERE ((es.event_id = events.id) AND (es.user_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "favorites",
+        "policyname": "Users can delete their own favorites",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "DELETE",
+        "qual": "(auth.uid() = user_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "favorites",
+        "policyname": "Users can insert their own favorites",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "INSERT",
+        "qual": null,
+        "with_check": "(auth.uid() = user_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "favorites",
+        "policyname": "Users can view their own favorites",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(auth.uid() = user_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "financial_categories",
+        "policyname": "Admins can manage all financial categories",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "financial_categories",
+        "policyname": "Producers can manage their financial categories",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "(auth.uid() = producer_id)",
+        "with_check": "(auth.uid() = producer_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "financial_transactions",
+        "policyname": "Admins can manage all financial transactions",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "financial_transactions",
+        "policyname": "Producers can manage their financial transactions",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "(auth.uid() = producer_id)",
+        "with_check": "(auth.uid() = producer_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "guest_lists",
+        "policyname": "Admins can manage all guest lists",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "guest_lists",
+        "policyname": "Producers can manage guest lists for their events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "(EXISTS ( SELECT 1\n   FROM events\n  WHERE ((events.id = guest_lists.event_id) AND (events.producer_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "half_price_reports",
+        "policyname": "Producers can view their half-price reports",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "((producer_id = auth.uid()) OR (EXISTS ( SELECT 1\n   FROM user_roles\n  WHERE ((user_roles.user_id = auth.uid()) AND (user_roles.role = 'admin'::app_role)))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "interest_list_fields",
+        "policyname": "Admins manage all fields",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "interest_list_fields",
+        "policyname": "Anyone can view fields of published lists",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM interest_lists\n  WHERE ((interest_lists.id = interest_list_fields.list_id) AND (interest_lists.status = 'published'::text))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "interest_list_fields",
+        "policyname": "Producers manage their list fields",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "(EXISTS ( SELECT 1\n   FROM interest_lists\n  WHERE ((interest_lists.id = interest_list_fields.list_id) AND (interest_lists.producer_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "interest_list_submissions",
+        "policyname": "Admins manage all submissions",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "interest_list_submissions",
+        "policyname": "Anyone can submit",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "INSERT",
+        "qual": null,
+        "with_check": "true"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "interest_list_submissions",
+        "policyname": "Producers view submissions for their lists",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM interest_lists\n  WHERE ((interest_lists.id = interest_list_submissions.list_id) AND (interest_lists.producer_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "interest_lists",
+        "policyname": "Admins manage all lists",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "interest_lists",
+        "policyname": "Anyone can view published lists",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(status = 'published'::text)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "interest_lists",
+        "policyname": "Producers manage their lists",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "(auth.uid() = producer_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "lgpd_consents",
+        "policyname": "Admins can view all consents",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "lgpd_consents",
+        "policyname": "Users can manage their consents",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "ALL",
+        "qual": "(auth.uid() = user_id)",
+        "with_check": "(auth.uid() = user_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "lgpd_consents",
+        "policyname": "Users can view their consents",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(auth.uid() = user_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "lgpd_data_requests",
+        "policyname": "Admins can manage all data requests",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": "has_role(auth.uid(), 'admin'::app_role)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "lgpd_data_requests",
+        "policyname": "Users can create data requests",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "INSERT",
+        "qual": null,
+        "with_check": "(auth.uid() = user_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "lgpd_data_requests",
+        "policyname": "Users can view their data requests",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(auth.uid() = user_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "notification_preferences",
+        "policyname": "Users can manage their own notification preferences",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "(auth.uid() = user_id)",
+        "with_check": "(auth.uid() = user_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "notifications",
+        "policyname": "Users can update their notifications",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "UPDATE",
+        "qual": "(auth.uid() = user_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "notifications",
+        "policyname": "Users can view their notifications",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(auth.uid() = user_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "order_products",
+        "policyname": "Admins can manage all order products",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "order_products",
+        "policyname": "Buyers can insert their order products",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "INSERT",
+        "qual": null,
+        "with_check": "(EXISTS ( SELECT 1\n   FROM orders\n  WHERE ((orders.id = order_products.order_id) AND (orders.buyer_id = auth.uid()))))"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "order_products",
+        "policyname": "Buyers can view their order products",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM orders\n  WHERE ((orders.id = order_products.order_id) AND (orders.buyer_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "order_products",
+        "policyname": "Producers can view order products for their events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM (orders o\n     JOIN events e ON ((e.id = o.event_id)))\n  WHERE ((o.id = order_products.order_id) AND (e.producer_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "orders",
+        "policyname": "Admins can manage all orders",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "orders",
+        "policyname": "Buyers can create orders",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "INSERT",
+        "qual": null,
+        "with_check": "(auth.uid() = buyer_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "orders",
+        "policyname": "Buyers can update their pending orders",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "UPDATE",
+        "qual": "((auth.uid() = buyer_id) AND (status = 'pending'::text))",
+        "with_check": "(auth.uid() = buyer_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "orders",
+        "policyname": "Buyers can view their own orders",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(auth.uid() = buyer_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "orders",
+        "policyname": "Producers and team members can view orders for their events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM events e\n  WHERE ((e.id = orders.event_id) AND ((e.producer_id = auth.uid()) OR (EXISTS ( SELECT 1\n           FROM producer_team_members m\n          WHERE ((m.producer_id = e.producer_id) AND (m.user_id = auth.uid()) AND (m.status = 'active'::text))))))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "participant_certificate_prefs",
+        "policyname": "Producers can view preferences for their events",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM events\n  WHERE ((events.id = participant_certificate_prefs.event_id) AND (events.producer_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "participant_certificate_prefs",
+        "policyname": "Users can manage their own preferences",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "ALL",
+        "qual": "(auth.uid() = user_id)",
+        "with_check": "(auth.uid() = user_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "payment_webhook_events",
+        "policyname": "Admins can read webhook events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "payment_webhook_events",
+        "policyname": "Service role can manage webhook events",
+        "permissive": "PERMISSIVE",
+        "roles": "{service_role}",
+        "cmd": "ALL",
+        "qual": "true",
+        "with_check": "true"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "platform_settings",
+        "policyname": "Admins can manage platform settings",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": "has_role(auth.uid(), 'admin'::app_role)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_balance_history",
+        "policyname": "Producers can view own history",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(producer_id = auth.uid())",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_balances",
+        "policyname": "Admins can view all balances",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM user_roles\n  WHERE ((user_roles.user_id = auth.uid()) AND (user_roles.role = 'admin'::app_role))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_balances",
+        "policyname": "Producers can view own balances",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(producer_id = auth.uid())",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_follows",
+        "policyname": "Anyone can view follows for counting",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "true",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_follows",
+        "policyname": "Producers can see their follower count",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(auth.uid() = producer_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_follows",
+        "policyname": "Users can follow producers",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "INSERT",
+        "qual": null,
+        "with_check": "(auth.uid() = user_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_follows",
+        "policyname": "Users can unfollow",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "DELETE",
+        "qual": "(auth.uid() = user_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_follows",
+        "policyname": "Users can view their follows",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(auth.uid() = user_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_messages",
+        "policyname": "Admins can manage all messages",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_messages",
+        "policyname": "Producers can update their messages",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "UPDATE",
+        "qual": "(auth.uid() = producer_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_messages",
+        "policyname": "Producers can view their inbox",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(auth.uid() = producer_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_messages",
+        "policyname": "Senders can insert messages",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "INSERT",
+        "qual": null,
+        "with_check": "(auth.uid() = sender_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_messages",
+        "policyname": "Senders can view their messages",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(auth.uid() = sender_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_team_members",
+        "policyname": "Admins can manage all teams",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_team_members",
+        "policyname": "Producers can manage their team",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "(auth.uid() = producer_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_team_members",
+        "policyname": "Team members can view their membership",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(auth.uid() = user_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_withdrawals",
+        "policyname": "Admins can manage all withdrawals",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "ALL",
+        "qual": "(EXISTS ( SELECT 1\n   FROM user_roles\n  WHERE ((user_roles.user_id = auth.uid()) AND (user_roles.role = 'admin'::app_role))))",
+        "with_check": "(EXISTS ( SELECT 1\n   FROM user_roles\n  WHERE ((user_roles.user_id = auth.uid()) AND (user_roles.role = 'admin'::app_role))))"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_withdrawals",
+        "policyname": "Producers can create withdrawal requests",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "INSERT",
+        "qual": null,
+        "with_check": "(producer_id = auth.uid())"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "producer_withdrawals",
+        "policyname": "Producers can view own withdrawals",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(producer_id = auth.uid())",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "product_images",
+        "policyname": "Admins can manage all product images",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "product_images",
+        "policyname": "Anyone can view product images for published events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM (event_products ep\n     JOIN events e ON ((e.id = ep.event_id)))\n  WHERE ((ep.id = product_images.product_id) AND (e.status = 'published'::text))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "product_images",
+        "policyname": "Producers can manage their product images",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "(EXISTS ( SELECT 1\n   FROM (event_products ep\n     JOIN events e ON ((e.id = ep.event_id)))\n  WHERE ((ep.id = product_images.product_id) AND (e.producer_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "product_variations",
+        "policyname": "Admins can manage all product variations",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "product_variations",
+        "policyname": "Anyone can view product variations for published events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM (event_products ep\n     JOIN events e ON ((e.id = ep.event_id)))\n  WHERE ((ep.id = product_variations.product_id) AND (e.status = 'published'::text))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "product_variations",
+        "policyname": "Producers can manage their product variations",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "(EXISTS ( SELECT 1\n   FROM (event_products ep\n     JOIN events e ON ((e.id = ep.event_id)))\n  WHERE ((ep.id = product_variations.product_id) AND (e.producer_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "profiles",
+        "policyname": "Admins can view all profiles",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "profiles",
+        "policyname": "Public profiles are viewable",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "true",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "profiles",
+        "policyname": "Users can insert their own profile",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "INSERT",
+        "qual": null,
+        "with_check": "(auth.uid() = id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "profiles",
+        "policyname": "Users can update their own profile",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "UPDATE",
+        "qual": "(auth.uid() = id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "profiles",
+        "policyname": "Users can view their own profile",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(auth.uid() = id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "promoter_commissions",
+        "policyname": "Admins can manage all promoter commissions",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "promoter_commissions",
+        "policyname": "Producers can manage their promoter commissions",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "(auth.uid() = producer_id)",
+        "with_check": "(auth.uid() = producer_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "promoter_events",
+        "policyname": "Admins can manage all promoter events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "promoter_events",
+        "policyname": "Producers can manage their promoter events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "(auth.uid() = producer_id)",
+        "with_check": "(auth.uid() = producer_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "promoters",
+        "policyname": "Admins can manage all promoters",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "promoters",
+        "policyname": "Producers can manage their promoters",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "(auth.uid() = producer_id)",
+        "with_check": "(auth.uid() = producer_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "rate_limits",
+        "policyname": "Service role only",
+        "permissive": "PERMISSIVE",
+        "roles": "{service_role}",
+        "cmd": "ALL",
+        "qual": "true",
+        "with_check": "true"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "refunds",
+        "policyname": "Admins can manage all refunds",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "refunds",
+        "policyname": "Buyers can view their refunds",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM orders\n  WHERE ((orders.id = refunds.order_id) AND (orders.buyer_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "refunds",
+        "policyname": "Producers can manage refunds for their events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "(EXISTS ( SELECT 1\n   FROM (orders o\n     JOIN events e ON ((e.id = o.event_id)))\n  WHERE ((o.id = refunds.order_id) AND (e.producer_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_listings",
+        "policyname": "Admins can manage all resale listings",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_listings",
+        "policyname": "Anyone can view active resale listings",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(status = 'active'::text)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_listings",
+        "policyname": "Buyers can view purchased listings",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(auth.uid() = buyer_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_listings",
+        "policyname": "Sellers can create resale listings",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "INSERT",
+        "qual": null,
+        "with_check": "(auth.uid() = seller_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_listings",
+        "policyname": "Sellers can update their own listings",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "UPDATE",
+        "qual": "((auth.uid() = seller_id) AND (status = 'active'::text))",
+        "with_check": "(auth.uid() = seller_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_listings",
+        "policyname": "Sellers can view their own listings",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(auth.uid() = seller_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_listings",
+        "policyname": "Users can create resale listings for their tickets",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "INSERT",
+        "qual": null,
+        "with_check": "(seller_id = auth.uid())"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_listings",
+        "policyname": "Users can view active resale listings",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "((status = 'active'::text) OR (seller_id = auth.uid()) OR (buyer_id = auth.uid()))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_orders",
+        "policyname": "Admins can manage all resale orders",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_orders",
+        "policyname": "Buyers can view their resale orders",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(auth.uid() = buyer_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resale_orders",
+        "policyname": "Sellers can view their resale orders",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(auth.uid() = seller_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "ticket_taxes_fees",
+        "policyname": "Admins can manage all fees",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "ticket_taxes_fees",
+        "policyname": "Anyone can view fees for published events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM events\n  WHERE ((events.id = ticket_taxes_fees.event_id) AND (events.status = 'published'::text))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "ticket_taxes_fees",
+        "policyname": "Producers can manage their fees",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "(EXISTS ( SELECT 1\n   FROM events\n  WHERE ((events.id = ticket_taxes_fees.event_id) AND (events.producer_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "ticket_tiers",
+        "policyname": "Admins can manage all tiers",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "ticket_tiers",
+        "policyname": "Anyone can view visible tiers of published events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "((is_visible = true) AND (EXISTS ( SELECT 1\n   FROM events\n  WHERE ((events.id = ticket_tiers.event_id) AND (events.status = 'published'::text)))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "ticket_tiers",
+        "policyname": "Producers can manage tiers for their events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "(EXISTS ( SELECT 1\n   FROM events\n  WHERE ((events.id = ticket_tiers.event_id) AND (events.producer_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "tickets",
+        "policyname": "Admins can manage all tickets",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "tickets",
+        "policyname": "Owners can view their tickets",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(auth.uid() = owner_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "tickets",
+        "policyname": "Producers and team members can view tickets for their events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM events e\n  WHERE ((e.id = tickets.event_id) AND ((e.producer_id = auth.uid()) OR (EXISTS ( SELECT 1\n           FROM producer_team_members m\n          WHERE ((m.producer_id = e.producer_id) AND (m.user_id = auth.uid()) AND (m.status = 'active'::text))))))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "tickets",
+        "policyname": "Staff can view tickets for their events",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM event_staff es\n  WHERE ((es.event_id = tickets.event_id) AND (es.user_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "user_roles",
+        "policyname": "Admins can manage all roles",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "user_roles",
+        "policyname": "Users can view their own roles",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(auth.uid() = user_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "user_wallets",
+        "policyname": "Admins can manage all wallets",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "user_wallets",
+        "policyname": "Users can view own wallet",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(auth.uid() = user_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "virtual_queue",
+        "policyname": "Admins can manage queue",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": "has_role(auth.uid(), 'admin'::app_role)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "virtual_queue",
+        "policyname": "Anyone can join queue",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "INSERT",
+        "qual": null,
+        "with_check": "(auth.uid() = user_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "virtual_queue",
+        "policyname": "Producers can view queue for their events",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM events\n  WHERE ((events.id = virtual_queue.event_id) AND (events.producer_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "virtual_queue",
+        "policyname": "Users can view their queue entry",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(auth.uid() = user_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "waitlist",
+        "policyname": "Admins can manage all waitlists",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "waitlist",
+        "policyname": "Producers can view waitlist for their events",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM events\n  WHERE ((events.id = waitlist.event_id) AND (events.producer_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "waitlist",
+        "policyname": "Users can join waitlist",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "INSERT",
+        "qual": null,
+        "with_check": "(auth.uid() = user_id)"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "waitlist",
+        "policyname": "Users can view their waitlist entries",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(auth.uid() = user_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "wallet_ledger",
+        "policyname": "Admins can manage all wallet ledger",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "wallet_ledger",
+        "policyname": "Users can view own wallet ledger",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(auth.uid() = user_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "wallet_transactions",
+        "policyname": "Users can view own transactions",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(user_id = auth.uid())",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "wallet_withdrawals",
+        "policyname": "Admins can manage all withdrawals",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "wallet_withdrawals",
+        "policyname": "Users can create withdrawal requests",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "INSERT",
+        "qual": null,
+        "with_check": "(user_id = auth.uid())"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "wallet_withdrawals",
+        "policyname": "Users can view own withdrawals",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(auth.uid() = user_id)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "wallets",
+        "policyname": "Users can view own wallet",
+        "permissive": "PERMISSIVE",
+        "roles": "{authenticated}",
+        "cmd": "SELECT",
+        "qual": "(user_id = auth.uid())",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "webhook_deliveries",
+        "policyname": "Admins can manage all deliveries",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "webhook_deliveries",
+        "policyname": "Producers can view their webhook deliveries",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM webhooks\n  WHERE ((webhooks.id = webhook_deliveries.webhook_id) AND (webhooks.producer_id = auth.uid()))))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "webhooks",
+        "policyname": "Admins can manage all webhooks",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "has_role(auth.uid(), 'admin'::app_role)",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "webhooks",
+        "policyname": "Producers can manage their webhooks",
+        "permissive": "PERMISSIVE",
+        "roles": "{public}",
+        "cmd": "ALL",
+        "qual": "(auth.uid() = producer_id)",
+        "with_check": null
+      }
+    ],
+    "count": 186
+  },
+  "enums": {
+    "label": "Enums",
+    "rows": [
+      {
+        "enum_name": "app_role",
+        "enum_value": "admin"
+      },
+      {
+        "enum_name": "app_role",
+        "enum_value": "producer"
+      },
+      {
+        "enum_name": "app_role",
+        "enum_value": "buyer"
+      },
+      {
+        "enum_name": "app_role",
+        "enum_value": "staff"
+      },
+      {
+        "enum_name": "producer_status",
+        "enum_value": "pending"
+      },
+      {
+        "enum_name": "producer_status",
+        "enum_value": "approved"
+      },
+      {
+        "enum_name": "producer_status",
+        "enum_value": "rejected"
+      },
+      {
+        "enum_name": "producer_status",
+        "enum_value": "suspended"
+      }
+    ],
+    "count": 8
+  },
+  "rls_enabled": {
+    "label": "RLS Enabled",
+    "rows": [
+      {
+        "table_name": "affiliates",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "bank_accounts",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "bulk_messages",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "capacity_groups",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "certificate_participant_prefs",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "certificate_signers",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "certificate_templates",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "certificates",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "checkin_lists",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "checkin_scan_logs",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "checkin_sessions",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "checkout_answers",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "checkout_questions",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "coupons",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "event_analytics",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "event_products",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "event_reviews",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "event_staff",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "events",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "favorites",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "financial_categories",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "financial_transactions",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "guest_lists",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "half_price_reports",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "interest_list_fields",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "interest_list_submissions",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "interest_lists",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "lgpd_consents",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "lgpd_data_requests",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "notification_preferences",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "notifications",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "order_products",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "orders",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "participant_certificate_prefs",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "payment_webhook_events",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "platform_settings",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "producer_balance_history",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "producer_balances",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "producer_follows",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "producer_messages",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "producer_team_members",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "producer_withdrawals",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "product_images",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "product_variations",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "profiles",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "promoter_commissions",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "promoter_events",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "promoters",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "rate_limits",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "refunds",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "resale_listings",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "resale_orders",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "ticket_taxes_fees",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "ticket_tiers",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "tickets",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "user_roles",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "user_wallets",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "virtual_queue",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "waitlist",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "wallet_ledger",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "wallet_transactions",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "wallet_withdrawals",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "wallets",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "webhook_deliveries",
+        "rls_enabled": true
+      },
+      {
+        "table_name": "webhooks",
+        "rls_enabled": true
+      }
+    ],
+    "count": 65
+  },
+  "extensions": {
+    "label": "Extensions",
+    "rows": [
+      {
+        "extname": "pg_cron"
+      },
+      {
+        "extname": "pg_graphql"
+      },
+      {
+        "extname": "pg_net"
+      },
+      {
+        "extname": "pg_stat_statements"
+      },
+      {
+        "extname": "pgcrypto"
+      },
+      {
+        "extname": "plpgsql"
+      },
+      {
+        "extname": "supabase_vault"
+      },
+      {
+        "extname": "uuid-ossp"
+      }
+    ],
+    "count": 8
+  },
+  "cron_jobs": {
+    "label": "Cron Jobs",
+    "error": "permission denied for schema cron",
+    "rows": [],
+    "count": 0
+  },
+  "storage_buckets": {
+    "label": "Storage Buckets",
+    "error": "permission denied for schema storage",
+    "rows": [],
+    "count": 0
+  },
+  "storage_policies": {
+    "label": "Storage Policies",
+    "rows": [
+      {
+        "schemaname": "storage",
+        "tablename": "objects",
+        "policyname": "Anyone can view event images",
+        "cmd": "SELECT",
+        "roles": "{public}",
+        "qual": "(bucket_id = 'event-images'::text)",
+        "with_check": null
+      },
+      {
+        "schemaname": "storage",
+        "tablename": "objects",
+        "policyname": "Authenticated users can upload event images",
+        "cmd": "INSERT",
+        "roles": "{public}",
+        "qual": null,
+        "with_check": "((bucket_id = 'event-images'::text) AND (auth.role() = 'authenticated'::text))"
+      },
+      {
+        "schemaname": "storage",
+        "tablename": "objects",
+        "policyname": "Users can delete their own event images",
+        "cmd": "DELETE",
+        "roles": "{public}",
+        "qual": "((bucket_id = 'event-images'::text) AND ((auth.uid())::text = (storage.foldername(name))[0]))",
+        "with_check": null
+      },
+      {
+        "schemaname": "storage",
+        "tablename": "objects",
+        "policyname": "Users can update their own event images",
+        "cmd": "UPDATE",
+        "roles": "{public}",
+        "qual": "((bucket_id = 'event-images'::text) AND ((auth.uid())::text = (storage.foldername(name))[0]))",
+        "with_check": null
+      }
+    ],
+    "count": 4
+  },
+  "edge_functions": {
+    "label": "Edge Functions",
+    "error": "relation \"supabase_functions.functions\" does not exist",
+    "rows": [],
+    "count": 0
+  }
+}

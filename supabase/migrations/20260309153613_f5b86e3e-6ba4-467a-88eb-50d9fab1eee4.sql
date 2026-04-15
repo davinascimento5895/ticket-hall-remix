@@ -62,4 +62,15 @@ CREATE POLICY "Admins can manage all resale listings"
   USING (has_role(auth.uid(), 'admin'::app_role));
 
 -- Enable realtime for resale_listings
-ALTER PUBLICATION supabase_realtime ADD TABLE public.resale_listings;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'resale_listings'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.resale_listings;
+  END IF;
+END $$;

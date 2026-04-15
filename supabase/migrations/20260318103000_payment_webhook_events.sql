@@ -26,14 +26,36 @@ CREATE INDEX IF NOT EXISTS idx_payment_webhook_events_status
 
 ALTER TABLE public.payment_webhook_events ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Admins can read webhook events" ON public.payment_webhook_events
-  FOR SELECT
-  USING (has_role(auth.uid(), 'admin'::app_role));
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'payment_webhook_events'
+      AND policyname = 'Admins can read webhook events'
+  ) THEN
+    CREATE POLICY "Admins can read webhook events" ON public.payment_webhook_events
+      FOR SELECT
+      USING (has_role(auth.uid(), 'admin'::app_role));
+  END IF;
+END $$;
 
-CREATE POLICY "Service role can manage webhook events" ON public.payment_webhook_events
-  FOR ALL TO service_role
-  USING (true)
-  WITH CHECK (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'payment_webhook_events'
+      AND policyname = 'Service role can manage webhook events'
+  ) THEN
+    CREATE POLICY "Service role can manage webhook events" ON public.payment_webhook_events
+      FOR ALL TO service_role
+      USING (true)
+      WITH CHECK (true);
+  END IF;
+END $$;
 
 CREATE OR REPLACE FUNCTION public.register_payment_webhook_event(
   p_provider TEXT,

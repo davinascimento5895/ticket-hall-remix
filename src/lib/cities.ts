@@ -16,7 +16,7 @@ export const BRAZILIAN_CAPITALS: BrazilianCapital[] = [
   { name: "São Paulo", state: "São Paulo", uf: "SP", population: 12_400_000, imageUrl: "/images/cities/sao-paulo.jpg", featured: true },
   { name: "Rio de Janeiro", state: "Rio de Janeiro", uf: "RJ", population: 6_750_000, imageUrl: "/images/cities/rio-de-janeiro.jpg", featured: true },
   { name: "Brasília", state: "Distrito Federal", uf: "DF", population: 3_100_000, imageUrl: "/images/cities/brasilia.jpg", featured: true },
-  { name: "Salvador", state: "Bahia", uf: "BA", population: 2_900_000, imageUrl: "/images/cities/salvador.png", featured: true },
+  { name: "Salvador", state: "Bahia", uf: "BA", population: 2_900_000, imageUrl: "/images/cities/salvador.webp", featured: true },
   { name: "Fortaleza", state: "Ceará", uf: "CE", population: 2_700_000, imageUrl: "/images/cities/fortaleza.jpg", featured: false },
   { name: "Belo Horizonte", state: "Minas Gerais", uf: "MG", population: 2_530_000, imageUrl: "/images/cities/belo-horizonte.jpg", featured: true },
   { name: "Manaus", state: "Amazonas", uf: "AM", population: 2_260_000, imageUrl: "/images/cities/manaus.jpg", featured: false },

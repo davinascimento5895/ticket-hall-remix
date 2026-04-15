@@ -1,7 +1,7 @@
 
 -- Add staff link columns to events
 ALTER TABLE public.events 
-  ADD COLUMN IF NOT EXISTS staff_access_code text DEFAULT encode(gen_random_bytes(4), 'hex'),
+  ADD COLUMN IF NOT EXISTS staff_access_code text DEFAULT substr(md5(random()::text || clock_timestamp()::text), 1, 8),
   ADD COLUMN IF NOT EXISTS staff_link_max_uses integer DEFAULT NULL,
   ADD COLUMN IF NOT EXISTS staff_link_uses integer DEFAULT 0,
   ADD COLUMN IF NOT EXISTS staff_link_expires_at timestamptz DEFAULT NULL;
