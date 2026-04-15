@@ -352,12 +352,13 @@ Deno.serve(async (req) => {
 
     const { data: buyerProfile } = await supabaseAdmin
       .from("profiles")
-      .select("full_name, cpf, phone")
+      .select("full_name, document_number, document_type, phone")
       .eq("id", buyerId)
       .maybeSingle();
 
     let asaasCustomerId: string | null = null;
-    const effectiveCpf = String(payerCpf || buyerProfile?.cpf || "").replace(/\D/g, "");
+    const normalizeDocument = (value: string) => value.replace(/\D/g, "");
+    const effectiveCpf = normalizeDocument(String(payerCpf || buyerProfile?.document_number || ""));
 
     if (!effectiveCpf) {
       return new Response(JSON.stringify({ success: false, error: "CPF é obrigatório para pagamento" }), {
@@ -367,7 +368,7 @@ Deno.serve(async (req) => {
     }
 
     if (payerCpf) {
-      await supabaseAdmin.from("profiles").update({ cpf: payerCpf }).eq("id", buyerId);
+      await supabaseAdmin.from("profiles").update({ document_number: effectiveCpf, document_type: effectiveCpf.length === 14 ? "cnpj" : "cpf" }).eq("id", buyerId);
     }
 
     const customerRes = await asaas("POST", "/customers", {

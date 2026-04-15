@@ -4,11 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
-import { validateCPF, formatCPF, formatPhone } from "@/lib/validators";
+import { formatPhone } from "@/lib/validators";
 import { fetchAddress, formatCEP } from "@/lib/cep";
 import { useIBGEStates } from "@/hooks/useIBGELocations";
 import { toast } from "@/hooks/use-toast";
 import { User, Loader2 } from "lucide-react";
+import { DocumentInput } from "@/components/DocumentInput";
+import { validateDocument } from "@/utils/document";
 
 export interface BuyerData {
   fullName: string;
@@ -46,7 +48,7 @@ export function CheckoutStepBuyer({ buyerData, setBuyerData, onNext }: CheckoutS
         ...prev,
         fullName: prev.fullName || profile.full_name || "",
         email: prev.email || user.email || "",
-        cpf: prev.cpf || (profile.cpf ? formatCPF(profile.cpf) : ""),
+        cpf: prev.cpf || profile.document_number || "",
         phone: prev.phone || (profile.phone ? formatPhone(profile.phone) : ""),
         birthDate: prev.birthDate || profile.birth_date || "",
         cep: prev.cep || (profile.cep ? formatCEP(profile.cep) : ""),
@@ -101,8 +103,9 @@ export function CheckoutStepBuyer({ buyerData, setBuyerData, onNext }: CheckoutS
       toast({ title: "Campo obrigatório", description: "Preencha sua data de nascimento.", variant: "destructive" });
       return;
     }
-    if (!buyerData.cpf.trim() || !validateCPF(buyerData.cpf)) {
-      toast({ title: "CPF inválido", description: "Preencha um CPF válido.", variant: "destructive" });
+    const documentValidation = validateDocument(buyerData.cpf);
+    if (!documentValidation.valid || !documentValidation.type) {
+      toast({ title: documentValidation.error || "Documento inválido", description: "Preencha um documento válido.", variant: "destructive" });
       return;
     }
     if (!buyerData.phone.trim() || buyerData.phone.replace(/\D/g, "").length < 10) {
@@ -188,17 +191,13 @@ export function CheckoutStepBuyer({ buyerData, setBuyerData, onNext }: CheckoutS
           />
         </div>
 
-        {/* CPF + Phone */}
+        {/* Documento + Phone */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <Label className="text-xs font-medium">CPF <span className="text-destructive">*</span></Label>
-            <Input
-              value={buyerData.cpf}
-              onChange={(e) => setBuyerData((p) => ({ ...p, cpf: formatCPF(e.target.value) }))}
-              placeholder="000.000.000-00"
-              maxLength={14}
-            />
-          </div>
+          <DocumentInput
+            label="CPF ou CNPJ"
+            value={buyerData.cpf}
+            onChange={(value) => setBuyerData((p) => ({ ...p, cpf: value }))}
+          />
           <div>
             <Label className="text-xs font-medium">Celular <span className="text-destructive">*</span></Label>
             <Input

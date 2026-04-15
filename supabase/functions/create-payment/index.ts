@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
     }
 
     // Parse body
-    const { orderId, paymentMethod, creditCard, installments, payerCpf } =
+    const { orderId, paymentMethod, creditCard, installments, payerCpf, payerDocumentNumber, payerDocumentType } =
       await req.json();
 
     if (!orderId || !paymentMethod) {
@@ -205,6 +205,12 @@ Deno.serve(async (req) => {
       .select("*")
       .eq("id", userId)
       .single();
+
+    const normalizeDocument = (value: string) => value.replace(/\D/g, "");
+    const requestedDocument = normalizeDocument(String(payerDocumentNumber || payerCpf || ""));
+    const fallbackDocument = normalizeDocument(String((buyer as any)?.document_number || ""));
+    const buyerDocument = requestedDocument || fallbackDocument;
+    const buyerDocumentType = payerDocumentType || (buyer as any)?.document_type || (buyerDocument.length === 14 ? "cnpj" : "cpf");
 
     // ─── Check if Asaas is configured ───
     const asaasConfigured =
@@ -309,24 +315,23 @@ Deno.serve(async (req) => {
     // 1. Create or find Asaas customer
     let customerId = order.asaas_customer_id;
     if (!customerId) {
-      // Use payerCpf from request body (preferred), fallback to profile
-      const buyerCpf = (payerCpf || buyer?.cpf || "").replace(/\D/g, "");
-      if (!buyerCpf) {
+      // Use payer document from request body (preferred), fallback to profile
+      if (!buyerDocument) {
         return new Response(
-          JSON.stringify({ error: "CPF é obrigatório para processar o pagamento. Por favor, preencha seu CPF no checkout." }),
+          JSON.stringify({ error: "Documento é obrigatório para processar o pagamento. Por favor, preencha seu documento no checkout." }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      // Also persist the CPF to the profile for future use
-      if (payerCpf) {
-        await supabaseAdmin.from("profiles").update({ cpf: payerCpf }).eq("id", userId);
+      // Also persist the document to the profile for future use
+      if (requestedDocument) {
+        await supabaseAdmin.from("profiles").update({ document_number: requestedDocument, document_type: buyerDocumentType }).eq("id", userId);
       }
 
       const customerRes = await asaas("POST", "/customers", {
         name: buyer?.full_name || "Comprador TicketHall",
         email: userEmail,
-        cpfCnpj: buyerCpf,
+        cpfCnpj: buyerDocument,
         mobilePhone: buyer?.phone?.replace(/\D/g, "") || undefined,
         notificationDisabled: true,
       });
@@ -343,10 +348,10 @@ Deno.serve(async (req) => {
 
       if (customerRes.errors || customerRes._empty) {
         // Try to find existing customer by CPF
-        if (buyer?.cpf) {
+        if (buyerDocument) {
           const existing = await asaas(
             "GET",
-            `/customers?cpfCnpj=${buyer.cpf.replace(/\D/g, "")}`
+            `/customers?cpfCnpj=${buyerDocument}`
           );
           if (existing.data?.[0]) {
             customerId = existing.data[0].id;
@@ -489,7 +494,7 @@ Deno.serve(async (req) => {
         paymentPayload.creditCardHolderInfo = {
           name: buyer?.full_name || creditCard.holderName,
           email: userEmail,
-          cpfCnpj: buyer?.cpf?.replace(/\D/g, "") || "",
+          cpfCnpj: buyerDocument,
           postalCode: creditCard.postalCode?.replace(/\D/g, "") || "",
           addressNumber: creditCard.addressNumber || "0",
           phone: buyer?.phone?.replace(/\D/g, "") || "",

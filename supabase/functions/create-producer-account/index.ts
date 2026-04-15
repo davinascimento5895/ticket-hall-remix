@@ -150,7 +150,7 @@ Deno.serve(async (req) => {
     const accountPayload: Record<string, unknown> = {
       name: producer.full_name || "Produtor TicketHall",
       email: producerEmail,
-      cpfCnpj: producer.cpf?.replace(/\D/g, "") || undefined,
+      cpfCnpj: producer.document_number?.replace(/\D/g, "") || undefined,
       mobilePhone: producer.phone?.replace(/\D/g, "") || undefined,
       companyType: "MEI",
       incomeValue: 1000, // default — producer can update later

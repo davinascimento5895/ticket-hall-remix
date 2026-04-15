@@ -12,7 +12,8 @@ export type InvoicePayload = {
   issued_at: string;
   order_id: string;
   buyer_name: string;
-  buyer_cpf: string | null;
+  buyer_document_number: string | null;
+  buyer_document_type: "cpf" | "cnpj" | null;
   billing_company_name: string | null;
   billing_cnpj: string | null;
   event_title: string;
@@ -104,7 +105,9 @@ export async function generateInvoicePDF(invoice: InvoicePayload) {
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...colors.muted);
   doc.setFontSize(9);
-  if (invoice.buyer_cpf) doc.text(`CPF: ${invoice.buyer_cpf}`, margin, y);
+  if (invoice.buyer_document_number) {
+    doc.text(`${invoice.buyer_document_type === "cnpj" ? "CNPJ" : "CPF"}: ${invoice.buyer_document_number}`, margin, y);
+  }
   if (invoice.event_location) doc.text(invoice.event_location, margin + contentWidth / 2, y);
 
   y += 4;

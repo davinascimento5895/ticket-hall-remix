@@ -42,7 +42,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: order, error: orderErr } = await adminClient
       .from("orders")
-      .select("*, events(title, venue_name, venue_city, start_date, producer_id), profiles!orders_buyer_id_fkey(full_name, cpf)")
+      .select("*, events(title, venue_name, venue_city, start_date, producer_id), profiles!orders_buyer_id_fkey(full_name, document_number, document_type)")
       .eq("id", order_id)
       .single();
 
@@ -94,7 +94,8 @@ Deno.serve(async (req: Request) => {
       issued_at: new Date().toISOString(),
       order_id: order.id,
       buyer_name: order.profiles?.full_name || "-",
-      buyer_cpf: order.profiles?.cpf || null,
+      buyer_document_number: order.profiles?.document_number || null,
+      buyer_document_type: order.profiles?.document_type || null,
       billing_company_name: order.billing_company_name || null,
       billing_cnpj: order.billing_cnpj || null,
       event_title: eventData.title || "-",
@@ -168,7 +169,7 @@ Deno.serve(async (req: Request) => {
         <div class="block" style="margin:0;">
           <h3>Comprador</h3>
           <p class="title">${invoicePayload.buyer_name}</p>
-          ${invoicePayload.buyer_cpf ? `<p class="meta">CPF: ${invoicePayload.buyer_cpf}</p>` : ""}
+          ${invoicePayload.buyer_document_number ? `<p class="meta">${invoicePayload.buyer_document_type === "cnpj" ? "CNPJ" : "CPF"}: ${invoicePayload.buyer_document_number}</p>` : ""}
           ${invoicePayload.billing_company_name ? `<p class="meta">${invoicePayload.billing_company_name}</p>` : ""}
           ${invoicePayload.billing_cnpj ? `<p class="meta">CNPJ: ${invoicePayload.billing_cnpj}</p>` : ""}
         </div>

@@ -12,13 +12,15 @@ export type PaymentMethod = 'pix' | 'credit_card' | 'debit_card' | 'boleto' | 'g
 export type TicketStatus = 'active' | 'used' | 'cancelled' | 'transferred' | 'refunded';
 export type DiscountType = 'percentage' | 'fixed';
 export type WaitlistStatus = 'waiting' | 'notified' | 'purchased' | 'expired';
+export type DocumentType = 'cpf' | 'cnpj';
 
 export interface Profile {
   id: string;
   full_name: string | null;
   avatar_url: string | null;
   phone: string | null;
-  cpf: string | null;
+  document_number: string | null;
+  document_type: DocumentType;
   role: UserRole;
   producer_status: ProducerStatus;
   organizer_slug: string | null;

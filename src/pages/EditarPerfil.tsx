@@ -53,6 +53,7 @@ export default function EditarPerfil() {
   const [deleting, setDeleting] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [loadingCep, setLoadingCep] = useState(false);
+  const [localAvatarUrl, setLocalAvatarUrl] = useState<string | undefined>(profile?.avatar_url || undefined);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const email = user?.email || "";
@@ -106,11 +107,16 @@ export default function EditarPerfil() {
     try {
       const ext = file.name.split(".").pop();
       const path = `${user.id}/avatar-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("event-images").upload(path, file, { upsert: true });
+      const { data: upData, error: upErr } = await supabase.storage.from("event-images").upload(path, file, { upsert: true });
       if (upErr) throw upErr;
-      const { data } = supabase.storage.from("event-images").getPublicUrl(path);
-      await supabase.from("profiles").update({ avatar_url: data.publicUrl }).eq("id", user.id);
+      const { data } = supabase.storage.from("event-images").getPublicUrl(upData?.path || path);
+      const publicUrl = `${data.publicUrl}?t=${Date.now()}`;
+      const { error: updateErr } = await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", user.id);
+      if (updateErr) throw updateErr;
+      setLocalAvatarUrl(publicUrl);
       toast({ title: "Foto atualizada!" });
+      // small delay to mitigate read-replica lag before refetching
+      await new Promise((r) => setTimeout(r, 400));
       await refetchRole();
     } catch (err: any) {
       toast({ title: err.message || "Erro ao enviar imagem", variant: "destructive" });
@@ -218,7 +224,7 @@ export default function EditarPerfil() {
               <div className="flex justify-center">
                 <div className="relative">
                   <Avatar className="h-28 w-28 border-4 border-primary/10">
-                    <AvatarImage src={profile?.avatar_url || undefined} />
+                    <AvatarImage src={localAvatarUrl || profile?.avatar_url || undefined} />
                     <AvatarFallback className="bg-muted text-muted-foreground text-3xl font-bold">{initials}</AvatarFallback>
                   </Avatar>
                   <input
@@ -413,7 +419,7 @@ export default function EditarPerfil() {
                 </div>
                 <div className="relative">
                   <Avatar className="h-32 w-32 border-4 border-primary/10">
-                    <AvatarImage src={profile?.avatar_url || undefined} />
+                    <AvatarImage src={localAvatarUrl || profile?.avatar_url || undefined} />
                     <AvatarFallback className="bg-muted text-muted-foreground text-4xl font-bold">{initials}</AvatarFallback>
                   </Avatar>
                   <input

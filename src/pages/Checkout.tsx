@@ -136,7 +136,10 @@ export default function Checkout() {
       // Persist buyer CPF/phone to profile for payment gateway
       if (buyerData.cpf || buyerData.phone) {
         const profileUpdate: Record<string, string> = {};
-        if (buyerData.cpf) profileUpdate.cpf = buyerData.cpf;
+        if (buyerData.cpf) {
+          profileUpdate.document_number = buyerData.cpf.replace(/\D/g, "");
+          profileUpdate.document_type = "cpf";
+        }
         if (buyerData.phone) profileUpdate.phone = buyerData.phone;
         if (buyerData.fullName) profileUpdate.full_name = buyerData.fullName;
         await supabase.from("profiles").update(profileUpdate).eq("id", user.id);
@@ -310,7 +313,7 @@ export default function Checkout() {
 
     // Save payer CPF to profile
     if (buyerData.cpf) {
-      await supabase.from("profiles").update({ cpf: buyerData.cpf }).eq("id", user!.id);
+      await supabase.from("profiles").update({ document_number: buyerData.cpf.replace(/\D/g, ""), document_type: "cpf" }).eq("id", user!.id);
     }
 
     setIsProcessingPayment(true);

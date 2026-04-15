@@ -3,6 +3,7 @@
 node_modules/
 .env
 .env.backup
+supabase/secrets.migration.template.env
 
 # Editor directories
 .vscode/

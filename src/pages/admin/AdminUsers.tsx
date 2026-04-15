@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { getAllUsersPaginated } from "@/lib/api-admin";
 import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
 import { supabase } from "@/integrations/supabase/client";
-import { maskCPF } from "@/lib/validators";
+import { formatDocument } from "@/utils/document";
 import { useState, useEffect, useMemo } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { toast } from "@/hooks/use-toast";
@@ -154,7 +154,7 @@ export default function AdminUsers() {
       <AdminPageHeader
         eyebrow="Base de usuários"
         title="Usuários"
-        description="Perfis sincronizados com roles da plataforma. A busca cobre nome, CPF e telefone; os papéis podem ser alterados sem sair da tela."
+        description="Perfis sincronizados com roles da plataforma. A busca cobre nome, documento e telefone; os papéis podem ser alterados sem sair da tela."
         actions={
           <Button
             variant="outline"
@@ -198,7 +198,7 @@ export default function AdminUsers() {
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="max-w-xl flex-1">
               <SearchInput
-                placeholder="Buscar por nome, CPF ou telefone..."
+                placeholder="Buscar por nome, documento ou telefone..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full"
@@ -261,7 +261,11 @@ export default function AdminUsers() {
                         <td className="p-4">
                           <div className="space-y-1">
                             <p className="text-muted-foreground">{user.phone || "—"}</p>
-                            <p className="font-mono text-xs text-muted-foreground">{user.cpf ? maskCPF(user.cpf) : "—"}</p>
+                            <p className="font-mono text-xs text-muted-foreground">
+                              {user.document_number
+                                ? `${user.document_type === "cnpj" ? "CNPJ" : "CPF"} ${formatDocument(user.document_number, user.document_type || "cpf")}`
+                                : "—"}
+                            </p>
                           </div>
                         </td>
                         <td className="p-4">

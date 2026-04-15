@@ -7,7 +7,9 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { formatCPF, validateCPF, formatPhone } from "@/lib/validators";
+import { formatPhone } from "@/lib/validators";
+import { DocumentInput } from "@/components/DocumentInput";
+import { validateDocument } from "@/utils/document";
 import { Loader2, Eye, EyeOff, ArrowRight } from "lucide-react";
 
 interface BecomeProducerModalProps {
@@ -36,7 +38,7 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
   const [regConfirm, setRegConfirm] = useState("");
 
   // Producer fields
-  const [cpf, setCpf] = useState("");
+  const [documentNumber, setDocumentNumber] = useState("");
   const [phone, setPhone] = useState("");
 
   const [loading, setLoading] = useState(false);
@@ -66,19 +68,19 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
         return;
       }
       setStep(user ? "producer-data" : "auth");
-      setCpf(profile?.cpf || "");
+      setDocumentNumber(profile?.document_number || (profile as any)?.cnpj || "");
       setPhone(profile?.phone || "");
     } else {
       // Clean up session storage when modal closes
       sessionStorage.removeItem("become_producer_flow");
     }
-  }, [open, user, role, navigate, onOpenChange, profile?.cpf, profile?.phone]);
+  }, [open, user, role, navigate, onOpenChange, profile?.document_number, profile?.phone]);
 
   // Handle OAuth callback completing the flow
   useEffect(() => {
     if (open && user && step === "auth" && sessionStorage.getItem("become_producer_flow")) {
       setStep("producer-data");
-      setCpf(profile?.cpf || "");
+      setDocumentNumber(profile?.document_number || (profile as any)?.cnpj || "");
       setPhone(profile?.phone || "");
     }
   }, [user, open, step, profile]);
@@ -110,31 +112,18 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
       return;
     }
     setLoading(true);
-    const response = await supabase.functions.invoke("signup-direct", {
-      body: {
-        email: regEmail,
-        password: regPassword,
-        full_name: regName,
+    const { error } = await supabase.auth.signUp({
+      email: regEmail,
+      password: regPassword,
+      options: {
+        data: { full_name: regName },
       },
     });
 
-    if (response.error) {
-      setLoading(false);
-      console.error("BecomeProducer register error:", response.error);
-      toast({ title: "Erro ao criar conta", variant: "destructive" });
-      return;
-    }
-
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: regEmail,
-      password: regPassword,
-    });
-
     setLoading(false);
-
-    if (signInError) {
-      console.error("BecomeProducer login after signup error:", signInError);
-      toast({ title: "Conta criada com sucesso!", description: "Conta criada sem confirmação de e-mail. Faça login com suas credenciais.", variant: "default" });
+    if (error) {
+      console.error("BecomeProducer register error:", error);
+      toast({ title: "Erro ao criar conta", variant: "destructive" });
       return;
     }
   };
@@ -156,9 +145,9 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
   // --- Producer handler ---
   const handleProducerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cleanCpf = cpf.replace(/\D/g, "");
-    if (!validateCPF(cleanCpf)) {
-      toast({ title: "CPF inválido", variant: "destructive" });
+    const documentValidation = validateDocument(documentNumber);
+    if (!documentValidation.valid || !documentValidation.type) {
+      toast({ title: documentValidation.error || "Documento inválido", variant: "destructive" });
       return;
     }
     const cleanPhone = phone.replace(/\D/g, "");
@@ -169,7 +158,7 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
     setLoading(true);
     try {
       const result = await supabase.functions.invoke("become-producer", {
-        body: { cpf: cleanCpf, phone: cleanPhone },
+        body: { document_number: documentNumber, document_type: documentValidation.type, phone: cleanPhone },
       });
       if (result.error) throw result.error;
       const data = result.data as { alreadyProducer?: boolean } | null;
@@ -194,7 +183,7 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className={`bg-card border-border p-0 overflow-hidden w-[min(92vw,420px)] max-w-[420px] max-h-[calc(100dvh-1rem)] ${
+        className={`bg-card border-border p-0 w-[min(92vw,420px)] max-w-[420px] ${
           isUltraCompact ? "w-[min(94vw,360px)] max-w-[360px]" : isCompact ? "w-[min(92vw,390px)] max-w-[390px]" : ""
         }`}
       >
@@ -418,18 +407,12 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
               </div>
 
               <form onSubmit={handleProducerSubmit} className={isUltraCompact ? "space-y-2" : isCompact ? "space-y-3" : "space-y-4"}>
-                <div className={isUltraCompact ? "space-y-1" : "space-y-2"}>
-                  <Label htmlFor="cpf" className={isUltraCompact ? "text-xs" : ""}>CPF</Label>
-                  <Input
-                    id="cpf"
-                    placeholder="000.000.000-00"
-                    value={cpf}
-                    onChange={(e) => setCpf(formatCPF(e.target.value))}
-                    maxLength={14}
-                    required
-                    className={isUltraCompact ? "h-8 text-xs" : isCompact ? "h-9 text-sm" : ""}
-                  />
-                </div>
+                <DocumentInput
+                  label="CPF ou CNPJ"
+                  value={documentNumber}
+                  onChange={setDocumentNumber}
+                  disabled={loading}
+                />
                 <div className={isUltraCompact ? "space-y-1" : "space-y-2"}>
                   <Label htmlFor="phone" className={isUltraCompact ? "text-xs" : ""}>Telefone</Label>
                   <Input

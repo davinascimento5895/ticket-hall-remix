@@ -14,7 +14,7 @@ import { toast } from "@/hooks/use-toast";
 import { Trash2, Upload, Loader2, Camera, ImageIcon, ShieldCheck, Activity, Wallet, Link2, ArrowUpRight } from "lucide-react";
 
 export default function ProducerSettings() {
-  const { user, profile } = useAuth();
+  const { user, profile, refetchRole } = useAuth();
   const queryClient = useQueryClient();
   const [form, setForm] = useState({
     full_name: profile?.full_name || "",
@@ -34,6 +34,11 @@ export default function ProducerSettings() {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const [activeTab, setActiveTab] = useState<"profile" | "organizer" | "bank" | "integrations">("profile");
+  const [localImageUrls, setLocalImageUrls] = useState<{
+    avatar_url?: string;
+    organizer_logo_url?: string;
+    organizer_banner_url?: string;
+  }>({});
 
   const avatarRef = useRef<HTMLInputElement>(null);
   const logoRef = useRef<HTMLInputElement>(null);
@@ -120,13 +125,17 @@ export default function ProducerSettings() {
     try {
       const ext = file.name.split(".").pop();
       const path = `${user.id}/${field}-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("event-images").upload(path, file, { upsert: true });
+      const { data: upData, error: upErr } = await supabase.storage.from("event-images").upload(path, file, { upsert: true });
       if (upErr) throw upErr;
-      const { data } = supabase.storage.from("event-images").getPublicUrl(path);
-      await updateProfile(user.id, { [field]: data.publicUrl } as any);
+      const { data } = supabase.storage.from("event-images").getPublicUrl(upData?.path || path);
+      const publicUrl = `${data.publicUrl}?t=${Date.now()}`;
+      await updateProfile(user.id, { [field]: publicUrl } as any);
+      setLocalImageUrls((prev) => ({ ...prev, [field]: publicUrl }));
       toast({ title: "Imagem atualizada!" });
+      // small delay to mitigate read-replica lag before refetching
+      await new Promise((r) => setTimeout(r, 400));
+      await refetchRole();
       queryClient.invalidateQueries({ queryKey: ["profile"] });
-      window.location.reload();
     } catch (err: any) {
       toast({ title: "Erro ao enviar imagem", description: err.message, variant: "destructive" });
     } finally {
@@ -177,8 +186,8 @@ export default function ProducerSettings() {
             <CardContent>
               <div className="flex items-center gap-4">
                 <div className="relative w-20 h-20 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-border">
-                  {profile?.avatar_url ? (
-                    <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                  {(localImageUrls.avatar_url || profile?.avatar_url) ? (
+                    <img src={localImageUrls.avatar_url || profile?.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-2xl font-bold text-muted-foreground">
                       {profile?.full_name?.[0]?.toUpperCase() || "?"}
@@ -222,8 +231,8 @@ export default function ProducerSettings() {
                 <Label className="text-sm font-medium">Logo do organizador</Label>
                 <div className="flex items-center gap-4 mt-2">
                   <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center overflow-hidden border border-border">
-                    {profile?.organizer_logo_url ? (
-                      <img src={profile.organizer_logo_url} alt="Logo" className="w-full h-full object-cover" />
+                    {(localImageUrls.organizer_logo_url || profile?.organizer_logo_url) ? (
+                      <img src={localImageUrls.organizer_logo_url || profile?.organizer_logo_url} alt="Logo" className="w-full h-full object-cover" />
                     ) : (
                       <ImageIcon className="h-6 w-6 text-muted-foreground" />
                     )}
@@ -244,8 +253,8 @@ export default function ProducerSettings() {
               <div>
                 <Label className="text-sm font-medium">Banner / Capa</Label>
                 <div className="mt-2 w-full aspect-[3/1] max-h-[160px] rounded-lg bg-muted flex items-center justify-center overflow-hidden border border-dashed border-border">
-                  {profile?.organizer_banner_url ? (
-                    <img src={profile.organizer_banner_url} alt="Banner" className="w-full h-full object-cover" />
+                  {(localImageUrls.organizer_banner_url || profile?.organizer_banner_url) ? (
+                    <img src={localImageUrls.organizer_banner_url || profile?.organizer_banner_url} alt="Banner" className="w-full h-full object-cover" />
                   ) : (
                     <div className="flex flex-col items-center text-muted-foreground">
                       <ImageIcon className="h-8 w-8 mb-1" />

@@ -56,12 +56,12 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
   const [isProcessing, setIsProcessing] = useState(false);
   const [payerCpf, setPayerCpf] = useState("");
 
-  // Auto-fill CPF from profile
+  // Auto-fill CPF from profile when the stored document is a CPF.
   useEffect(() => {
-    if (profile?.cpf && !payerCpf) {
-      setPayerCpf(formatCPF(profile.cpf));
+    if (profile?.document_type === "cpf" && profile.document_number && !payerCpf) {
+      setPayerCpf(formatCPF(profile.document_number));
     }
-  }, [profile]);
+  }, [profile, payerCpf]);
 
   const unitPrice = selectedTier?.price ?? 0;
   const subtotal = unitPrice * quantity;
@@ -175,7 +175,7 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
         // Process payment
         // Save CPF to profile
         if (payerCpf) {
-          await supabase.from("profiles").update({ cpf: payerCpf }).eq("id", user.id);
+          await supabase.from("profiles").update({ document_number: payerCpf.replace(/\D/g, ""), document_type: "cpf" }).eq("id", user.id);
         }
         const payResult = await createPayment(newOrderId, method as "pix" | "credit_card" | "boleto", cardData, installments, payerCpf);
 

@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { cpf, phone } = await req.json();
+    const { document_number, document_type, cpf, phone } = await req.json();
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -57,11 +57,19 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Update profile with CPF and phone, set status to approved immediately
+    const normalizeDocument = (value: string) => value.replace(/\D/g, "");
+    const rawDocument = String(document_number || cpf || "");
+    const cleanDocument = normalizeDocument(rawDocument);
+    const resolvedDocumentType = document_type || (cleanDocument.length === 14 ? "cnpj" : "cpf");
+
+    // Update profile with document and phone, set status to approved immediately
     const updates: Record<string, string> = {
       producer_status: "approved",
     };
-    if (cpf) updates.cpf = cpf.replace(/\D/g, "");
+    if (cleanDocument) {
+      updates.document_number = cleanDocument;
+      updates.document_type = resolvedDocumentType;
+    }
     if (phone) updates.phone = phone.replace(/\D/g, "");
 
     await supabaseAdmin
@@ -82,14 +90,14 @@ Deno.serve(async (req) => {
       try {
         const { data: profile } = await supabaseAdmin
           .from("profiles")
-          .select("full_name, cpf, phone")
+          .select("full_name, document_number, document_type, phone")
           .eq("id", user.id)
           .single();
 
         const accountPayload: Record<string, unknown> = {
           name: profile?.full_name || "Produtor TicketHall",
           email: user.email,
-          cpfCnpj: (cpf || profile?.cpf || "").replace(/\D/g, "") || undefined,
+          cpfCnpj: cleanDocument || profile?.document_number || undefined,
           mobilePhone: (phone || profile?.phone || "").replace(/\D/g, "") || undefined,
           companyType: "MEI",
           incomeValue: 1000,

@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { sanitizeDocument } from "@/utils/document";
 
 const TIME_ZONE = "America/Sao_Paulo";
 
@@ -555,12 +556,15 @@ export async function getAllUsersPaginated(
 ) {
   let query = supabase
     .from("profiles")
-    .select("id, full_name, cpf, phone, avatar_url, created_at", { count: "exact" })
+    .select("id, full_name, document_number, document_type, phone, avatar_url, created_at", { count: "exact" })
     .order("created_at", { ascending: false });
 
   if (filters?.search) {
     const safeSearch = filters.search.replace(/[%_]/g, "");
-    query = query.or(`full_name.ilike.%${safeSearch}%,cpf.ilike.%${safeSearch}%,phone.ilike.%${safeSearch}%`);
+    const documentSearch = sanitizeDocument(filters.search);
+    const documentClause = documentSearch ? `document_number.ilike.%${documentSearch}%` : "";
+    const searchParts = [`full_name.ilike.%${safeSearch}%`, `phone.ilike.%${safeSearch}%`, documentClause].filter(Boolean);
+    query = query.or(searchParts.join(","));
   }
   if (range) query = query.range(range.from, range.to);
 
@@ -570,10 +574,13 @@ export async function getAllUsersPaginated(
 }
 
 export async function getAllUsers(search?: string) {
-  let query = supabase.from("profiles").select("id, full_name, cpf, phone, created_at").order("created_at", { ascending: false });
+  let query = supabase.from("profiles").select("id, full_name, document_number, document_type, phone, created_at").order("created_at", { ascending: false });
   if (search) {
     const safeSearch = search.replace(/[%_]/g, "");
-    query = query.or(`full_name.ilike.%${safeSearch}%,cpf.ilike.%${safeSearch}%,phone.ilike.%${safeSearch}%`);
+    const documentSearch = sanitizeDocument(search);
+    const documentClause = documentSearch ? `document_number.ilike.%${documentSearch}%` : "";
+    const searchParts = [`full_name.ilike.%${safeSearch}%`, `phone.ilike.%${safeSearch}%`, documentClause].filter(Boolean);
+    query = query.or(searchParts.join(","));
   }
   const { data: profiles, error } = await query;
   if (error) throw error;
@@ -618,7 +625,7 @@ export async function getProducers(search?: string) {
   // Query profiles with event count in single pass
   let query = supabase
     .from("profiles")
-    .select("id, full_name, phone, created_at")
+    .select("id, full_name, document_number, document_type, phone, created_at")
     .in("id", producerIds)
     .order("created_at", { ascending: false });
 
@@ -641,7 +648,7 @@ export async function getProducers(search?: string) {
 
 export async function getProducerDetail(producerId: string) {
   const [profileRes, eventsRes] = await Promise.all([
-    supabase.from("profiles").select("id, full_name, phone, created_at, producer_status").eq("id", producerId).single(),
+    supabase.from("profiles").select("id, full_name, document_number, document_type, phone, created_at, producer_status").eq("id", producerId).single(),
     supabase.from("events").select("id, title, status, start_date, created_at").eq("producer_id", producerId).order("created_at", { ascending: false }),
   ]);
   if (profileRes.error) throw profileRes.error;

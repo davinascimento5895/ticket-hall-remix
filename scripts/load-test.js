@@ -65,8 +65,8 @@ export const options = {
   },
 };
 
-const API_URL = __ENV.API_URL || 'http://localhost:54321';
-const ANON_KEY = __ENV.ANON_KEY || 'sua-anon-key';
+const API_URL = __ENV.API_URL;
+const ANON_KEY = __ENV.ANON_KEY;
 
 // Helpers
 const headers = {

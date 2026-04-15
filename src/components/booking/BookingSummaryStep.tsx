@@ -8,8 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { cn, formatBRL } from "@/lib/utils";
 import { type CreditCardData, getInstallmentOptions } from "@/lib/api-payment";
-import { validateCPF, formatCPF } from "@/lib/validators";
 import { toast } from "@/hooks/use-toast";
+import { DocumentInput } from "@/components/DocumentInput";
+import { validateDocument } from "@/utils/document";
 
 interface Props {
   event: {
@@ -63,9 +64,9 @@ export function BookingSummaryStep({
       return;
     }
 
-    // Validate CPF before payment
-    if (!payerCpf.trim() || !validateCPF(payerCpf)) {
-      toast({ title: "CPF inválido", description: "Preencha um CPF válido para prosseguir com o pagamento.", variant: "destructive" });
+    const documentValidation = validateDocument(payerCpf);
+    if (!documentValidation.valid || !documentValidation.type) {
+      toast({ title: documentValidation.error || "Documento inválido", description: "Preencha um documento válido para prosseguir com o pagamento.", variant: "destructive" });
       return;
     }
 
@@ -155,19 +156,16 @@ export function BookingSummaryStep({
         </div>
       </div>
 
-      {/* CPF do pagador - only for paid events */}
+      {/* Documento do pagador - only for paid events */}
       {!isFree && (
         <div className="space-y-2">
-          <Label className="text-sm font-medium">CPF do pagador <span className="text-destructive">*</span></Label>
-          <Input
+          <DocumentInput
+            label="CPF ou CNPJ do pagador"
             value={payerCpf}
-            onChange={(e) => onPayerCpfChange(formatCPF(e.target.value))}
-            placeholder="000.000.000-00"
-            maxLength={14}
-            className="text-sm"
+            onChange={onPayerCpfChange}
           />
           <p className="text-xs text-muted-foreground">
-            Caso queira pagar em nome de outra pessoa, altere o CPF acima.
+            Caso queira pagar em nome de outra pessoa, altere o documento acima.
           </p>
         </div>
       )}

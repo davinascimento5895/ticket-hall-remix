@@ -71,11 +71,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 
   const fetchProfile = async (userId: string) => {
-    const { data } = await supabase
+    // Tentativa 1: select completo com todas as colunas que o código espera
+    let { data, error } = await supabase
       .from("profiles")
       .select("id, full_name, avatar_url, phone, cpf, birth_date, cep, street, neighborhood, address_number, complement, city, state, producer_status, organizer_slug, organizer_bio, organizer_instagram, organizer_facebook, organizer_website, organizer_logo_url, organizer_banner_url")
       .eq("id", userId)
       .single();
+
+    // Fallback: se o schema do banco estiver desatualizado (ex: colunas inexistentes),
+    // fazemos um select básico para não quebrar a sessão do usuário.
+    if (error) {
+      console.warn("fetchProfile full select failed, trying fallback:", error);
+      const fallback = await supabase
+        .from("profiles")
+        .select("id, full_name, avatar_url, phone, cpf")
+        .eq("id", userId)
+        .single();
+      data = fallback.data;
+      if (fallback.error) {
+        console.error("fetchProfile fallback also failed:", fallback.error);
+      }
+    }
+
     setProfile(data);
   };
 

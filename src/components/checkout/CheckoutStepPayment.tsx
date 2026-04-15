@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CreditCardData, getInstallmentOptions } from "@/lib/api-payment";
-import { validateCPF, formatCPF } from "@/lib/validators";
 import { formatCEP } from "@/lib/cep";
 import { formatBRL } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { DocumentInput } from "@/components/DocumentInput";
+import { validateDocument } from "@/utils/document";
 
 interface CheckoutStepPaymentProps {
   subtotal: number;
@@ -122,9 +123,9 @@ export function CheckoutStepPayment({
   };
 
   const handleConfirm = () => {
-    // Validate CPF before any payment method
-    if (!payerCpf.trim() || !validateCPF(payerCpf)) {
-      toast({ title: "CPF inválido", description: "Preencha um CPF válido para prosseguir com o pagamento.", variant: "destructive" });
+    const documentValidation = validateDocument(payerCpf);
+    if (!documentValidation.valid || !documentValidation.type) {
+      toast({ title: documentValidation.error || "Documento inválido", description: "Preencha um documento válido para prosseguir com o pagamento.", variant: "destructive" });
       return;
     }
 
@@ -238,15 +239,13 @@ export function CheckoutStepPayment({
 
       {/* CPF do pagador */}
       <div className="p-4 rounded-lg border border-border bg-card space-y-2">
-        <Label className="text-xs font-medium">CPF do pagador <span className="text-destructive">*</span></Label>
-        <Input
+        <DocumentInput
+          label="CPF ou CNPJ do pagador"
           value={payerCpf}
-          onChange={(e) => onPayerCpfChange(formatCPF(e.target.value))}
-          placeholder="000.000.000-00"
-          maxLength={14}
+          onChange={onPayerCpfChange}
         />
         <p className="text-xs text-muted-foreground">
-          Caso queira pagar em nome de outra pessoa, altere o CPF acima.
+          Caso queira pagar em nome de outra pessoa, altere o documento acima.
         </p>
       </div>
 

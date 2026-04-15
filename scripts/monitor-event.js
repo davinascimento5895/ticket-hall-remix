@@ -11,8 +11,13 @@
 
 const { createClient } = require('@supabase/supabase-js');
 
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://seu-projeto.supabase.co';
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || 'sua-service-role-key';
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+  console.error('❌ Erro: As variáveis de ambiente SUPABASE_URL e SUPABASE_SERVICE_KEY são obrigatórias.');
+  process.exit(1);
+}
 
 const eventId = process.argv[2];
 

@@ -115,6 +115,14 @@ export function Navbar() {
     ? profile.full_name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
     : "?";
 
+  const firstName = profile?.full_name
+    ? profile.full_name.trim().split(/\s+/)[0]
+    : "Usuário";
+
+  const accountDisplayName = profile?.full_name
+    ? firstName
+    : "Minha Conta";
+
   return (
     <>
       <header
@@ -176,7 +184,7 @@ export function Navbar() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="gap-2">
                       <User className="h-4 w-4" />
-                      <span className="max-w-[120px] truncate">{profile?.full_name || "Minha Conta"} — {roleLabels[role || "buyer"]}</span>
+                      <span className="max-w-[120px] truncate">{accountDisplayName} — {roleLabels[role || "buyer"]}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
@@ -187,7 +195,7 @@ export function Navbar() {
                           <AvatarFallback className="bg-muted text-muted-foreground">{initials}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium truncate">{profile?.full_name || "Usuário"}</div>
+                          <div className="text-sm font-medium truncate">{firstName}</div>
                           <div className="text-xs text-muted-foreground truncate">{user?.email}</div>
                         </div>
                       </div>
@@ -308,7 +316,7 @@ export function Navbar() {
                       <AvatarFallback className="bg-muted text-muted-foreground">{initials}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <div className="text-sm font-medium truncate">{profile?.full_name || "Usuário"}</div>
+                      <div className="text-sm font-medium truncate">{firstName}</div>
                       <div className="text-xs text-muted-foreground truncate">{user?.email}</div>
                     </div>
                   </div>

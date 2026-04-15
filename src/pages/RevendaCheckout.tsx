@@ -17,7 +17,8 @@ import {
   type ResaleCreditCardData,
 } from "@/lib/api-resale";
 import { getUserWalletSummary } from "@/lib/api-wallet";
-import { formatCPF } from "@/lib/validators";
+import { DocumentInput } from "@/components/DocumentInput";
+import { validateDocument } from "@/utils/document";
 
 export default function RevendaCheckout() {
   const { listingId } = useParams<{ listingId: string }>();
@@ -30,7 +31,7 @@ export default function RevendaCheckout() {
   const [paymentMethod, setPaymentMethod] = useState<"pix" | "credit_card" | "boleto">("pix");
   const [installments, setInstallments] = useState(1);
   const [useWalletCredit, setUseWalletCredit] = useState(false);
-  const [payerCpf, setPayerCpf] = useState(profile?.cpf ? formatCPF(profile.cpf) : "");
+  const [payerCpf, setPayerCpf] = useState(profile?.document_number || "");
   const [cardData, setCardData] = useState<ResaleCreditCardData>({
     holderName: profile?.full_name || "",
     number: "",
@@ -135,6 +136,7 @@ export default function RevendaCheckout() {
       && cardData.ccv.length >= 3
     );
   }, [cardData, paymentMethod]);
+  const payerDocumentValid = validateDocument(payerCpf).valid;
 
   return (
     <>
@@ -290,8 +292,7 @@ export default function RevendaCheckout() {
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <Label>CPF pagador</Label>
-                    <Input value={payerCpf} onChange={(e) => setPayerCpf(e.target.value)} placeholder="000.000.000-00" />
+                    <DocumentInput label="CPF ou CNPJ pagador" value={payerCpf} onChange={setPayerCpf} />
                   </div>
                 </div>
               </div>
@@ -329,7 +330,7 @@ export default function RevendaCheckout() {
             <Button
               className="w-full gap-2"
               size="lg"
-              disabled={!confirmed || purchaseMutation.isPending || !cardIsValid}
+              disabled={!confirmed || purchaseMutation.isPending || !cardIsValid || !payerDocumentValid}
               onClick={() => purchaseMutation.mutate()}
             >
               {purchaseMutation.isPending ? (

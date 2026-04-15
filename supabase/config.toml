@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.toggle-event-certificates]
 verify_jwt = true
+
+[functions.signup-direct]
+verify_jwt = false

@@ -2,6 +2,7 @@
  * CSV Export Utility
  * Converts array of objects into downloadable CSV files.
  */
+import { formatDocument } from "@/utils/document";
 
 export function exportToCSV<T extends Record<string, any>>(
   data: T[],
@@ -55,7 +56,7 @@ export const orderCSVColumns = [
 
 export const userCSVColumns = [
   { key: "full_name", header: "Nome" },
-  { key: "cpf", header: "CPF" },
+  { key: "document_number", header: "Documento", format: (value: string, row: any) => value ? formatDocument(String(value), row.document_type || "cpf") : "" },
   { key: "phone", header: "Telefone" },
   { key: "created_at", header: "Cadastro", format: (v: string) => v ? new Date(v).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "" },
 ];

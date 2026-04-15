@@ -319,7 +319,7 @@ export async function deleteTicketTier(tierId: string) {
 export async function getEventOrders(eventId: string) {
   const { data, error } = await supabase
     .from("orders")
-    .select("*, profiles!orders_buyer_id_fkey(full_name, cpf)")
+    .select("*, profiles!orders_buyer_id_fkey(full_name, document_number, document_type)")
     .eq("event_id", eventId)
     .order("created_at", { ascending: false });
   if (error) throw error;
