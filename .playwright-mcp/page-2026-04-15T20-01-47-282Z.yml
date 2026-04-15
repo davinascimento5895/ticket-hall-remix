@@ -1,0 +1,362 @@
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - link "TicketHall" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - img "TicketHall" [ref=e8]
+        - navigation [ref=e9]:
+          - link "Eventos" [ref=e10] [cursor=pointer]:
+            - /url: /eventos
+          - link "Revenda" [ref=e11] [cursor=pointer]:
+            - /url: /revenda
+          - link "Produtores" [ref=e12] [cursor=pointer]:
+            - /url: /produtores
+          - link "Blog" [ref=e13] [cursor=pointer]:
+            - /url: /blog
+        - generic [ref=e14]:
+          - button "Alternar tema" [ref=e15] [cursor=pointer]:
+            - img [ref=e16]
+            - generic [ref=e18]: Toggle theme
+          - generic [ref=e72]:
+            - link "Carrinho" [ref=e73] [cursor=pointer]:
+              - /url: /carrinho
+              - img [ref=e74]
+            - button [ref=e77] [cursor=pointer]:
+              - img
+            - button "Teste — Comprador" [ref=e78] [cursor=pointer]:
+              - img
+              - generic [ref=e79]: Teste — Comprador
+    - main [ref=e26]:
+      - generic [ref=e82]:
+        - generic [ref=e83]:
+          - heading "Seus ingressos para congressos" [level=1] [ref=e401]:
+            - text: Seus ingressos para
+            - generic [ref=e402]: congressos
+          - paragraph [ref=e87]: Compre, transfira e gerencie seus ingressos com segurança. A plataforma completa para produtores e compradores.
+          - generic [ref=e90]:
+            - textbox "Buscar eventos, shows, cidades..." [ref=e91]
+            - button [ref=e93] [cursor=pointer]:
+              - img
+          - generic [ref=e94]:
+            - link "Explorar eventos" [ref=e95] [cursor=pointer]:
+              - /url: /eventos
+              - text: Explorar eventos
+              - img
+            - link "Sou produtor" [ref=e96] [cursor=pointer]:
+              - /url: /produtores
+        - generic [ref=e98]:
+          - region [ref=e99]:
+            - generic [ref=e101]:
+              - group [ref=e102]:
+                - generic [ref=e104]:
+                  - img "Show ao vivo com palco iluminado" [ref=e105]
+                  - generic [ref=e106]: Show
+              - group [ref=e107]:
+                - generic [ref=e109]:
+                  - img "Palestra em auditório" [ref=e110]
+                  - generic [ref=e111]: Palestra
+              - group [ref=e112]:
+                - generic [ref=e114]:
+                  - img "Festival de música com público e iluminação de palco" [ref=e115]
+                  - generic [ref=e116]: Festival
+              - group [ref=e117]:
+                - generic [ref=e119]:
+                  - img "Espaço de teatro com plateia" [ref=e120]
+                  - generic [ref=e121]: Teatro
+              - group [ref=e122]:
+                - generic [ref=e124]:
+                  - img "Auditório de congresso com plateia" [ref=e125]
+                  - generic [ref=e126]: Congresso
+              - group [ref=e127]:
+                - generic [ref=e129]:
+                  - img "Workshop com pessoas em atividade prática" [ref=e130]
+                  - generic [ref=e131]: Workshop
+          - generic [ref=e132]:
+            - button "Ir para shows" [ref=e133] [cursor=pointer]
+            - button "Ir para palestras" [ref=e134] [cursor=pointer]
+            - button "Ir para festivais" [ref=e135] [cursor=pointer]
+            - button "Ir para teatros" [ref=e136] [cursor=pointer]
+            - button "Ir para congressos" [ref=e137] [cursor=pointer]
+            - button "Ir para workshops" [ref=e138] [cursor=pointer]
+      - generic [ref=e140]:
+        - generic [ref=e141]:
+          - heading "Explore nossas coleções" [level=2] [ref=e142]
+          - link "Ver tudo" [ref=e143] [cursor=pointer]:
+            - /url: /eventos
+        - generic [ref=e144]:
+          - button [ref=e145] [cursor=pointer]:
+            - img
+          - button [ref=e146] [cursor=pointer]:
+            - img
+          - generic [ref=e147]:
+            - link "Festas e Shows" [ref=e148] [cursor=pointer]:
+              - /url: /eventos?categoria=shows
+              - generic [ref=e149]:
+                - img [ref=e151]
+                - generic [ref=e155]: Festas e Shows
+            - link "Teatros e Espetáculos" [ref=e156] [cursor=pointer]:
+              - /url: /eventos?categoria=theater
+              - generic [ref=e157]:
+                - img [ref=e159]
+                - generic [ref=e168]: Teatros e Espetáculos
+            - link "Stand Up Comedy" [ref=e169] [cursor=pointer]:
+              - /url: /eventos?categoria=standup
+              - generic [ref=e170]:
+                - img [ref=e172]
+                - generic [ref=e176]: Stand Up Comedy
+            - link "Esportes" [ref=e177] [cursor=pointer]:
+              - /url: /eventos?categoria=sports
+              - generic [ref=e178]:
+                - img [ref=e180]
+                - generic [ref=e186]: Esportes
+            - link "Passeios e Tours" [ref=e187] [cursor=pointer]:
+              - /url: /eventos?categoria=tours
+              - generic [ref=e188]:
+                - img [ref=e190]
+                - generic [ref=e193]: Passeios e Tours
+            - link "Descontos Exclusivos" [ref=e194] [cursor=pointer]:
+              - /url: /eventos?categoria=deals
+              - generic [ref=e195]:
+                - img [ref=e197]
+                - generic [ref=e200]: Descontos Exclusivos
+            - link "Congressos e Palestras" [ref=e201] [cursor=pointer]:
+              - /url: /eventos?categoria=corporate
+              - generic [ref=e202]:
+                - img [ref=e204]
+                - generic [ref=e207]: Congressos e Palestras
+            - link "Infantil" [ref=e208] [cursor=pointer]:
+              - /url: /eventos?categoria=kids
+              - generic [ref=e209]:
+                - img [ref=e211]
+                - generic [ref=e214]: Infantil
+            - link "Eventos com Loja" [ref=e215] [cursor=pointer]:
+              - /url: /eventos?categoria=shopping
+              - generic [ref=e216]:
+                - img [ref=e218]
+                - generic [ref=e221]: Eventos com Loja
+            - link "Outros" [ref=e222] [cursor=pointer]:
+              - /url: /eventos?categoria=other
+              - generic [ref=e223]:
+                - img [ref=e225]
+                - generic [ref=e227]: Outros
+      - generic [ref=e229]:
+        - generic [ref=e230]:
+          - generic [ref=e231]:
+            - heading "Em destaque" [level=2] [ref=e232]
+            - paragraph [ref=e233]: Os eventos mais procurados da semana
+          - link "Ver todos" [ref=e234] [cursor=pointer]:
+            - /url: /eventos
+            - text: Ver todos
+            - img
+        - paragraph [ref=e235]: Nenhum evento em destaque no momento.
+      - generic [ref=e237]:
+        - generic [ref=e238]:
+          - heading "Por que o TicketHall?" [level=2] [ref=e239]
+          - paragraph [ref=e240]: Tudo o que você precisa para comprar e vender ingressos online.
+        - generic [ref=e241]:
+          - generic [ref=e242]:
+            - img [ref=e244]
+            - heading "Pagamento seguro" [level=3] [ref=e246]
+            - paragraph [ref=e247]: PIX, cartão de crédito e boleto. Checkout rápido e protegido.
+          - generic [ref=e248]:
+            - img [ref=e250]
+            - heading "Ingresso digital" [level=3] [ref=e252]
+            - paragraph [ref=e253]: QR Code único no celular. Sem necessidade de impressão.
+          - generic [ref=e254]:
+            - img [ref=e256]
+            - heading "Entrega instantânea" [level=3] [ref=e258]
+            - paragraph [ref=e259]: Receba seus ingressos por e-mail e na área logada em segundos.
+          - generic [ref=e260]:
+            - img [ref=e262]
+            - heading "Garantia de reembolso" [level=3] [ref=e264]
+            - paragraph [ref=e265]: Solicite reembolso facilmente caso o evento seja cancelado.
+          - generic [ref=e266]:
+            - img [ref=e268]
+            - heading "Transferência fácil" [level=3] [ref=e273]
+            - paragraph [ref=e274]: Transfira ingressos para amigos com apenas um clique.
+          - generic [ref=e275]:
+            - img [ref=e277]
+            - heading "Check-in rápido" [level=3] [ref=e283]
+            - paragraph [ref=e284]: Check-in na entrada do evento com leitura de QR Code.
+      - generic [ref=e286]:
+        - generic [ref=e287]:
+          - generic [ref=e288]:
+            - heading "O melhor de cada cidade" [level=2] [ref=e289]
+            - paragraph [ref=e290]: Encontre eventos na sua cidade
+          - link "Ver tudo" [ref=e291] [cursor=pointer]:
+            - /url: /cidades
+            - text: Ver tudo
+            - img
+        - generic [ref=e292]:
+          - button [ref=e293] [cursor=pointer]:
+            - img [ref=e294]
+          - button [ref=e296] [cursor=pointer]:
+            - img [ref=e297]
+          - generic [ref=e299]:
+            - link "Eventos em São Paulo São Paulo SP" [ref=e300] [cursor=pointer]:
+              - /url: /eventos?cidade=S%C3%A3o%20Paulo
+              - img "Eventos em São Paulo" [ref=e301]
+              - generic [ref=e303]:
+                - heading "São Paulo" [level=3] [ref=e304]
+                - paragraph [ref=e305]: SP
+            - link "Eventos em Rio de Janeiro Rio de Janeiro RJ" [ref=e306] [cursor=pointer]:
+              - /url: /eventos?cidade=Rio%20de%20Janeiro
+              - img "Eventos em Rio de Janeiro" [ref=e307]
+              - generic [ref=e309]:
+                - heading "Rio de Janeiro" [level=3] [ref=e310]
+                - paragraph [ref=e311]: RJ
+            - link "Eventos em Brasília Brasília DF" [ref=e312] [cursor=pointer]:
+              - /url: /eventos?cidade=Bras%C3%ADlia
+              - img "Eventos em Brasília" [ref=e313]
+              - generic [ref=e315]:
+                - heading "Brasília" [level=3] [ref=e316]
+                - paragraph [ref=e317]: DF
+            - link "Eventos em Salvador Salvador BA" [ref=e318] [cursor=pointer]:
+              - /url: /eventos?cidade=Salvador
+              - img "Eventos em Salvador" [ref=e319]
+              - generic [ref=e321]:
+                - heading "Salvador" [level=3] [ref=e322]
+                - paragraph [ref=e323]: BA
+            - link "Eventos em Belo Horizonte Belo Horizonte MG" [ref=e324] [cursor=pointer]:
+              - /url: /eventos?cidade=Belo%20Horizonte
+              - img "Eventos em Belo Horizonte" [ref=e325]
+              - generic [ref=e327]:
+                - heading "Belo Horizonte" [level=3] [ref=e328]
+                - paragraph [ref=e329]: MG
+            - link "Eventos em Curitiba Curitiba PR" [ref=e330] [cursor=pointer]:
+              - /url: /eventos?cidade=Curitiba
+              - img "Eventos em Curitiba" [ref=e331]
+              - generic [ref=e333]:
+                - heading "Curitiba" [level=3] [ref=e334]
+                - paragraph [ref=e335]: PR
+            - link "Eventos em Recife Recife PE" [ref=e336] [cursor=pointer]:
+              - /url: /eventos?cidade=Recife
+              - img "Eventos em Recife" [ref=e337]
+              - generic [ref=e339]:
+                - heading "Recife" [level=3] [ref=e340]
+                - paragraph [ref=e341]: PE
+            - link "Eventos em Porto Alegre Porto Alegre RS" [ref=e342] [cursor=pointer]:
+              - /url: /eventos?cidade=Porto%20Alegre
+              - img "Eventos em Porto Alegre" [ref=e343]
+              - generic [ref=e345]:
+                - heading "Porto Alegre" [level=3] [ref=e346]
+                - paragraph [ref=e347]: RS
+            - link "Eventos em Florianópolis Florianópolis SC" [ref=e348] [cursor=pointer]:
+              - /url: /eventos?cidade=Florian%C3%B3polis
+              - img "Eventos em Florianópolis" [ref=e349]
+              - generic [ref=e351]:
+                - heading "Florianópolis" [level=3] [ref=e352]
+                - paragraph [ref=e353]: SC
+      - generic [ref=e355]:
+        - heading "É produtor de eventos?" [level=2] [ref=e356]
+        - paragraph [ref=e357]: Crie seus eventos, venda ingressos e gerencie check-in com uma plataforma completa e sem mensalidade.
+        - link "Começar a vender grátis" [ref=e358] [cursor=pointer]:
+          - /url: /produtores
+          - text: Começar a vender grátis
+          - img
+      - generic [ref=e360]:
+        - heading "Perguntas frequentes" [level=2] [ref=e361]
+        - generic [ref=e362]:
+          - heading "Como compro ingressos?" [level=3] [ref=e364]:
+            - button "Como compro ingressos?" [ref=e365] [cursor=pointer]:
+              - text: Como compro ingressos?
+              - img [ref=e366]
+          - heading "É seguro comprar pelo TicketHall?" [level=3] [ref=e369]:
+            - button "É seguro comprar pelo TicketHall?" [ref=e370] [cursor=pointer]:
+              - text: É seguro comprar pelo TicketHall?
+              - img [ref=e371]
+          - heading "Posso transferir meu ingresso?" [level=3] [ref=e374]:
+            - button "Posso transferir meu ingresso?" [ref=e375] [cursor=pointer]:
+              - text: Posso transferir meu ingresso?
+              - img [ref=e376]
+          - heading "Como funciona o reembolso?" [level=3] [ref=e379]:
+            - button "Como funciona o reembolso?" [ref=e380] [cursor=pointer]:
+              - text: Como funciona o reembolso?
+              - img [ref=e381]
+          - heading "Meu ingresso é digital ou preciso imprimir?" [level=3] [ref=e384]:
+            - button "Meu ingresso é digital ou preciso imprimir?" [ref=e385] [cursor=pointer]:
+              - text: Meu ingresso é digital ou preciso imprimir?
+              - img [ref=e386]
+          - heading "Como funciona o check-in no evento?" [level=3] [ref=e389]:
+            - button "Como funciona o check-in no evento?" [ref=e390] [cursor=pointer]:
+              - text: Como funciona o check-in no evento?
+              - img [ref=e391]
+          - heading "Posso parcelar minha compra?" [level=3] [ref=e394]:
+            - button "Posso parcelar minha compra?" [ref=e395] [cursor=pointer]:
+              - text: Posso parcelar minha compra?
+              - img [ref=e396]
+    - contentinfo [ref=e29]:
+      - generic [ref=e30]:
+        - generic [ref=e31]:
+          - generic [ref=e32]:
+            - img "TicketHall" [ref=e34]
+            - paragraph [ref=e35]: A plataforma de ingressos com a menor taxa do Brasil.
+            - button "Crie seu evento" [ref=e36] [cursor=pointer]:
+              - img
+              - text: Crie seu evento
+          - generic [ref=e37]:
+            - heading "Plataforma" [level=4] [ref=e38]
+            - list [ref=e39]:
+              - listitem [ref=e40]:
+                - link "Eventos" [ref=e41] [cursor=pointer]:
+                  - /url: /eventos
+              - listitem [ref=e42]:
+                - link "Para Produtores" [ref=e43] [cursor=pointer]:
+                  - /url: /produtores
+              - listitem [ref=e44]:
+                - link "Blog" [ref=e45] [cursor=pointer]:
+                  - /url: /blog
+              - listitem [ref=e46]:
+                - link "Changelog" [ref=e47] [cursor=pointer]:
+                  - /url: /changelog
+          - generic [ref=e48]:
+            - heading "Legal & Suporte" [level=4] [ref=e49]
+            - list [ref=e50]:
+              - listitem [ref=e51]:
+                - link "Termos para Clientes" [ref=e52] [cursor=pointer]:
+                  - /url: /termos-de-uso/cliente
+              - listitem [ref=e53]:
+                - link "Termos para Produtores" [ref=e54] [cursor=pointer]:
+                  - /url: /termos-de-uso/produtor
+              - listitem [ref=e55]:
+                - link "Política de Privacidade" [ref=e56] [cursor=pointer]:
+                  - /url: /politica-de-privacidade
+              - listitem [ref=e57]:
+                - link "Perguntas Frequentes" [ref=e58] [cursor=pointer]:
+                  - /url: /faq
+          - generic [ref=e59]:
+            - heading "Contato" [level=4] [ref=e60]
+            - list [ref=e61]:
+              - listitem [ref=e62]:
+                - link "contato@tickethall.com.br" [ref=e63] [cursor=pointer]:
+                  - /url: mailto:contato@tickethall.com.br
+            - generic [ref=e64]:
+              - link "Instagram" [ref=e65] [cursor=pointer]:
+                - /url: https://instagram.com/tickethallbrasil
+                - img [ref=e66]
+              - link "LinkedIn" [ref=e68] [cursor=pointer]:
+                - /url: https://linkedin.com/company/tickethall
+                - img [ref=e69]
+        - generic [ref=e71]: © 2026 TicketHall. Todos os direitos reservados. Uma empresa do grupo ioMob Tecnologia LTDA - CNPJ 29.256.741/0001-10
+  - generic [ref=e403]:
+    - generic [ref=e404]:
+      - generic [ref=e405]:
+        - img [ref=e406]
+        - generic [ref=e409]:
+          - paragraph [ref=e410]: Suporte TicketHall
+          - paragraph [ref=e411]: ● Online
+      - button [ref=e412] [cursor=pointer]:
+        - img [ref=e413]
+    - generic [ref=e418]: Olá! Sou o assistente automatizado da TicketHall. Posso ajudar com dúvidas frequentes. Para atendimento humano, envie um e-mail para suporte@tickethall.com.br.
+    - generic [ref=e419]:
+      - button "Como comprar ingressos?" [ref=e420] [cursor=pointer]
+      - button "Quero pedir reembolso" [ref=e421] [cursor=pointer]
+      - button "Meu QR Code não funciona" [ref=e422] [cursor=pointer]
+      - button "Como transferir ingresso?" [ref=e423] [cursor=pointer]
+    - generic [ref=e424]:
+      - textbox "Digite sua mensagem..." [ref=e425]
+      - button [disabled]:
+        - img

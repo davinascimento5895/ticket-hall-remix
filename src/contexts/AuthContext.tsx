@@ -14,6 +14,8 @@ interface AuthContextType {
     avatar_url: string | null;
     phone: string | null;
     cpf: string | null;
+    document_number: string | null;
+    document_type: "cpf" | "cnpj" | null;
     birth_date: string | null;
     cep: string | null;
     street: string | null;
@@ -63,7 +65,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const ensureProfile = async (userId: string) => {
     try {
-      await supabase.functions.invoke("ensure-user-profile");
+      const { data: { session } } = await supabase.auth.getSession();
+      await supabase.functions.invoke("ensure-user-profile", {
+        headers: session ? { Authorization: `Bearer ${session.access_token}` } : undefined,
+      });
     } catch (e) {
       console.warn("ensure-user-profile failed (non-blocking):", e);
     }
@@ -74,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Tentativa 1: select completo com todas as colunas que o código espera
     let { data, error } = await supabase
       .from("profiles")
-      .select("id, full_name, avatar_url, phone, cpf, birth_date, cep, street, neighborhood, address_number, complement, city, state, producer_status, organizer_slug, organizer_bio, organizer_instagram, organizer_facebook, organizer_website, organizer_logo_url, organizer_banner_url")
+      .select("id, full_name, avatar_url, phone, document_number, document_type, birth_date, cep, street, neighborhood, address_number, complement, city, state, producer_status, organizer_slug, organizer_bio, organizer_instagram, organizer_facebook, organizer_website, organizer_logo_url, organizer_banner_url")
       .eq("id", userId)
       .single();
 
@@ -84,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.warn("fetchProfile full select failed, trying fallback:", error);
       const fallback = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url, phone, cpf")
+        .select("id, full_name, avatar_url, phone, document_number, document_type")
         .eq("id", userId)
         .single();
       data = fallback.data;

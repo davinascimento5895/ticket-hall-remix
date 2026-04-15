@@ -13,7 +13,7 @@ import { BookingSummaryStep } from "./BookingSummaryStep";
 import { BookingConfirmation } from "./BookingConfirmation";
 import { supabase } from "@/integrations/supabase/client";
 import { createPayment, type CreditCardData } from "@/lib/api-payment";
-import { formatCPF } from "@/lib/validators";
+import { formatDocument, detectDocumentType } from "@/utils/document";
 import { toast } from "@/hooks/use-toast";
 import { cn, formatBRL } from "@/lib/utils";
 
@@ -56,10 +56,10 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
   const [isProcessing, setIsProcessing] = useState(false);
   const [payerCpf, setPayerCpf] = useState("");
 
-  // Auto-fill CPF from profile when the stored document is a CPF.
+  // Auto-fill document from profile when available.
   useEffect(() => {
-    if (profile?.document_type === "cpf" && profile.document_number && !payerCpf) {
-      setPayerCpf(formatCPF(profile.document_number));
+    if (profile?.document_number && !payerCpf) {
+      setPayerCpf(formatDocument(profile.document_number, profile.document_type || "cpf"));
     }
   }, [profile, payerCpf]);
 
@@ -173,9 +173,13 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
         setStep("confirmation");
       } else {
         // Process payment
-        // Save CPF to profile
+        // Save document to profile
         if (payerCpf) {
-          await supabase.from("profiles").update({ document_number: payerCpf.replace(/\D/g, ""), document_type: "cpf" }).eq("id", user.id);
+          const cleanDoc = payerCpf.replace(/\D/g, "");
+          const docType = detectDocumentType(cleanDoc);
+          if (docType) {
+            await supabase.from("profiles").update({ document_number: cleanDoc, document_type: docType }).eq("id", user.id);
+          }
         }
         const payResult = await createPayment(newOrderId, method as "pix" | "credit_card" | "boleto", cardData, installments, payerCpf);
 

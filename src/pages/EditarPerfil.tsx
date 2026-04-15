@@ -19,8 +19,9 @@ import {
 import { ArrowLeft, Camera, Lock, Loader2, User, MapPin, Mail, Lock as LockIcon } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { EVENT_CATEGORIES } from "@/lib/categories";
-import { validateCPF, formatCPF, formatPhone } from "@/lib/validators";
+import { validateDocument, formatPhone } from "@/lib/validators";
 import { fetchAddress, formatCEP } from "@/lib/cep";
+import { DocumentInput } from "@/components/DocumentInput";
 import { useIBGEStates } from "@/hooks/useIBGELocations";
 
 export default function EditarPerfil() {
@@ -30,7 +31,7 @@ export default function EditarPerfil() {
 
   // Personal data
   const [fullName, setFullName] = useState(profile?.full_name || "");
-  const [cpf, setCpf] = useState(profile?.cpf ? formatCPF(profile.cpf) : "");
+  const [documentNumber, setDocumentNumber] = useState(profile?.document_number || "");
   const [birthDate, setBirthDate] = useState(profile?.birth_date || "");
   const [phone, setPhone] = useState(profile?.phone ? formatPhone(profile.phone) : "");
 
@@ -133,8 +134,9 @@ export default function EditarPerfil() {
       toast({ title: "O nome é obrigatório", variant: "destructive" });
       return;
     }
-    if (cpf.trim() && !validateCPF(cpf)) {
-      toast({ title: "CPF inválido", description: "Verifique o CPF informado.", variant: "destructive" });
+    const documentValidation = validateDocument(documentNumber);
+    if (documentNumber.trim() && (!documentValidation.valid || !documentValidation.type)) {
+      toast({ title: documentValidation.error || "Documento inválido", description: "Verifique o documento informado.", variant: "destructive" });
       return;
     }
     if (phone.trim() && phone.replace(/\D/g, "").length < 10) {
@@ -148,7 +150,6 @@ export default function EditarPerfil() {
 
     setSaving(true);
 
-    const cleanCpf = cpf.replace(/\D/g, "");
     const cleanPhone = phone.replace(/\D/g, "");
     const cleanCep = cep.replace(/\D/g, "");
 
@@ -156,7 +157,8 @@ export default function EditarPerfil() {
       .from("profiles")
       .update({
         full_name: fullName.trim(),
-        cpf: cleanCpf || null,
+        document_number: documentNumber.replace(/\D/g, "") || null,
+        document_type: documentValidation.type || null,
         birth_date: birthDate || null,
         phone: cleanPhone || null,
         cep: cleanCep || null,
@@ -261,8 +263,13 @@ export default function EditarPerfil() {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs font-medium">CPF</Label>
-                      <Input value={cpf} onChange={(e) => setCpf(formatCPF(e.target.value))} placeholder="000.000.000-00" maxLength={14} className="mt-1" />
+                      <Label className="text-xs font-medium">CPF ou CNPJ</Label>
+                      <DocumentInput
+                        value={documentNumber}
+                        onChange={setDocumentNumber}
+                        label=""
+                        placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                      />
                     </div>
                     <div>
                       <Label className="text-xs font-medium">Nascimento</Label>
@@ -457,8 +464,13 @@ export default function EditarPerfil() {
                     <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Seu nome completo" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="font-medium">CPF</Label>
-                    <Input value={cpf} onChange={(e) => setCpf(formatCPF(e.target.value))} placeholder="000.000.000-00" maxLength={14} />
+                    <Label className="font-medium">CPF ou CNPJ</Label>
+                    <DocumentInput
+                      value={documentNumber}
+                      onChange={setDocumentNumber}
+                      label=""
+                      placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label className="font-medium">Data de Nascimento</Label>

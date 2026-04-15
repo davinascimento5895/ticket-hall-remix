@@ -119,7 +119,6 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
         data: { full_name: regName },
       },
     });
-
     setLoading(false);
     if (error) {
       console.error("BecomeProducer register error:", error);
@@ -157,7 +156,9 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
     }
     setLoading(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       const result = await supabase.functions.invoke("become-producer", {
+        headers: session ? { Authorization: `Bearer ${session.access_token}` } : undefined,
         body: { document_number: documentNumber, document_type: documentValidation.type, phone: cleanPhone },
       });
       if (result.error) throw result.error;

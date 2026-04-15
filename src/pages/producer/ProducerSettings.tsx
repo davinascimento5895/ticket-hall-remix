@@ -11,6 +11,8 @@ import { updateProfile } from "@/lib/api";
 import { supabase } from "@/integrations/supabase/client";
 import { getBankAccounts, createBankAccount, deleteBankAccount } from "@/lib/api-financial";
 import { toast } from "@/hooks/use-toast";
+import { DocumentInput } from "@/components/DocumentInput";
+import { validateDocument } from "@/utils/document";
 import { Trash2, Upload, Loader2, Camera, ImageIcon, ShieldCheck, Activity, Wallet, Link2, ArrowUpRight } from "lucide-react";
 
 export default function ProducerSettings() {
@@ -19,7 +21,7 @@ export default function ProducerSettings() {
   const [form, setForm] = useState({
     full_name: profile?.full_name || "",
     phone: profile?.phone || "",
-    documento: (profile as any)?.cnpj || profile?.cpf || "",
+    documento: profile?.document_number || (profile as any)?.cnpj || profile?.cpf || "",
   });
 
   const [bankForm, setBankForm] = useState({
@@ -54,13 +56,13 @@ export default function ProducerSettings() {
   const saveMutation = useMutation({
     mutationFn: () => {
       const digits = form.documento.replace(/\D/g, "");
-      const isCNPJ = digits.length > 11;
+      const docValidation = validateDocument(digits);
       return updateProfile(user!.id, {
         full_name: form.full_name,
         phone: form.phone,
-        cpf: isCNPJ ? null : form.documento || null,
-        cnpj: isCNPJ ? form.documento : null,
-      } as any);
+        document_number: docValidation.valid ? digits : null,
+        document_type: docValidation.type || null,
+      });
     },
     onSuccess: () => toast({ title: "Perfil atualizado!" }),
     onError: (err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
@@ -213,7 +215,11 @@ export default function ProducerSettings() {
             <CardContent className="space-y-4">
               <div><Label>Nome completo</Label><Input value={form.full_name} onChange={(e) => setForm((p) => ({ ...p, full_name: e.target.value }))} /></div>
               <div><Label>Telefone</Label><Input value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} placeholder="(11) 99999-9999" /></div>
-              <div><Label>CPF / CNPJ</Label><Input value={form.documento} onChange={(e) => setForm((p) => ({ ...p, documento: e.target.value }))} placeholder="000.000.000-00 ou 00.000.000/0000-00" /></div>
+              <DocumentInput
+                label="CPF / CNPJ"
+                value={form.documento}
+                onChange={(value) => setForm((p) => ({ ...p, documento: value }))}
+              />
               <p className="text-xs text-muted-foreground">
                 Esses dados aparecem em comunicações oficiais e ajudam na validação da conta para saques.
               </p>
@@ -348,7 +354,7 @@ export default function ProducerSettings() {
                     onClick={() => setForm({
                       full_name: profile?.full_name || "",
                       phone: profile?.phone || "",
-                      documento: (profile as any)?.cnpj || profile?.cpf || "",
+                      documento: profile?.document_number || (profile as any)?.cnpj || profile?.cpf || "",
                     })}
                   >
                     Cancelar

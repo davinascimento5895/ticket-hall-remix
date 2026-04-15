@@ -15,6 +15,7 @@ import { getCheckoutQuestions, saveOrderProducts } from "@/lib/api-checkout";
 import { createPayment, CreditCardData } from "@/lib/api-payment";
 import { toast } from "@/hooks/use-toast";
 import { formatBRL } from "@/lib/utils";
+import { detectDocumentType } from "@/utils/document";
 
 const steps = ["Comprador", "Participantes", "Pagamento", "Confirmação"];
 
@@ -137,8 +138,12 @@ export default function Checkout() {
       if (buyerData.cpf || buyerData.phone) {
         const profileUpdate: Record<string, string> = {};
         if (buyerData.cpf) {
-          profileUpdate.document_number = buyerData.cpf.replace(/\D/g, "");
-          profileUpdate.document_type = "cpf";
+          const cleanDoc = buyerData.cpf.replace(/\D/g, "");
+          const docType = detectDocumentType(cleanDoc);
+          if (docType) {
+            profileUpdate.document_number = cleanDoc;
+            profileUpdate.document_type = docType;
+          }
         }
         if (buyerData.phone) profileUpdate.phone = buyerData.phone;
         if (buyerData.fullName) profileUpdate.full_name = buyerData.fullName;
@@ -313,7 +318,11 @@ export default function Checkout() {
 
     // Save payer CPF to profile
     if (buyerData.cpf) {
-      await supabase.from("profiles").update({ document_number: buyerData.cpf.replace(/\D/g, ""), document_type: "cpf" }).eq("id", user!.id);
+      const cleanDoc = buyerData.cpf.replace(/\D/g, "");
+      const docType = detectDocumentType(cleanDoc);
+      if (docType) {
+        await supabase.from("profiles").update({ document_number: cleanDoc, document_type: docType }).eq("id", user!.id);
+      }
     }
 
     setIsProcessingPayment(true);

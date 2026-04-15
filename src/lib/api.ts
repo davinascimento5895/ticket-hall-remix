@@ -130,14 +130,14 @@ export async function updateProfile(userId: string, updates: {
   full_name?: string;
   phone?: string;
   cpf?: string;
+  cnpj?: string;
   avatar_url?: string;
+  document_number?: string | null;
+  document_type?: "cpf" | "cnpj";
 }) {
   const { data, error } = await supabase
     .from("profiles")
     .update(updates)
-     document_number?: string | null;
-  document_type?: "cpf" | "cnpj";
-)
     .select()
     .single();
   if (error) throw error;

@@ -1,0 +1,454 @@
+- generic:
+  - generic:
+    - list
+    - generic:
+      - banner:
+        - generic:
+          - link:
+            - /url: /
+            - generic:
+              - img
+          - navigation:
+            - link:
+              - /url: /eventos
+              - text: Eventos
+            - link:
+              - /url: /revenda
+              - text: Revenda
+            - link:
+              - /url: /produtores
+              - text: Produtores
+            - link:
+              - /url: /blog
+              - text: Blog
+          - generic:
+            - button:
+              - img
+              - generic: Toggle theme
+            - link:
+              - /url: /carrinho
+              - img
+            - button:
+              - img
+              - text: Crie seu evento
+            - button: Entrar
+            - button: Criar Conta
+      - main:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - heading [level=1]:
+                  - text: Seus ingressos para
+                  - generic:
+                    - generic: teatros
+                - paragraph: Compre, transfira e gerencie seus ingressos com segurança. A plataforma completa para produtores e compradores.
+                - generic:
+                  - generic:
+                    - generic:
+                      - textbox:
+                        - /placeholder: Buscar eventos, shows, cidades...
+                      - generic:
+                        - button:
+                          - img
+                - generic:
+                  - link:
+                    - /url: /eventos
+                    - text: Explorar eventos
+                    - img
+                  - link:
+                    - /url: /produtores
+                    - text: Sou produtor
+              - generic:
+                - generic:
+                  - region:
+                    - generic:
+                      - generic:
+                        - group:
+                          - generic:
+                            - generic:
+                              - img
+                              - generic: Show
+                        - group:
+                          - generic:
+                            - generic:
+                              - img
+                              - generic: Palestra
+                        - group:
+                          - generic:
+                            - generic:
+                              - img
+                              - generic: Festival
+                        - group:
+                          - generic:
+                            - generic:
+                              - img
+                              - generic: Teatro
+                        - group:
+                          - generic:
+                            - generic:
+                              - img
+                              - generic: Congresso
+                        - group:
+                          - generic:
+                            - generic:
+                              - img
+                              - generic: Workshop
+                  - generic:
+                    - button
+                    - button
+                    - button
+                    - button
+                    - button
+                    - button
+        - generic:
+          - generic:
+            - generic:
+              - heading [level=2]: Explore nossas coleções
+              - link:
+                - /url: /eventos
+                - text: Ver tudo
+            - generic:
+              - button:
+                - img
+              - button:
+                - img
+              - generic:
+                - link:
+                  - /url: /eventos?categoria=shows
+                  - generic:
+                    - generic:
+                      - img
+                    - generic: Festas e Shows
+                - link:
+                  - /url: /eventos?categoria=theater
+                  - generic:
+                    - generic:
+                      - img
+                    - generic: Teatros e Espetáculos
+                - link:
+                  - /url: /eventos?categoria=standup
+                  - generic:
+                    - generic:
+                      - img
+                    - generic: Stand Up Comedy
+                - link:
+                  - /url: /eventos?categoria=sports
+                  - generic:
+                    - generic:
+                      - img
+                    - generic: Esportes
+                - link:
+                  - /url: /eventos?categoria=tours
+                  - generic:
+                    - generic:
+                      - img
+                    - generic: Passeios e Tours
+                - link:
+                  - /url: /eventos?categoria=deals
+                  - generic:
+                    - generic:
+                      - img
+                    - generic: Descontos Exclusivos
+                - link:
+                  - /url: /eventos?categoria=corporate
+                  - generic:
+                    - generic:
+                      - img
+                    - generic: Congressos e Palestras
+                - link:
+                  - /url: /eventos?categoria=kids
+                  - generic:
+                    - generic:
+                      - img
+                    - generic: Infantil
+                - link:
+                  - /url: /eventos?categoria=shopping
+                  - generic:
+                    - generic:
+                      - img
+                    - generic: Eventos com Loja
+                - link:
+                  - /url: /eventos?categoria=other
+                  - generic:
+                    - generic:
+                      - img
+                    - generic: Outros
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - heading [level=2]: Em destaque
+                - paragraph: Os eventos mais procurados da semana
+              - link:
+                - /url: /eventos
+                - text: Ver todos
+                - img
+            - paragraph: Nenhum evento em destaque no momento.
+        - generic:
+          - generic:
+            - generic:
+              - heading [level=2]: Por que o TicketHall?
+              - paragraph: Tudo o que você precisa para comprar e vender ingressos online.
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                - heading [level=3]: Pagamento seguro
+                - paragraph: PIX, cartão de crédito e boleto. Checkout rápido e protegido.
+              - generic:
+                - generic:
+                  - img
+                - heading [level=3]: Ingresso digital
+                - paragraph: QR Code único no celular. Sem necessidade de impressão.
+              - generic:
+                - generic:
+                  - img
+                - heading [level=3]: Entrega instantânea
+                - paragraph: Receba seus ingressos por e-mail e na área logada em segundos.
+              - generic:
+                - generic:
+                  - img
+                - heading [level=3]: Garantia de reembolso
+                - paragraph: Solicite reembolso facilmente caso o evento seja cancelado.
+              - generic:
+                - generic:
+                  - img
+                - heading [level=3]: Transferência fácil
+                - paragraph: Transfira ingressos para amigos com apenas um clique.
+              - generic:
+                - generic:
+                  - img
+                - heading [level=3]: Check-in rápido
+                - paragraph: Check-in na entrada do evento com leitura de QR Code.
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - heading [level=2]: O melhor de cada cidade
+                - paragraph: Encontre eventos na sua cidade
+              - link:
+                - /url: /cidades
+                - text: Ver tudo
+                - img
+            - generic:
+              - button:
+                - img
+              - button:
+                - img
+              - generic:
+                - link:
+                  - /url: /eventos?cidade=S%C3%A3o%20Paulo
+                  - img
+                  - generic:
+                    - heading [level=3]: São Paulo
+                    - paragraph: SP
+                - link:
+                  - /url: /eventos?cidade=Rio%20de%20Janeiro
+                  - img
+                  - generic:
+                    - heading [level=3]: Rio de Janeiro
+                    - paragraph: RJ
+                - link:
+                  - /url: /eventos?cidade=Bras%C3%ADlia
+                  - img
+                  - generic:
+                    - heading [level=3]: Brasília
+                    - paragraph: DF
+                - link:
+                  - /url: /eventos?cidade=Salvador
+                  - img
+                  - generic:
+                    - heading [level=3]: Salvador
+                    - paragraph: BA
+                - link:
+                  - /url: /eventos?cidade=Belo%20Horizonte
+                  - img
+                  - generic:
+                    - heading [level=3]: Belo Horizonte
+                    - paragraph: MG
+                - link:
+                  - /url: /eventos?cidade=Curitiba
+                  - img
+                  - generic:
+                    - heading [level=3]: Curitiba
+                    - paragraph: PR
+                - link:
+                  - /url: /eventos?cidade=Recife
+                  - img
+                  - generic:
+                    - heading [level=3]: Recife
+                    - paragraph: PE
+                - link:
+                  - /url: /eventos?cidade=Porto%20Alegre
+                  - img
+                  - generic:
+                    - heading [level=3]: Porto Alegre
+                    - paragraph: RS
+                - link:
+                  - /url: /eventos?cidade=Florian%C3%B3polis
+                  - img
+                  - generic:
+                    - heading [level=3]: Florianópolis
+                    - paragraph: SC
+        - generic:
+          - generic:
+            - heading [level=2]: É produtor de eventos?
+            - paragraph: Crie seus eventos, venda ingressos e gerencie check-in com uma plataforma completa e sem mensalidade.
+            - link:
+              - /url: /produtores
+              - text: Começar a vender grátis
+              - img
+        - generic:
+          - generic:
+            - heading [level=2]: Perguntas frequentes
+            - generic:
+              - generic:
+                - heading [level=3]:
+                  - button:
+                    - text: Como compro ingressos?
+                    - img
+              - generic:
+                - heading [level=3]:
+                  - button:
+                    - text: É seguro comprar pelo TicketHall?
+                    - img
+              - generic:
+                - heading [level=3]:
+                  - button:
+                    - text: Posso transferir meu ingresso?
+                    - img
+              - generic:
+                - heading [level=3]:
+                  - button:
+                    - text: Como funciona o reembolso?
+                    - img
+              - generic:
+                - heading [level=3]:
+                  - button:
+                    - text: Meu ingresso é digital ou preciso imprimir?
+                    - img
+              - generic:
+                - heading [level=3]:
+                  - button:
+                    - text: Como funciona o check-in no evento?
+                    - img
+              - generic:
+                - heading [level=3]:
+                  - button:
+                    - text: Posso parcelar minha compra?
+                    - img
+      - contentinfo:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - img
+              - paragraph: A plataforma de ingressos com a menor taxa do Brasil.
+              - button:
+                - img
+                - text: Crie seu evento
+            - generic:
+              - heading [level=4]: Plataforma
+              - list:
+                - listitem:
+                  - link:
+                    - /url: /eventos
+                    - text: Eventos
+                - listitem:
+                  - link:
+                    - /url: /produtores
+                    - text: Para Produtores
+                - listitem:
+                  - link:
+                    - /url: /blog
+                    - text: Blog
+                - listitem:
+                  - link:
+                    - /url: /changelog
+                    - text: Changelog
+            - generic:
+              - heading [level=4]: Legal & Suporte
+              - list:
+                - listitem:
+                  - link:
+                    - /url: /termos-de-uso/cliente
+                    - text: Termos para Clientes
+                - listitem:
+                  - link:
+                    - /url: /termos-de-uso/produtor
+                    - text: Termos para Produtores
+                - listitem:
+                  - link:
+                    - /url: /politica-de-privacidade
+                    - text: Política de Privacidade
+                - listitem:
+                  - link:
+                    - /url: /faq
+                    - text: Perguntas Frequentes
+            - generic:
+              - heading [level=4]: Contato
+              - list:
+                - listitem:
+                  - link:
+                    - /url: mailto:contato@tickethall.com.br
+                    - text: contato@tickethall.com.br
+              - generic:
+                - link:
+                  - /url: https://instagram.com/tickethallbrasil
+                  - img
+                - link:
+                  - /url: https://linkedin.com/company/tickethall
+                  - img
+          - generic: © 2026 TicketHall. Todos os direitos reservados. Uma empresa do grupo ioMob Tecnologia LTDA - CNPJ 29.256.741/0001-10
+    - button:
+      - img
+  - dialog [ref=e418]:
+    - generic [ref=e419]:
+      - generic [ref=e420]:
+        - generic [ref=e421]:
+          - heading "Crie sua conta de produtor" [level=2] [ref=e422]
+          - paragraph [ref=e423]: Para criar eventos, você precisa de uma conta.
+        - generic [ref=e424]:
+          - button "Entrar" [active] [ref=e425] [cursor=pointer]
+          - button "Criar Conta" [ref=e426] [cursor=pointer]
+        - generic [ref=e427]:
+          - generic [ref=e428]:
+            - text: Nome completo
+            - textbox "Seu nome" [ref=e429]
+          - generic [ref=e430]:
+            - text: E-mail
+            - textbox "seu@email.com" [ref=e431]
+          - generic [ref=e432]:
+            - text: Senha
+            - generic [ref=e433]:
+              - textbox "Mínimo 6 caracteres" [ref=e434]
+              - button "Mostrar senha" [ref=e435] [cursor=pointer]:
+                - img [ref=e436]
+          - generic [ref=e439]:
+            - text: Confirmar senha
+            - generic [ref=e440]:
+              - textbox "Repita a senha" [ref=e441]
+              - button "Mostrar senha" [ref=e442] [cursor=pointer]:
+                - img [ref=e443]
+          - button "Criar conta e continuar" [ref=e446] [cursor=pointer]:
+            - img
+            - text: Criar conta e continuar
+          - paragraph [ref=e447]:
+            - text: Ao criar sua conta, você concorda com os
+            - link "Termos de Uso do Produtor" [ref=e448] [cursor=pointer]:
+              - /url: /termos-de-uso/produtor
+            - text: e
+            - link "Política de Privacidade" [ref=e449] [cursor=pointer]:
+              - /url: /politica-de-privacidade
+            - text: .
+        - generic [ref=e454]: ou
+        - button "Continuar com Google" [ref=e455] [cursor=pointer]:
+          - img
+          - text: Continuar com Google
+        - paragraph [ref=e456]:
+          - text: Já tem conta?
+          - button "Entrar" [ref=e457] [cursor=pointer]
+      - button "Close" [ref=e458] [cursor=pointer]:
+        - img [ref=e459]
+        - generic [ref=e462]: Close
