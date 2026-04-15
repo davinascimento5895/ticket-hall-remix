@@ -170,6 +170,17 @@ export default function Checkout() {
 
       // Build billing address string
       const billingAddress = [buyerData.street, buyerData.addressNumber, buyerData.complement, buyerData.neighborhood, buyerData.city, buyerData.state, buyerData.cep].filter(Boolean).join(", ");
+      const orderDebugContext = {
+        eventId,
+        buyerId: user.id,
+        tierIds,
+        quantities,
+        couponCode: couponCode?.trim() || null,
+        promoterEventId,
+        billingAddress,
+        isFreeCart,
+        itemCount: items.length,
+      };
 
       // Create order via server-side RPC (includes billing_address for free orders)
       const { data: rpcResult, error: rpcErr } = await supabase.rpc("create_order_validated", {
@@ -184,6 +195,10 @@ export default function Checkout() {
       if (rpcErr) throw rpcErr;
       const result = rpcResult as any;
       if (result?.error) {
+        console.error("create_order_validated returned application error:", {
+          error: result.error,
+          context: orderDebugContext,
+        });
         toast({ title: "Erro ao criar pedido", description: result.error, variant: "destructive" });
         setIsCreatingOrder(false);
         return;
@@ -305,7 +320,17 @@ export default function Checkout() {
         setStep(2); // Go to payment
       }
     } catch (error: any) {
-      console.error("Order creation error:", error);
+      console.error("Order creation error:", {
+        error,
+        context: {
+          eventId,
+          buyerId: user?.id ?? null,
+          tierCount: items.length,
+          isFreeCart,
+          couponCode: couponCode?.trim() || null,
+          trackingCode: trackingCode || null,
+        },
+      });
       toast({ title: "Erro ao criar pedido", description: error.message || "Tente novamente.", variant: "destructive" });
     } finally {
       setIsCreatingOrder(false);

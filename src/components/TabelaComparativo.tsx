@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, XCircle, ChevronDown, Info } from "lucide-react";
 import {
@@ -252,13 +252,12 @@ function DesktopTable() {
 
           {/* Feature rows */}
           {featureRows.map((feature, i) => {
-            const showCategory = feature.category !== lastCategory;
-            lastCategory = feature.category;
+            const isFirstInCategory = i === 0 || featureRows[i - 1].category !== feature.category;
 
             return (
-              <>
-                {showCategory && (
-                  <tr key={`cat-${feature.category}`} className="border-b border-border">
+              <React.Fragment key={feature.key}>
+                {isFirstInCategory && (
+                  <tr className="border-b border-border">
                     <td
                       colSpan={platforms.length + 1}
                       className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase tracking-wider bg-background"
@@ -268,7 +267,6 @@ function DesktopTable() {
                   </tr>
                 )}
                 <motion.tr
-                  key={feature.key}
                   initial={{ opacity: 0, y: 6 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -291,7 +289,7 @@ function DesktopTable() {
                     </td>
                   ))}
                 </motion.tr>
-              </>
+              </React.Fragment>
             );
           })}
 

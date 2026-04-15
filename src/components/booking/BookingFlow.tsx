@@ -112,6 +112,15 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
       if (rpcErr) throw rpcErr;
       const result = rpcResult as any;
       if (result?.error) {
+        console.error("create_order_validated returned application error:", {
+          error: result.error,
+          context: {
+            selectedTierId: selectedTier.id,
+            quantity,
+            couponCode: couponCode?.trim() || null,
+            isFree: result.is_free,
+          },
+        });
         toast({ title: "Erro ao criar pedido", description: result.error, variant: "destructive" });
         setIsProcessing(false);
         return;
@@ -200,7 +209,15 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
         }
       }
     } catch (error: any) {
-      console.error("Booking error:", error);
+      console.error("Booking error:", {
+        error,
+        context: {
+          selectedTierId: selectedTier?.id ?? null,
+          quantity,
+          couponCode: couponCode?.trim() || null,
+          payerCpfProvided: !!payerCpf,
+        },
+      });
       toast({ title: "Erro", description: error.message || "Tente novamente.", variant: "destructive" });
     } finally {
       setIsProcessing(false);

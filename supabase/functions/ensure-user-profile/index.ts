@@ -14,8 +14,17 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("Authorization");
+    console.info("[ensure-user-profile] request", {
+      method: req.method,
+      hasAuthHeader: !!authHeader,
+      authHeaderPrefix: authHeader ? authHeader.slice(0, 24) : null,
+      supabaseUrl: !!Deno.env.get("SUPABASE_URL"),
+      supabaseAnonKey: !!Deno.env.get("SUPABASE_ANON_KEY"),
+      supabaseServiceRoleKey: !!Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
+    });
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: "No auth" }), {
+      console.error("[ensure-user-profile] missing Authorization header");
+      return new Response(JSON.stringify({ error: "No auth", code: "MISSING_AUTH_HEADER" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -32,8 +41,14 @@ Deno.serve(async (req) => {
       data: { user },
       error: userErr,
     } = await userClient.auth.getUser();
+    console.info("[ensure-user-profile] auth lookup", {
+      userId: user?.id ?? null,
+      userEmail: user?.email ?? null,
+      error: userErr?.message ?? null,
+    });
     if (userErr || !user) {
-      return new Response(JSON.stringify({ error: "Invalid token" }), {
+      console.error("[ensure-user-profile] invalid token", { message: userErr?.message ?? null });
+      return new Response(JSON.stringify({ error: "Invalid token", code: "INVALID_TOKEN" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -51,16 +66,24 @@ Deno.serve(async (req) => {
       .select("id")
       .eq("id", user.id)
       .maybeSingle();
+    console.info("[ensure-user-profile] profile lookup", {
+      userId: user.id,
+      profileExists: !!existing,
+    });
 
     if (!existing) {
       // Create profile
-      await admin.from("profiles").insert({
+      const profileInsert = await admin.from("profiles").insert({
         id: user.id,
         full_name:
           user.user_metadata?.full_name ||
           user.user_metadata?.name ||
           "",
         avatar_url: user.user_metadata?.avatar_url || "",
+      });
+      console.info("[ensure-user-profile] profile insert", {
+        userId: user.id,
+        error: profileInsert.error?.message ?? null,
       });
     }
 
@@ -71,11 +94,19 @@ Deno.serve(async (req) => {
       .eq("user_id", user.id)
       .eq("role", "buyer")
       .maybeSingle();
+    console.info("[ensure-user-profile] buyer role lookup", {
+      userId: user.id,
+      roleExists: !!existingRole,
+    });
 
     if (!existingRole) {
-      await admin.from("user_roles").insert({
+      const roleInsert = await admin.from("user_roles").insert({
         user_id: user.id,
         role: "buyer",
+      });
+      console.info("[ensure-user-profile] buyer role insert", {
+        userId: user.id,
+        error: roleInsert.error?.message ?? null,
       });
     }
 
@@ -83,8 +114,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    console.error("ensure-user-profile error:", err);
-    return new Response(JSON.stringify({ error: "Internal error" }), {
+    console.error("[ensure-user-profile] internal error", err);
+    return new Response(JSON.stringify({ error: "Internal error", code: "INTERNAL_ERROR" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

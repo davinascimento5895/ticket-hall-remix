@@ -13,18 +13,31 @@ export default function AuthCallback() {
       navigate(redirectTo, { replace: true });
     };
 
-    supabase.auth.onAuthStateChange((event) => {
+    const processSession = async () => {
+      const { data, error } = await supabase.auth.getSessionFromUrl();
+      if (error) {
+        console.warn("Auth callback session exchange failed:", error);
+      }
+      if (data?.session) {
+        handleRedirect();
+        return;
+      }
+
+      const { data: fallback } = await supabase.auth.getSession();
+      if (fallback.session) {
+        handleRedirect();
+      }
+    };
+
+    processSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN") {
         handleRedirect();
       }
     });
 
-    // Fallback: if already signed in, redirect
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        handleRedirect();
-      }
-    });
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   return (

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -156,11 +156,35 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
     }
     setLoading(true);
     try {
+      console.info("[become-producer] submit start: " + JSON.stringify({
+        userId: user?.id ?? null,
+        role,
+        profileLoaded: !!profile,
+        hasDocument: Boolean(documentNumber),
+        hasPhone: Boolean(phone),
+      }));
       const { data: { session } } = await supabase.auth.getSession();
+      console.info("[become-producer] session snapshot: " + JSON.stringify({
+        hasSession: !!session,
+        userId: session?.user?.id ?? null,
+        expiresAt: session?.expires_at ?? null,
+        hasAccessToken: !!session?.access_token,
+        accessTokenPrefix: session?.access_token ? session.access_token.slice(0, 12) : null,
+      }));
+      if (!session?.access_token) {
+        console.error("[become-producer] missing access token before function invoke");
+        toast({ title: "Sessão inválida. Faça login novamente.", variant: "destructive" });
+        return;
+      }
       const result = await supabase.functions.invoke("become-producer", {
-        headers: session ? { Authorization: `Bearer ${session.access_token}` } : undefined,
+        headers: { Authorization: `Bearer ${session.access_token}` },
         body: { document_number: documentNumber, document_type: documentValidation.type, phone: cleanPhone },
       });
+      console.info("[become-producer] function result: " + JSON.stringify({
+        hasError: !!result.error,
+        data: result.data ?? null,
+        errorMessage: result.error?.message ?? null,
+      }));
       if (result.error) throw result.error;
       const data = result.data as { alreadyProducer?: boolean } | null;
       if (data?.alreadyProducer) {
@@ -171,7 +195,8 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
       await refetchRole();
       onOpenChange(false);
       navigate("/producer/events/new");
-    } catch {
+    } catch (error) {
+      console.error("[become-producer] submit failed", error);
       toast({ title: "Erro ao ativar conta de produtor", variant: "destructive" });
     } finally {
       setLoading(false);
@@ -188,6 +213,10 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
           isUltraCompact ? "w-[min(94vw,360px)] max-w-[360px]" : isCompact ? "w-[min(92vw,390px)] max-w-[390px]" : ""
         }`}
       >
+        <DialogTitle className="sr-only">Conta de produtor</DialogTitle>
+        <DialogDescription className="sr-only">
+          Formulário para autenticar ou criar conta e ativar seu perfil de produtor.
+        </DialogDescription>
         <div className={`${isUltraCompact ? "p-3 space-y-3" : isCompact ? "p-4 space-y-4" : "p-6 space-y-5"}`}>
           {/* Step indicator removed as requested */}
 

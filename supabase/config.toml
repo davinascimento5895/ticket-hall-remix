@@ -8,3 +8,9 @@ verify_jwt = true
 
 [functions.signup-direct]
 verify_jwt = false
+
+[functions.ensure-user-profile]
+verify_jwt = false
+
+[functions.become-producer]
+verify_jwt = false

@@ -66,39 +66,78 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const ensureProfile = async (userId: string) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      await supabase.functions.invoke("ensure-user-profile", {
-        headers: session ? { Authorization: `Bearer ${session.access_token}` } : undefined,
+      console.info("[auth] ensureProfile start: " + JSON.stringify({
+        userId,
+        hasSession: !!session,
+        hasAccessToken: !!session?.access_token,
+        sessionUserId: session?.user?.id ?? null,
+      }));
+      if (!session?.access_token) {
+        console.warn("ensure-user-profile skipped: no active auth session");
+        return;
+      }
+      const result = await supabase.functions.invoke("ensure-user-profile", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
+      console.info("[auth] ensureProfile result: " + JSON.stringify({
+        error: result.error?.message ?? null,
+        data: result.data ?? null,
+      }));
     } catch (e) {
-      console.warn("ensure-user-profile failed (non-blocking):", e);
+      console.warn("[auth] ensure-user-profile failed (non-blocking):", e);
     }
   };
 
 
   const fetchProfile = async (userId: string) => {
-    // Tentativa 1: select completo com todas as colunas que o código espera
-    let { data, error } = await supabase
+    // Tentativa 1: select completo de colunas existentes no esquema atual
+    const result = await supabase
       .from("profiles")
-      .select("id, full_name, avatar_url, phone, document_number, document_type, birth_date, cep, street, neighborhood, address_number, complement, city, state, producer_status, organizer_slug, organizer_bio, organizer_instagram, organizer_facebook, organizer_website, organizer_logo_url, organizer_banner_url")
+      .select("*")
       .eq("id", userId)
       .single();
 
-    // Fallback: se o schema do banco estiver desatualizado (ex: colunas inexistentes),
-    // fazemos um select básico para não quebrar a sessão do usuário.
-    if (error) {
-      console.warn("fetchProfile full select failed, trying fallback:", error);
+    let profileData: AuthContextType["profile"] | null = null;
+
+    if (!result.error && result.data) {
+      profileData = result.data as unknown as AuthContextType["profile"];
+      console.info("[auth] fetchProfile success: " + JSON.stringify({
+        userId,
+        selectedFields: "all-existing",
+        hasProfile: !!profileData,
+      }));
+    } else {
+      console.warn("[auth] fetchProfile full select failed, trying fallback: " + JSON.stringify({
+        userId,
+        code: (result.error as any)?.code ?? null,
+        message: (result.error as any)?.message ?? null,
+        hint: (result.error as any)?.hint ?? null,
+        details: (result.error as any)?.details ?? null,
+      }));
       const fallback = await supabase
         .from("profiles")
         .select("id, full_name, avatar_url, phone, document_number, document_type")
         .eq("id", userId)
         .single();
-      data = fallback.data;
-      if (fallback.error) {
-        console.error("fetchProfile fallback also failed:", fallback.error);
+      if (!fallback.error && fallback.data) {
+        profileData = fallback.data as unknown as AuthContextType["profile"];
+        console.info("[auth] fetchProfile fallback success", {
+          userId,
+          selectedFields: "safe",
+          hasProfile: !!profileData,
+        });
+      } else {
+        console.error("[auth] fetchProfile fallback also failed", {
+          userId,
+          code: (fallback.error as any)?.code ?? null,
+          message: (fallback.error as any)?.message ?? null,
+          hint: (fallback.error as any)?.hint ?? null,
+          details: (fallback.error as any)?.details ?? null,
+        });
       }
     }
 
-    setProfile(data);
+    setProfile(profileData);
   };
 
   const ROLE_PRIORITY: AppRole[] = ["admin", "producer", "staff", "buyer"];
@@ -128,6 +167,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let sessionHandled = false;
 
     const handleSession = (session: Session | null) => {
+      console.info("[auth] handleSession: " + JSON.stringify({
+        hasSession: !!session,
+        userId: session?.user?.id ?? null,
+        expiresAt: session?.expires_at ?? null,
+        accessTokenPrefix: session?.access_token ? session.access_token.slice(0, 12) : null,
+      }));
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -189,6 +234,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refetchRole = async () => {
     const { data: { session: s } } = await supabase.auth.getSession();
+    console.info("[auth] refetchRole", {
+      hasSession: !!s,
+      userId: s?.user?.id ?? null,
+      hasAccessToken: !!s?.access_token,
+    });
     if (s?.user) {
       await Promise.all([fetchProfile(s.user.id), fetchRole(s.user.id)]);
     }
