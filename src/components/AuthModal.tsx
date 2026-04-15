@@ -72,22 +72,32 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login", redirectTo
         return;
       }
     } else {
-      const { error } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          data: { full_name: data.name },
-          emailRedirectTo: window.location.origin,
+      const response = await supabase.functions.invoke("signup-direct", {
+        body: {
+          email: data.email,
+          password: data.password,
+          full_name: data.name,
         },
       });
 
-      setLoading(false);
-      if (error) {
-        toast({ title: "Erro ao criar conta", description: translateAuthError(error.message), variant: "destructive" });
+      if (response.error) {
+        setLoading(false);
+        toast({ title: "Erro ao criar conta", description: translateAuthError(response.error.message), variant: "destructive" });
         return;
       }
 
-      toast({ title: "Conta criada com sucesso!", description: "Verifique seu e-mail para confirmar sua conta antes de entrar." });
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
+
+      setLoading(false);
+      if (signInError) {
+        toast({ title: "Conta criada com sucesso!", description: "Conta criada sem confirmação de e-mail. Faça login com suas credenciais.", variant: "default" });
+        return;
+      }
+
+      toast({ title: "Conta criada com sucesso!", description: "Você já está logado e não precisa confirmar o e-mail." });
     }
 
     onOpenChange(false);

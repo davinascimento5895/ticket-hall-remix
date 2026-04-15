@@ -71,7 +71,7 @@ serve(async (req) => {
 
     if (paidOrders && paidOrders.length > 0) {
       const asaasApiKey = Deno.env.get("ASAAS_API_KEY");
-      const asaasBaseUrl = Deno.env.get("ASAAS_BASE_URL") || "https://sandbox.asaas.com/api/v3";
+      const asaasBaseUrl = Deno.env.get("ASAAS_BASE_URL") || "https://api-sandbox.asaas.com/v3";
 
       for (const order of paidOrders) {
         // Try to refund via Asaas if configured and has payment ID

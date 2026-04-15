@@ -110,18 +110,32 @@ export function BecomeProducerModal({ open, onOpenChange }: BecomeProducerModalP
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email: regEmail,
-      password: regPassword,
-      options: {
-        data: { full_name: regName },
-        emailRedirectTo: window.location.origin,
+    const response = await supabase.functions.invoke("signup-direct", {
+      body: {
+        email: regEmail,
+        password: regPassword,
+        full_name: regName,
       },
     });
-    setLoading(false);
-    if (error) {
-      console.error("BecomeProducer register error:", error);
+
+    if (response.error) {
+      setLoading(false);
+      console.error("BecomeProducer register error:", response.error);
       toast({ title: "Erro ao criar conta", variant: "destructive" });
+      return;
+    }
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: regEmail,
+      password: regPassword,
+    });
+
+    setLoading(false);
+
+    if (signInError) {
+      console.error("BecomeProducer login after signup error:", signInError);
+      toast({ title: "Conta criada com sucesso!", description: "Conta criada sem confirmação de e-mail. Faça login com suas credenciais.", variant: "default" });
+      return;
     }
   };
 

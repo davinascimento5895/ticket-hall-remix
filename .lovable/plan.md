@@ -126,7 +126,7 @@ Business Case & Product Design Analysis completo fornecido pelo cliente em 2026-
 
 ### Bloco 2 — Edge Functions de Pagamento (Asaas)
 - create-payment, asaas-webhook, create-producer-account
-- Secrets: ASAAS_API_KEY, ASAAS_BASE_URL, QR_SECRET
+- Secrets: ASAAS_API_KEY, ASAAS_BASE_URL, ASAAS_WEBHOOK_TOKEN, ASAAS_WEBHOOK_SECRET, QR_SECRET, CRON_SECRET
 
 ### Bloco 3 — Checkout Real
 - Conectar UI ao create-payment
