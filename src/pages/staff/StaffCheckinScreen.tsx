@@ -47,6 +47,8 @@ interface FeedbackState {
   attendeeEmail?: string;
   tierName?: string;
   checkedInAt?: string;
+  checkedInBy?: string;
+  checkedInByName?: string;
 }
 
 interface HistoryEntry {
@@ -54,6 +56,8 @@ interface HistoryEntry {
   name: string;
   time: string;
   result: ScanResult;
+  checkedInAt?: string;
+  checkedInByName?: string;
 }
 
 interface TicketRow {
@@ -63,6 +67,7 @@ interface TicketRow {
   status: string | null;
   tier_id: string | null;
   order_id: string | null;
+  checked_in_at?: string | null;
   ticket_tiers: { name: string } | null;
   profiles: { full_name: string | null; email: string | null } | null;
 }
@@ -229,8 +234,8 @@ export default function StaffCheckinScreen() {
   }, [user, loading, eventId, fetchCounters]);
 
   // ─── Show feedback (stable ref-based) ───
-  const showFeedback = useCallback((result: ScanResult, message: string, attendeeName?: string, tierName?: string, checkedInAt?: string, attendeeEmail?: string) => {
-    setFeedback({ result, message, attendeeName, attendeeEmail, tierName, checkedInAt });
+  const showFeedback = useCallback((result: ScanResult, message: string, attendeeName?: string, tierName?: string, checkedInAt?: string, attendeeEmail?: string, checkedInBy?: string, checkedInByName?: string) => {
+    setFeedback({ result, message, attendeeName, attendeeEmail, tierName, checkedInAt, checkedInBy, checkedInByName });
 
     // Audio + haptic via ref to avoid stale closure
     if (soundRef.current) {
@@ -248,6 +253,8 @@ export default function StaffCheckinScreen() {
       name: displayName,
       time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "America/Sao_Paulo" }),
       result,
+      checkedInAt,
+      checkedInByName,
     }, ...prev].slice(0, 50));
 
     // Auto-dismiss
@@ -279,7 +286,7 @@ export default function StaffCheckinScreen() {
         { qrCode, scannedBy: user?.id, checkinListId: staffCheckinListId || undefined },
         session.access_token,
       );
-      showFeedback(result.result as ScanResult, result.message, result.attendeeName, result.tierName, result.checkedInAt, result.attendeeEmail);
+      showFeedback(result.result as ScanResult, result.message, result.attendeeName, result.tierName, result.checkedInAt, result.attendeeEmail, result.checkedInBy, result.checkedInByName);
     } catch (err: any) {
       showFeedback("error", err?.message || "Erro desconhecido");
     }
@@ -341,49 +348,89 @@ export default function StaffCheckinScreen() {
     const safeQuery = q.replace(/[%_,]/g, "");
 
     try {
-      // Causa raiz: PostgREST não permite misturar colunas da tabela principal
-      // e foreign table dentro do mesmo .or() sem foreignTable. Fazemos duas
-      // buscas separadas e unimos os resultados client-side.
-      const ticketFilters = [
-        `attendee_name.ilike.%${safeQuery}%`,
-        `attendee_email.ilike.%${safeQuery}%`,
-        `order_id.ilike.%${safeQuery}%`,
-        `id.ilike.%${safeQuery}%`,
-      ];
+      // Estratégia robusta: PostgREST NÃO suporta ilike em uuid nem ::text cast dentro de or().
+      // 1) Busca perfis por nome/email.
+      // 2) Busca tickets por attendee_name/email (texto) — SEMPRE seguro.
+      // 3) Se a query for um UUID, busca tickets por eq(id) e eq(order_id) em paralelo.
+      // 4) Busca tickets pelos owner_id dos perfis encontrados.
+      // 5) Une, deduplica e filtra client-side.
 
-      const [ticketRes, profileRes] = await Promise.all([
+      const isUuid = /^[0-9a-fA-F-]{36}$/.test(safeQuery);
+
+      const baseTicketSelect = "id, attendee_name, attendee_email, status, tier_id, order_id, owner_id, checked_in_at, ticket_tiers(name), profiles!owner_id(full_name, email)";
+      const baseTicketQuery = () =>
         supabase
           .from("tickets")
-          .select("id, attendee_name, attendee_email, status, tier_id, order_id, ticket_tiers(name), profiles(full_name, email)")
+          .select(baseTicketSelect)
           .eq("event_id", eventId)
-          .in("status", ["active", "used"])
-          .or(ticketFilters.join(","))
-          .limit(20),
+          .in("status", ["active", "used"]);
+
+      const ticketTextQuery = baseTicketQuery()
+        .or(`attendee_name.ilike.%${safeQuery}%,attendee_email.ilike.%${safeQuery}%`)
+        .limit(20);
+
+      const extraQueries: Promise<any>[] = [];
+      if (isUuid) {
+        extraQueries.push(baseTicketQuery().eq("id", safeQuery).limit(1));
+        extraQueries.push(baseTicketQuery().eq("order_id", safeQuery).limit(1));
+      }
+
+      const [profileRes, ticketTextRes, ...extraResults] = await Promise.all([
         supabase
-          .from("tickets")
-          .select("id, attendee_name, attendee_email, status, tier_id, order_id, ticket_tiers(name), profiles(full_name, email)")
-          .eq("event_id", eventId)
-          .in("status", ["active", "used"])
-          .or(`full_name.ilike.%${safeQuery}%,email.ilike.%${safeQuery}%`, { foreignTable: "profiles" })
-          .limit(20),
+          .from("profiles")
+          .select("id, full_name, email")
+          .or(`full_name.ilike.%${safeQuery}%,email.ilike.%${safeQuery}%`)
+          .limit(50),
+        ticketTextQuery,
+        ...extraQueries,
       ]);
 
-      if (ticketRes.error) throw ticketRes.error;
-      if (profileRes.error) throw profileRes.error;
+      // Se achamos perfis, buscamos tickets deles para este evento
+      let ownerIds: string[] = [];
+      if (!profileRes.error && profileRes.data && profileRes.data.length > 0) {
+        ownerIds = profileRes.data.map((p: any) => p.id);
+      }
+
+      let ownerTicketsRes: any = { data: [], error: null };
+      if (ownerIds.length > 0) {
+        ownerTicketsRes = await supabase
+          .from("tickets")
+          .select(baseTicketSelect)
+          .eq("event_id", eventId)
+          .in("status", ["active", "used"])
+          .in("owner_id", ownerIds)
+          .limit(20);
+      }
+
+      if (ticketTextRes.error) throw ticketTextRes.error;
+      if (ownerTicketsRes.error) throw ownerTicketsRes.error;
+      for (const res of extraResults) {
+        if (res.error) throw res.error;
+      }
 
       const normalizedQuery = normalizeSearchText(q);
       const merged = new Map<string, any>();
 
-      for (const ticket of [...(ticketRes.data || []), ...(profileRes.data || [])]) {
+      const allTickets = [
+        ...(ticketTextRes.data || []),
+        ...extraResults.flatMap((res: any) => res.data || []),
+        ...(ownerTicketsRes.data || []),
+      ];
+
+      for (const ticket of allTickets) {
         if (!ticket) continue;
-        const searchable = normalizeSearchText([
-          ticket.attendee_name,
-          ticket.attendee_email,
-          ticket.order_id,
-          ticket.id,
-          ticket.profiles?.full_name,
-          ticket.profiles?.email,
-        ].filter(Boolean).join(" "));
+        const searchable = normalizeSearchText(
+          [
+            ticket.attendee_name,
+            ticket.attendee_email,
+            ticket.order_id,
+            ticket.id,
+            ticket.profiles?.full_name,
+            ticket.profiles?.email,
+          ]
+            .filter(Boolean)
+            .join(" "),
+        );
 
         if (searchable.includes(normalizedQuery)) {
           merged.set(ticket.id, ticket);
@@ -435,7 +482,7 @@ export default function StaffCheckinScreen() {
     }
 
     if (ticket.status === "used") {
-      showFeedback("already_used", "Ingresso já utilizado", ticket.attendee_name || ticket.profiles?.full_name || undefined, undefined, undefined, ticket.attendee_email || ticket.profiles?.email || undefined);
+      showFeedback("already_used", "Ingresso já utilizado", ticket.attendee_name || ticket.profiles?.full_name || undefined, undefined, ticket.checked_in_at || undefined, ticket.attendee_email || ticket.profiles?.email || undefined);
       return;
     }
 
@@ -605,6 +652,12 @@ export default function StaffCheckinScreen() {
                           {feedback.tierName ? ` · ${feedback.tierName}` : ""}
                         </p>
                       )}
+                      {feedback.result === "already_used" && feedback.checkedInAt && (
+                        <p className="text-xs text-yellow-600">
+                          Validado {feedback.checkedInByName ? `por ${feedback.checkedInByName} ` : ""}
+                          em {format(new Date(feedback.checkedInAt), "dd/MM HH:mm", { locale: ptBR })}
+                        </p>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -682,6 +735,11 @@ export default function StaffCheckinScreen() {
                                 <p className="truncate text-sm font-medium">{t.attendee_name || t.profiles?.full_name || "Sem nome"}</p>
                                 <p className="text-xs text-muted-foreground">{(t.attendee_email || t.profiles?.email) ? maskEmail(t.attendee_email || t.profiles?.email || "") : "—"}</p>
                                 <p className="text-xs text-muted-foreground">{(t as any).ticket_tiers?.name || "—"}</p>
+                                {t.status === "used" && t.checked_in_at && (
+                                  <p className="text-[10px] text-muted-foreground">
+                                    Validado em {format(new Date(t.checked_in_at), "dd/MM HH:mm", { locale: ptBR })}
+                                  </p>
+                                )}
                               </div>
                               <Badge variant={t.status === "used" ? "secondary" : "default"} className="text-[10px]">
                                 {t.status === "used" ? "USADO" : "ATIVO"}
@@ -722,7 +780,15 @@ export default function StaffCheckinScreen() {
                       ) : history.map((h) => (
                         <div key={h.id} className="flex items-center gap-2 border-b border-border py-1.5 last:border-0">
                           {h.result === "success" ? <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-accent" /> : h.result === "already_used" ? <AlertTriangle className="h-4 w-4 flex-shrink-0 text-warning" /> : <XCircle className="h-4 w-4 flex-shrink-0 text-destructive" />}
-                          <p className="min-w-0 flex-1 truncate text-sm">{h.name}</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm">{h.name}</p>
+                            {h.checkedInAt && (
+                              <p className="text-[10px] text-muted-foreground">
+                                Já validado em {format(new Date(h.checkedInAt), "dd/MM HH:mm", { locale: ptBR })}
+                                {h.checkedInByName ? ` · ${h.checkedInByName}` : ""}
+                              </p>
+                            )}
+                          </div>
                           <span className="flex-shrink-0 text-xs text-muted-foreground">{h.time}</span>
                         </div>
                       ))}
@@ -805,7 +871,11 @@ export default function StaffCheckinScreen() {
 
               {confirmTicket.status === "used" && (
                 <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs text-warning-foreground">
-                  Esse ingresso já foi validado anteriormente. O sistema vai bloquear nova entrada e mostrar o histórico original.
+                  Esse ingresso já foi validado anteriormente.
+                  {confirmTicket.checked_in_at && (
+                    <span> Em {format(new Date(confirmTicket.checked_in_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}.</span>
+                  )}
+                  {" "}O sistema vai bloquear nova entrada.
                 </div>
               )}
             </div>

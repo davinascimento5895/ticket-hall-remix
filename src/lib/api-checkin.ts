@@ -11,6 +11,8 @@ export interface CheckinResult {
   attendeeEmail?: string;
   tierName?: string;
   checkedInAt?: string;
+  checkedInBy?: string;
+  checkedInByName?: string;
 }
 
 async function resolveAuthToken(authToken?: string) {
@@ -20,9 +22,23 @@ async function resolveAuthToken(authToken?: string) {
   return session?.access_token ?? null;
 }
 
-function tryParseErrorBody(error: unknown): Record<string, unknown> | null {
-  // Supabase functions.invoke sometimes puts the raw response body in error.context.body
+async function tryParseErrorBody(error: unknown): Promise<Record<string, unknown> | null> {
   const ctx = (error as any)?.context;
+
+  // Supabase functions.invoke returns a Response object in context for HTTP errors (4xx/5xx)
+  if (ctx instanceof Response) {
+    try {
+      return await ctx.clone().json();
+    } catch {
+      try {
+        const text = await ctx.clone().text();
+        return JSON.parse(text);
+      } catch {}
+    }
+    return null;
+  }
+
+  // Legacy fallback: raw body in context.body
   if (ctx?.body) {
     const body = ctx.body;
     if (typeof body === "string") {
@@ -35,7 +51,6 @@ function tryParseErrorBody(error: unknown): Record<string, unknown> | null {
         return JSON.parse(new TextDecoder().decode(body));
       } catch {}
     }
-    // ReadableStream or Blob – skip (rare in this path)
   }
   return null;
 }
@@ -64,7 +79,7 @@ export async function validateCheckin(params: {
     if (data && typeof data === "object" && "result" in data) {
       payload = data as Record<string, unknown>;
     } else {
-      payload = tryParseErrorBody(error);
+      payload = await tryParseErrorBody(error);
     }
 
     if (payload && "result" in payload) {

@@ -235,10 +235,16 @@ serve(async (req) => {
 
     // 4. Check if already used
     if (ticket.status === "used") {
+      let checkedInByName: string | null = null;
+      if (ticket.checked_in_by) {
+        const { data: checkedInProfile } = await supabase.from("profiles").select("full_name").eq("id", ticket.checked_in_by).maybeSingle();
+        checkedInByName = checkedInProfile?.full_name || null;
+      }
       await logScan(supabase, { checkinListId, checkinListName, ticketId, qrCode, result: "already_used", deviceId, scannedBy: effectiveScannedBy, operatorName, operatorEmail, verificationMethod: "qr_scan" });
       return jsonResponse({
         success: false, result: "already_used", message: "Ingresso já utilizado",
-        attendeeName: ticket.attendee_name, tierName: (ticket as any).ticket_tiers?.name, phase: "ticket_status", requestId,
+        attendeeName: ticket.attendee_name, attendeeEmail: ticket.attendee_email, tierName: (ticket as any).ticket_tiers?.name, phase: "ticket_status", requestId,
+        checkedInAt: ticket.checked_in_at, checkedInBy: ticket.checked_in_by, checkedInByName,
       }, 409);
     }
 
