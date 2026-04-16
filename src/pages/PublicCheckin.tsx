@@ -68,7 +68,7 @@ export default function PublicCheckin() {
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["checkin-tickets"] });
       setLastResult(result);
-      toast({ title: "Check-in realizado!", description: result.attendeeName });
+      toast({ title: "Check-in realizado!", description: result.attendeeName || result.attendeeEmail || "Participante" });
     },
     onError: (err: any) => {
       setLastResult({ success: false, result: "error", message: err.message });
@@ -83,7 +83,7 @@ export default function PublicCheckin() {
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["checkin-tickets"] });
       setLastResult(result);
-      toast({ title: "Check-in realizado!", description: result.attendeeName });
+      toast({ title: "Check-in realizado!", description: result.attendeeName || result.attendeeEmail || "Participante" });
     },
     onError: (err: any) => {
       setLastResult({ success: false, result: "error", message: err.message });

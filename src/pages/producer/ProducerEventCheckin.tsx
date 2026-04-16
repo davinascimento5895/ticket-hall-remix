@@ -67,7 +67,7 @@ export default function ProducerEventCheckin() {
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["event-tickets-checkin", id] });
       setLastResult(result);
-      toast({ title: "Check-in realizado!", description: result.attendeeName });
+      toast({ title: "Check-in realizado!", description: result.attendeeName || result.attendeeEmail || "Participante" });
     },
     onError: (err: any) => {
       setLastResult({ success: false, result: "error", message: err.message });
@@ -84,7 +84,7 @@ export default function ProducerEventCheckin() {
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["event-tickets-checkin", id] });
       setLastResult(result);
-      toast({ title: "Check-in realizado!", description: result.attendeeName });
+      toast({ title: "Check-in realizado!", description: result.attendeeName || result.attendeeEmail || "Participante" });
     },
     onError: (err: any) => {
       setLastResult({ success: false, result: "error", message: err.message });
@@ -207,8 +207,8 @@ export default function ProducerEventCheckin() {
                 )}
                 <div>
                   <p className="text-sm font-medium text-foreground">{lastResult.message}</p>
-                  {lastResult.attendeeName && (
-                    <p className="text-xs text-muted-foreground">{lastResult.attendeeName} · {lastResult.tierName}</p>
+                  {(lastResult.attendeeName || lastResult.attendeeEmail) && (
+                    <p className="text-xs text-muted-foreground">{lastResult.attendeeName || lastResult.attendeeEmail || "Participante"}{lastResult.tierName ? ` · ${lastResult.tierName}` : ""}</p>
                   )}
                 </div>
               </CardContent>

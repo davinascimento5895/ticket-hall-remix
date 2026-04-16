@@ -150,6 +150,23 @@ export function BookingFlow({ open, onOpenChange, event, tiers }: BookingFlowPro
 
       setOrderId(newOrderId);
 
+      // Save attendee data on reserved tickets (BookingFlow has no attendee form, fallback to buyer profile)
+      const { data: reservedTickets } = await supabase
+        .from("tickets")
+        .select("id")
+        .eq("order_id", newOrderId)
+        .eq("status", "reserved");
+      if (reservedTickets && reservedTickets.length > 0) {
+        const attendeeName = profile?.full_name || user.email || "Participante";
+        const attendeeEmail = user.email || null;
+        for (const ticket of reservedTickets) {
+          await supabase.from("tickets").update({
+            attendee_name: attendeeName,
+            attendee_email: attendeeEmail,
+          }).eq("id", ticket.id);
+        }
+      }
+
       // Free order: confirm immediately via RPC
       if (isFree) {
         const { data: confirmed, error: confirmErr } = await supabase.rpc("confirm_order_payment", {

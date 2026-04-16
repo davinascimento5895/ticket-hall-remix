@@ -233,11 +233,13 @@ export default function Checkout() {
           tierIdx[ticket.tier_id] = idx + 1;
           const key = `${ticket.tier_id}-${idx}`;
           const data = attendeeData[key];
-          if (data) {
-            await supabase.from("tickets").update({
-              attendee_name: data.name, attendee_email: data.email, attendee_cpf: data.cpf || null,
-            }).eq("id", ticket.id);
-          }
+          const fallbackName = buyerData.fullName || user?.email || "Participante";
+          const fallbackEmail = buyerData.email || user?.email || null;
+          await supabase.from("tickets").update({
+            attendee_name: data?.name?.trim() || fallbackName,
+            attendee_email: data?.email?.trim() || fallbackEmail,
+            attendee_cpf: data?.cpf?.trim() || null,
+          }).eq("id", ticket.id);
         }
       }
 

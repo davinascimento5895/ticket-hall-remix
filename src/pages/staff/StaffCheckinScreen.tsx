@@ -44,6 +44,7 @@ interface FeedbackState {
   result: ScanResult;
   message: string;
   attendeeName?: string;
+  attendeeEmail?: string;
   tierName?: string;
   checkedInAt?: string;
 }
@@ -227,8 +228,8 @@ export default function StaffCheckinScreen() {
   }, [user, loading, eventId, fetchCounters]);
 
   // ─── Show feedback (stable ref-based) ───
-  const showFeedback = useCallback((result: ScanResult, message: string, attendeeName?: string, tierName?: string, checkedInAt?: string) => {
-    setFeedback({ result, message, attendeeName, tierName, checkedInAt });
+  const showFeedback = useCallback((result: ScanResult, message: string, attendeeName?: string, tierName?: string, checkedInAt?: string, attendeeEmail?: string) => {
+    setFeedback({ result, message, attendeeName, attendeeEmail, tierName, checkedInAt });
 
     // Audio + haptic via ref to avoid stale closure
     if (soundRef.current) {
@@ -240,9 +241,10 @@ export default function StaffCheckinScreen() {
     else vibrateError();
 
     // History
+    const displayName = attendeeName?.trim() || attendeeEmail || "—";
     setHistory((prev) => [{
       id: crypto.randomUUID(),
-      name: attendeeName || "—",
+      name: displayName,
       time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "America/Sao_Paulo" }),
       result,
     }, ...prev].slice(0, 50));
@@ -276,7 +278,7 @@ export default function StaffCheckinScreen() {
         { qrCode, scannedBy: user?.id, checkinListId: staffCheckinListId || undefined },
         session.access_token,
       );
-      showFeedback(result.result as ScanResult, result.message, result.attendeeName, result.tierName, result.checkedInAt);
+      showFeedback(result.result as ScanResult, result.message, result.attendeeName, result.tierName, result.checkedInAt, result.attendeeEmail);
     } catch (err: any) {
       showFeedback("error", err?.message || "Erro desconhecido");
     }
@@ -410,7 +412,7 @@ export default function StaffCheckinScreen() {
     }
 
     if (ticket.status === "used") {
-      showFeedback("already_used", "Ingresso já utilizado", ticket.attendee_name || undefined);
+      showFeedback("already_used", "Ingresso já utilizado", ticket.attendee_name || undefined, undefined, undefined, ticket.attendee_email || undefined);
       return;
     }
 
@@ -424,7 +426,7 @@ export default function StaffCheckinScreen() {
         { qrCode: t.qr_code, scannedBy: user?.id, checkinListId: staffCheckinListId || undefined },
         session.access_token,
       );
-      showFeedback(result.result as ScanResult, result.message, result.attendeeName, result.tierName, result.checkedInAt);
+      showFeedback(result.result as ScanResult, result.message, result.attendeeName, result.tierName, result.checkedInAt, result.attendeeEmail);
     } catch (err: any) {
       showFeedback("error", err?.message || "Erro ao validar ingresso");
     }
@@ -558,6 +560,29 @@ export default function StaffCheckinScreen() {
                     <Button variant="ghost" size="sm" className="h-8 px-3 text-xs" onClick={() => setInstructionsVisible(true)}>
                       <ClipboardList className="h-4 w-4 mr-2" /> Mostrar instruções
                     </Button>
+                  </CardContent>
+                </Card>
+              )}
+
+              {feedback && (
+                <Card className={feedback.result === "success" ? "border-green-500/50 bg-green-500/5" : feedback.result === "already_used" ? "border-yellow-500/50 bg-yellow-500/5" : "border-destructive/50 bg-destructive/5"}>
+                  <CardContent className="py-3 flex items-center gap-3">
+                    {feedback.result === "success" ? (
+                      <CheckCircle2 className="h-6 w-6 text-green-500 shrink-0" />
+                    ) : feedback.result === "already_used" ? (
+                      <AlertTriangle className="h-6 w-6 text-yellow-500 shrink-0" />
+                    ) : (
+                      <XCircle className="h-6 w-6 text-destructive shrink-0" />
+                    )}
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{feedback.message}</p>
+                      {(feedback.attendeeName || feedback.attendeeEmail) && (
+                        <p className="text-xs text-muted-foreground">
+                          {feedback.attendeeName?.trim() || feedback.attendeeEmail || "Participante"}
+                          {feedback.tierName ? ` · ${feedback.tierName}` : ""}
+                        </p>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               )}
