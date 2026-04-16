@@ -64,6 +64,7 @@ interface TicketRow {
   tier_id: string | null;
   order_id: string | null;
   ticket_tiers: { name: string } | null;
+  profiles: { full_name: string | null; email: string | null } | null;
 }
 
 function maskEmail(email: string) {
@@ -339,18 +340,20 @@ export default function StaffCheckinScreen() {
     setSearching(true);
     const safeQuery = q.replace(/[%_,]/g, "");
 
-    // Search by name, email, order_id, or ticket id
+    // Search by name, email, order_id, ticket id, or profile data
     const orFilters = [
       `attendee_name.ilike.%${safeQuery}%`,
       `attendee_email.ilike.%${safeQuery}%`,
       `order_id.ilike.%${safeQuery}%`,
       `id.ilike.%${safeQuery}%`,
+      `profiles.full_name.ilike.%${safeQuery}%`,
+      `profiles.email.ilike.%${safeQuery}%`,
     ];
 
     try {
       const { data, error } = await supabase
         .from("tickets")
-        .select("id, attendee_name, attendee_email, status, tier_id, order_id, ticket_tiers(name)")
+        .select("id, attendee_name, attendee_email, status, tier_id, order_id, ticket_tiers(name), profiles(full_name, email)")
         .eq("event_id", eventId)
         .in("status", ["active", "used"])
         .or(orFilters.join(","))
@@ -365,6 +368,8 @@ export default function StaffCheckinScreen() {
           ticket.attendee_email,
           ticket.order_id,
           ticket.id,
+          ticket.profiles?.full_name,
+          ticket.profiles?.email,
         ].filter(Boolean).join(" "));
 
         return searchable.includes(normalizedQuery);
@@ -412,7 +417,7 @@ export default function StaffCheckinScreen() {
     }
 
     if (ticket.status === "used") {
-      showFeedback("already_used", "Ingresso já utilizado", ticket.attendee_name || undefined, undefined, undefined, ticket.attendee_email || undefined);
+      showFeedback("already_used", "Ingresso já utilizado", ticket.attendee_name || ticket.profiles?.full_name || undefined, undefined, undefined, ticket.attendee_email || ticket.profiles?.email || undefined);
       return;
     }
 
@@ -656,8 +661,8 @@ export default function StaffCheckinScreen() {
                           >
                             <div className="flex items-center justify-between gap-3">
                               <div className="min-w-0">
-                                <p className="truncate text-sm font-medium">{t.attendee_name || "Sem nome"}</p>
-                                <p className="text-xs text-muted-foreground">{t.attendee_email ? maskEmail(t.attendee_email) : "—"}</p>
+                                <p className="truncate text-sm font-medium">{t.attendee_name || t.profiles?.full_name || "Sem nome"}</p>
+                                <p className="text-xs text-muted-foreground">{(t.attendee_email || t.profiles?.email) ? maskEmail(t.attendee_email || t.profiles?.email || "") : "—"}</p>
                                 <p className="text-xs text-muted-foreground">{(t as any).ticket_tiers?.name || "—"}</p>
                               </div>
                               <Badge variant={t.status === "used" ? "secondary" : "default"} className="text-[10px]">
@@ -768,9 +773,9 @@ export default function StaffCheckinScreen() {
           {confirmTicket && (
             <div className="space-y-3">
               <div className="rounded-lg border border-border bg-muted/30 p-3">
-                <p className="truncate text-sm font-semibold">{confirmTicket.attendee_name || "Sem nome"}</p>
+                <p className="truncate text-sm font-semibold">{confirmTicket.attendee_name || (confirmTicket as any).profiles?.full_name || "Sem nome"}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {confirmTicket.attendee_email ? maskEmail(confirmTicket.attendee_email) : "—"}
+                  {(confirmTicket.attendee_email || (confirmTicket as any).profiles?.email) ? maskEmail(confirmTicket.attendee_email || (confirmTicket as any).profiles?.email || "") : "—"}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">{(confirmTicket as any).ticket_tiers?.name || "Sem lote"}</p>
                 <div className="mt-2 flex items-center gap-2">

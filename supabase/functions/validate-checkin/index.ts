@@ -151,11 +151,26 @@ serve(async (req) => {
     }
 
     // 2. Get ticket with details
-    const { data: ticket, error: ticketErr } = await supabase
+    let { data: ticket, error: ticketErr } = await supabase
       .from("tickets")
       .select("id, status, event_id, tier_id, order_id, owner_id, attendee_name, attendee_email, qr_code, ticket_tiers(name)")
       .eq("id", ticketId)
       .single();
+
+    // Fallback: legacy tickets created between migrations had a random UUID
+    // in qr_code different from id. Allow lookup by that printed QR value.
+    if ((ticketErr || !ticket) && legacyRawTicketId) {
+      const fallback = await supabase
+        .from("tickets")
+        .select("id, status, event_id, tier_id, order_id, owner_id, attendee_name, attendee_email, qr_code, ticket_tiers(name)")
+        .eq("qr_code", qrCode.trim())
+        .maybeSingle();
+      if (fallback.data) {
+        ticket = fallback.data;
+        ticketErr = null;
+        ticketId = ticket.id;
+      }
+    }
 
     if (ticketErr || !ticket) {
       await logScan(supabase, { checkinListId, checkinListName, ticketId, qrCode, result: "not_found", deviceId, scannedBy: effectiveScannedBy, operatorName, operatorEmail, verificationMethod: "qr_scan" });
