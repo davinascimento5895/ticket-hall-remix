@@ -12,9 +12,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { validateCheckin, validateCheckinByTicketId, type CheckinResult } from "@/lib/api-checkin";
 import { toast } from "@/hooks/use-toast";
 import { Html5Qrcode } from "html5-qrcode";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function PublicCheckin() {
   const { accessCode } = useParams<{ accessCode: string }>();
+  const { session } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [lastResult, setLastResult] = useState<CheckinResult | null>(null);
@@ -62,7 +64,7 @@ export default function PublicCheckin() {
   // Manual check-in by ticket ID (list button)
   const checkinMutation = useMutation({
     mutationFn: (ticketId: string) =>
-      validateCheckinByTicketId({ ticketId, checkinListId: checkinList?.id }),
+      validateCheckinByTicketId({ ticketId, checkinListId: checkinList?.id }, session?.access_token),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["checkin-tickets"] });
       setLastResult(result);
@@ -77,7 +79,7 @@ export default function PublicCheckin() {
   // QR scanner check-in
   const scanCheckinMutation = useMutation({
     mutationFn: (qrCode: string) =>
-      validateCheckin({ qrCode, checkinListId: checkinList?.id }),
+      validateCheckin({ qrCode, checkinListId: checkinList?.id }, session?.access_token),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["checkin-tickets"] });
       setLastResult(result);

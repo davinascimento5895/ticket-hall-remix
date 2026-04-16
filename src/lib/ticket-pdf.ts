@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import type { TicketDownloadData } from "@/components/checkout/TicketDownloadCard";
 import { formatBRL } from "@/lib/utils";
+import { resolveTicketQrCode } from "@/lib/ticket-qr";
 import logoSvgUrl from "@/assets/logo-full-black.svg";
 
 const PRIMARY_COLOR: [number, number, number] = [234, 88, 12];
@@ -171,11 +172,12 @@ export async function generateTicketPDF(data: TicketDownloadData) {
   const qrSize = 35;
   const qrX = pageW - margin - qrSize;
   const qrY = y - 2;
+  const resolvedQrCode = resolveTicketQrCode(data.qrCode, data.ticketId);
 
   try {
     const qrUrl =
       data.qrCodeImageUrl ||
-      `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(data.qrCode)}`;
+      `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(resolvedQrCode)}`;
     const qrDataUrl = await loadImage(qrUrl);
     doc.addImage(qrDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
   } catch {

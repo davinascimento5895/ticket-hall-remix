@@ -6,7 +6,6 @@ import { SearchInput } from "@/components/ui/search-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
-import { TicketDetailModal } from "@/components/TicketDetailModal";
 import { TransferTicketModal } from "@/components/TransferTicketModal";
 import { ResaleListingModal } from "@/components/ResaleListingModal";
 import { RefundDialog } from "@/components/RefundDialog";
@@ -21,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { normalizeText } from "@/lib/search";
 import { useToast } from "@/hooks/use-toast";
 import { generateGoogleCalendarUrl } from "@/lib/calendar";
+import { resolveTicketQrCode } from "@/lib/ticket-qr";
 
 type TabId = "active" | "pending" | "cancelled" | "past" | "archived";
 
@@ -29,11 +29,6 @@ export default function MeusIngressos() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabId>("active");
   const [searchQuery, setSearchQuery] = useState("");
-  
-  const [ticketDetailModal, setTicketDetailModal] = useState<{
-    open: boolean;
-    ticket: any;
-  }>({ open: false, ticket: null });
 
   const [transferModal, setTransferModal] = useState<{
     open: boolean;
@@ -243,7 +238,7 @@ export default function MeusIngressos() {
               variant="default"
               size="sm"
               className="gap-1.5"
-              onClick={() => setTicketDetailModal({ open: true, ticket })}
+              onClick={() => navigate(`/meus-ingressos/${ticket.id}`)}
             >
               <Eye className="h-4 w-4" /> Ver ingresso
             </Button>
@@ -256,7 +251,7 @@ export default function MeusIngressos() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               {ticket.status === "active" && (
-                <DropdownMenuItem onClick={() => setTicketDetailModal({ open: true, ticket })}>
+                <DropdownMenuItem onClick={() => navigate(`/meus-ingressos/${ticket.id}`)}>
                   <Eye className="mr-2 h-4 w-4" /> Ver ingresso
                 </DropdownMenuItem>
               )}
@@ -290,7 +285,7 @@ export default function MeusIngressos() {
                           recipientEmail: ticket.attendee_email || user?.email,
                           eventTitle: ticket.events?.title,
                           tierName: ticket.ticket_tiers?.name,
-                          qrCode: ticket.qr_code,
+                          qrCode: resolveTicketQrCode(ticket.qr_code, ticket.id),
                         },
                       });
                       toast({ title: "E-mail enviado!", description: "Verifique sua caixa de entrada." });
@@ -457,12 +452,6 @@ export default function MeusIngressos() {
           />
         )}
       </div>
-
-      <TicketDetailModal
-        open={ticketDetailModal.open}
-        onOpenChange={(open) => setTicketDetailModal((p) => ({ ...p, open }))}
-        ticket={ticketDetailModal.ticket}
-      />
 
       <TransferTicketModal
         open={transferModal.open}

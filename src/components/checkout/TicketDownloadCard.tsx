@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Printer, Download, Calendar, Clock, MapPin, Ticket, Hash, User, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatBRL } from "@/lib/utils";
+import { resolveTicketQrCode } from "@/lib/ticket-qr";
 
 export interface TicketDownloadData {
   ticketId: string;
@@ -50,10 +51,11 @@ export function TicketDownloadCard(props: TicketDownloadData) {
   } = props;
 
   const [downloading, setDownloading] = useState(false);
+  const resolvedQrCode = resolveTicketQrCode(qrCode, ticketId);
 
   const qrImageUrl =
     qrCodeImageUrl ||
-    `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrCode)}`;
+    `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(resolvedQrCode)}`;
 
   const startDate = new Date(eventDate);
   const localeDateOpts = { weekday: "short", day: "2-digit", month: "long", year: "numeric", timeZone: "America/Sao_Paulo" } as const;

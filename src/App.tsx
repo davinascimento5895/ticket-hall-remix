@@ -38,6 +38,7 @@ const EventBooking = lazy(() => import("./pages/EventBooking"));
 const Carrinho = lazy(() => import("./pages/Carrinho"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const MeusIngressos = lazy(() => import("./pages/MeusIngressos"));
+const TicketDetailPage = lazy(() => import("./pages/TicketDetailPage"));
 const MeusPedidos = lazy(() => import("./pages/MeusPedidos"));
 const PublicCheckin = lazy(() => import("./pages/PublicCheckin"));
 const OrganizerProfile = lazy(() => import("./pages/OrganizerProfile"));
@@ -187,6 +188,7 @@ const App = () => {
                 <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
                 <Route path="/pedido/:orderId" element={<ProtectedRoute><PedidoRecuperacao /></ProtectedRoute>} />
                 <Route path="/meus-ingressos" element={<ProtectedRoute><MeusIngressos /></ProtectedRoute>} />
+                <Route path="/meus-ingressos/:ticketId" element={<ProtectedRoute><TicketDetailPage /></ProtectedRoute>} />
                 <Route path="/meus-pedidos" element={<ProtectedRoute><MeusPedidos /></ProtectedRoute>} />
                 <Route path="/organizador/:slug" element={<OrganizerProfile />} />
                 <Route path="/minha-conta/privacidade" element={<ProtectedRoute><Privacidade /></ProtectedRoute>} />

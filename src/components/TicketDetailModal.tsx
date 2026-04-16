@@ -1,5 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TicketDownloadCard } from "@/components/checkout/TicketDownloadCard";
+import { resolveTicketQrCode } from "@/lib/ticket-qr";
 
 interface TicketDetailModalProps {
   open: boolean;
@@ -55,7 +56,7 @@ export function TicketDetailModal({ open, onOpenChange, ticket }: TicketDetailMo
             tierPrice={ticket.ticket_tiers?.price}
             attendeeName={ticket.attendee_name || undefined}
             attendeeCpf={ticket.attendee_cpf || undefined}
-            qrCode={ticket.qr_code || ticket.id}
+            qrCode={resolveTicketQrCode(ticket.qr_code, ticket.id)}
             qrCodeImageUrl={ticket.qr_code_image_url}
             eventTitle={event?.title || "Evento"}
             eventDate={event?.start_date || new Date().toISOString()}

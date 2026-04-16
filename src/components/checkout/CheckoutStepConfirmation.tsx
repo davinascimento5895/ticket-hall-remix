@@ -7,6 +7,7 @@ import { generateGoogleCalendarUrl, downloadICS } from "@/lib/calendar";
 import { ShareSheet } from "@/components/ShareSheet";
 import { TicketDownloadCard } from "./TicketDownloadCard";
 import { formatBRL } from "@/lib/utils";
+import { resolveTicketQrCode } from "@/lib/ticket-qr";
 
 interface CheckoutStepConfirmationProps {
   orderId?: string | null;
@@ -154,7 +155,7 @@ export function CheckoutStepConfirmation({ orderId }: CheckoutStepConfirmationPr
                     tierPrice={(t.ticket_tiers as any)?.price}
                     attendeeName={t.attendee_name}
                     attendeeCpf={t.attendee_cpf}
-                    qrCode={t.qr_code || t.id}
+                    qrCode={resolveTicketQrCode(t.qr_code, t.id)}
                     qrCodeImageUrl={t.qr_code_image_url}
                     eventTitle={event.title}
                     eventDate={event.start_date}

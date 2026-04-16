@@ -34,7 +34,7 @@ function getTicketStatusLabel(status: string) {
 
 export default function ProducerEventCheckin() {
   const { id } = useParams();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -60,7 +60,10 @@ export default function ProducerEventCheckin() {
 
   // Mutation for manual check-in by ticket ID (list button click)
   const checkinMutation = useMutation({
-    mutationFn: (ticketId: string) => validateCheckinByTicketId({ ticketId, scannedBy: user?.id }),
+    mutationFn: (ticketId: string) => validateCheckinByTicketId(
+      { ticketId, scannedBy: user?.id },
+      session?.access_token,
+    ),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["event-tickets-checkin", id] });
       setLastResult(result);
@@ -74,7 +77,10 @@ export default function ProducerEventCheckin() {
 
   // Mutation for QR scanner — passes raw QR code string
   const scanCheckinMutation = useMutation({
-    mutationFn: (qrCode: string) => validateCheckin({ qrCode, scannedBy: user?.id }),
+    mutationFn: (qrCode: string) => validateCheckin(
+      { qrCode, scannedBy: user?.id },
+      session?.access_token,
+    ),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["event-tickets-checkin", id] });
       setLastResult(result);

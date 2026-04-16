@@ -91,7 +91,7 @@ const roleLabels: Record<string, string> = {
 
 export default function StaffCheckinScreen() {
   const { eventId } = useParams<{ eventId: string }>();
-  const { user, loading, signOut, profile, allRoles, role, switchRole } = useAuth();
+  const { user, session, loading, signOut, profile, allRoles, role, switchRole } = useAuth();
   const navigate = useNavigate();
 
   // Event info
@@ -262,11 +262,20 @@ export default function StaffCheckinScreen() {
     if (debounceRef.current) return;
     debounceRef.current = true;
 
+    if (!session?.access_token) {
+      showFeedback("unauthorized", "Sessão expirada. Faça login novamente.");
+      setTimeout(() => { debounceRef.current = false; }, 1500);
+      return;
+    }
+
     // Pause scanner (don't stop — keeps camera alive)
     try { scannerRef.current?.pause(true); } catch {}
 
     try {
-      const result = await validateCheckin({ qrCode, scannedBy: user?.id, checkinListId: staffCheckinListId || undefined });
+      const result = await validateCheckin(
+        { qrCode, scannedBy: user?.id, checkinListId: staffCheckinListId || undefined },
+        session.access_token,
+      );
       showFeedback(result.result as ScanResult, result.message, result.attendeeName, result.tierName, result.checkedInAt);
     } catch (err: any) {
       showFeedback("error", err?.message || "Erro desconhecido");
@@ -395,6 +404,11 @@ export default function StaffCheckinScreen() {
     setConfirmTicket(null);
     setManualOpen(false);
 
+    if (!session?.access_token) {
+      showFeedback("unauthorized", "Sessão expirada. Faça login novamente.");
+      return;
+    }
+
     if (ticket.status === "used") {
       showFeedback("already_used", "Ingresso já utilizado", ticket.attendee_name || undefined);
       return;
@@ -406,12 +420,15 @@ export default function StaffCheckinScreen() {
         showFeedback("error", "QR code não encontrado para este ingresso");
         return;
       }
-      const result = await validateCheckin({ qrCode: t.qr_code, scannedBy: user?.id, checkinListId: staffCheckinListId || undefined });
+      const result = await validateCheckin(
+        { qrCode: t.qr_code, scannedBy: user?.id, checkinListId: staffCheckinListId || undefined },
+        session.access_token,
+      );
       showFeedback(result.result as ScanResult, result.message, result.attendeeName, result.tierName, result.checkedInAt);
     } catch (err: any) {
       showFeedback("error", err?.message || "Erro ao validar ingresso");
     }
-  }, [user, showFeedback]);
+  }, [session, user, showFeedback]);
 
   // ─── Derived ───
   const pct = totalTickets > 0 ? Math.round((checkedInCount / totalTickets) * 100) : 0;
