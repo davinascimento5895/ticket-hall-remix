@@ -340,29 +340,42 @@ export default function StaffCheckinScreen() {
     setSearching(true);
     const safeQuery = q.replace(/[%_,]/g, "");
 
-    // Search by name, email, order_id, ticket id, or profile data
-    const orFilters = [
-      `attendee_name.ilike.%${safeQuery}%`,
-      `attendee_email.ilike.%${safeQuery}%`,
-      `order_id.ilike.%${safeQuery}%`,
-      `id.ilike.%${safeQuery}%`,
-      `profiles.full_name.ilike.%${safeQuery}%`,
-      `profiles.email.ilike.%${safeQuery}%`,
-    ];
-
     try {
-      const { data, error } = await supabase
-        .from("tickets")
-        .select("id, attendee_name, attendee_email, status, tier_id, order_id, ticket_tiers(name), profiles(full_name, email)")
-        .eq("event_id", eventId)
-        .in("status", ["active", "used"])
-        .or(orFilters.join(","))
-        .limit(20);
+      // Causa raiz: PostgREST não permite misturar colunas da tabela principal
+      // e foreign table dentro do mesmo .or() sem foreignTable. Fazemos duas
+      // buscas separadas e unimos os resultados client-side.
+      const ticketFilters = [
+        `attendee_name.ilike.%${safeQuery}%`,
+        `attendee_email.ilike.%${safeQuery}%`,
+        `order_id.ilike.%${safeQuery}%`,
+        `id.ilike.%${safeQuery}%`,
+      ];
 
-      if (error) throw error;
+      const [ticketRes, profileRes] = await Promise.all([
+        supabase
+          .from("tickets")
+          .select("id, attendee_name, attendee_email, status, tier_id, order_id, ticket_tiers(name), profiles(full_name, email)")
+          .eq("event_id", eventId)
+          .in("status", ["active", "used"])
+          .or(ticketFilters.join(","))
+          .limit(20),
+        supabase
+          .from("tickets")
+          .select("id, attendee_name, attendee_email, status, tier_id, order_id, ticket_tiers(name), profiles(full_name, email)")
+          .eq("event_id", eventId)
+          .in("status", ["active", "used"])
+          .or(`full_name.ilike.%${safeQuery}%,email.ilike.%${safeQuery}%`, { foreignTable: "profiles" })
+          .limit(20),
+      ]);
+
+      if (ticketRes.error) throw ticketRes.error;
+      if (profileRes.error) throw profileRes.error;
 
       const normalizedQuery = normalizeSearchText(q);
-      const rows = ((data as any[]) || []).filter((ticket) => {
+      const merged = new Map<string, any>();
+
+      for (const ticket of [...(ticketRes.data || []), ...(profileRes.data || [])]) {
+        if (!ticket) continue;
         const searchable = normalizeSearchText([
           ticket.attendee_name,
           ticket.attendee_email,
@@ -372,13 +385,18 @@ export default function StaffCheckinScreen() {
           ticket.profiles?.email,
         ].filter(Boolean).join(" "));
 
-        return searchable.includes(normalizedQuery);
-      });
+        if (searchable.includes(normalizedQuery)) {
+          merged.set(ticket.id, ticket);
+        }
+      }
+
+      const rows = Array.from(merged.values());
 
       if (requestId !== searchRequestRef.current) return;
       setSearchResults(rows);
       setConfirmTicket(null);
     } catch (error) {
+      console.error("[staff-checkin] search error:", error);
       if (requestId !== searchRequestRef.current) return;
       setSearchResults([]);
     } finally {
