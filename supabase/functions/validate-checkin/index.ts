@@ -223,9 +223,7 @@ serve(async (req) => {
       await logScan(supabase, { checkinListId, checkinListName, ticketId, qrCode, result: "already_used", deviceId, scannedBy: effectiveScannedBy, operatorName, operatorEmail, verificationMethod: "qr_scan" });
       return jsonResponse({
         success: false, result: "already_used", message: "Ingresso já utilizado",
-        attendeeName: ticket.attendee_name || "Participante",
-        attendeeEmail: ticket.attendee_email,
-        tierName: (ticket as any).ticket_tiers?.name, phase: "ticket_status", requestId,
+        attendeeName: ticket.attendee_name, tierName: (ticket as any).ticket_tiers?.name, phase: "ticket_status", requestId,
       }, 409);
     }
 
@@ -343,8 +341,7 @@ serve(async (req) => {
 
     return jsonResponse({
       success: true, result: "success", message: "Check-in realizado!",
-      attendeeName: ticket.attendee_name || "Participante",
-      attendeeEmail: ticket.attendee_email,
+      attendeeName: ticket.attendee_name, attendeeEmail: ticket.attendee_email,
       tierName: (ticket as any).ticket_tiers?.name, checkedInAt: now,
       certificateGenerated, phase: "done", requestId,
     });
